@@ -12,6 +12,8 @@ import com.kidcare.family.core.FamilyRepository
 import com.kidcare.family.core.RoleStore
 import com.kidcare.family.databinding.ActivityGuardianPairingBinding
 import com.kidcare.family.guardian.GuardianMainActivity
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -30,6 +32,12 @@ class GuardianPairingActivity : AppCompatActivity() {
     // 화면을 두 번 띄우고 겹쳐 쌓을 수 있어서, 한 번만 넘어가도록 플래그로 막는다.
     private var navigated = false
 
+    // onCreate 에서 시작하는 코루틴의 Job. onDestroy 가 알아서 취소해줄 거라고 믿으면 안 된다 —
+    // "역할 다시 고르기"는 화면이 살아있는 채로 store.clear() 를 부르므로, 그 시점에 코루틴이
+    // 아직 createFamily() 응답을 기다리는 중이면 clear() 이후에 재개돼 지워진 RoleStore 에
+    // familyId 를 도로 써넣을 수 있다. 그래서 clear() 전에 이 Job 을 직접 취소한다.
+    private var pairingJob: Job? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGuardianPairingBinding.inflate(layoutInflater)
@@ -40,6 +48,10 @@ class GuardianPairingActivity : AppCompatActivity() {
         binding.resetRoleButton.setOnClickListener {
             // 페어링이 끝나기 전까지만 보이는 되돌리기 버튼.
             // 이미 만들어진 가족 문서는 그대로 버려둔다(멤버가 보호자 하나뿐인 빈 문서라 해가 없다).
+            //
+            // 순서가 중요하다: 코루틴을 먼저 취소해야 store.clear() 뒤에 코루틴이 깨어나
+            // familyId 를 다시 써넣는 경합을 막을 수 있다. cancel → clear → navigate.
+            pairingJob?.cancel()
             listener?.remove()
             listener = null
             store.clear()
@@ -50,7 +62,7 @@ class GuardianPairingActivity : AppCompatActivity() {
             finish()
         }
 
-        lifecycleScope.launch {
+        pairingJob = lifecycleScope.launch {
             try {
                 val uid = AuthGateway.signIn()
                 val familyId = store.familyId ?: FamilyRepository.createFamily(uid).also {
@@ -58,6 +70,10 @@ class GuardianPairingActivity : AppCompatActivity() {
                 }
                 binding.codeText.text = FamilyRepository.inviteCodeOf(familyId)
                 listener = FamilyRepository.observeChildJoined(familyId) { goToMain() }
+            } catch (e: CancellationException) {
+                // 화면 이탈(되돌리기 버튼, onDestroy)로 인한 정상 취소다. 실패로 취급해
+                // hintText 를 덮어쓰면 안 되므로 그대로 다시 던져 코루틴 취소를 완성시킨다.
+                throw e
             } catch (e: Exception) {
                 binding.hintText.text = getString(R.string.pairing_failed, e.message ?: "")
             }
