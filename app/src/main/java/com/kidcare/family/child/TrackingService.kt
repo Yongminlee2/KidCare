@@ -36,6 +36,8 @@ class TrackingService : LifecycleService() {
     private val collector by lazy { LocationCollector(this) }
     private val reporter = StatusReporter()
     private var lastUploaded: Fix? = null
+    private val segmentUploader = SegmentUploader()
+    private var lastSegmentRebuildAt = 0L
 
     // onCreate 에서 확인한 결과. ChildHomeActivity 는 PermissionStep.firstMissing 이
     // null 일 때만(=모든 권한이 켜져 있을 때만) 이 서비스를 켜지만, 그 뒤 사용자가
@@ -137,6 +139,29 @@ class TrackingService : LifecycleService() {
                 // 그 위치를 기준으로 거리를 재서, 진짜 새 위치가 와도 SKIP_TOO_CLOSE 로
                 // 계속 버려질 수 있다.
                 lastUploaded = fix
+
+                // 구간 재계산은 하루치 점을 다시 읽는 작업이라 점이 올라갈 때마다 하면
+                // 읽기 사용량이 점 개수의 제곱으로 늘어난다. 10분에 한 번이면 화면이
+                // 충분히 최신이면서 비용은 하루 100회 남짓으로 끝난다.
+                val now = System.currentTimeMillis()
+                if (now - lastSegmentRebuildAt >= SEGMENT_REBUILD_INTERVAL_MILLIS) {
+                    // 재계산이 실패해도 시각은 먼저(또는 여기서 바로) 갱신해 둔다 — 안
+                    // 그러면 색인이 없어 매번 FAILED_PRECONDITION 으로 죽는 상황에서
+                    // fix 가 올라올 때마다 실패를 반복해 같은 비용을 다시 문다.
+                    lastSegmentRebuildAt = now
+                    runCatching { segmentUploader.rebuildToday(familyId, childUid) }
+                        .onFailure { e ->
+                            // runCatching 은 CancellationException 도 삼킨다 — 이 저장소가
+                            // 같은 실수를 네 번 고쳤다. 서비스가 죽으며 취소된 것뿐이면
+                            // 그대로 다시 던져 취소를 완성시켜야 한다.
+                            if (e is CancellationException) throw e
+                            // 색인 누락은 FAILED_PRECONDITION 예외 메시지에 색인 생성
+                            // URL 을 담아 오는데, 그 URL 은 logcat 에서만 보인다. e.message
+                            // 만 잘라 찍으면 URL 이 잘려 나갈 수 있으므로 예외 객체
+                            // 자체를 Log.w 에 넘긴다.
+                            Log.w(TAG, "구간 재계산 실패", e)
+                        }
+                }
             } catch (e: CancellationException) {
                 // 서비스가 죽으면서 lifecycleScope 가 취소된 것뿐인 정상 종료다.
                 // GuardianPairingActivity 에서 두 번 고친 것과 같은 실수(취소를 실패로
@@ -196,6 +221,7 @@ class TrackingService : LifecycleService() {
         private const val TAG = "TrackingService"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "tracking"
+        private const val SEGMENT_REBUILD_INTERVAL_MILLIS = 10 * 60 * 1000L
 
         fun start(context: Context) {
             context.startForegroundService(Intent(context, TrackingService::class.java))

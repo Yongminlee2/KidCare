@@ -37,7 +37,7 @@ class LocationCollector(private val context: Context) {
         val cb = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 val loc = result.lastLocation ?: return
-                onFix(Fix(loc.latitude, loc.longitude, loc.accuracy, loc.time))
+                onFix(Fix(loc.latitude, loc.longitude, loc.accuracy, loc.time, loc.speed))
             }
         }
         callback = cb

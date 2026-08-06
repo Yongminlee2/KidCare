@@ -12,6 +12,14 @@ data class Fix(
     val lng: Double,
     val accuracy: Float,
     val at: Long,
+    /**
+     * m/s. 기기가 속도를 못 주면 0 이다.
+     *
+     * 기본값을 둔 이유: 이 필드가 없던 시절에 저장된 points 문서는 speed 가 0 으로
+     * 읽히는데, 그걸 "정지"로 오해하면 안 된다. 속도는 참고용이고 구간 판정은
+     * 좌표와 시각으로만 한다.
+     */
+    val speed: Float = 0f,
 )
 
 enum class Decision {

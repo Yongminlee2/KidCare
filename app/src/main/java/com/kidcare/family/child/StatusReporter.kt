@@ -52,6 +52,7 @@ class StatusReporter {
                 lat = fix.lat,
                 lng = fix.lng,
                 accuracy = fix.accuracy,
+                speed = fix.speed,
                 at = fix.at,
                 battery = battery,
             )

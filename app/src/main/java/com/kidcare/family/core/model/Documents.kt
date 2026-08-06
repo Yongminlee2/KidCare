@@ -62,3 +62,27 @@ data class PointDoc(
     val at: Long = 0L,
     val battery: Int = -1,
 )
+
+/**
+ * children/{childUid}/segments/{autoId} — 하루를 머무름·이동으로 요약한 한 토막.
+ *
+ * 자녀 폰이 자기 points 를 읽어 계산해 올린다. 보호자 폰이 하루치 원시 점(하루 최대
+ * 수백 개)을 매번 내려받으면 느리고 Firestore 읽기 사용량도 커지는데, 요약본은
+ * 하루 20~30건이면 끝난다.
+ *
+ * [dayKey] 는 "2026-08-07" 꼴로, 그 구간이 **시작한 날**을 자녀 폰의 시간대 기준으로
+ * 박아둔 값이다. startAt 범위로 쿼리하면 자정을 걸친 구간이 어느 날에 속하는지 매번
+ * 계산해야 하고 시간대가 바뀌면 어긋난다.
+ */
+data class SegmentDoc(
+    val type: String = "",          // "STAY" | "MOVE"
+    val startAt: Long = 0L,
+    val endAt: Long = 0L,
+    val lat: Double = 0.0,
+    val lng: Double = 0.0,
+    val distanceMeters: Double = 0.0,
+    val pointCount: Int = 0,
+    /** 머무른 곳 이름. Task 4 가 채운다. 비어 있으면 화면이 "머무른 곳"으로 표시한다. */
+    val placeName: String = "",
+    val dayKey: String = "",
+)
