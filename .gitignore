@@ -6,3 +6,4 @@ google-services.json
 build/
 *.apk
 .idea/
+.superpowers/
