@@ -32,5 +32,18 @@
         <activity android:name=".onboarding.PermissionActivity" android:exported="false" />
         <activity android:name=".guardian.GuardianMainActivity" android:exported="false" />
         <activity android:name=".child.ChildHomeActivity" android:exported="false" />
+
+        <service
+            android:name=".child.TrackingService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <receiver
+            android:name=".child.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

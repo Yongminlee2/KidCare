@@ -55,5 +55,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.play.services.location)
+    implementation(libs.androidx.lifecycle.service)
     testImplementation(libs.junit)
 }

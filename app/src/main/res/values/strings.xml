@@ -38,4 +38,8 @@
     <string name="child_sharing_on">지금 내 위치가 부모님께 공유되고 있어요.</string>
     <string name="child_permission_missing">%1$s 이(가) 꺼져 있어요.\n켜야 위치가 전달됩니다.</string>
     <string name="child_go_to_permission">권한 켜러 가기</string>
+
+    <string name="channel_tracking">위치 공유</string>
+    <string name="tracking_notification_title">위치 공유 중</string>
+    <string name="tracking_notification_text">부모님께 내 위치를 알려주고 있어요</string>
 </resources>

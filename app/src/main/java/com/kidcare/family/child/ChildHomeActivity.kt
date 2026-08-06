@@ -36,6 +36,7 @@ class ChildHomeActivity : AppCompatActivity() {
         super.onResume()
         val missing = PermissionStep.firstMissing(this)
         if (missing == null) {
+            TrackingService.start(this)
             binding.childStatus.text = getString(R.string.child_sharing_on)
             binding.goToPermissionButton.visibility = View.GONE
         } else {
