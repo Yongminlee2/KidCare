@@ -74,3 +74,24 @@ sdk.dir=C\:\\Users\\\uC0AC\uC6A9\uC790\\AppData\\Local\\Android\\Sdk
 - 커맨드라인: `sdkmanager "platforms;android-37"`
 
 원인은 위에서 적은 대로 `core-ktx 1.19.0`이 `compileSdk 37`을 요구하기 때문이다.
+
+## Firebase 설정
+
+1. https://console.firebase.google.com 접속 → `프로젝트 만들기`
+2. 프로젝트 이름 `KidCare` → Google 애널리틱스는 `사용 안 함` → 만들기
+3. 프로젝트 개요 화면에서 안드로이드 아이콘 클릭
+   - Android 패키지 이름: `com.kidcare.family`   ← 정확히 이대로
+   - 앱 닉네임: 우리아이 지킴이
+   - 디버그 서명 인증서 SHA-1: 지금은 비워둔다 (익명 로그인에는 불필요)
+4. `google-services.json` 다운로드 → `C:\workAndroid\KidCare\app\google-services.json` 에 저장
+5. 왼쪽 메뉴 `빌드 > Authentication` → `시작하기` → `Sign-in method` 탭
+   → `익명` 선택 → `사용 설정` → 저장
+6. 왼쪽 메뉴 `빌드 > Firestore Database` → `데이터베이스 만들기`
+   - 위치: `asia-northeast3 (서울)`
+   - 모드: `프로덕션 모드에서 시작`  (규칙은 Task 6 에서 넣는다)
+7. 왼쪽 아래 톱니바퀴 → `사용량 및 결제` → `요금제 수정` → `Blaze` 선택 → 카드 등록
+8. 같은 화면에서 `예산 알림 설정` → 1,000원 → 알림 이메일 등록
+
+이 프로젝트(`kidcare-17fe5`)는 위 절차로 이미 만들어졌고 `app/google-services.json`도
+받아져 있다 (Task 3 작업 시작 시점 기준). 이 파일은 `.gitignore`에 있어 커밋되지
+않으므로, 새 기계에서 이어받으면 위 절차를 다시 밟아 직접 받아야 한다.
