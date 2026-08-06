@@ -88,7 +88,18 @@ class PlaceNamer {
         }
         first.optJSONObject("address")?.let { address ->
             val region = address.optString("region_3depth_name")
-            val bunji = address.optString("main_address_no")
+            val main = address.optString("main_address_no")
+            val sub = address.optString("sub_address_no")
+            // 지번 주소는 본번-부번 꼴("123-4")이다. sub_address_no 를 안 읽으면
+            // 부번이 있는 주소도 "123"으로만 나와, 설계서 §4.2 예시("○○동 123-4")와
+            // 어긋난다.
+            val bunji = if (main.isEmpty()) {
+                ""
+            } else if (sub.isNotEmpty()) {
+                "$main-$sub"
+            } else {
+                main
+            }
             if (region.isNotEmpty()) return if (bunji.isNotEmpty()) "$region $bunji" else region
         }
         return null

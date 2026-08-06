@@ -145,6 +145,41 @@ Task 6 최초 버전은 `families`를 `inviteCode` 필드로 query(`whereEqualTo
 않았으므로(위 참고) 콘솔에 남아있는 기존 데이터·구버전 문서는 없다 — 마이그레이션
 불필요.
 
+### 복합 색인 만들기 (3단계 Fix 2 — 타임라인이 안 뜰 때)
+
+`SegmentRepository.observeSegmentsOfDay`는 `dayKey`(같음 조건) + `startAt`(정렬)을
+같이 쓰는 쿼리라서 Firestore 복합 색인이 필요하다. 규칙 게시와 마찬가지로 콘솔에서
+사람이 직접 만들어야 하는 절차다. 색인이 없으면 첫 실행에서 이 리스너가
+`FAILED_PRECONDITION`으로 죽는데, 그 오류 문구는 `statusBar`에 잠깐 떴다가
+10분 안에 다음 status 스냅샷이 덮어써 사라진다 — 지도는 멀쩡하고 타임라인만
+영원히 비어 보이는데 화면 어디에도 이유가 안 남는다.
+
+가장 빠른 방법은 색인을 미리 만들지 않고, 앱을 한 번 그대로 돌려서 Firestore가
+알려주는 생성 URL을 그대로 쓰는 것이다:
+
+1. 페어링을 마치고 보호자 화면(지도+타임라인)을 한 번 연다.
+2. PC에서 아래 명령으로 logcat을 보고 `FAILED_PRECONDITION` 줄을 찾는다 —
+   `SegmentRepository.observeSegmentsOfDay`가 예외 객체를 그대로 `Log.w`에
+   넘기므로 색인 생성 URL이 줄바꿈 없이 이 로그 줄에 전부 남는다.
+   ```bash
+   adb logcat -s SegmentRepository:W
+   ```
+3. 그 줄에 있는 `https://console.firebase.google.com/.../firestore/indexes?create_composite=...`
+   URL을 브라우저로 열면, `dayKey` 오름차순 + `startAt` 오름차순 복합 색인 생성
+   화면이 이미 채워져 있다. `만들기`만 누르면 된다(콘솔 버튼은 Task 6 규칙
+   게시와 같은 이유로 사람이 직접 눌러야 한다 — Claude가 대신 할 수 없다).
+4. 색인 상태가 `사용 설정됨`으로 바뀔 때까지(보통 몇 분) 기다린 뒤 앱을 다시
+   열어 타임라인이 채워지는지 확인한다.
+
+미리 손으로 만들고 싶으면 콘솔 `Firestore Database > 색인 > 복합 색인 추가`에서
+컬렉션 `families/{familyId}/children/{childUid}/segments` 아래에 `dayKey`
+오름차순 → `startAt` 오름차순 순서로 필드를 추가해도 된다.
+
+**`SegmentRepository.pointsOfDay`(범위 쿼리 `at` + `orderBy("at")`)는 이 색인이
+필요 없다** — 조건과 정렬이 같은 필드(`at`)라서 Firestore 자동 단일 필드 색인만
+으로 충분하다(등호/정렬이 서로 다른 필드일 때만 복합 색인이 필요하다). 확인차
+검토했고, 별도 조치는 없다.
+
 ## 자녀 권한 온보딩 기기 확인 (Task 7)
 
 Task 7은 코드만 작성했고 실기기 확인은 사람이 직접 한다. 확인 절차:

@@ -6,6 +6,7 @@ import com.kidcare.family.core.model.SegmentDoc
 import com.kidcare.family.logic.Fix
 import com.kidcare.family.logic.SegmentBuilder
 import com.kidcare.family.logic.SegmentType
+import kotlinx.coroutines.sync.Mutex
 import java.time.Instant
 import java.time.ZoneId
 
@@ -30,6 +31,18 @@ class SegmentUploader(
 
     /** 이 서비스 인스턴스가 지금까지 확보한 오늘 점들. */
     private val buffer = mutableListOf<Fix>()
+
+    // Fix 4: TrackingService 는 lastSegmentRebuildAt 을 "부르기 전"에 갱신해 다음
+    // 예약이 겹치는 것만 막는다 — 이미 시작된 호출이 실제로 얼마나 오래 도는지는
+    // 모른다. PlaceNamer 타임아웃(점당 최대 5초)이 여러 번 겹치거나 Firestore 가
+    // 느리면 한 번의 rebuildToday 가 15분(다음 예약 간격)을 넘길 수 있고, 그러면
+    // 두 번째 호출이 첫 번째가 끝나기 전에 시작된다. 둘 다 replaceSegmentsOfDay 로
+    // 같은 하루를 통째로 갈아끼우는데, 두 번째가 삭제 대상 목록을 첫 번째의 쓰기가
+    // 반영되기 전에 읽으면 그 날에 구간 두 벌이 겹쳐 쌓인다(타임라인 중복 행, 경로선
+    // 두 겹, DiffUtil 키 충돌). tryLock 으로 "이미 도는 중이면 이번 호출은 건너뛴다"
+    // 만 막는다 — Mutex.lock()(대기)을 쓰면 두 번째가 큐에 쌓였다가 뒤늦게 또
+    // 실행되는데, 그건 이미 최신 상태를 반영한 뒤에 하는 불필요한 재계산일 뿐이다.
+    private val rebuildMutex = Mutex()
 
     /**
      * [buffer] 가 어느 날짜의 점들인지. null 이면(서비스가 막 떴을 때) 아직 한 번도
@@ -56,6 +69,18 @@ class SegmentUploader(
     }
 
     suspend fun rebuildToday(familyId: String, childUid: String) {
+        if (!rebuildMutex.tryLock()) {
+            Log.d(TAG, "구간 재계산 생략: 이전 재계산이 아직 진행 중이다")
+            return
+        }
+        try {
+            rebuildTodayLocked(familyId, childUid)
+        } finally {
+            rebuildMutex.unlock()
+        }
+    }
+
+    private suspend fun rebuildTodayLocked(familyId: String, childUid: String) {
         val now = System.currentTimeMillis()
         val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
         val dayStart = today.atStartOfDay(zone).toInstant().toEpochMilli()

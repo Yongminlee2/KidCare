@@ -106,9 +106,20 @@ class MapTimelineFragment : Fragment() {
         binding.nextDayButton.setOnClickListener { changeDay(1) }
         renderDayHeader()
 
+        // Fix 1: subscribe() 는 앱키 가드보다 반드시 먼저 불러야 한다. 예전엔 가드
+        // 뒤에 있어서, 앱키가 없는 빌드(지금 이 기기가 그렇다)에서는 여기 도달하지
+        // 못해 joinedListener·statusListener·segmentListener 가 셋 다 안 걸렸다 —
+        // segments/ 에 데이터가 가득해도 "이 날은 기록이 없어요"만 영원히 뜨는
+        // 상태였다. 데이터 구독은 지도와 무관하다(위 renderTimeline 주석과 같은
+        // 이유) — 아래 render()/drawRoute() 는 kakaoMap 이 null 이면 각각
+        // pendingStatus 에 담아두거나 그냥 return 하므로, 앱키가 없어 kakaoMap 이
+        // 끝까지 null 인 채로도 Kakao SDK 클래스를 하나도 건드리지 않는다.
+        subscribe()
+
         if (BuildConfig.KAKAO_APP_KEY.isEmpty()) {
             // 앱키가 없다(개발기에 아직 등록 전) — 지도를 아예 시작하지 않는다.
-            // 안내만 띄우고, 페어링·위치 수집 등 이 화면과 무관한 기능은 그대로 돈다.
+            // 안내만 띄우고, 페어링·위치 수집·타임라인 구독 등 이 화면과 무관한
+            // 기능은 그대로 돈다.
             binding.noKeyNotice.visibility = View.VISIBLE
             return
         }
@@ -129,8 +140,6 @@ class MapTimelineFragment : Fragment() {
                 }
             },
         )
-
-        subscribe()
     }
 
     /**
@@ -235,6 +244,12 @@ class MapTimelineFragment : Fragment() {
     private fun subscribeSegments() {
         segmentListener?.remove()
         segmentListener = null
+        // Fix 6: 새 리스너를 걸기 전에 화면을 먼저 빈 상태로 되돌린다. 안 그러면
+        // 새 리스너가 에러로 죽었을 때(색인 없음 등) renderTimeline 이 한 번도 안
+        // 불려서, 어제 목록과 어제 경로선이 오늘 헤더 아래 그대로 남는다 — 부모가
+        // 아이 위치를 잘못 읽는 상태다. 여기서 지우면 drawRoute(emptyList()) 도
+        // 같이 불려 경로선까지 함께 지워진다.
+        renderTimeline(emptyList())
         val familyId = RoleStore(requireContext()).familyId ?: return
         val uid = childUid ?: return
         segmentListener = SegmentRepository.observeSegmentsOfDay(
@@ -243,7 +258,11 @@ class MapTimelineFragment : Fragment() {
             dayKey = dayKey,
             onChange = { docs -> renderTimeline(docs) },
             onError = { e ->
-                _binding?.statusBar?.text = getString(R.string.map_error, e.message ?: "")
+                // Fix 7: map_error 를 그대로 쓰면 타임라인(색인 누락 등) 실패가
+                // "지도를 불러오지 못했어요"로 보인다 — 실제로는 지도가 멀쩡한데도.
+                // 다음 status 스냅샷이 10분 안에 이 문구를 덮어쓰긴 하지만, 그 전에
+                // 뜨는 짧은 순간에도 원인이 맞는 문구여야 한다.
+                _binding?.statusBar?.text = getString(R.string.timeline_error, e.message ?: "")
             },
         )
     }

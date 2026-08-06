@@ -51,6 +51,7 @@
     <string name="map_no_key">지도 키가 설정되지 않았습니다.\n개발자에게 문의하세요.</string>
     <string name="map_no_child">아직 아이 폰이 연결되지 않았어요.</string>
     <string name="map_error">지도를 불러오지 못했어요\n%1$s</string>
+    <string name="timeline_error">기록을 불러오지 못했어요\n%1$s</string>
     <string name="map_status_format">🔋 %1$d%%   ·   %2$s 기준</string>
 
     <string name="timeline_icon_stay">📍</string>
