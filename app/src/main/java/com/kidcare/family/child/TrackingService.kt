@@ -55,6 +55,11 @@ class TrackingService : LifecycleService() {
     // 전에 반드시 먼저 확인해야 한다.
     private var hasLocationPermission = false
 
+    // 이 인스턴스가 활동 인식 구독을 실제로(성공까지) 걸었는지. removeActivityTransitionUpdates
+    // 는 권한을 요구하지 않으므로, 해제 여부는 "지금 권한이 있는가"가 아니라 "이 값"으로만
+    // 판단해야 한다 — 아래 unregisterActivityTransitions() 주석 참고.
+    private var transitionsRegistered = false
+
     override fun onCreate() {
         super.onCreate()
         hasLocationPermission = ContextCompat.checkSelfPermission(
@@ -111,11 +116,21 @@ class TrackingService : LifecycleService() {
         )
         ActivityRecognition.getClient(this)
             .requestActivityTransitionUpdates(request, activityTransitionPendingIntent())
+            .addOnSuccessListener { transitionsRegistered = true }
             .addOnFailureListener { e -> Log.w(TAG, "활동 인식 등록 실패", e) }
     }
 
+    /**
+     * removeActivityTransitionUpdates 는 requestActivityTransitionUpdates 와 달리
+     * 권한을 요구하지 않는다 — LocationCollector.clearUpdates() 가 removeLocationUpdates
+     * 를 무조건 부르는 것과 같은 이유다. "지금 권한이 있는가"로 이 해제를 게이트하면,
+     * 등록해 둔 뒤 권한이 취소된 경우 딱 그 순간 해제가 통째로 스킵돼 구글 플레이
+     * 서비스 쪽 구독이 아무도 못 지우는 채로 영원히 남는다(배터리 누수). 그래서 여기는
+     * "이 인스턴스가 실제로 등록했는가"(transitionsRegistered)로만 판단한다.
+     */
     private fun unregisterActivityTransitions() {
-        if (!PermissionStep.ACTIVITY_RECOGNITION.isGranted(this)) return
+        if (!transitionsRegistered) return
+        transitionsRegistered = false
         ActivityRecognition.getClient(this)
             .removeActivityTransitionUpdates(activityTransitionPendingIntent())
     }
@@ -171,6 +186,19 @@ class TrackingService : LifecycleService() {
     }
 
     private fun handle(familyId: String, fix: Fix) {
+        // 활동 인식 권한은 서비스가 도는 도중에도 설정에서 언제든 꺼질 수 있다.
+        // 정지 상태(5분 주기)로 넘어가 있는 채로 권한이 사라지면, 그 뒤로는 '이동'
+        // 전환이 다시 올 수 없어 아이가 실제로 움직이기 시작해도 5분 주기에 영원히
+        // 갇힌다 — "정지 5분은 진짜 정지 전환이 있을 때만"이라는 규칙이 깨진다.
+        // fix 는 정지 중에도 최소 5분마다 한 번은 여기를 지나가므로, 매 fix 마다
+        // 확인하면 늦어도 한 주기 안에 감지한다. 되돌릴 값은 5분이 아니라 1분이다 —
+        // 위치 신뢰성이 배터리보다 먼저다.
+        if (transitionsRegistered && !PermissionStep.ACTIVITY_RECOGNITION.isGranted(this)) {
+            Log.w(TAG, "활동 인식 권한이 도중에 취소됨 — 구독 해제하고 이동(1분)으로 되돌림")
+            unregisterActivityTransitions()
+            collector.onMovingChanged(true)
+        }
+
         // 시계가 거꾸로 갔으면(아이가 설정에서 일부러 되돌리거나, NTP 재동기화로
         // 우연히) lastUploaded.at 이 미래 시각인 채로 남는다. LocationFilter.decide 는
         // elapsed(=fix.at - lastUploaded.at) <= 0 이면 무조건 REJECT_IMPOSSIBLE 이라,
