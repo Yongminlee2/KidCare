@@ -17,4 +17,24 @@
     <string name="pairing_not_found">그런 번호가 없어요. 다시 확인해 주세요.</string>
     <string name="pairing_expired">번호가 만료됐어요. 엄마 폰에서 새 번호를 받아주세요.</string>
     <string name="pairing_full">이미 다른 폰이 연결돼 있어요.</string>
+
+    <string name="perm_title">몇 가지만 켜주세요</string>
+    <string name="perm_location_title">위치 권한</string>
+    <string name="perm_location_reason">지금 어디 있는지 부모님께 알려주기 위해 필요해요.</string>
+    <string name="perm_background_title">위치 \'항상 허용\'</string>
+    <string name="perm_background_reason">앱을 안 보고 있을 때도 위치를 보내려면 \'항상 허용\'이어야 해요. 설정 화면에서 \'항상 허용\'을 골라주세요.</string>
+    <string name="perm_notification_title">알림</string>
+    <string name="perm_notification_reason">부모님이 보낸 메시지를 받고, 위치 공유 중이라는 표시를 띄우기 위해 필요해요.</string>
+    <string name="perm_battery_title">배터리 최적화 제외</string>
+    <string name="perm_battery_reason">이걸 안 켜면 폰이 앱을 잠재워서 위치가 끊겨요. 설정 화면에서 \'허용\'을 골라주세요.</string>
+    <string name="perm_battery_hint">설정 화면이 열리면 목록에서 \'우리아이 지킴이\'를 찾아 \'제한 없음\'으로 바꿔주세요.</string>
+    <string name="perm_grant">켜기</string>
+    <string name="perm_done">모두 켜졌어요. 시작할게요!</string>
+    <string name="perm_start">시작하기</string>
+    <string name="perm_denied_permanently">방금 거부돼서 이 화면에서는 다시 물어볼 수 없어요. \'설정에서 켜기\'를 누르면 앱 설정으로 가요. 거기서 권한을 켜주세요.</string>
+    <string name="perm_open_settings">설정에서 켜기</string>
+
+    <string name="child_home_title">위치 공유 중</string>
+    <string name="child_sharing_on">지금 내 위치가 부모님께 공유되고 있어요.</string>
+    <string name="child_permission_missing">%1$s 이(가) 꺼져 있어요.\n켜야 위치가 전달됩니다.</string>
 </resources>
