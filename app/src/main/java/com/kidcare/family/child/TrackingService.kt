@@ -139,10 +139,21 @@ class TrackingService : LifecycleService() {
                 // 그 위치를 기준으로 거리를 재서, 진짜 새 위치가 와도 SKIP_TOO_CLOSE 로
                 // 계속 버려질 수 있다.
                 lastUploaded = fix
+                // SegmentUploader 가 이 fix 를 메모리 버퍼에 쌓는다 — decide() 가
+                // UPLOAD 를 준 것 중에서도 실제 Firestore 쓰기(report)가 성공한
+                // 것만 여기 도달하므로, 버퍼는 pointsOfDay 가 나중에 읽을 값과
+                // 정확히 같은 집합이 된다.
+                segmentUploader.onUploaded(fix)
 
-                // 구간 재계산은 하루치 점을 다시 읽는 작업이라 점이 올라갈 때마다 하면
-                // 읽기 사용량이 점 개수의 제곱으로 늘어난다. 10분에 한 번이면 화면이
-                // 충분히 최신이면서 비용은 하루 100회 남짓으로 끝난다.
+                // 재계산 자체는(버퍼 덕분에) 대부분 Firestore 읽기가 없지만, 그래도
+                // 매 fix 마다 부르면 SegmentBuilder.build 를 하루치 점 전체에 대해
+                // 반복 실행하고 replaceSegmentsOfDay 배치 쓰기도 매번 나간다.
+                //
+                // 10분이 아니라 15분인 이유: LocationFilter.HEARTBEAT_MILLIS 도
+                // 10분이다. 값이 같으면, 완전히 멈춰 있는 아이는 "안 움직여도
+                // 10분마다 한 번 올린다"는 하트비트 업로드가 재계산 주기도 거의
+                // 매번 함께 넘겨 버려서, 정지한 날일수록 오히려 재계산이 더 자주
+                // 도는 역설이 생긴다. 15분으로 일부러 두 주기를 어긋나게 둔다.
                 val now = System.currentTimeMillis()
                 if (now - lastSegmentRebuildAt >= SEGMENT_REBUILD_INTERVAL_MILLIS) {
                     // 재계산이 실패해도 시각은 먼저(또는 여기서 바로) 갱신해 둔다 — 안
@@ -221,7 +232,9 @@ class TrackingService : LifecycleService() {
         private const val TAG = "TrackingService"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "tracking"
-        private const val SEGMENT_REBUILD_INTERVAL_MILLIS = 10 * 60 * 1000L
+        // LocationFilter.HEARTBEAT_MILLIS(10분)와 일부러 다른 값을 쓴다. 위
+        // handle() 안의 주석 참고.
+        private const val SEGMENT_REBUILD_INTERVAL_MILLIS = 15 * 60 * 1000L
 
         fun start(context: Context) {
             context.startForegroundService(Intent(context, TrackingService::class.java))
