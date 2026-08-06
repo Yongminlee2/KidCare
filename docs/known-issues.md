@@ -20,28 +20,42 @@
 필요하다** — 아이가 스스로 감시를 풀 수 있게 되기 때문이다. 확인 절차를 두든, 부모에게
 알림을 보내든, 결정하고 나서 만들 것.
 
-### 2. 초대 코드 만료를 부모 폰 시계로 계산한다
+### 2. 초대 코드 만료를 부모 폰 시계로 계산한다 — 3단계에서 처리함
 
 `FamilyRepository`는 `System.currentTimeMillis() + 10분`으로 만료 시각을 쓰는데,
 보안 규칙은 **서버 시각**(`request.time`)으로 검사한다. 부모 폰 시계가 15분 느리면
 만들자마자 죽은 코드가 되고, 재발급해도 같은 시계를 쓰므로 계속 죽은 코드만 나온다.
 아이 화면에는 "만료됐어요"만 뜨고 원인은 아무 데도 안 남는다.
 
-해법: 만료 시각을 `FieldValue.serverTimestamp()` 기준으로 쓰거나, 서버 시각과의 차이를
-한 번 재서 보정할 것.
+처리: `members/{uid}`는 본인이 `updatedAt`만 바꾸는 update를 규칙이 이미 허용한다는
+점을 이용해, `FieldValue.serverTimestamp()`를 그 필드에 쓰고 즉시 다시 읽어 기기·서버
+시계 차이를 앱 실행당 한 번 잰다(`FamilyRepository.serverNow`). `createFamily`·
+`inviteCodeOf`·`joinFamily`의 만료 계산이 전부 이 보정된 시각을 쓴다. 아직 그 가족의
+멤버가 아닌 아이(페어링 전)는 측정할 자기 문서가 없어 오프셋 0(기기 시계 그대로)으로
+물러나는데, 실제 보안 경계는 어차피 서버 쪽 규칙(`request.time`)이라 문제되지 않는다.
+규칙은 손대지 않았다.
 
-### 3. 지도가 아이 uid를 한 번만 찾는다
+### 3. 지도가 아이 uid를 한 번만 찾는다 — 3단계에서 처리함
 
 `MapTimelineFragment`는 `onViewCreated`에서 `findChildUid`를 한 번 부르고 끝이다.
 부모가 지도 화면을 켜 둔 채로 아이가 페어링을 끝내면, 화면을 다시 만들기 전까지
 "아직 아이 폰이 연결되지 않았어요"가 유지된다. `members`를 구독하도록 바꿀 것.
 
-### 4. 30일 지난 위치를 지우는 주체가 없다
+처리: `FamilyRepository.observeChildJoined` 구독으로 바꿨다. `onJoined`이 오면
+`childUid`를 갱신하고 상태·구간 리스너를 다시 건다 — 화면에 리스너가 세 개
+(`joinedListener`·`statusListener`·`segmentListener`) 떠 있고 전부 `onDestroyView`에서
+지운다.
+
+### 4. 30일 지난 위치를 지우는 주체가 없다 — 3단계에서 처리함
 
 설계서 §3의 `dailyCleanup` Cloud Function이 유일한 삭제 경로였는데, 무료(Spark) 요금제로
 가면서 Cloud Functions를 안 쓰기로 했다. **지금은 `points/`가 무한히 쌓인다.**
 자녀 폰이 직접 오래된 문서를 지우게 하거나(보안 규칙상 자기 데이터라 가능하다),
 부모 폰이 앱을 열 때 정리하게 할 것.
+
+처리: `child/PointsCleaner`가 자녀 폰에서(`TrackingService`가 구간 재계산과 같은
+방식으로 하루 한 번만) 30일 지난 점을 최대 200개씩 지운다. 한 번에 다 지우지
+않으므로 오래 꺼져 있던 폰도 며칠에 걸쳐 따라잡을 뿐 실패하지 않는다.
 
 ## 4단계(원격 명령·폰찾기) 시작 전에 먼저 해야 할 것
 

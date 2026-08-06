@@ -1,14 +1,17 @@
 package com.kidcare.family.core
 
 import android.util.Log
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Source
 import com.kidcare.family.core.model.ChildStatusDoc
 import com.kidcare.family.core.model.FamilyDoc
 import com.kidcare.family.core.model.InviteCodeDoc
 import com.kidcare.family.core.model.MemberDoc
 import com.kidcare.family.logic.InviteCode
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -34,27 +37,85 @@ object FamilyRepository {
     private const val INVITE_TTL_MILLIS = 10 * 60 * 1000L
     private const val TAG = "FamilyRepository"
 
+    /**
+     * 기기 시계와 서버 시계의 차이(밀리초). 서버가 앞서면 양수다.
+     *
+     * inviteExpiresAt 은 기기 시계로 쓰는데 보안 규칙은 request.time(서버 시각)으로
+     * 검사한다. 부모 폰 시계가 15분 느리면 만들자마자 죽은 코드가 되고, 재발급해도
+     * 같은 시계를 쓰므로 영원히 죽은 코드만 나온다 — 화면에는 "만료됨"만 뜨고
+     * 원인은 아무 데도 안 남는다. 앱 실행(프로세스)당 한 번만 재고 캐시한다.
+     */
+    @Volatile private var serverOffsetMillis: Long? = null
+
+    private suspend fun serverNow(familyId: String?, uid: String?): Long {
+        serverOffsetMillis?.let { return System.currentTimeMillis() + it }
+        val offset = runCatching { measureServerOffset(familyId, uid) }.getOrElse { e ->
+            if (e is CancellationException) throw e
+            Log.w(TAG, "서버 시각 보정 실패 — 기기 시계를 그대로 쓴다", e)
+            0L
+        }
+        serverOffsetMillis = offset
+        return System.currentTimeMillis() + offset
+    }
+
+    /**
+     * members/{uid} 문서는 본인이 updatedAt 필드만 바꾸는 update 를 규칙이 허용한다
+     * (아래 members/{uid} update 규칙 참고: role 불변 + displayName·fcmToken·appVersion·
+     * updatedAt 만 허용). FieldValue.serverTimestamp() 로 그 필드를 쓰고 즉시 서버에서
+     * 다시 읽으면(Source.SERVER — 캐시로 읽으면 아직 추정치일 수 있다) 서버가 실제로
+     * 기록한 시각을 알 수 있다.
+     *
+     * [uid] 가 아직 이 가족의 멤버가 아니면(예: 아이가 페어링을 끝내기 전) update 자체가
+     * "자기 문서" 조건에 걸려 실패한다 — 그 문서가 없기 때문이다. 규칙을 고치지 않고는
+     * 이 경우를 측정할 방법이 없으므로, 위 serverNow() 가 이 실패를 잡아 오프셋 0(기기
+     * 시계 그대로)으로 물러난다.
+     */
+    private suspend fun measureServerOffset(familyId: String?, uid: String?): Long {
+        if (familyId == null || uid == null) return 0L
+        val ref = db.collection("families").document(familyId).collection("members").document(uid)
+        val before = System.currentTimeMillis()
+        ref.update("updatedAt", FieldValue.serverTimestamp()).await()
+        val after = System.currentTimeMillis()
+        // MemberDoc.updatedAt 은 Long 으로 선언돼 있지만 방금 쓴 값은 Firestore
+        // Timestamp 다 — toObject(MemberDoc::class.java) 로 읽으면 타입이 안 맞아
+        // 깨진다. 여기서는 raw snapshot 에서 getTimestamp 로만 읽는다.
+        val serverMillis = ref.get(Source.SERVER).await()
+            .getTimestamp("updatedAt")?.toDate()?.time ?: return 0L
+        // 왕복 시간의 절반을 오차로 보고 중간값을 쓴다 — 네트워크 지연이 클수록
+        // before 만 쓰면 오프셋을 과대평가한다.
+        return serverMillis - (before + after) / 2
+    }
+
     /** 가족 문서를 만들고 보호자를 첫 멤버로 넣는다. familyId 를 돌려준다. */
     suspend fun createFamily(guardianUid: String): String {
-        val now = System.currentTimeMillis()
+        val bootTime = System.currentTimeMillis()
         val familyRef = db.collection("families").document()
-        val code = InviteCode.generate()
-        val expiresAt = now + INVITE_TTL_MILLIS
 
         // 순서가 중요하다: members/{uid} 를 만들 때 규칙이 families/{id}.ownerUid 를
-        // 대조하므로 family 문서가 먼저 있어야 하고, inviteCodes/{code} 를 만들 때
-        // 규칙이 "이 가족의 보호자인가"를 대조하므로 guardian 멤버 문서가 먼저 있어야 한다.
+        // 대조하므로 family 문서가 먼저 있어야 한다. 초대 코드·만료 시각은 아직
+        // 정하지 않는다 — serverNow() 로 보정하려면 "자기 멤버 문서"가 있어야 하는데
+        // (measureServerOffset 참고) 이 시점엔 그 문서가 없어 잴 수가 없다.
         familyRef.set(
             FamilyDoc(
                 name = "우리 가족",
-                createdAt = now,
-                inviteCode = code,
-                inviteExpiresAt = expiresAt,
+                createdAt = bootTime,
+                inviteCode = "",
+                inviteExpiresAt = 0L,
                 ownerUid = guardianUid,
             )
         ).await()
         familyRef.collection("members").document(guardianUid).set(
-            MemberDoc(role = "guardian", displayName = "보호자", updatedAt = now)
+            MemberDoc(role = "guardian", displayName = "보호자", updatedAt = bootTime)
+        ).await()
+
+        // 이제 이 uid 는 이 가족의 정식 멤버라 서버 시각을 잴 수 있다. 이 값으로
+        // 코드와 만료 시각을 확정해 채워 넣는다 — 규칙은 guardian 이 이 두 필드를
+        // update 하는 것을 허용한다(가족 문서 update 규칙 참고).
+        val now = serverNow(familyRef.id, guardianUid)
+        val code = InviteCode.generate()
+        val expiresAt = now + INVITE_TTL_MILLIS
+        familyRef.update(
+            mapOf("inviteCode" to code, "inviteExpiresAt" to expiresAt)
         ).await()
         db.collection("inviteCodes").document(code).set(
             InviteCodeDoc(familyId = familyRef.id, expiresAt = expiresAt)
@@ -72,7 +133,12 @@ object FamilyRepository {
         val ref = db.collection("families").document(familyId)
         val doc = ref.get().await().toObject(FamilyDoc::class.java)
             ?: error("가족 문서가 없다: $familyId")
-        val now = System.currentTimeMillis()
+        // 이 함수를 부르는 시점엔 호출자가 이미 이 가족의 보호자다(createFamily 직후거나,
+        // 기존 가족의 코드를 다시 띄우는 화면이거나) — measureServerOffset 이 쓸 자기
+        // 멤버 문서가 있다. createFamily 가 기기 시계로 임시로 써 둔 값이 실제로
+        // 서버 기준 이미 만료돼 있었다면, 아래 비교가 그걸 잡아내 바로 재발급한다
+        // (=known-issues 2 의 "만들자마자 죽은 코드"가 여기서 자연스럽게 복구된다).
+        val now = serverNow(familyId, AuthGateway.currentUid())
         if (!forceNew && doc.inviteExpiresAt > now && doc.inviteCode.isNotEmpty()) {
             return InviteCodeInfo(doc.inviteCode, doc.inviteExpiresAt)
         }
@@ -152,7 +218,6 @@ object FamilyRepository {
      */
     suspend fun joinFamily(code: String, childUid: String): String {
         val normalized = InviteCode.normalize(code)
-        val now = System.currentTimeMillis()
 
         val codeDoc = db.collection("inviteCodes").document(normalized).get().await()
         if (!codeDoc.exists()) {
@@ -168,6 +233,13 @@ object FamilyRepository {
         val familyId = codeDoc.getString("familyId")
             ?: throw PairingException(PairingException.Reason.NOT_FOUND)
         val expiresAt = codeDoc.getLong("expiresAt") ?: 0L
+        // 이 아이는 아직 이 가족의 멤버가 아니라 measureServerOffset 이 쓸 자기 멤버
+        // 문서가 없다 — serverNow() 는 그 실패를 잡아 오프셋 0(기기 시계 그대로)으로
+        // 물러난다. expiresAt 자체는(위 Step 이 고쳐진 뒤로는) 이미 서버 시각 기준으로
+        // 정확히 쓰인 값이므로, 이 비교가 다소 부정확해도 진짜 보안 경계는 members
+        // create 규칙의 request.time 대조다 — 여기는 헛걸음(오프라인 왕복)을 줄이는
+        // 사전 안내일 뿐이다.
+        val now = serverNow(familyId, childUid)
         if (expiresAt <= now) throw PairingException(PairingException.Reason.EXPIRED)
 
         val familyRef = db.collection("families").document(familyId)

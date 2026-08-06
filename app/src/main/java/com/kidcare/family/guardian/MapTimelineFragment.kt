@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.kakao.vectormap.KakaoMap
@@ -31,8 +30,6 @@ import com.kidcare.family.core.model.ChildStatusDoc
 import com.kidcare.family.core.model.SegmentDoc
 import com.kidcare.family.databinding.FragmentMapTimelineBinding
 import com.kidcare.family.logic.DayPicker
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.Locale
@@ -57,6 +54,12 @@ class MapTimelineFragment : Fragment() {
     private var routeLine: RouteLine? = null
     private var statusListener: ListenerRegistration? = null
 
+    // 자녀가 members 에 들어오는 순간을 계속 지켜본다(Task 8 이전엔 findChildUid 를
+    // onViewCreated 에서 한 번만 불러 화면을 켜 둔 채로 페어링이 끝나면 다시 만들기
+    // 전까지 "연결 안 됨"이 안 풀리는 문제가 있었다). 이 리스너 하나가 statusListener·
+    // segmentListener 두 개를 필요할 때마다 다시 걸어 준다.
+    private var joinedListener: ListenerRegistration? = null
+
     // Firestore 스냅샷(특히 캐시 응답)은 onMapReady 보다 먼저 도착할 수 있다.
     // 그 사이에는 지도에 아무것도 그릴 수 없으니 여기 잠깐 담아뒀다가
     // onMapReady 에서 한 번 더 그린다. 반대로 onMapReady 가 먼저 끝나면
@@ -71,8 +74,8 @@ class MapTimelineFragment : Fragment() {
     private var dayKey: String = DayPicker.todayKey(zone, System.currentTimeMillis())
     private var segmentListener: ListenerRegistration? = null
 
-    // subscribe() 의 코루틴이 찾아서 채운다. 날짜를 넘길 때마다 다시 조회하지 않고
-    // 여기 저장해 둔 값을 재사용한다("한 번만 찾는다"의 한계는 Task 8 이 다룬다).
+    // joinedListener 의 onJoined 가 채운다. 날짜를 넘길 때(changeDay)는 이 값을
+    // 그대로 재사용하고 다시 조회하지 않는다.
     private var childUid: String? = null
     private lateinit var timelineAdapter: TimelineAdapter
 
@@ -130,37 +133,45 @@ class MapTimelineFragment : Fragment() {
         subscribe()
     }
 
+    /**
+     * findChildUid 를 한 번만 부르던 옛 방식은 부모가 지도를 켜 둔 채로 아이가
+     * 페어링을 끝내면 화면을 다시 만들기 전까지 "연결 안 됨"이 풀리지 않았다
+     * (known-issues 3). observeChildJoined 는 addSnapshotListener 라서(suspend
+     * 가 아니다) 코루틴이 필요 없다 — subscribeSegments 와 같은 방식이다.
+     */
     private fun subscribe() {
         val store = RoleStore(requireContext())
         val familyId = store.familyId ?: return
-        // Fragment 자신의 lifecycleScope 가 아니라 viewLifecycleOwner 걸 써야 한다.
-        // Fragment 스코프를 쓰면 configuration change 로 뷰만 다시 만들어질 때도
-        // 이 코루틴이 안 끝나고 살아남아, 옛 리스너가 새로 생긴 뷰 위에 계속
-        // 값을 흘려보내는 경합(=사실상 리스너 중복)이 생긴다.
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val uid = FamilyRepository.findChildUid(familyId)
-                if (uid == null) {
-                    _binding?.statusBar?.text = getString(R.string.map_no_child)
-                    return@launch
-                }
+        _binding?.statusBar?.text = getString(R.string.map_no_child)
+        joinedListener = FamilyRepository.observeChildJoined(
+            familyId,
+            onJoined = { uid ->
+                // 자기 멤버 문서가 바뀔 때마다(예: 다음 단계의 fcmToken/appVersion 갱신)
+                // 이 콜백이 같은 uid 로 다시 불릴 수 있다. uid 가 그대로면 리스너를
+                // 갈아 끼울 이유가 없다 — 매번 다시 걸면 화면이 불필요하게 다시 그려진다.
+                if (uid == childUid) return@observeChildJoined
                 childUid = uid
-                statusListener = FamilyRepository.observeChildStatus(
-                    familyId,
-                    uid,
-                    onChange = { status -> render(status) },
-                    onError = { e -> _binding?.statusBar?.text = getString(R.string.map_error, e.message ?: "") },
-                )
-                subscribeSegments()
-            } catch (e: CancellationException) {
-                // 화면 이탈로 인한 정상 취소다. 삼켜서 실패처럼 취급하면 안 되므로
-                // 그대로 다시 던져 코루틴 취소를 완성시킨다(GuardianPairingActivity 와
-                // 같은 패턴).
-                throw e
-            } catch (e: Exception) {
-                _binding?.statusBar?.text = getString(R.string.map_error, e.message ?: "")
-            }
-        }
+                attachChildListeners(familyId, uid)
+            },
+            onError = { e -> _binding?.statusBar?.text = getString(R.string.map_error, e.message ?: "") },
+        )
+    }
+
+    /**
+     * childUid 가 (처음이든, 재페어링이든) 확정될 때마다 상태·구간 리스너를 다시 건다.
+     * 리스너를 세 개(joinedListener·statusListener·segmentListener) 들고 있게 되므로
+     * 옛 statusListener 를 먼저 지운다 — subscribeSegments 가 옛 segmentListener 를
+     * 먼저 지우는 것과 같은 규율이다.
+     */
+    private fun attachChildListeners(familyId: String, uid: String) {
+        statusListener?.remove()
+        statusListener = FamilyRepository.observeChildStatus(
+            familyId,
+            uid,
+            onChange = { status -> render(status) },
+            onError = { e -> _binding?.statusBar?.text = getString(R.string.map_error, e.message ?: "") },
+        )
+        subscribeSegments()
     }
 
     /** Firestore 콜백에서도 불릴 수 있어서, onDestroyView 이후엔 아무 뷰도 건드리지 않는다. */
@@ -292,6 +303,8 @@ class MapTimelineFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        joinedListener?.remove()
+        joinedListener = null
         statusListener?.remove()
         statusListener = null
         segmentListener?.remove()

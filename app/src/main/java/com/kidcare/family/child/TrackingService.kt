@@ -45,6 +45,8 @@ class TrackingService : LifecycleService() {
     private var lastUploaded: Fix? = null
     private val segmentUploader = SegmentUploader()
     private var lastSegmentRebuildAt = 0L
+    private val pointsCleaner = PointsCleaner()
+    private var lastPointsCleanupAt = 0L
 
     // onCreate 에서 확인한 결과. ChildHomeActivity 는 PermissionStep.firstMissing 이
     // null 일 때만(=모든 권한이 켜져 있을 때만) 이 서비스를 켜지만, 그 뒤 사용자가
@@ -272,6 +274,23 @@ class TrackingService : LifecycleService() {
                             Log.w(TAG, "구간 재계산 실패", e)
                         }
                 }
+
+                // 30일 지난 위치 점 정리(known-issues 4) — 하루에 한 번이면 충분하다.
+                // 위 구간 재계산과 같은 방식(마지막 실행 시각 비교)으로 붙인다. 이 서비스는
+                // 자녀 폰에서만 돈다 — 규칙상으로도 children/{childUid} 아래는 그 아이
+                // 본인만 지울 수 있어 보호자 폰에서는 애초에 부를 수 없는 경로다.
+                if (now - lastPointsCleanupAt >= POINTS_CLEANUP_INTERVAL_MILLIS) {
+                    // 재계산과 같은 이유로 실패해도 시각을 먼저 갱신해 둔다 — 실패를
+                    // fix 마다 반복해서 같은 비용을 다시 물지 않게 한다.
+                    lastPointsCleanupAt = now
+                    runCatching { pointsCleaner.cleanOldPoints(familyId, childUid) }
+                        .onFailure { e ->
+                            // 여기도 CancellationException 을 먼저 다시 던진다 — 위
+                            // 구간 재계산과 같은 이유(runCatching 이 삼키는 문제).
+                            if (e is CancellationException) throw e
+                            Log.w(TAG, "오래된 위치 점 정리 실패", e)
+                        }
+                }
             } catch (e: CancellationException) {
                 // 서비스가 죽으면서 lifecycleScope 가 취소된 것뿐인 정상 종료다.
                 // GuardianPairingActivity 에서 두 번 고친 것과 같은 실수(취소를 실패로
@@ -339,6 +358,8 @@ class TrackingService : LifecycleService() {
         // LocationFilter.HEARTBEAT_MILLIS(10분)와 일부러 다른 값을 쓴다. 위
         // handle() 안의 주석 참고.
         private const val SEGMENT_REBUILD_INTERVAL_MILLIS = 15 * 60 * 1000L
+        // 오래된 위치 점 정리는 하루 한 번이면 충분하다(PointsCleaner 참고).
+        private const val POINTS_CLEANUP_INTERVAL_MILLIS = 24 * 60 * 60 * 1000L
 
         // ActivityTransitionReceiver(매니페스트 등록, 이 서비스와 다른 컴포넌트)가
         // 지금 살아있는 서비스의 LocationCollector 를 부를 통로. 서비스가 없을 때
