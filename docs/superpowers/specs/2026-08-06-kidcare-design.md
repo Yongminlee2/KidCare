@@ -41,7 +41,8 @@
 
 - 프로젝트 루트: `C:\workAndroid\KidCare` (독립 Gradle 루트, HomeCam과 무관)
 - AGP 9.2.1 (Kotlin 내장) / Gradle 9.4.1
-- compileSdk 36 / minSdk 26 / targetSdk 36
+- compileSdk 37 / minSdk 26 / targetSdk 36
+  (compileSdk 는 `core-ktx 1.19.0` 이 요구하는 최소값이다. 36 으로 두면 AGP 가 빌드를 거부한다.)
 - UI: Views + ViewBinding + Material3 (Compose 안 씀 — 기존 프로젝트 관례 유지)
 - applicationId: `com.kidcare.family`
 

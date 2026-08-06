@@ -4,6 +4,7 @@ keystore.properties
 google-services.json
 .gradle/
 build/
+.kotlin/
 *.apk
 .idea/
 .superpowers/

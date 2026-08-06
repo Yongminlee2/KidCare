@@ -13,7 +13,9 @@
 ## Global Constraints
 
 - 프로젝트 루트는 `C:\workAndroid\KidCare`. HomeCam(`C:\workAndroid\app`)과 무관한 독립 Gradle 루트다.
-- AGP `9.2.1` / Gradle `9.4.1` / compileSdk `36` / minSdk `26` / targetSdk `36`
+- AGP `9.2.1` / Gradle `9.4.1` / compileSdk `37` / minSdk `26` / targetSdk `36`
+  (compileSdk 는 원래 36 으로 잡았으나 `core-ktx 1.19.0` 이 37 을 요구해 AGP 가 빌드를 거부한다.
+  Task 1 에서 37 로 올렸다. targetSdk 는 36 그대로다.)
 - applicationId·namespace 는 `com.kidcare.family`. 앱 표시명은 `우리아이 지킴이`.
 - UI는 Views + ViewBinding + Material3. **Compose를 쓰지 않는다.**
 - AGP 9는 Kotlin 지원이 내장이다. `kotlin-android` 플러그인을 따로 적용하지 않는다.
