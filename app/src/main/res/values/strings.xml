@@ -50,4 +50,13 @@
     <string name="map_no_child">아직 아이 폰이 연결되지 않았어요.</string>
     <string name="map_error">지도를 불러오지 못했어요\n%1$s</string>
     <string name="map_status_format">🔋 %1$d%%   ·   %2$s 기준</string>
+
+    <string name="timeline_icon_stay">📍</string>
+    <string name="timeline_icon_move">🚶</string>
+    <string name="timeline_unknown_place">머무른 곳</string>
+    <string name="timeline_move_title">이동 %1$s</string>
+    <string name="timeline_detail">%1$s · %2$s</string>
+    <string name="timeline_empty">이 날은 기록이 없어요</string>
+    <string name="day_prev">이전 날</string>
+    <string name="day_next">다음 날</string>
 </resources>
