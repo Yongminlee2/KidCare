@@ -95,3 +95,28 @@ sdk.dir=C\:\\Users\\\uC0AC\uC6A9\uC790\\AppData\\Local\\Android\\Sdk
 이 프로젝트(`kidcare-17fe5`)는 위 절차로 이미 만들어졌고 `app/google-services.json`도
 받아져 있다 (Task 3 작업 시작 시점 기준). 이 파일은 `.gitignore`에 있어 커밋되지
 않으므로, 새 기계에서 이어받으면 위 절차를 다시 밟아 직접 받아야 한다.
+
+## Firestore 보안 규칙 게시 (Task 6)
+
+규칙 원본은 저장소의 `firestore.rules` 다. 콘솔에 붙여넣어 게시한다:
+
+1. https://console.firebase.google.com → `kidcare-17fe5` 프로젝트 → 왼쪽 메뉴
+   `빌드 > Firestore Database` → 상단 탭 `규칙`
+2. 저장소의 `firestore.rules` 내용 전체를 복사해 편집기에 붙여넣기 (기존 내용을
+   덮어쓴다 — 지금 콘솔에는 프로덕션 모드의 기본값, 즉 전부 막힌 규칙이 들어있다)
+3. `게시` 클릭
+
+이 작업은 Claude 가 대신 할 수 없다 — 콘솔 게시 버튼은 사람이 직접 눌러야 한다.
+Task 6 작업 시점 기준으로 익명 인증은 이미 사용 설정돼 있고 Firestore 도
+프로덕션 모드로 만들어져 있었지만, 규칙은 아직 게시 전이었다(임시로 열어둔 기본
+규칙 상태). 이 규칙을 게시하기 전에는 페어링을 포함한 모든 Firestore 읽기/쓰기가
+막혀 있거나(프로덕션 모드 기본값은 전면 거부) 반대로 완전히 열려 있을 수 있으니,
+두 폰 확인(Step 4)은 반드시 게시 이후에 진행한다.
+
+**주의 (4단계에서 반드시 먼저 처리할 것):** `firestore.rules` 의
+`children/{childUid}/{document=**}` 규칙은 그 아래 전부를 아이 본인만 쓸 수 있게
+막는다. 원격 명령(`commands/`)은 보호자가 써야 하는데, 이 프로젝트는 Cloud
+Functions 없이 Spark 무료 요금제로 가기 위해 FCM 푸시 대신 **Firestore 스냅샷
+리스너**로 명령을 전달하기로 했다 — 즉 보호자 쓰기가 막힌 채로는 즉시 변경·폰찾기
+기능 자체가 동작하지 않는다. 4단계 계획에 `commands/` 전용 규칙 분리를 반드시
+넣는다.

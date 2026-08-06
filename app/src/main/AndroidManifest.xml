@@ -21,6 +21,7 @@
         <activity android:name=".onboarding.RoleSelectActivity" android:exported="false" />
         <activity android:name=".onboarding.GuardianPairingActivity" android:exported="false" />
         <activity android:name=".onboarding.ChildPairingActivity" android:exported="false" />
+        <activity android:name=".onboarding.PermissionActivity" android:exported="false" />
         <activity android:name=".guardian.GuardianMainActivity" android:exported="false" />
         <activity android:name=".child.ChildHomeActivity" android:exported="false" />
     </application>

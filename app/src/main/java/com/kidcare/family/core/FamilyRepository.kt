@@ -66,4 +66,56 @@ object FamilyRepository {
                 val childUid = snapshot?.documents?.firstOrNull()?.id ?: return@addSnapshotListener
                 onJoined(childUid)
             }
+
+    /**
+     * 코드로 가족을 찾아 자녀로 들어간다.
+     *
+     * 코드는 families 컬렉션 전체에서 찾는다. 6자리 31진수라 충돌 확률이 낮고,
+     * 만료된 코드는 걸러내므로 같은 코드가 동시에 두 가족에 살아있을 일은 사실상 없다.
+     * 그래도 여러 개가 나오면 만료가 가장 늦은 것을 고른다.
+     *
+     * 멤버 문서 쓰기와 코드 무효화 쓰기는 두 번의 별도 요청이라 완전한 원자성은 없다.
+     * 두 번째(무효화) 쓰기가 실패해도 절반 가입 상태로 위험해지지 않는다: 코드가 살아있는
+     * 채로 남아도 ALREADY_FULL 검사가 같은 가족에 대한 재가입을 막고, 같은 아이가 재시도하면
+     * document(childUid).set() 이 멱등이라 그대로 다시 성공한다. 최악의 경우도 TTL(10분) 안에
+     * 코드가 자연 만료되는 것뿐이라 트랜잭션으로 묶지 않았다.
+     */
+    suspend fun joinFamily(code: String, childUid: String): String {
+        val normalized = InviteCode.normalize(code)
+        val now = System.currentTimeMillis()
+
+        val matches = db.collection("families")
+            .whereEqualTo("inviteCode", normalized)
+            .get().await()
+
+        if (matches.isEmpty) throw PairingException(PairingException.Reason.NOT_FOUND)
+
+        val alive = matches.documents
+            .filter { (it.getLong("inviteExpiresAt") ?: 0L) > now }
+            .maxByOrNull { it.getLong("inviteExpiresAt") ?: 0L }
+            ?: throw PairingException(PairingException.Reason.EXPIRED)
+
+        val familyRef = alive.reference
+        // 두 아이가 거의 동시에 같은 코드를 넣으면 이 조회와 아래 쓰기 사이에 경합이 생길 수 있다.
+        // 두 폰짜리 가족 앱에서 실제로 부딪힐 확률은 극히 낮고, 부딪혀도 결과는 멤버 문서가
+        // 하나 더 느슨하게 생기는 정도라 트랜잭션으로 막지 않았다.
+        val existingChildren = familyRef.collection("members")
+            .whereEqualTo("role", "child").get().await()
+        if (existingChildren.documents.any { it.id != childUid }) {
+            throw PairingException(PairingException.Reason.ALREADY_FULL)
+        }
+
+        familyRef.collection("members").document(childUid).set(
+            MemberDoc(role = "child", displayName = "아이", updatedAt = now)
+        ).await()
+
+        // 코드를 즉시 무효화한다. 한 번 쓴 코드가 계속 살아 있으면 안 된다.
+        familyRef.update("inviteExpiresAt", 0L).await()
+
+        return familyRef.id
+    }
+}
+
+class PairingException(val reason: Reason) : Exception(reason.name) {
+    enum class Reason { NOT_FOUND, EXPIRED, ALREADY_FULL }
 }

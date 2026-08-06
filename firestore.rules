@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // 이 사용자가 해당 가족의 멤버인가
+    function memberOf(familyId) {
+      return signedIn() && exists(
+        /databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid)
+      );
+    }
+
+    function roleIn(familyId) {
+      return get(
+        /databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid)
+      ).data.role;
+    }
+
+    match /families/{familyId} {
+      // 페어링 전에는 멤버가 아니므로 코드로 찾는 조회를 허용해야 한다.
+      // 대신 문서 전체가 아니라 목록 조회만 열고, 쓰기는 멤버로 제한한다.
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if memberOf(familyId);
+      allow delete: if false;
+
+      match /members/{uid} {
+        // 자기 자신의 멤버 문서는 만들 수 있다 (= 페어링).
+        allow read: if memberOf(familyId);
+        allow create: if signedIn() && request.auth.uid == uid;
+        allow update: if signedIn() && request.auth.uid == uid;
+        allow delete: if memberOf(familyId) && roleIn(familyId) == 'guardian';
+      }
+
+      // 주의: 이 규칙은 children/{childUid} 아래의 모든 문서를 그 아이 본인만
+      // 쓸 수 있게 만든다. 4단계(즉시 변경·폰찾기)에서 보호자가 명령(commands/)을
+      // 써야 하는데, 지금 이 규칙 그대로면 보호자의 쓰기가 막힌다.
+      // → 4단계에서 commands/ 전용 규칙을 따로 파서 이 match 를 고쳐야 한다.
+      // (Task 6 작성 시점 기준: 원격 명령은 FCM 푸시가 아니라 Firestore 스냅샷
+      //  리스너로 전달하기로 결정됐다 — Cloud Functions 없이, Spark 무료 요금제로
+      //  가려는 목적. 즉 보호자가 commands/ 문서를 직접 써야 하므로 이 구멍은
+      //  나중이 아니라 4단계에서 반드시 먼저 메워야 한다.)
+      match /children/{childUid}/{document=**} {
+        allow read: if memberOf(familyId);
+        // 아이는 자기 아래에만 쓴다.
+        allow write: if memberOf(familyId) && request.auth.uid == childUid;
+      }
+
+      match /places/{id} {
+        allow read: if memberOf(familyId);
+        allow write: if memberOf(familyId) && roleIn(familyId) == 'guardian';
+      }
+
+      match /schedules/{id} {
+        allow read: if memberOf(familyId);
+        allow write: if memberOf(familyId) && roleIn(familyId) == 'guardian';
+      }
+
+      match /events/{id} {
+        allow read: if memberOf(familyId);
+        allow create: if memberOf(familyId);
+        allow update, delete: if memberOf(familyId) && roleIn(familyId) == 'guardian';
+      }
+    }
+  }
+}
