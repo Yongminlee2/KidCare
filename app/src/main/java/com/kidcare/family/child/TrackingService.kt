@@ -98,11 +98,35 @@ class TrackingService : LifecycleService() {
     }
 
     private fun handle(familyId: String, fix: Fix) {
+        // 시계가 거꾸로 갔으면(아이가 설정에서 일부러 되돌리거나, NTP 재동기화로
+        // 우연히) lastUploaded.at 이 미래 시각인 채로 남는다. LocationFilter.decide 는
+        // elapsed(=fix.at - lastUploaded.at) <= 0 이면 무조건 REJECT_IMPOSSIBLE 이라,
+        // 그 뒤로 오는 모든 정상 fix 가 영원히 막힌다 — 서비스는 멀쩡히 돌고 로그도
+        // 조용해서, 위치가 안 올라온다는 사실 자체를 알아챌 방법이 없다. lastUploaded
+        // 를 버려서 다음 fix 를 첫 fix 취급으로 되살린다(LocationFilter 는 그대로 두고
+        // 여기서만 고친다 — 그 클래스는 순수하고 이미 단위테스트로 고정돼 있다).
+        val previous = lastUploaded
+        if (previous != null && fix.at < previous.at) {
+            Log.w(TAG, "시계가 거꾸로 감: lastUploaded.at=${previous.at} > fix.at=${fix.at} — lastUploaded 초기화")
+            lastUploaded = null
+        }
+
         when (LocationFilter.decide(lastUploaded, fix)) {
             Decision.UPLOAD -> Unit
-            Decision.SKIP_TOO_CLOSE,
-            Decision.REJECT_INACCURATE,
-            Decision.REJECT_IMPOSSIBLE -> return
+            // 거절 사유가 전부 조용히 버려지면 "GPS 가 아직 안 잡혔다"와 구분이
+            // 안 된다. adb logcat 에서라도 보이게 남긴다.
+            Decision.SKIP_TOO_CLOSE -> {
+                Log.d(TAG, "SKIP_TOO_CLOSE: familyId=$familyId at=${fix.at}")
+                return
+            }
+            Decision.REJECT_INACCURATE -> {
+                Log.w(TAG, "REJECT_INACCURATE: familyId=$familyId accuracy=${fix.accuracy}")
+                return
+            }
+            Decision.REJECT_IMPOSSIBLE -> {
+                Log.w(TAG, "REJECT_IMPOSSIBLE: familyId=$familyId at=${fix.at} previous=${lastUploaded?.at}")
+                return
+            }
         }
 
         lifecycleScope.launch {

@@ -1,5 +1,6 @@
 package com.kidcare.family.core
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ListenerRegistration
@@ -31,6 +32,7 @@ object FamilyRepository {
     private val db: FirebaseFirestore get() = FirebaseFirestore.getInstance()
 
     private const val INVITE_TTL_MILLIS = 10 * 60 * 1000L
+    private const val TAG = "FamilyRepository"
 
     /** 가족 문서를 만들고 보호자를 첫 멤버로 넣는다. familyId 를 돌려준다. */
     suspend fun createFamily(guardianUid: String): String {
@@ -60,21 +62,27 @@ object FamilyRepository {
         return familyRef.id
     }
 
-    /** 코드가 만료됐으면 새로 발급하고, 아니면 현재 코드를 준다. */
-    suspend fun inviteCodeOf(familyId: String): String {
+    /**
+     * 코드가 만료됐으면 새로 발급하고, 아니면 현재 코드를 준다.
+     *
+     * [forceNew] 를 true 로 주면 만료 전이어도 무조건 새로 발급한다("새 번호 받기"
+     * 버튼용). 기본값 false 는 옛 동작 그대로라 기존 호출부에 영향이 없다.
+     */
+    suspend fun inviteCodeOf(familyId: String, forceNew: Boolean = false): InviteCodeInfo {
         val ref = db.collection("families").document(familyId)
         val doc = ref.get().await().toObject(FamilyDoc::class.java)
             ?: error("가족 문서가 없다: $familyId")
         val now = System.currentTimeMillis()
-        if (doc.inviteExpiresAt > now && doc.inviteCode.isNotEmpty()) {
-            return doc.inviteCode
+        if (!forceNew && doc.inviteExpiresAt > now && doc.inviteCode.isNotEmpty()) {
+            return InviteCodeInfo(doc.inviteCode, doc.inviteExpiresAt)
         }
 
-        // 코드가 만료됐다 → 새로 발급한다. 한 가족에 살아있는 코드가 둘 이상
-        // 존재하면 안 되므로, 새 inviteCodes 문서를 먼저 만들어 새 코드가 즉시
-        // 조회 가능하게 한 뒤 옛 문서를 지운다 — 중간에 실패해도 "조회 가능한 코드가
-        // 하나도 없는" 순간은 생기지 않는다(최악의 경우 옛 문서가 고아로 남을 뿐이고,
-        // 그 문서로 조회해도 실제 검증은 families.inviteCode 대조에서 다시 걸러진다).
+        // 코드가 만료됐거나 forceNew 다 → 새로 발급한다. 한 가족에 살아있는 코드가
+        // 둘 이상 존재하면 안 되므로, 새 inviteCodes 문서를 먼저 만들어 새 코드가
+        // 즉시 조회 가능하게 한 뒤 옛 문서를 지운다 — 중간에 실패해도 "조회 가능한
+        // 코드가 하나도 없는" 순간은 생기지 않는다(최악의 경우 옛 문서가 고아로
+        // 남을 뿐이고, 그 문서로 조회해도 실제 검증은 families.inviteCode 대조에서
+        // 다시 걸러진다).
         val fresh = InviteCode.generate()
         val freshExpiresAt = now + INVITE_TTL_MILLIS
         ref.update(
@@ -89,14 +97,30 @@ object FamilyRepository {
         if (doc.inviteCode.isNotEmpty()) {
             db.collection("inviteCodes").document(doc.inviteCode).delete().await()
         }
-        return fresh
+        return InviteCodeInfo(fresh, freshExpiresAt)
     }
 
-    /** 자녀가 members 에 들어오는 순간을 감시한다. 붙인 리스너는 화면이 사라질 때 remove 해야 한다. */
-    fun observeChildJoined(familyId: String, onJoined: (childUid: String) -> Unit): ListenerRegistration =
+    /**
+     * 자녀가 members 에 들어오는 순간을 감시한다. 붙인 리스너는 화면이 사라질 때 remove 해야 한다.
+     *
+     * [onError] 없이 에러를 그냥 삼키면(예전 코드) PERMISSION_DENIED 나 리스너가 끊기는
+     * 사고가 나도 화면은 계속 스피너만 돌리고 아무 데도 로그가 안 남는다 — 이 앱에서
+     * 가장 흔한 실패 유형인데 원인을 알 방법이 없었다. 그래서 로그(logcat)와 화면 표시를
+     * 호출부가 고를 수 있게 콜백으로 넘긴다.
+     */
+    fun observeChildJoined(
+        familyId: String,
+        onJoined: (childUid: String) -> Unit,
+        onError: (Exception) -> Unit,
+    ): ListenerRegistration =
         db.collection("families").document(familyId).collection("members")
             .whereEqualTo("role", "child")
-            .addSnapshotListener { snapshot, _ ->
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.w(TAG, "observeChildJoined 리스너 실패: familyId=$familyId", error)
+                    onError(error)
+                    return@addSnapshotListener
+                }
                 val childUid = snapshot?.documents?.firstOrNull()?.id ?: return@addSnapshotListener
                 onJoined(childUid)
             }
@@ -131,7 +155,15 @@ object FamilyRepository {
         val now = System.currentTimeMillis()
 
         val codeDoc = db.collection("inviteCodes").document(normalized).get().await()
-        if (!codeDoc.exists()) throw PairingException(PairingException.Reason.NOT_FOUND)
+        if (!codeDoc.exists()) {
+            // 존재하지 않는 게 아니라 서버에 물어볼 수가 없었던 경우일 수 있다:
+            // 오프라인이면 이 get() 은 캐시로 대답하는데, 이 코드는 캐시에 있을 리
+            // 없으므로(아이가 이 코드를 처음 조회하는 것) exists()==false 가 그대로
+            // 나온다 — 그러면 "코드가 틀렸다"가 아니라 "인터넷이 안 된다"고 안내해야
+            // 한다. 안 그러면 아이는 멀쩡한 코드를 계속 다시 입력하게 된다.
+            if (codeDoc.metadata.isFromCache) throw PairingException(PairingException.Reason.OFFLINE)
+            throw PairingException(PairingException.Reason.NOT_FOUND)
+        }
 
         val familyId = codeDoc.getString("familyId")
             ?: throw PairingException(PairingException.Reason.NOT_FOUND)
@@ -175,16 +207,25 @@ object FamilyRepository {
         familyId: String,
         childUid: String,
         onChange: (ChildStatusDoc) -> Unit,
+        onError: (Exception) -> Unit,
     ): ListenerRegistration =
         db.collection("families").document(familyId)
             .collection("children").document(childUid)
-            .addSnapshotListener { snapshot, _ ->
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.w(TAG, "observeChildStatus 리스너 실패: familyId=$familyId childUid=$childUid", error)
+                    onError(error)
+                    return@addSnapshotListener
+                }
                 snapshot?.toObject(ChildStatusDoc::class.java)?.let(onChange)
             }
 }
 
+/** [FamilyRepository.inviteCodeOf] 의 결과. 코드와 함께 만료 시각도 줘야 화면에 남은 시간을 보여줄 수 있다. */
+data class InviteCodeInfo(val code: String, val expiresAt: Long)
+
 class PairingException(val reason: Reason) : Exception(reason.name) {
     // ALREADY_FULL 은 지금은 joinFamily 가 던지지 않지만, Task 4/6 UI 문구가 이미
     // 이 값을 참조하고 나중에 다자녀 지원이 들어오면 다시 쓸 것이므로 남겨둔다.
-    enum class Reason { NOT_FOUND, EXPIRED, ALREADY_FULL }
+    enum class Reason { NOT_FOUND, EXPIRED, ALREADY_FULL, OFFLINE }
 }

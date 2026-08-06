@@ -32,10 +32,29 @@
         android:text="@string/pairing_guardian_hint"
         android:textAppearance="?attr/textAppearanceBodyMedium" />
 
+    <!-- inviteExpiresAt 에서 계산한 스냅샷 한 줄이다(실시간 카운트다운 아님 —
+         타이머를 두면 onDestroy 이후에도 살아남을 위험이 있어 일부러 안 둔다). -->
+    <TextView
+        android:id="@+id/expiry_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        tools:text="이 번호는 10분 뒤에 만료돼요" />
+
     <ProgressBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/new_code_button"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="@string/pairing_new_code_button" />
 
     <!-- 코드/진행 표시와 아래쪽 되돌리기 버튼 사이를 벌려서, 되돌리기가
          주요 동작처럼 보이지 않고 화면 맨 아래의 보조 동작으로 보이게 한다. -->

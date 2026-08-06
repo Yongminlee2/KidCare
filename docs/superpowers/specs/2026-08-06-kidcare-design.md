@@ -53,11 +53,11 @@
 
 | 의존성 | 용도 | 비고 |
 |---|---|---|
-| `com.kakao.maps.open:android` | 지도 표시, 경로 폴리라인, 역지오코딩 | 카카오 개발자 앱키 필요. Maven repo `https://devrepo.kakao.com/nexus/content/groups/public/` 추가 |
+| `com.kakao.maps.open:android` | 지도 표시, 경로 폴리라인, 역지오코딩 | 카카오 개발자 앱키 필요. Maven repo `https://devrepo.kakao.com/nexus/repository/kakaomap-releases/` 추가 (`settings.gradle.kts`와 일치) |
 | Firebase Auth (익명) | 기기 식별 | 계정 생성 불필요 |
 | Firebase Firestore | 위치·명령·예약·이벤트 저장 | |
-| Firebase Cloud Messaging | 명령/알림 즉시 전달 | |
-| Firebase Cloud Functions | 푸시 발송, 오래된 데이터 정리 | **Blaze 플랜 필요** |
+| Firebase Cloud Messaging | (4단계 후보, 현재 미사용) 명령/알림 즉시 전달 | 2026-08-07 Spark 결정으로 보류 — 지금은 Firestore 스냅샷 리스너로 대체(§2 "Firebase 요금제", §9) |
+| Firebase Cloud Functions | (4단계 후보, 현재 미사용) 푸시 발송, 오래된 데이터 정리 | **Blaze 플랜 필요.** 명령 유실이 실사용에서 관측되면 승격 검토 |
 | `play-services-location` | FusedLocationProvider, Geofencing, ActivityRecognition | 위치 수집·장소 판정·이동/정지 감지를 모두 담당 |
 | Room | 자녀 폰 오프라인 위치 버퍼 | |
 
@@ -154,28 +154,44 @@ LocationCollector
 
                                  commands/  ◄───────────────  버튼 누름
                                     │
-                    Cloud Function ─┘ (onCreate)
-                                    ↓ FCM 고우선순위
+                     Firestore 스냅샷 리스너 (TrackingService 안 —
+                     위치 수집용으로 이미 상시 도는 그 포그라운드 서비스)
+                                    ↓ 1~3초
 TrackingService ◄──────────────────┘
   → 실행 → commands/{id}.state = done  ──►  ─────────────►  "완료" 표시
 
 GeofenceMonitor / HealthReporter
   → events/ 쓰기      ────────►  events/
                                     │
-                    Cloud Function ─┘ (onCreate)
-                                    ↓ FCM
+                     Firestore 스냅샷 리스너 (보호자 화면)
+                                    ↓
                                                             알림 표시
 ```
+
+(2026-08-07 변경: Cloud Function → FCM 경로를 Firestore 스냅샷 리스너로 바꿨다.
+근거는 §2 "Firebase 요금제"와 §9 결정 기록. 자녀 폰이 위치 수집 때문에 이미 상시
+켜져 있으므로 "잠든 앱을 깨우는" FCM의 이점이 여기서는 없다.)
 
 ### Firestore 문서 구조
 
 ```
+inviteCodes/{code}   (Task 6 보안 리뷰로 추가. families 하위가 아니라 최상위
+                      컬렉션이고, 문서 ID 자체가 정규화된 6자리 코드다 — "코드를
+                      아는 것" 자체가 조회 권한이 되게 하려고 별도로 뺐다. §3
+                      "보안 규칙"과 firestore.rules 주석 참고)
+  familyId, expiresAt
+
 families/{familyId}
   name, createdAt, inviteCode, inviteExpiresAt
+  ownerUid   (Task 6. 가족을 만든 보호자의 uid — members/{보호자uid} 를 create
+              할 때 규칙이 이 값과 request.auth.uid 를 대조한다)
 
   members/{uid}
     role: "guardian" | "child"
     displayName, fcmToken, appVersion, updatedAt
+    joinCode   (Task 6. 자녀가 가입 시 실제로 입력한 코드. 규칙이 이 값을
+                families.inviteCode 와 대조해 "코드를 정말 아는 사람만 자녀가
+                된다"를 서버에서 검증한다. 보호자 문서에는 빈 채로 둔다)
 
   children/{childUid}   (문서 자체가 status. 계속 덮어씀 — Task 9에서 확정,
                          별도 status 하위 문서를 두지 않는다: 문서 하나를
@@ -227,11 +243,22 @@ families/{familyId}
 - 보호자 uid만 `commands/`, `places/`, `schedules/` 생성·수정 가능.
 - `inviteCode`는 10분 뒤 만료. 페어링이 끝나면 즉시 무효화한다.
 
-### Cloud Functions (3개)
+### Cloud Functions → 안 씀 (2026-08-07 변경)
 
-1. `onCommandCreated` — `commands/` 문서 생성 시 해당 자녀 폰에 FCM 고우선순위 data 메시지.
-2. `onEventCreated` — `events/` 문서 생성 시 가족 내 보호자 전원에게 FCM 알림 메시지.
-3. `dailyCleanup` — 매일 04:00(KST) 30일 지난 `points/` 삭제.
+Spark 무료 요금제로 가기로 하면서(§2 "Firebase 요금제", §9) 아래 세 함수는 이제
+만들지 않는다. 앞 둘은 대체 수단이 있고, 셋째는 아직 없다.
+
+1. ~~`onCommandCreated`~~ — `commands/` 문서 생성을 자녀 폰(TrackingService)이
+   Firestore 스냅샷 리스너로 직접 구독한다. 위 "데이터 흐름" 다이어그램 참고.
+2. ~~`onEventCreated`~~ — `events/` 문서 생성을 보호자 화면이 Firestore 스냅샷
+   리스너로 직접 구독한다.
+3. **`dailyCleanup` — 대체 수단 없음 (미해결 항목).** 매일 04:00(KST)에 30일 지난
+   `points/`를 지우는 것은 주기 실행이지 "문서가 생겼을 때" 반응하는 이벤트가
+   아니라서, 스냅샷 리스너로 옮길 수 있는 성격이 아니다. Cloud Functions 없이
+   가는 이 설계에는 아직 이걸 대신할 방법이 없다 — 요구사항 자체를 지우지 않고
+   미해결로 남긴다. 4단계 계획 전에 다음 중 하나로 정해야 한다: (a) 자녀 폰이
+   업로드할 때마다 오래된 `points/`를 같이 지우는 클라이언트 정리, (b) 사람이
+   콘솔에서 수동 정리, (c) 명령 유실로 Blaze 로 승격하게 되면 그때 되살리기.
 
 ## 4. 핵심 로직 규칙
 
@@ -406,5 +433,11 @@ families/{familyId}
 - 자녀가 여러 명인 경우. 이번 설계는 데이터 구조상 다자녀를 지원하지만
   (`children/{childUid}`), 보호자 화면 UI는 자녀 1명 기준으로 만든다.
   2명 이상이 필요해지면 상단에 자녀 선택 탭을 추가한다.
-- 보호자가 2명(엄마·아빠)인 경우. 데이터 구조는 지원한다(`members/`에 여러 guardian).
-  초대 코드를 한 번 더 발급하면 된다. UI 작업은 1단계에 포함한다.
+- 보호자가 2명(엄마·아빠)인 경우. **지원하지 않는다** — 정정: 이 항목은 원래
+  "데이터 구조가 지원하고 초대 코드를 한 번 더 발급하면 되며 UI 작업은 1단계에
+  포함된다"고 적혀 있었는데 틀렸다. `firestore.rules`의 `members/{uid}` create
+  규칙은 `role == 'guardian'` 자리를 `families.ownerUid` 본인에게만 내준다
+  (Task 6 보안 리뷰로 잠긴 부분 — `firestore.rules`는 세 번의 보안 리뷰를 거쳤으므로
+  가볍게 바꾸지 않는다). 다자녀와 달리 이건 데이터 스키마 문제가 아니라 규칙
+  문제라서, 지원하려면 규칙을 먼저 바꿔야 한다(예: `ownerUid` 하나 대신
+  guardian uid 목록을 두고 대조). 이번 설계·1~2단계 범위 밖이며 별도 결정이 필요하다.

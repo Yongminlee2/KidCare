@@ -106,9 +106,12 @@ class MapTimelineFragment : Fragment() {
                     _binding?.statusBar?.text = getString(R.string.map_no_child)
                     return@launch
                 }
-                statusListener = FamilyRepository.observeChildStatus(familyId, childUid) { status ->
-                    render(status)
-                }
+                statusListener = FamilyRepository.observeChildStatus(
+                    familyId,
+                    childUid,
+                    onChange = { status -> render(status) },
+                    onError = { e -> _binding?.statusBar?.text = getString(R.string.map_error, e.message ?: "") },
+                )
             } catch (e: CancellationException) {
                 // 화면 이탈로 인한 정상 취소다. 삼켜서 실패처럼 취급하면 안 되므로
                 // 그대로 다시 던져 코루틴 취소를 완성시킨다(GuardianPairingActivity 와

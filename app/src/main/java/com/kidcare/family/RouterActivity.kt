@@ -46,8 +46,16 @@ class RouterActivity : AppCompatActivity() {
         val store = RoleStore(this)
         return when (store.role) {
             null -> RoleSelectActivity::class.java
-            Role.GUARDIAN -> if (store.isPaired) GuardianMainActivity::class.java
+            // isPaired(role+familyId) 만으로는 부족하다: 보호자는 코드를 만든
+            // 순간 familyId 가 생기지만, 그 시점엔 아직 아무 아이도 안 들어왔을
+            // 수 있다. childUid 까지 있어야 진짜로 아이가 연결된 것이다 — 아니면
+            // GuardianPairingActivity 로 돌려보내 코드를 다시 보여준다(코드는
+            // 그 화면이 재진입 시 기존 familyId 로 이어서 처리한다).
+            Role.GUARDIAN -> if (store.familyId != null && store.childUid != null)
+                                 GuardianMainActivity::class.java
                              else GuardianPairingActivity::class.java
+            // 자녀 쪽은 Task 7 의 권한 복구 흐름이 이 분기에 그대로 의존하므로
+            // 손대지 않는다 — isPaired 그대로 쓴다.
             Role.CHILD -> if (store.isPaired) ChildHomeActivity::class.java
                           else ChildPairingActivity::class.java
         }

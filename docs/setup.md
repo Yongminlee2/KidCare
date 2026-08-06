@@ -89,8 +89,13 @@ sdk.dir=C\:\\Users\\\uC0AC\uC6A9\uC790\\AppData\\Local\\Android\\Sdk
 6. 왼쪽 메뉴 `빌드 > Firestore Database` → `데이터베이스 만들기`
    - 위치: `asia-northeast3 (서울)`
    - 모드: `프로덕션 모드에서 시작`  (규칙은 Task 6 에서 넣는다)
-7. 왼쪽 아래 톱니바퀴 → `사용량 및 결제` → `요금제 수정` → `Blaze` 선택 → 카드 등록
-8. 같은 화면에서 `예산 알림 설정` → 1,000원 → 알림 이메일 등록
+
+**요금제는 Spark(무료) 그대로 두면 된다 — Blaze로 올리거나 카드를 등록할 필요가 없다.**
+2026-08-07 설계 변경(설계서 §2 "Firebase 요금제", §9 결정 기록)으로 원격 명령 전달을
+Cloud Functions + FCM 대신 Firestore 스냅샷 리스너로 바꿨다. 익명 인증 + Firestore만
+쓰는 1~3단계는 전부 Spark 무료 한도 안에서 돈다. Blaze는 4단계 계획 시점에 실사용에서
+명령 유실이 실제로 관측될 때만 다시 검토한다(그때도 카드 없는 대안인 Cloudflare Workers
+무료 티어를 먼저 저울질한다).
 
 이 프로젝트(`kidcare-17fe5`)는 위 절차로 이미 만들어졌고 `app/google-services.json`도
 받아져 있다 (Task 3 작업 시작 시점 기준). 이 파일은 `.gitignore`에 있어 커밋되지

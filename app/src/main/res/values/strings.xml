@@ -11,12 +11,15 @@
     <string name="pairing_guardian_hint">아이 폰에서 앱을 켜고\n\'아이\'를 고른 뒤 이 번호를 넣으면 연결됩니다.</string>
     <string name="pairing_failed">연결 실패\n%1$s</string>
     <string name="pairing_reset_role_button">역할 다시 고르기</string>
+    <string name="pairing_new_code_button">새 번호 받기</string>
+    <string name="pairing_code_expiry_format">이 번호는 %1$d분 뒤에 만료돼요</string>
     <string name="pairing_child_title">엄마 폰에 뜬\n6자리 번호를 넣어주세요</string>
     <string name="pairing_child_hint">번호 6자리</string>
     <string name="pairing_child_join">연결하기</string>
     <string name="pairing_not_found">그런 번호가 없어요. 다시 확인해 주세요.</string>
     <string name="pairing_expired">번호가 만료됐어요. 엄마 폰에서 새 번호를 받아주세요.</string>
     <string name="pairing_full">이미 다른 폰이 연결돼 있어요.</string>
+    <string name="pairing_offline">인터넷에 연결할 수 없어요. 와이파이나 데이터 연결 상태를 확인해 주세요.</string>
 
     <string name="perm_title">몇 가지만 켜주세요</string>
     <string name="perm_location_title">위치 권한</string>

@@ -78,6 +78,7 @@ class ChildPairingActivity : AppCompatActivity() {
                         PairingException.Reason.NOT_FOUND -> getString(R.string.pairing_not_found)
                         PairingException.Reason.EXPIRED -> getString(R.string.pairing_expired)
                         PairingException.Reason.ALREADY_FULL -> getString(R.string.pairing_full)
+                        PairingException.Reason.OFFLINE -> getString(R.string.pairing_offline)
                     }
                 )
             } catch (e: Exception) {
