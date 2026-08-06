@@ -5,6 +5,7 @@ import com.kidcare.family.core.SegmentRepository
 import com.kidcare.family.core.model.SegmentDoc
 import com.kidcare.family.logic.Fix
 import com.kidcare.family.logic.SegmentBuilder
+import com.kidcare.family.logic.SegmentType
 import java.time.Instant
 import java.time.ZoneId
 
@@ -22,7 +23,10 @@ import java.time.ZoneId
  * 인스턴스가 살아있는 동안 그 날 딱 한 번(버퍼가 비어 있거나 날짜가 바뀌었을 때)만
  * 한다. 그 뒤로는 재계산이 몇 번을 돌든 추가 읽기가 없다.
  */
-class SegmentUploader(private val zone: ZoneId = ZoneId.systemDefault()) {
+class SegmentUploader(
+    private val zone: ZoneId = ZoneId.systemDefault(),
+    private val placeNamer: PlaceNamer = PlaceNamer(),
+) {
 
     /** 이 서비스 인스턴스가 지금까지 확보한 오늘 점들. */
     private val buffer = mutableListOf<Fix>()
@@ -86,17 +90,32 @@ class SegmentUploader(private val zone: ZoneId = ZoneId.systemDefault()) {
             return
         }
 
-        val docs = SegmentBuilder.build(buffer).map { segment ->
-            SegmentDoc(
-                type = segment.type.name,
-                startAt = segment.startAt,
-                endAt = segment.endAt,
-                lat = segment.lat,
-                lng = segment.lng,
-                distanceMeters = segment.distanceMeters,
-                pointCount = segment.pointCount,
-                dayKey = dayKey,
-            )
+        // map 의 람다는 suspend 가 아니라서 그 안에서 placeNamer.nameOf(suspend) 를
+        // 부를 수 없다 — for 루프로 풀어서 buildList 로 모은다.
+        val docs = buildList {
+            for (segment in SegmentBuilder.build(buffer)) {
+                // 이동 구간에는 이름을 붙이지 않는다. 이동은 "어디서 어디로"가 앞뒤
+                // 머무름 이름으로 이미 드러나고, 이동 중 좌표 하나를 주소로 바꿔봐야
+                // 지나가던 길 이름이라 의미가 없다.
+                val placeName = if (segment.type == SegmentType.STAY) {
+                    placeNamer.nameOf(segment.lat, segment.lng).orEmpty()
+                } else {
+                    ""
+                }
+                add(
+                    SegmentDoc(
+                        type = segment.type.name,
+                        startAt = segment.startAt,
+                        endAt = segment.endAt,
+                        lat = segment.lat,
+                        lng = segment.lng,
+                        distanceMeters = segment.distanceMeters,
+                        pointCount = segment.pointCount,
+                        placeName = placeName,
+                        dayKey = dayKey,
+                    )
+                )
+            }
         }
         SegmentRepository.replaceSegmentsOfDay(familyId, childUid, dayKey, docs)
         Log.i(TAG, "구간 ${docs.size}개 반영 완료: dayKey=$dayKey 점 ${buffer.size}개")
