@@ -31,7 +31,18 @@ service cloud.firestore {
       allow create: if signedIn()
                     && memberOf(request.resource.data.familyId)
                     && roleIn(request.resource.data.familyId) == 'guardian';
-      allow update, delete: if signedIn() && memberOf(resource.data.familyId);
+      // update 는 보호자만 — familyId 도 못 바꾼다. 막는 공격: 아무 멤버가 update
+      // 로 familyId 를 다른 가족으로 갈아치우거나(문서를 가로채 다른 가족의 초대
+      // 창구로 재사용) expiresAt 을 조작해 코드를 되살리는 것 (fix round 2 Important 3).
+      allow update: if signedIn()
+                    && memberOf(resource.data.familyId)
+                    && roleIn(resource.data.familyId) == 'guardian'
+                    && request.resource.data.familyId == resource.data.familyId;
+      // delete 는 그대로 아무 멤버나 — 아이가 join 직후 자기가 쓴 코드를 죽여야
+      // 하기 때문이다(joinFamily). 대가: 멤버라면 자기 가족의 살아있는 코드
+      // 문서를 실수로/악의로 미리 지워 페어링을 막을 수 있다(자기 가족限定 자해성
+      // 서비스 거부). 보호자가 inviteCodeOf 로 다시 발급하면 복구되므로 허용한다.
+      allow delete: if signedIn() && memberOf(resource.data.familyId);
     }
 
     match /families/{familyId} {
@@ -42,11 +53,22 @@ service cloud.firestore {
       // 가족을 만드는 사람은 자기 uid 를 ownerUid 로 적어야 한다.
       // (아래 members/{보호자uid} 를 create 할 때 이 값을 대조한다.)
       allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
-      // 멤버는 코드 재발급·이름 변경만 할 수 있다. ownerUid·createdAt 을 덮어써서
-      // 가족을 가로채는 것은 막는다.
-      allow update: if memberOf(familyId)
-                    && request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(['inviteCode', 'inviteExpiresAt', 'name']);
+      // update 를 역할별로 쪼갠다. 막는 공격: 예전엔 "멤버이기만 하면" 저 세
+      // 필드를 아무 값으로나 바꿀 수 있어서, 자녀 멤버가 inviteCode 를 자기가
+      // 원하는 값으로, inviteExpiresAt 을 먼 미래로 설정해 스스로 상시 초대장을
+      // 만들어 외부인을 가족에 끌어들일 수 있었다(fix round 2 Critical 2).
+      allow update: if memberOf(familyId) && (
+          // 보호자: 코드 재발급과 이름 변경.
+          (roleIn(familyId) == 'guardian'
+           && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['inviteCode', 'inviteExpiresAt', 'name']))
+          ||
+          // 아무 멤버나 할 수 있는 것은 "가입 직후 코드를 죽이는 것" 하나뿐이다.
+          // 0 으로 내리는 것만 허용하고 미래로 늘리는 길은 막는다 — joinFamily 가
+          // 자녀 자격으로 이 쓰기를 해야 하므로 보호자 전용으로 막을 수는 없다.
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['inviteExpiresAt'])
+           && request.resource.data.inviteExpiresAt == 0)
+      );
       allow delete: if false;
 
       match /members/{uid} {
@@ -68,7 +90,16 @@ service cloud.firestore {
              && get(/databases/$(database)/documents/families/$(familyId)).data.inviteExpiresAt
                   > request.time.toMillis())
         );
-        allow update: if signedIn() && request.auth.uid == uid;
+        // role·joinCode 는 생성 이후 불변이다. 막는 공격: 예전엔 자기 문서라면
+        // 아무 필드나 바꿀 수 있어서, 이미 join 한 자녀가 자기 role 을 'guardian'
+        // 으로 고쳐 roleIn() 을 속이고 places/schedules 쓰기, events 삭제, 심지어
+        // 진짜 보호자의 members 문서 delete(= 가족에서 추방)까지 손에 넣을 수
+        // 있었다(fix round 2 Critical 1). 아이도 이 앱의 API 키로 Firestore 를
+        // 직접 두드릴 수 있는 잠재적 공격자라고 가정한다.
+        allow update: if signedIn() && request.auth.uid == uid
+                      && request.resource.data.role == resource.data.role
+                      && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['displayName', 'fcmToken', 'appVersion', 'updatedAt']);
         allow delete: if memberOf(familyId) && roleIn(familyId) == 'guardian';
       }
 
