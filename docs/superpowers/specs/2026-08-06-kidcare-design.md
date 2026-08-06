@@ -177,7 +177,9 @@ families/{familyId}
     role: "guardian" | "child"
     displayName, fcmToken, appVersion, updatedAt
 
-  children/{childUid}/status            (문서 1개, 계속 덮어씀)
+  children/{childUid}   (문서 자체가 status. 계속 덮어씀 — Task 9에서 확정,
+                         별도 status 하위 문서를 두지 않는다: 문서 하나를
+                         아끼고 읽기도 한 번 줄어든다)
     lat, lng, accuracy, at
     battery, charging
     ringerMode: "normal" | "vibrate" | "silent"
