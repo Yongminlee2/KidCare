@@ -68,7 +68,19 @@ class PermissionActivity : AppCompatActivity() {
         val step = PermissionStep.firstMissing(this)
         if (step == null) {
             navigatedToHome = true
-            startActivity(Intent(this, ChildHomeActivity::class.java))
+            // FLAG_ACTIVITY_CLEAR_TOP: ChildHomeActivity 의 "권한 켜러 가기" 버튼으로
+            // 들어온 경로에서는, 그 버튼이 뒤로가기 취소를 살리려고 자신을 finish() 하지
+            // 않으므로 스택 아래에 낡은 ChildHomeActivity 인스턴스가 그대로 남아있다.
+            // 이 플래그 없이 새 인스턴스를 또 올리면 둘이 겹쳐 쌓여, 뒤로가기를 두 번
+            // 눌러야 앱이 꺼지는 문제가 생긴다. CLEAR_TOP 은 이미 있는 인스턴스를 찾아
+            // 그 위(=이 PermissionActivity)를 정리하고 새 인스턴스로 교체하므로 결과적으로
+            // ChildHomeActivity 는 스택에 하나만 남는다. 기존 페어링 완료 경로(스택에
+            // ChildHomeActivity 가 아예 없는 경우)에는 이 플래그가 아무 효과가 없어
+            // 동작이 그대로다 — 이 브랜치는 이번 변경 전부터 있던 것과 동일하다.
+            startActivity(
+                Intent(this, ChildHomeActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            )
             finish()
             return
         }

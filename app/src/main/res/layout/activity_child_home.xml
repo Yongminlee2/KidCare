@@ -19,4 +19,14 @@
         android:layout_marginTop="24dp"
         android:gravity="center"
         android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+    <!-- 권한이 빠진 채로 이 화면에 오는 경우(페어링 직후 앱이 죽는 등)를 위한 복구
+         동작. 평소엔 안 보이다가, 빠진 권한이 있을 때만 onResume 에서 켠다. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/go_to_permission_button"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginTop="24dp"
+        android:visibility="gone"
+        android:text="@string/child_go_to_permission" />
 </LinearLayout>
