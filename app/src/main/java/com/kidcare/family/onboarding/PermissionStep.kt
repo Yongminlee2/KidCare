@@ -49,6 +49,22 @@ enum class PermissionStep(val titleRes: Int, val reasonRes: Int) {
             val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
             return pm.isIgnoringBatteryOptimizations(context.packageName)
         }
+    },
+
+    // 맨 뒤에 둔다 — 위치가 없으면 활동 인식은 의미가 없고(다른 단계들과 달리),
+    // 이 권한은 거부돼도 앱이 망가지지 않는다. LocationCollector 가 이동(1분) 주기로
+    // 계속 동작할 뿐이다. '이 권한이 없으면 죽는다'가 아니라 '있으면 배터리를 아낀다'.
+    ACTIVITY_RECOGNITION(R.string.perm_activity_title, R.string.perm_activity_reason) {
+        override fun isGranted(context: Context): Boolean =
+            // ACTIVITY_RECOGNITION 은 안드로이드 10(Q, API 29)부터 런타임 권한이다.
+            // 그 이전 기기에서는 매니페스트 선언만으로 쓸 수 있어 항상 true 를 준다 —
+            // 여기서 false 를 주면 이 단계 버튼을 눌러도(PermissionActivity.ask()가
+            // API 29 미만에서는 아무 것도 안 하므로) 화면이 절대 안 넘어가 아이가
+            // 갇힌다.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) true
+            else ContextCompat.checkSelfPermission(
+                context, Manifest.permission.ACTIVITY_RECOGNITION
+            ) == PackageManager.PERMISSION_GRANTED
     };
 
     abstract fun isGranted(context: Context): Boolean

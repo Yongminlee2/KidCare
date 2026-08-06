@@ -136,6 +136,12 @@ class PermissionActivity : AppCompatActivity() {
                 // 목록 화면. ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS(자동 요청 다이얼로그)
                 // 대신 이 목록 화면을 쓴다 — 전자는 플레이 정책상 특정 앱만 쓸 수 있다.
                 startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+
+            PermissionStep.ACTIVITY_RECOGNITION ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    requestOrOpenSettings(step, Manifest.permission.ACTIVITY_RECOGNITION)
+                }
+            // Q 미만은 PermissionStep.isGranted() 가 항상 true 라 이 단계 자체가 안 뜬다.
         }
     }
 
@@ -174,5 +180,11 @@ class PermissionActivity : AppCompatActivity() {
                 null
             }
         PermissionStep.BATTERY_UNRESTRICTED -> null
+        PermissionStep.ACTIVITY_RECOGNITION ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                Manifest.permission.ACTIVITY_RECOGNITION
+            } else {
+                null
+            }
     }
 }

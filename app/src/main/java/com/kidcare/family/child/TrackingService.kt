@@ -1,9 +1,11 @@
 package com.kidcare.family.child
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -16,12 +18,17 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.location.ActivityRecognition
+import com.google.android.gms.location.ActivityTransition
+import com.google.android.gms.location.ActivityTransitionRequest
+import com.google.android.gms.location.DetectedActivity
 import com.kidcare.family.R
 import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.RoleStore
 import com.kidcare.family.logic.Decision
 import com.kidcare.family.logic.Fix
 import com.kidcare.family.logic.LocationFilter
+import com.kidcare.family.onboarding.PermissionStep
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -63,6 +70,70 @@ class TrackingService : LifecycleService() {
             return
         }
         promoteToForeground(NOTIFICATION_ID, buildNotification())
+
+        // ActivityTransitionReceiver(매니페스트 등록, 별도 인스턴스)가 지금 도는
+        // 서비스의 collector 에 닿을 방법이 없어 정적 참조로 다리를 놓는다.
+        // onDestroy 에서 반드시 null 로 되돌린다 — 안 그러면 죽은 서비스의
+        // collector 를 계속 붙들어 leak 이 된다.
+        activeCollector = collector
+        registerActivityTransitions()
+    }
+
+    /**
+     * 활동 인식 전환 구독을 건다. onCreate 는 이 서비스 인스턴스당 한 번만 불리므로
+     * (Android 는 같은 Service 클래스의 인스턴스를 프로세스마다 하나만 유지하고,
+     * onStartCommand 가 여러 번 불려도 onCreate 는 다시 안 부른다) 이 함수도 인스턴스당
+     * 한 번만 실행된다. 프로세스가 죽었다 BootReceiver/START_STICKY 로 다시 뜨는
+     * 경우에도, PendingIntent 는 (컴포넌트·요청 코드·FLAG_UPDATE_CURRENT) 조합으로
+     * 동일하게 다시 만들어지므로 구글 플레이 서비스 쪽에서 새 구독이 아니라 기존
+     * 구독을 갱신한 것으로 취급한다 — 중복 등록이 쌓이지 않는다.
+     */
+    @SuppressLint("MissingPermission")
+    private fun registerActivityTransitions() {
+        if (!PermissionStep.ACTIVITY_RECOGNITION.isGranted(this)) {
+            // 권한이 없으면 등록 자체를 건너뛴다. LocationCollector 는 moving=true 로
+            // 시작해 그대로 유지되므로 1분 주기가 계속된다 — 배터리보다 위치
+            // 신뢰성이 먼저다.
+            Log.i(TAG, "활동 인식 권한 없음 — 이동(1분) 고정으로 계속 동작")
+            return
+        }
+        val request = ActivityTransitionRequest(
+            listOf(
+                ActivityTransition.Builder()
+                    .setActivityType(DetectedActivity.STILL)
+                    .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                    .build(),
+                ActivityTransition.Builder()
+                    .setActivityType(DetectedActivity.STILL)
+                    .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                    .build(),
+            )
+        )
+        ActivityRecognition.getClient(this)
+            .requestActivityTransitionUpdates(request, activityTransitionPendingIntent())
+            .addOnFailureListener { e -> Log.w(TAG, "활동 인식 등록 실패", e) }
+    }
+
+    private fun unregisterActivityTransitions() {
+        if (!PermissionStep.ACTIVITY_RECOGNITION.isGranted(this)) return
+        ActivityRecognition.getClient(this)
+            .removeActivityTransitionUpdates(activityTransitionPendingIntent())
+    }
+
+    /**
+     * 매니페스트에 등록한 명시적 컴포넌트를 향한 PendingIntent. 구글 플레이
+     * 서비스는 전환 정보를 이 PendingIntent 로 브로드캐스트를 '보낼 때' Intent 에
+     * extra 로 채워 넣는다(fill-in) — FLAG_IMMUTABLE 로 만들면 그 채워 넣기 자체가
+     * 막혀 API 31+ 에서 전환 정보가 비어 오거나 등록이 거부된다. 그래서 여기는
+     * FLAG_MUTABLE 이 맞다. FLAG_UPDATE_CURRENT 는 등록/해제 양쪽에서 같은
+     * PendingIntent 를 다시 얻기 위한 것이다 — request/remove 는 시스템 안에서
+     * '같은 PendingIntent 인지'로 짝을 맞추므로, 플래그·요청 코드·Intent 모양이
+     * 조금이라도 다르면 remove 가 등록을 못 찾아 해제가 실패한다.
+     */
+    private fun activityTransitionPendingIntent(): PendingIntent {
+        val intent = Intent(this, ActivityTransitionReceiver::class.java)
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+        return PendingIntent.getBroadcast(this, ACTIVITY_TRANSITION_REQUEST_CODE, intent, flags)
     }
 
     // Service.startForeground(int, Notification) 를 그대로 오버로드하듯 가리면
@@ -224,6 +295,10 @@ class TrackingService : LifecycleService() {
     }
 
     override fun onDestroy() {
+        // 서비스가 죽으면서 활동 인식 구독을 그대로 두면, 서비스는 없는데 센서만
+        // 계속 도는 배터리 누수가 된다 — 이 작업이 막으려는 것과 정반대다.
+        unregisterActivityTransitions()
+        activeCollector = null
         collector.stop()
         super.onDestroy()
     }
@@ -232,9 +307,21 @@ class TrackingService : LifecycleService() {
         private const val TAG = "TrackingService"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "tracking"
+        private const val ACTIVITY_TRANSITION_REQUEST_CODE = 2001
         // LocationFilter.HEARTBEAT_MILLIS(10분)와 일부러 다른 값을 쓴다. 위
         // handle() 안의 주석 참고.
         private const val SEGMENT_REBUILD_INTERVAL_MILLIS = 15 * 60 * 1000L
+
+        // ActivityTransitionReceiver(매니페스트 등록, 이 서비스와 다른 컴포넌트)가
+        // 지금 살아있는 서비스의 LocationCollector 를 부를 통로. 서비스가 없을 때
+        // (activeCollector == null) 전환이 와도 조용히 버린다 — 그때는 위치 수집도
+        // 멈춰 있어 주기를 바꿀 대상 자체가 없다.
+        @Volatile
+        private var activeCollector: LocationCollector? = null
+
+        fun notifyMovingChanged(nowMoving: Boolean) {
+            activeCollector?.onMovingChanged(nowMoving)
+        }
 
         fun start(context: Context) {
             context.startForegroundService(Intent(context, TrackingService::class.java))

@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
     <application
         android:name=".KidCareApp"
@@ -45,5 +46,11 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- ActivityRecognitionClient 의 전환 이벤트를 받는다. 시스템(구글 플레이
+             서비스)만 이 PendingIntent 로 브로드캐스트를 보내므로 exported=false. -->
+        <receiver
+            android:name=".child.ActivityTransitionReceiver"
+            android:exported="false" />
     </application>
 </manifest>
