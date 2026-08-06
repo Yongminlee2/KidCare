@@ -8,8 +8,9 @@ import com.kidcare.family.core.RoleStore
 import com.kidcare.family.databinding.ActivityRoleSelectBinding
 
 /**
- * 첫 실행 화면. 한 번 고르면 페어링이 끝나는 즉시 잠긴다.
- * 바꾸려면 앱 데이터를 지우고 다시 페어링해야 한다.
+ * 첫 실행 화면. 페어링이 끝나면 역할이 잠긴다.
+ * 페어링이 끝나기 전에는 연결 화면에서 되돌릴 수 있다(그 되돌리기 버튼은 Task 5·6 에서 붙는다).
+ * 페어링이 끝난 뒤 바꾸려면 앱 데이터를 지우고 다시 페어링해야 한다.
  */
 class RoleSelectActivity : AppCompatActivity() {
 
