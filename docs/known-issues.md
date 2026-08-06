@@ -89,9 +89,22 @@ Cloudflare Workers 중계로 올릴 수 있어야 한다. 전송 수단을 바�
   자해일 뿐이고, Cloud Functions 없이는 막을 방법이 없다.
 - `Documents.kt`에 아직 쓰는 데가 없는 필드들(`fcmToken`, `appVersion`, `ringerMode`,
   `charging`, `lastSeenAt`). 다음 단계에서 쓴다.
-  단, **`PointDoc.speed`는 항상 0으로 저장된다** — `Fix`에 속도가 없기 때문이다.
-  3단계에서 구간 요약을 만들 때 속도를 쓸 거면 `Fix`부터 고쳐야 한다.
+  `PointDoc.speed`는 3단계 Task 3에서 고쳤다 — `LocationCollector`가 `loc.speed`를
+  `Fix`에 담고 `StatusReporter`가 그대로 저장한다. 단, **이 수정 이전에 이미 저장된
+  points 문서는 speed 가 0으로 남아 있다** — 옛 데이터를 다룰 때 0을 "정지"로
+  해석하면 안 된다.
 - `MapLifeCycleCallback.onMapDestroy()`가 비어 있다. `onDestroyView`에서 이미 정리한다.
+- `FamilyRepository.createFamily`가 family 문서 쓰기와 보호자 member 문서 쓰기를 마친
+  뒤에 크래시하면(서버 시각 보정을 하려고 그 사이 순서를 바꿨다 — 3단계 Task 8),
+  `GuardianPairingActivity.kt`는 `store.familyId`를 `createFamily`가 **반환한 뒤에만**
+  대입하므로 다음 실행은 그 familyId를 모른 채 `createFamily`를 다시 불러 새 auto-ID로
+  가족을 또 만든다. 옛 `families/{id}` + `members/{uid}` 쌍은 아무도 다시 안 건드리는
+  고아로 영원히 남는다. 고치지 않기로 한 이유: 사용자 입장에서는 새 가족이 정상적으로
+  만들어져 페어링이 그대로 진행되므로 체감 피해가 없고(부모가 빈 코드에 갇히는 시나리오가
+  아니다), 대안(가족 문서 참조를 쓰기 전에 미리 `store.familyId`에 대입)은 더 나쁘다 —
+  크래시가 member 문서 쓰기 전에 나면 `inviteCodeOf`의 family update가 규칙(guardian이
+  `memberOf`여야 함)에 막혀 부모가 진짜로 빈 코드에 갇힌다. 드문 크래시 1회당 고아 문서
+  하나를 남기는 쪽이 확실히 더 안전한 트레이드오프다.
 
 ## 아직 실기기에서 한 번도 안 돌려봤다
 
