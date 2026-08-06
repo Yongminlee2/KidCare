@@ -17,6 +17,11 @@ import com.kakao.vectormap.label.Label
 import com.kakao.vectormap.label.LabelOptions
 import com.kakao.vectormap.label.LabelStyle
 import com.kakao.vectormap.label.LabelStyles
+import com.kakao.vectormap.route.RouteLine
+import com.kakao.vectormap.route.RouteLineOptions
+import com.kakao.vectormap.route.RouteLineSegment
+import com.kakao.vectormap.route.RouteLineStyle
+import com.kakao.vectormap.route.RouteLineStyles
 import com.kidcare.family.BuildConfig
 import com.kidcare.family.R
 import com.kidcare.family.core.FamilyRepository
@@ -40,7 +45,7 @@ import java.util.Locale
  * 상단 카드 문구와 지도 마커를 함께 갱신한다.
  *
  * 3단계 Task 5 가 지도 아래에 하루 요약 타임라인과 날짜 이동을 붙였다.
- * 지도 위 하루 경로 폴리라인은 Task 6 이 [drawRoute] 를 채우며 붙인다.
+ * 3단계 Task 6 이 [drawRoute] 로 지도 위에 하루 경로 폴리라인을 붙였다.
  */
 class MapTimelineFragment : Fragment() {
 
@@ -49,6 +54,7 @@ class MapTimelineFragment : Fragment() {
 
     private var kakaoMap: KakaoMap? = null
     private var childLabel: Label? = null
+    private var routeLine: RouteLine? = null
     private var statusListener: ListenerRegistration? = null
 
     // Firestore 스냅샷(특히 캐시 응답)은 onMapReady 보다 먼저 도착할 수 있다.
@@ -235,7 +241,7 @@ class MapTimelineFragment : Fragment() {
         _binding ?: return
         timelineAdapter.submitList(docs)
         binding.timelineEmpty.visibility = if (docs.isEmpty()) View.VISIBLE else View.GONE
-        drawRoute(docs)          // Task 6 에서 채운다. 지금은 빈 함수로 둔다.
+        drawRoute(docs)
     }
 
     private fun focusOn(lat: Double, lng: Double) {
@@ -243,8 +249,37 @@ class MapTimelineFragment : Fragment() {
         map.moveCamera(CameraUpdateFactory.newCenterPosition(LatLng.from(lat, lng), 16))
     }
 
-    /** Task 6 에서 경로선을 그린다. */
-    private fun drawRoute(docs: List<SegmentDoc>) = Unit
+    /**
+     * 하루 경로를 선으로 그린다.
+     *
+     * 구간 요약의 좌표만 잇는다 — 원시 점을 전부 내려받으면 하루 수백 개라 느리고,
+     * 요약 좌표(머무름 중심 + 이동 끝점)만으로도 "어디서 어디로"는 충분히 보인다.
+     * SegmentBuilder 가 이동 구간의 끝을 앞뒤 머무름과 이어붙이도록 만들어 놨기
+     * 때문에 이 선은 끊기지 않는다.
+     *
+     * renderTimeline 은 스냅샷마다, 그리고 날짜를 넘길 때마다 불린다. 매번 새로
+     * 선을 그리기 전에 지난 선을 지우지 않으면 날이 바뀔 때마다 선이 겹겹이
+     * 쌓여 지도가 낙서가 된다. 앱키가 없어 kakaoMap 이 없는 개발기에서는
+     * routeLineManager 에 접근할 이유도 없으므로 맨 앞에서 빠진다.
+     */
+    private fun drawRoute(docs: List<SegmentDoc>) {
+        val map = kakaoMap ?: return
+        val layer = map.routeLineManager?.layer ?: return
+
+        // 위치 마커는 labelManager 의 레이어에 있어 별개다 — 여기서 지우는 건
+        // routeLineManager 레이어의 선뿐이고 마커는 건드리지 않는다.
+        routeLine?.let { layer.remove(it) }
+        routeLine = null
+
+        val positions = docs.map { LatLng.from(it.lat, it.lng) }
+        if (positions.size < 2) return // 점 하나로는 선이 안 된다.
+
+        val styles = RouteLineStyles.from(RouteLineStyle.from(ROUTE_LINE_WIDTH, ROUTE_COLOR))
+        val segment = RouteLineSegment.from(positions, styles)
+        routeLine = layer.addRouteLine(RouteLineOptions.from(segment))
+        // 카메라는 여기서 움직이지 않는다 — 부모가 이미 지도를 옮겨봤을 수 있으니
+        // 마커가 처음 생길 때(render())만 이동하고, 경로 갱신으로는 시점을 뺏지 않는다.
+    }
 
     override fun onResume() {
         super.onResume()
@@ -263,8 +298,14 @@ class MapTimelineFragment : Fragment() {
         segmentListener = null
         kakaoMap = null
         childLabel = null
+        routeLine = null
         pendingStatus = null
         _binding = null
         super.onDestroyView()
+    }
+
+    private companion object {
+        private const val ROUTE_LINE_WIDTH = 14f
+        private const val ROUTE_COLOR = 0xFF3D6DF5.toInt()
     }
 }
