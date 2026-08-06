@@ -83,11 +83,16 @@ class MapTimelineFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // 타임라인은 지도와 무관하다 — 앱키가 없어 지도를 못 띄우는 개발기에서도
-        // 날짜 이동 UI 자체는 멀쩡히 그려져야 한다(실제 데이터는 subscribeSegments 가
-        // childUid 를 못 구해 조용히 비어 있을 뿐, 아래 empty 안내로 보인다).
+        // 날짜 이동 UI 자체는 멀쩡히 그려져야 한다. subscribeSegments 가 childUid 를
+        // 못 구해 구독이 아예 안 걸리는 경우(앱키가 없거나, 아직 아이 폰이 첫 보고를
+        // 안 올린 첫 실행 구간) renderTimeline 이 한 번도 안 불릴 수 있는데, 그때
+        // 화면이 "아무 설명 없이 텅 빈 채로" 남으면 고장으로 읽힌다. 그래서 구독
+        // 결과를 기다리지 않고 여기서 빈 목록으로 한 번 먼저 그려 empty 안내부터
+        // 보여준다 — 실제 데이터가 오면 renderTimeline 이 다시 불려 덮어쓴다.
         timelineAdapter = TimelineAdapter(zone) { doc -> focusOn(doc.lat, doc.lng) }
         binding.timelineList.layoutManager = LinearLayoutManager(requireContext())
         binding.timelineList.adapter = timelineAdapter
+        renderTimeline(emptyList())
         binding.prevDayButton.setOnClickListener { changeDay(-1) }
         binding.nextDayButton.setOnClickListener { changeDay(1) }
         renderDayHeader()
