@@ -19,18 +19,55 @@ service cloud.firestore {
       ).data.role;
     }
 
+    // 코드를 아는 것 자체가 열쇠다. families 를 inviteCode 필드로 query(whereEqualTo)
+    // 하게 열어두면, Firestore 규칙에서 read 는 get 과 list 를 구분하지 않으므로
+    // read 를 여는 순간 회원이 아닌 사람도 families 컬렉션 전체를 list 해서 모든
+    // 초대 코드를 긁어갈 수 있었다(Task 6 보안 리뷰 Critical 1 — "목록 조회만
+    // 열었다"던 예전 주석은 틀렸다). 그래서 코드를 문서 ID 로 쓰는 이 별도
+    // 컬렉션을 두고, get(정확한 ID로 한 건)만 허용하고 list 는 아예 금지한다.
+    match /inviteCodes/{code} {
+      allow get: if signedIn();            // 코드를 정확히 알아야 읽는다
+      allow list: if false;                // 목록 조회 금지 — 코드 수집 차단
+      allow create: if signedIn()
+                    && memberOf(request.resource.data.familyId)
+                    && roleIn(request.resource.data.familyId) == 'guardian';
+      allow update, delete: if signedIn() && memberOf(resource.data.familyId);
+    }
+
     match /families/{familyId} {
-      // 페어링 전에는 멤버가 아니므로 코드로 찾는 조회를 허용해야 한다.
-      // 대신 문서 전체가 아니라 목록 조회만 열고, 쓰기는 멤버로 제한한다.
-      allow read: if signedIn();
-      allow create: if signedIn();
-      allow update: if memberOf(familyId);
+      // families 문서도 list 를 막는다. 목록 조회를 열면 문서 내용이(예전엔
+      // inviteCode 필드까지) 회원이 아닌 사람에게 그대로 노출된다. get 은 멤버만.
+      allow get: if memberOf(familyId);
+      allow list: if false;
+      // 가족을 만드는 사람은 자기 uid 를 ownerUid 로 적어야 한다.
+      // (아래 members/{보호자uid} 를 create 할 때 이 값을 대조한다.)
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      // 멤버는 코드 재발급·이름 변경만 할 수 있다. ownerUid·createdAt 을 덮어써서
+      // 가족을 가로채는 것은 막는다.
+      allow update: if memberOf(familyId)
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['inviteCode', 'inviteExpiresAt', 'name']);
       allow delete: if false;
 
       match /members/{uid} {
-        // 자기 자신의 멤버 문서는 만들 수 있다 (= 페어링).
         allow read: if memberOf(familyId);
-        allow create: if signedIn() && request.auth.uid == uid;
+        // 자기 자신의 멤버 문서만 만들 수 있고, 그마저도 두 경우만 허용한다:
+        //   1) 가족을 만든 본인이 보호자 자리를 가져간다 (ownerUid 대조)
+        //   2) 살아있는 초대 코드를 실제로 아는 사람이 자녀 자리를 가져간다
+        //      (요청이 실어보낸 joinCode 가 families.inviteCode 와 같고,
+        //       아직 만료 전이어야 한다)
+        // joinFamily() 의 클라이언트 쪽 검사(코드 존재·만료·중복)는 클라이언트가
+        // 스스로 지키겠다는 약속일 뿐 강제력이 없다 — 실제로 강제하는 곳은 여기다.
+        allow create: if signedIn() && request.auth.uid == uid && (
+            (request.resource.data.role == 'guardian'
+             && get(/databases/$(database)/documents/families/$(familyId)).data.ownerUid == request.auth.uid)
+            ||
+            (request.resource.data.role == 'child'
+             && request.resource.data.joinCode
+                  == get(/databases/$(database)/documents/families/$(familyId)).data.inviteCode
+             && get(/databases/$(database)/documents/families/$(familyId)).data.inviteExpiresAt
+                  > request.time.toMillis())
+        );
         allow update: if signedIn() && request.auth.uid == uid;
         allow delete: if memberOf(familyId) && roleIn(familyId) == 'guardian';
       }

@@ -120,3 +120,22 @@ Functions 없이 Spark 무료 요금제로 가기 위해 FCM 푸시 대신 **Fir
 리스너**로 명령을 전달하기로 했다 — 즉 보호자 쓰기가 막힌 채로는 즉시 변경·폰찾기
 기능 자체가 동작하지 않는다. 4단계 계획에 `commands/` 전용 규칙 분리를 반드시
 넣는다.
+
+### fix round 1 (보안 리뷰) — `inviteCodes` 컬렉션 추가
+
+Task 6 최초 버전은 `families`를 `inviteCode` 필드로 query(`whereEqualTo`)해서 코드를
+찾았는데, Firestore 규칙은 `get`과 `list`를 구분하지 못해 이 조회를 열어두려면 결국
+`families` 컬렉션 전체를 회원 아닌 사람도 `list`할 수 있게 열어야 했다 — 초대 코드가
+전부 새어나가는 구멍이었다. 그리고 `members/{uid}` 의 `create` 규칙이 역할·코드를
+전혀 검증하지 않아, 아무나 아무 가족의 `familyId`만 알면 자기를 그 가족의 `guardian`으로
+등록할 수 있었다.
+
+고친 구조: `inviteCodes/{code}` 컬렉션을 새로 두고 문서 ID 자체를 코드로 쓴다 —
+`get`(정확한 ID 하나)만 허용하고 `list`는 규칙에서 아예 막는다. `families` 문서에는
+`ownerUid`(생성자 uid)를, `members` 문서에는 `joinCode`(가입 시 사용한 코드)를
+추가해, `members/{uid}`를 `create`할 때 규칙이 서버에서 "보호자 자리는 `ownerUid`
+본인만, 자녀 자리는 살아있는 코드를 실제로 아는 사람만" 가져갈 수 있게 대조한다.
+`core/model/Documents.kt`의 `FamilyDoc.ownerUid`, `MemberDoc.joinCode`,
+`InviteCodeDoc`이 이 변경분이다. 이 프로젝트는 이 시점까지 규칙을 한 번도 게시하지
+않았으므로(위 참고) 콘솔에 남아있는 기존 데이터·구버전 문서는 없다 — 마이그레이션
+불필요.
