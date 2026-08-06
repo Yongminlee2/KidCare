@@ -57,5 +57,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.play.services.location)
     implementation(libs.androidx.lifecycle.service)
+    implementation(libs.kakao.map)
     testImplementation(libs.junit)
 }

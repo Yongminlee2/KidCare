@@ -42,4 +42,9 @@
     <string name="channel_tracking">위치 공유</string>
     <string name="tracking_notification_title">위치 공유 중</string>
     <string name="tracking_notification_text">부모님께 내 위치를 알려주고 있어요</string>
+
+    <string name="map_no_key">지도 키가 설정되지 않았습니다.\n개발자에게 문의하세요.</string>
+    <string name="map_no_child">아직 아이 폰이 연결되지 않았어요.</string>
+    <string name="map_error">지도를 불러오지 못했어요\n%1$s</string>
+    <string name="map_status_format">🔋 %1$d%%   ·   %2$s 기준</string>
 </resources>

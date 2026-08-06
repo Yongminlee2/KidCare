@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Task 10 에서 채운다. 지금은 GuardianMainActivity 가 아직 이 레이아웃을 쓰지 않는다. -->
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- 탭이 하나뿐이라 프래그먼트 컨테이너 하나로 충분하다.
+     4단계에서 두 번째 탭이 생기면 BottomNavigationView 를 여기 붙인다. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fragment_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent" />

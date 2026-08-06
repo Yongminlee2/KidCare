@@ -3,6 +3,7 @@ package com.kidcare.family.core
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ListenerRegistration
+import com.kidcare.family.core.model.ChildStatusDoc
 import com.kidcare.family.core.model.FamilyDoc
 import com.kidcare.family.core.model.InviteCodeDoc
 import com.kidcare.family.core.model.MemberDoc
@@ -158,6 +159,28 @@ object FamilyRepository {
 
         return familyId
     }
+
+    /** 가족의 자녀 uid 를 찾는다. 아직 자녀가 안 붙었으면 null. */
+    suspend fun findChildUid(familyId: String): String? =
+        db.collection("families").document(familyId).collection("members")
+            .whereEqualTo("role", "child").get().await()
+            .documents.firstOrNull()?.id
+
+    /**
+     * 자녀의 현재 상태(children/{childUid} 문서 자체 — StatusReporter 주석 참고,
+     * 설계서의 별도 status 하위 문서가 아니다)를 실시간 구독한다.
+     * 붙인 리스너는 화면이 사라질 때 반드시 remove 해야 한다.
+     */
+    fun observeChildStatus(
+        familyId: String,
+        childUid: String,
+        onChange: (ChildStatusDoc) -> Unit,
+    ): ListenerRegistration =
+        db.collection("families").document(familyId)
+            .collection("children").document(childUid)
+            .addSnapshotListener { snapshot, _ ->
+                snapshot?.toObject(ChildStatusDoc::class.java)?.let(onChange)
+            }
 }
 
 class PairingException(val reason: Reason) : Exception(reason.name) {
