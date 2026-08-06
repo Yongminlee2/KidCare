@@ -1,33 +1,55 @@
 package com.kidcare.family
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.kidcare.family.child.ChildHomeActivity
 import com.kidcare.family.core.AuthGateway
+import com.kidcare.family.core.Role
+import com.kidcare.family.core.RoleStore
 import com.kidcare.family.databinding.ActivityRouterBinding
+import com.kidcare.family.guardian.GuardianMainActivity
+import com.kidcare.family.onboarding.ChildPairingActivity
+import com.kidcare.family.onboarding.GuardianPairingActivity
+import com.kidcare.family.onboarding.RoleSelectActivity
 import kotlinx.coroutines.launch
 
 /**
- * 런처 액티비티. 저장된 역할에 따라 보호자/자녀 화면으로 보내는 갈림길이다.
- * Task 4 에서 분기 로직이 들어간다. 지금은 익명 로그인이 되는지, uid 를
- * 받아오는지만 화면에 찍어서 확인한다.
+ * 런처. 익명 로그인을 끝낸 뒤 저장된 상태에 따라 갈라 보낸다.
+ *
+ *   역할 없음        → 역할 선택
+ *   역할만 있음      → 그 역할의 페어링 화면
+ *   역할 + 가족 있음 → 그 역할의 본 화면
  */
 class RouterActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityRouterBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityRouterBinding.inflate(layoutInflater)
+        val binding = ActivityRouterBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         binding.statusText.text = getString(R.string.connecting)
+
         lifecycleScope.launch {
-            binding.statusText.text = try {
-                getString(R.string.uid_format, AuthGateway.signIn())
+            try {
+                AuthGateway.signIn()
             } catch (e: Exception) {
-                getString(R.string.connect_failed, e.message ?: "")
+                binding.statusText.text = getString(R.string.connect_failed, e.message ?: "")
+                return@launch
             }
+            startActivity(Intent(this@RouterActivity, destination()))
+            finish()
+        }
+    }
+
+    private fun destination(): Class<*> {
+        val store = RoleStore(this)
+        return when (store.role) {
+            null -> RoleSelectActivity::class.java
+            Role.GUARDIAN -> if (store.isPaired) GuardianMainActivity::class.java
+                             else GuardianPairingActivity::class.java
+            Role.CHILD -> if (store.isPaired) ChildHomeActivity::class.java
+                          else ChildPairingActivity::class.java
         }
     }
 }
