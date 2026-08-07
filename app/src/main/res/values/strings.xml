@@ -66,6 +66,32 @@
     <string name="timeline_error">기록을 불러오지 못했어요\n%1$s</string>
     <string name="map_status_format">🔋 %1$d%%   ·   %2$s 기준</string>
 
+    <string name="tab_map">지도</string>
+    <string name="tab_control">관리</string>
+
+    <string name="control_section_ringer">지금 바로 바꾸기</string>
+    <string name="control_mode_normal">🔔\n벨소리</string>
+    <string name="control_mode_vibrate">📳\n진동</string>
+    <string name="control_mode_silent">🔕\n무음</string>
+    <string name="control_lock_switch">아이가 되돌리면 다시 바꾸기</string>
+    <string name="control_lock_hint">아이가 소리를 바꿔도 몇 초 뒤에 부모님이 정한 대로 돌아가요.</string>
+    <string name="control_find_phone">📢 핸드폰 찾기</string>
+    <string name="control_find_stop">🔇 소리 끄기</string>
+    <string name="control_find_stop_hint">이미 울리고 있다면 소리 끄기</string>
+    <string name="control_find_hint">무음이어도 큰 소리로 울려요. 5분이 지나면 저절로 멈춰요.</string>
+    <string name="control_command_sending">전달 중…</string>
+    <string name="control_command_done">완료</string>
+    <string name="control_command_timeout">애기폰이 응답하지 않아요</string>
+    <string name="control_command_timeout_format">애기폰이 응답하지 않아요\n%1$s</string>
+    <string name="control_last_seen_format">마지막 신호 %1$s</string>
+    <string name="control_last_seen_never">아직 한 번도 신호가 없었어요</string>
+    <string name="control_last_seen_now">방금 전</string>
+    <string name="control_last_seen_minutes">%1$d분 전</string>
+    <string name="control_last_seen_hours">%1$d시간 전</string>
+    <string name="control_last_seen_days">%1$d일 전</string>
+    <string name="control_error_ringer_denied">아이 폰에서 소리 설정 권한이 꺼져 있어요. 아이 폰 설정에서 켜야 바꿀 수 있어요.</string>
+    <string name="control_error_child_failed">아이 폰이 이 명령을 처리하지 못했어요.</string>
+
     <string name="timeline_icon_stay">📍</string>
     <string name="timeline_icon_move">🚶</string>
     <string name="timeline_unknown_place">머무른 곳</string>

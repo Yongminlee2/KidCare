@@ -47,7 +47,18 @@ object FamilyRepository {
      */
     @Volatile private var serverOffsetMillis: Long? = null
 
-    private suspend fun serverNow(familyId: String?, uid: String?): Long {
+    /**
+     * 서버 기준 "지금"(UTC 밀리초) = 기기 시계 + [serverOffsetMillis].
+     *
+     * 페어링 말고 화면에서도 필요해서 공개해 뒀다: 보호자의 관리 화면이 "마지막 신호
+     * 12분 전"을 만들 때 [System.currentTimeMillis] 로 빼면, 부모 폰 시계가 뒤처져
+     * 있는 만큼 그대로 어긋나 "마지막 신호 -3분 전" 같은 문구가 나온다
+     * ([com.kidcare.family.guardian.ControlFragment] 참고).
+     *
+     * 첫 호출은 서버를 한 번 다녀오므로(measureServerOffset) 코루틴 안에서 부른다.
+     * 그 뒤로는 프로세스가 살아 있는 동안 캐시된 오프셋만 더해 곧바로 돌려준다.
+     */
+    suspend fun serverNow(familyId: String?, uid: String?): Long {
         serverOffsetMillis?.let { return System.currentTimeMillis() + it }
         val offset = runCatching { measureServerOffset(familyId, uid) }.getOrElse { e ->
             if (e is CancellationException) throw e

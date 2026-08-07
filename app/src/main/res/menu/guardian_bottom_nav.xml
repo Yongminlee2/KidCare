@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    보호자 하단 탭.
+
+    설계서 §3 은 탭 넷(지도·관리·예약·알림)을 그렸지만 여기에는 지금 실제로 열 수 있는
+    것만 넣는다. '알림'(EventsFragment)은 6단계에 events/ 가 생길 때, '예약'
+    (ScheduleFragment)은 다음 작업(4단계 Task 10)에 화면이 만들어질 때 각각
+    항목 한 줄을 여기에 더한다 — 열면 아무것도 없는 탭은 부모 눈에 고장으로 보인다.
+
+    항목 ID 는 GuardianMainActivity 의 탭 표(tabs)와 짝이다. 여기에 항목을 더하면
+    그 표에도 한 줄을 더해야 한다 — 안 그러면 눌러도 아무 일이 없다.
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/tab_map"
+        android:icon="@drawable/ic_tab_map"
+        android:title="@string/tab_map" />
+
+    <item
+        android:id="@+id/tab_control"
+        android:icon="@drawable/ic_tab_control"
+        android:title="@string/tab_control" />
+</menu>

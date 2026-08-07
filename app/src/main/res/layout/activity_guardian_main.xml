@@ -1,7 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 탭이 하나뿐이라 프래그먼트 컨테이너 하나로 충분하다.
-     4단계에서 두 번째 탭이 생기면 BottomNavigationView 를 여기 붙인다. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/fragment_container"
+<!-- 탭이 둘 이상이 되면서 컨테이너 하나로는 부족해졌다. 위쪽은 프래그먼트 자리,
+     아래는 하단 탭이다. 컨테이너에 weight 를 줘서 탭 높이를 뺀 나머지를 전부
+     차지하게 한다 — 지도가 탭 뒤로 잘려 들어가지 않게 하려는 것이다. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_nav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:menu="@menu/guardian_bottom_nav" />
+</LinearLayout>

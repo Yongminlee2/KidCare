@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 관리 탭. 부모가 버튼 하나로 아이 폰을 바꾸는 화면이라 버튼을 크게 두고,
+     누른 뒤 무슨 일이 벌어졌는지를 맨 아래 한 줄이 계속 말해준다.
+     작은 화면·큰 글꼴 설정에서도 아래쪽 버튼이 잘리지 않도록 ScrollView 로 감쌌다. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- 아이 폰이 아직 안 붙었거나 상태를 못 읽을 때만 보인다. 평소에는 GONE. -->
+        <TextView
+            android:id="@+id/child_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="12dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/control_section_ringer"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <!-- 폭이 셋으로 갈리므로 글자를 두 줄(그림 / 이름)로 둔다. 한 줄로 두면
+                 큰 글꼴 설정에서 말줄임(…)으로 잘려 무슨 버튼인지 알 수 없어진다. -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/mode_normal_button"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:paddingHorizontal="2dp"
+                android:text="@string/control_mode_normal" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/mode_vibrate_button"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_marginHorizontal="6dp"
+                android:layout_weight="1"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:paddingHorizontal="2dp"
+                android:text="@string/control_mode_vibrate" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/mode_silent_button"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:paddingHorizontal="2dp"
+                android:text="@string/control_mode_silent" />
+        </LinearLayout>
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/lock_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:minHeight="48dp"
+            android:text="@string/control_lock_switch"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/control_lock_hint"
+            android:textAppearance="?attr/textAppearanceBodySmall" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="20dp"
+            android:background="?attr/colorOutlineVariant" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/find_button"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:text="@string/control_find_phone"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnError"
+            app:backgroundTint="?attr/colorError" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/control_find_hint"
+            android:textAppearance="?attr/textAppearanceBodySmall" />
+
+        <!-- 앱을 새로 열었을 때는 아이 폰이 울리고 있는지 알 방법이 없다.
+             그래서 '찾기' 버튼과 별개로 언제든 끌 수 있는 길을 하나 열어둔다
+             (ControlFragment.renderFindButton 주석 참고). -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/find_stop_button"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/control_find_stop_hint" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ProgressBar
+                android:id="@+id/command_progress"
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="10dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/command_status"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
