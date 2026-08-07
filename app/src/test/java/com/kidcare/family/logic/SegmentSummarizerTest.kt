@@ -12,6 +12,8 @@ class SegmentSummarizerTest {
         type = SegmentType.STAY,
         startAt = startAt, endAt = endAt,
         lat = 37.5, lng = 127.0, distanceMeters = 0.0, pointCount = 2,
+        // SegmentSummarizer 는 시각·거리만 문장으로 만든다 — 이름 좌표는 안 본다.
+        nameLat = 37.5, nameLng = 127.0,
     )
 
     @Test

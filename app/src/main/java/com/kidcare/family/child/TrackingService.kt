@@ -132,9 +132,9 @@ class TrackingService : LifecycleService() {
     private fun registerActivityTransitions() {
         if (!PermissionStep.ACTIVITY_RECOGNITION.isGranted(this)) {
             // 권한이 없으면 등록 자체를 건너뛴다. LocationCollector 는 moving=true 로
-            // 시작해 그대로 유지되므로 1분 주기가 계속된다 — 배터리보다 위치
+            // 시작해 그대로 유지되므로 30초 주기가 계속된다 — 배터리보다 위치
             // 신뢰성이 먼저다.
-            Log.i(TAG, "활동 인식 권한 없음 — 이동(1분) 고정으로 계속 동작")
+            Log.i(TAG, "활동 인식 권한 없음 — 이동(30초) 고정으로 계속 동작")
             return
         }
         val request = ActivityTransitionRequest(
@@ -284,10 +284,10 @@ class TrackingService : LifecycleService() {
         // 전환이 다시 올 수 없어 아이가 실제로 움직이기 시작해도 5분 주기에 영원히
         // 갇힌다 — "정지 5분은 진짜 정지 전환이 있을 때만"이라는 규칙이 깨진다.
         // fix 는 정지 중에도 최소 5분마다 한 번은 여기를 지나가므로, 매 fix 마다
-        // 확인하면 늦어도 한 주기 안에 감지한다. 되돌릴 값은 5분이 아니라 1분이다 —
+        // 확인하면 늦어도 한 주기 안에 감지한다. 되돌릴 값은 5분이 아니라 30초다 —
         // 위치 신뢰성이 배터리보다 먼저다.
         if (transitionsRegistered && !PermissionStep.ACTIVITY_RECOGNITION.isGranted(this)) {
-            Log.w(TAG, "활동 인식 권한이 도중에 취소됨 — 구독 해제하고 이동(1분)으로 되돌림")
+            Log.w(TAG, "활동 인식 권한이 도중에 취소됨 — 구독 해제하고 이동(30초)으로 되돌림")
             unregisterActivityTransitions()
             collector.onMovingChanged(true)
         }
@@ -307,6 +307,15 @@ class TrackingService : LifecycleService() {
 
         when (LocationFilter.decide(lastUploaded, fix)) {
             Decision.UPLOAD -> Unit
+            // 완화 문턱으로 간신히 통과한 점이다. 올리는 동작은 UPLOAD 와 똑같지만
+            // 반드시 W 로 남긴다 — known-issues 의 '정확도 기아 상태'는 이 태그
+            // (`adb logcat -s TrackingService:W`)로 진단하게 돼 있는데, 완화 승인이
+            // 조용하면 "신호가 계속 나빠 15분에 한 번씩 간신히 올리는 중"과 "다 정상"이
+            // 로그에서 똑같이 보인다. 그 둘을 못 가르면 실기기에서 판단할 근거가 없다.
+            Decision.UPLOAD_STALE_FALLBACK -> Log.w(
+                TAG,
+                "UPLOAD_STALE_FALLBACK: 오래 못 올려 완화 문턱으로 받음 familyId=$familyId accuracy=${fix.accuracy}",
+            )
             // 거절 사유가 전부 조용히 버려지면 "GPS 가 아직 안 잡혔다"와 구분이
             // 안 된다. adb logcat 에서라도 보이게 남긴다.
             Decision.SKIP_TOO_CLOSE -> {

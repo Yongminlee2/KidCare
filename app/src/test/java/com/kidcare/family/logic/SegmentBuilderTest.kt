@@ -163,4 +163,87 @@ class SegmentBuilderTest {
         assertEquals(SegmentType.STAY, segments[0].type)
         assertEquals(4, segments[0].pointCount)
     }
+
+    @Test
+    fun `완화 문턱으로 올라온 거친 점은 계산에서 빼지 않는다`() {
+        // 오차 50~100m 는 LocationFilter 가 "오래 아무것도 못 올렸을 때" 일부러
+        // 올린 점이다(UPLOAD_STALE_FALLBACK). 여기서 빼 버리면 신호가 나쁜 날에
+        // 지도 마커만 움직이고 타임라인은 텅 비는 상태가 된다.
+        val points = listOf(
+            p(0.0, 0), p(5.0, 10, accuracy = 90f), p(10.0, 20), p(15.0, 30),
+        )
+        val segments = SegmentBuilder.build(points)
+        assertEquals(1, segments.size)
+        assertEquals(4, segments[0].pointCount)
+    }
+
+    @Test
+    fun `이름 좌표는 정확한 점 쪽으로 끌린다`() {
+        // 도착 순간 한 번 크게 튄 fix(오차 90m)가 이름을 정하면 옆 건물이 나온다.
+        // 단순 평균은 그 점을 그대로 끌어안지만 이름 좌표는 정확한 점 쪽에 붙어야 한다.
+        // 나쁜 점도 머무름 반경(100m) 안이어야 같은 구간에 들어간다 — 밖으로 나가면
+        // 이건 이름 문제가 아니라 구간이 갈리는 문제가 된다.
+        val points = listOf(
+            p(80.0, 0, accuracy = 90f),   // 도착 순간의 나쁜 점
+            p(0.0, 10), p(0.0, 20), p(0.0, 30),
+        )
+        val stay = SegmentBuilder.build(points).first { it.type == SegmentType.STAY }
+        val badLat = baseLat + 80.0 / 111_320.0
+        val goodLat = baseLat
+
+        val nameOffset = Math.abs(stay.nameLat - goodLat)
+        val meanOffset = Math.abs(stay.lat - goodLat)
+        assertTrue(
+            "이름 좌표가 단순 평균보다 좋은 점에 가까워야 한다: name=${stay.nameLat} mean=${stay.lat}",
+            nameOffset < meanOffset,
+        )
+        assertTrue(
+            "이름 좌표가 나쁜 점 쪽으로 끌려갔다: ${stay.nameLat}",
+            Math.abs(stay.nameLat - badLat) > Math.abs(stay.nameLat - goodLat),
+        )
+    }
+
+    @Test
+    fun `오차가 모두 같으면 이름 좌표는 단순 평균과 같다`() {
+        // 가중치가 균일하면 가중 평균은 산술 평균이다 — 가중이 공짜로 좌표를
+        // 흔들지 않는다는 확인이다.
+        val points = listOf(p(0.0, 0), p(100.0, 5), p(3000.0, 30), p(6000.0, 40))
+        val stay = SegmentBuilder.build(points).first { it.type == SegmentType.STAY }
+        assertEquals(stay.lat, stay.nameLat, 1e-9)
+        assertEquals(stay.lng, stay.nameLng, 1e-9)
+    }
+
+    @Test
+    fun `오차 0 인 옛 점이 이름 좌표를 독점하지 않는다`() {
+        // 옛 points 문서는 accuracy 가 0 으로 읽힌다. 0 은 완벽하다는 뜻이 아니라
+        // 모른다는 뜻이라, 1/0² 로 무한대 가중치를 주면 안 된다.
+        val points = listOf(
+            p(80.0, 0, accuracy = 0f),
+            p(0.0, 10), p(0.0, 20), p(0.0, 30),
+        )
+        val stay = SegmentBuilder.build(points).first { it.type == SegmentType.STAY }
+        val loneLat = baseLat + 80.0 / 111_320.0
+
+        // floor 가 없으면 1/0² = 무한대라 이 값이 NaN 이거나 loneLat 과 정확히 같아진다.
+        assertTrue("이름 좌표가 유한해야 한다: ${stay.nameLat}", stay.nameLat.isFinite())
+        assertTrue(
+            "오차 0 짜리 점 하나가 이름 좌표를 통째로 가져갔다: ${stay.nameLat}",
+            stay.nameLat < loneLat,
+        )
+        assertTrue(
+            "나머지 점들이 이름 좌표를 통째로 가져갔다: ${stay.nameLat}",
+            stay.nameLat > baseLat,
+        )
+    }
+
+    @Test
+    fun `이동 구간의 이름 좌표는 도착 지점 그대로다`() {
+        val points = listOf(
+            p(0.0, 0), p(5.0, 5),
+            p(3000.0, 30), p(6000.0, 40),
+        )
+        val move = SegmentBuilder.build(points).first { it.type == SegmentType.MOVE }
+        assertEquals(move.lat, move.nameLat, 1e-12)
+        assertEquals(move.lng, move.nameLng, 1e-12)
+    }
 }

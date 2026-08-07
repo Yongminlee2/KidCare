@@ -22,6 +22,7 @@ import java.time.ZoneId
 import java.util.Locale
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
 
 /**
@@ -45,6 +46,10 @@ class MapTimelineFragment : Fragment() {
     // 아이 위치 마커. 처음 생길 때만 카메라를 이동시키기 위해 null 여부로
     // "이미 그린 적 있는가"를 판정한다 — 아래 render() 참고.
     private var childMarker: Marker? = null
+
+    // 마커 주변에 그리는 오차 원. 마커와 따로 들고 있어야 갱신할 때 이전 원만
+    // 골라 지울 수 있다(routeLine 과 같은 규율).
+    private var accuracyCircle: Polygon? = null
     private var routeLine: Polyline? = null
     private var statusListener: ListenerRegistration? = null
 
@@ -167,6 +172,7 @@ class MapTimelineFragment : Fragment() {
         )
 
         val point = GeoPoint(status.lat, status.lng)
+        drawAccuracyCircle(point, status.accuracy)
         val marker = childMarker
         if (marker == null) {
             val newMarker = Marker(b.mapView)
@@ -185,6 +191,49 @@ class MapTimelineFragment : Fragment() {
             marker.position = point
             b.mapView.invalidate()
         }
+    }
+
+    /**
+     * 현재 위치 마커 둘레에 오차 원을 그린다.
+     *
+     * 지도에 점 하나만 찍으면 그 점이 얼마나 믿을 만한지가 화면에서 완전히 사라진다 —
+     * 오차 12m 짜리 fix 와 90m 짜리 fix 가 **똑같이 확신에 찬 핀 하나**로 보인다.
+     * `PointDoc`/`ChildStatusDoc` 은 이미 accuracy 를 싣고 올라오므로 저장 형식도,
+     * 보안 규칙도 건드릴 필요가 없다 — 있는 값을 안 보여주고 있었을 뿐이다.
+     *
+     * 그리는 규칙:
+     *  - **불확실성으로 읽혀야지 지오펜스나 강조로 읽히면 안 된다.** 옅은 채움에
+     *    가는 테두리를 쓰고 마커보다 **아래**(overlays 인덱스 0)에 넣는다.
+     *  - **최소 크기를 강제하지 않는다.** 오차가 작아 지금 배율에서 원이 안 보이면
+     *    그게 맞는 결과다. 좋은 fix 를 억지로 큰 원으로 부풀리는 것은 그 자체가
+     *    또 다른 거짓말이다.
+     *  - accuracy 가 0 이면 아예 안 그린다. 0 은 "오차 없음"이 아니라 **모른다**는
+     *    뜻이다(옛 문서·기기가 값을 안 줄 때 0 으로 읽힌다). 모르는 것을 완벽한
+     *    것처럼 그리면 안 된다.
+     */
+    private fun drawAccuracyCircle(center: GeoPoint, accuracyMeters: Float) {
+        val b = _binding ?: return
+
+        accuracyCircle?.let { b.mapView.overlays.remove(it) }
+        accuracyCircle = null
+
+        if (accuracyMeters <= 0f) {
+            b.mapView.invalidate()
+            return
+        }
+
+        val circle = Polygon(b.mapView)
+        circle.setPoints(Polygon.pointsAsCircle(center, accuracyMeters.toDouble()))
+        // setFillColor/setStrokeColor 대신 Paint 를 직접 만진다 — 이 파일의
+        // Polyline 이 이미 같은 이유(구버전 API deprecated)로 그렇게 하고 있다.
+        circle.fillPaint.color = ACCURACY_FILL_COLOR
+        circle.outlinePaint.color = ACCURACY_STROKE_COLOR
+        circle.outlinePaint.strokeWidth = ACCURACY_STROKE_WIDTH
+        // 인덱스 0 = 가장 먼저 그려짐 = 가장 아래. 마커·경로선은 이 위에 남는다.
+        // 마커가 나중에 append 되므로 "원이 마커를 덮는" 순서가 나올 수 없다.
+        b.mapView.overlays.add(0, circle)
+        accuracyCircle = circle
+        b.mapView.invalidate()
     }
 
     /** "이전 날"/"다음 날" 버튼. 미래로는 못 가게 막는다 — 볼 데이터가 없는 날이다. */
@@ -313,6 +362,7 @@ class MapTimelineFragment : Fragment() {
         // 정리한다 — 안 부르면 화면을 나갔다 들어올 때마다 조금씩 샌다.
         _binding?.mapView?.onDetach()
         childMarker = null
+        accuracyCircle = null
         routeLine = null
         _binding = null
         super.onDestroyView()
@@ -321,5 +371,15 @@ class MapTimelineFragment : Fragment() {
     private companion object {
         private const val ROUTE_LINE_WIDTH = 14f
         private const val ROUTE_COLOR = 0xFF3D6DF5.toInt()
+
+        // 경로선과 같은 파랑에 알파만 크게 낮춘 값이다. 색을 따로 만들지 않는 이유:
+        // 새 색은 "다른 무언가"라는 신호를 주는데, 이 원은 마커가 가리키는 그 위치의
+        // 불확실성일 뿐 별개의 대상이 아니다. 채움 0x22(약 13%)는 아래 지도 타일의
+        // 도로·건물 이름이 그대로 읽히는 정도라 영역을 '칠한' 느낌이 안 난다.
+        private const val ACCURACY_FILL_COLOR = 0x223D6DF5
+        // 테두리는 채움보다 조금만 진하게. 진하면 지오펜스 경계선처럼 보인다.
+        private const val ACCURACY_STROKE_COLOR = 0x553D6DF5
+        // 경로선(14f)의 1/7. 가늘어야 '경계'가 아니라 '번짐'으로 읽힌다.
+        private const val ACCURACY_STROKE_WIDTH = 2f
     }
 }

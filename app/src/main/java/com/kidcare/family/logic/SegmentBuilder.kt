@@ -16,6 +16,21 @@ data class Segment(
     val lng: Double,
     val distanceMeters: Double,
     val pointCount: Int,
+    /**
+     * **이름을 물어볼 좌표.** 역지오코딩([com.kidcare.family.child.PlaceNamer])에만 쓴다.
+     *
+     * [lat]/[lng] 와 따로 두는 이유: 저 둘은 지도에 찍고 선을 잇는 좌표라 의미를 바꾸면
+     * 화면·타임라인·경로선이 전부 따라 바뀐다(그 계약은 건드리지 않는다). 반면 이름은
+     * 좌표 하나를 건물 이름으로 바꾸는 일이라 **오차에 훨씬 민감하다** — 단순 평균은
+     * 도착 순간의 나쁜 fix 한 개를 그대로 끌어안아서, 머무름 전체가 옆 건물 이름을
+     * 달 수 있다. 특히 점이 2~3개뿐인 짧은 머무름에서는 나쁜 점 하나가 평균의 절반이다.
+     *
+     * 그래서 이 좌표는 **오차로 가중한 평균**이다(가중치 = 1/오차²). 오차를 표준편차로
+     * 보면 이게 통계적으로 맞는 결합 방식이고, 정확한 점이 이름을 결정하게 된다.
+     * MOVE 구간에서는 [lat]/[lng] 와 같은 값이다 — 이동 구간에는 애초에 이름을 안 붙인다.
+     */
+    val nameLat: Double,
+    val nameLng: Double,
 )
 
 /**
@@ -42,10 +57,28 @@ object SegmentBuilder {
     /** 반경을 벗어난 점이 이만큼 연속돼야 머무름을 끝낸다. */
     const val EXIT_CONFIRM_POINTS: Int = 2
 
+    /**
+     * 가중 평균에서 오차를 이 값보다 작게 치지 않는다.
+     *
+     * 두 가지를 막는다. (1) 0 으로 나누기 — `PointDoc.accuracy` 는 옛 문서에서 0 으로
+     * 읽힐 수 있다. (2) 그 0 이 "완벽한 점"으로 해석돼 가중치를 독점하는 것 — 0 은
+     * 완벽하다는 뜻이 아니라 **모른다**는 뜻이다. 소비자용 GPS 가 실제로 5m 보다
+     * 정확해지는 일은 없으므로, 그 아래는 전부 5m 로 친다.
+     */
+    const val MIN_WEIGHT_ACCURACY_METERS: Double = 5.0
+
     fun build(points: List<Fix>): List<Segment> {
         // Firestore 쿼리 결과 순서를 믿지 않는다. 오차가 큰 점은 계산 자체에서 뺀다.
+        //
+        // 문턱이 LocationFilter.MAX_ACCURACY_METERS(평소 50m)가 아니라 완화 문턱인
+        // 이유: 그 완화 문턱까지는 LocationFilter 가 **일부러** 올린 점이다(오래
+        // 아무것도 못 올렸을 때의 UPLOAD_STALE_FALLBACK). 여기서 50m 로 자르면
+        // 신호가 나빠 간신히 건진 그 점들이 구간 계산에서 통째로 빠져 — 지도 마커는
+        // 움직이는데 타임라인만 비는, 원인을 알 수 없는 상태가 된다. 이 필터가 막으려는
+        // 것은 '올린 적도 없는 쓰레기 값이 다른 경로로 섞여 들어오는 것'이지
+        // '거칠지만 우리가 승인한 점'이 아니다.
         val sorted = points
-            .filter { it.accuracy <= LocationFilter.MAX_ACCURACY_METERS }
+            .filter { it.accuracy <= LocationFilter.FALLBACK_MAX_ACCURACY_METERS }
             .sortedBy { it.at }
         if (sorted.size < 2) return emptyList()
 
@@ -109,11 +142,23 @@ object SegmentBuilder {
             lng = points[to].lng,
             distanceMeters = distance,
             pointCount = to - from + 1,
+            // 이동 구간에는 이름을 안 붙이므로(SegmentUploader) 가중 평균을 낼 이유가
+            // 없다. 도착 지점을 그대로 둔다.
+            nameLat = points[to].lat,
+            nameLng = points[to].lng,
         )
     }
 
     private fun staySegment(points: List<Fix>, range: IntRange): Segment {
         val slice = points.slice(range)
+        // 가중치는 1/오차². 오차를 표준편차로 보면 역분산 가중이 되어, 정확한 점이
+        // 이름을 결정한다. 합이 0 이 되는 경우는 없다 — 아래 floor 때문에 모든
+        // 가중치가 양수다.
+        val weights = slice.map { fix ->
+            val a = maxOf(fix.accuracy.toDouble(), MIN_WEIGHT_ACCURACY_METERS)
+            1.0 / (a * a)
+        }
+        val weightSum = weights.sum()
         return Segment(
             type = SegmentType.STAY,
             startAt = slice.first().at,
@@ -122,6 +167,8 @@ object SegmentBuilder {
             lng = slice.sumOf { it.lng } / slice.size,
             distanceMeters = 0.0,
             pointCount = slice.size,
+            nameLat = slice.indices.sumOf { slice[it].lat * weights[it] } / weightSum,
+            nameLng = slice.indices.sumOf { slice[it].lng * weights[it] } / weightSum,
         )
     }
 }

@@ -42,6 +42,11 @@ class TimelineAdapter(
                 startAt = doc.startAt, endAt = doc.endAt,
                 lat = doc.lat, lng = doc.lng,
                 distanceMeters = doc.distanceMeters, pointCount = doc.pointCount,
+                // 이름 좌표는 자녀 폰이 역지오코딩할 때만 쓰고 저장되지 않는다
+                // (SegmentDoc 에 그 필드가 없다 — 스키마를 늘리지 않았다). 보호자
+                // 화면은 이미 완성된 placeName 을 읽을 뿐이라 여기서 쓸 일이 없으므로
+                // 표시 좌표를 그대로 넣는다. SegmentSummarizer 도 이 값을 안 본다.
+                nameLat = doc.lat, nameLng = doc.lng,
             )
 
             binding.iconText.text = context.getString(

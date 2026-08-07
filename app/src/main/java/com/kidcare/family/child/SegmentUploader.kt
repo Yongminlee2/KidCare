@@ -122,8 +122,16 @@ class SegmentUploader(
                 // 이동 구간에는 이름을 붙이지 않는다. 이동은 "어디서 어디로"가 앞뒤
                 // 머무름 이름으로 이미 드러나고, 이동 중 좌표 하나를 주소로 바꿔봐야
                 // 지나가던 길 이름이라 의미가 없다.
+                //
+                // 이름은 segment.lat/lng 가 아니라 segment.nameLat/nameLng 로 묻는다.
+                // 앞의 둘은 지도에 찍는 좌표(단순 평균)고, 뒤의 둘은 오차로 가중한
+                // 평균이다 — 좌표 하나를 건물 이름으로 바꾸는 일은 오차에 훨씬
+                // 민감해서, 도착 순간 튄 fix 한 개가 머무름 전체에 옆 건물 이름을
+                // 달아버릴 수 있다(SegmentBuilder.Segment.nameLat 주석). 저장하는
+                // SegmentDoc.lat/lng 는 그대로 segment.lat/lng 다 — 화면에 찍히는
+                // 위치는 하나도 안 바뀐다.
                 val placeName = if (segment.type == SegmentType.STAY) {
-                    placeNamer.nameOf(segment.lat, segment.lng).orEmpty()
+                    placeNamer.nameOf(segment.nameLat, segment.nameLng).orEmpty()
                 } else {
                     ""
                 }

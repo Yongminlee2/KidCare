@@ -57,12 +57,48 @@ class LocationCollector(private val context: Context) {
         clearUpdates()
 
         val interval = if (moving) MOVING_INTERVAL_MILLIS else STILL_INTERVAL_MILLIS
-        val priority = if (moving) Priority.PRIORITY_HIGH_ACCURACY else Priority.PRIORITY_BALANCED_POWER_ACCURACY
         Log.i(TAG, "수집 주기 변경: ${if (moving) "이동" else "정지"} ${interval / 1000}초")
 
-        val request = LocationRequest.Builder(priority, interval)
+        // 정지 중에도 PRIORITY_HIGH_ACCURACY 를 쓴다(2026-08-07 변경. 예전엔 정지에
+        // PRIORITY_BALANCED_POWER_ACCURACY 였다).
+        //
+        // "가만히 있는 폰에 왜 GPS 를 켜 두나"가 당연히 나올 질문이라 근거를 남긴다.
+        // BALANCED 는 WiFi·기지국 측위라 오차가 보통 20~60m, 나쁘면 그보다 훨씬 크다.
+        // 그런데 **아이가 하루의 대부분을 보내는 곳이 바로 그 정지 구간**이다(학교·집·
+        // 학원). 그리고 머무름 구간의 좌표를 역지오코딩해서 "△△초등학교" 같은 이름을
+        // 만드는 것도(PlaceNamer) 그 점들이다. 즉 옛 설정은 **가장 부정확한 점이 장소
+        // 이름을 정하게** 만들어 놨고, 부모가 실제로 겪은 불만("장소가 옆 건물로 나온다")이
+        // 정확히 그것이다.
+        //
+        // 배터리는 우선순위 플래그보다 **깨어나는 빈도**가 지배한다. 정지 주기 5분은
+        // 그대로 두므로 GPS 는 5분에 한 번 짧게 잡고 그 사이에는 무선을 재운다 —
+        // 이동(30초)과 비교하면 같은 HIGH_ACCURACY 라도 duty cycle 이 1/10 이다.
+        // 실기기에서 하루 소모를 재 보고 그래도 과하면 사용자용 "배터리 아끼기"
+        // 토글을 다는 것이 다음 수순이다(docs/known-issues.md).
+        val builder = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, interval)
             .setMinUpdateIntervalMillis(interval / 2)
-            .build()
+
+        if (moving) {
+            // 이동 상태인데 실제로는 가만히 있는 폰(활동 인식 권한이 없어 moving 이
+            // true 로 굳은 경우가 대표적이다)을 30초마다 깨우지 않으려는 것이다.
+            //
+            // 20m 인 이유는 LocationFilter.MIN_MOVE_METERS(25m)를 **넘지 않기 위해서**다.
+            // 이 값이 25m 이상이면 무선 계층이 LocationFilter 가 올렸을 fix 를 먼저
+            // 삼켜버려, "얼마나 움직여야 올리는가"를 정하는 곳이 두 군데로 갈린다 —
+            // 그 판단은 단위테스트로 고정된 LocationFilter 한 곳에만 있어야 한다.
+            // 20m 는 좋은 fix 의 흔들림(보통 3~8m)보다는 위라, 진짜로 멈춰 있는 폰의
+            // 잡음성 깨우기는 걸러진다.
+            //
+            // 대가가 있다: 완전히 멈춘 폰은 콜백 자체가 안 와서 LocationFilter 의
+            // 하트비트(10분)가 탈 fix 가 없어질 수 있다. 그래서 **정지 요청에는
+            // 이 필터를 걸지 않는다** — 활동 인식이 정상이면 STILL 전환이 1분 안에
+            // 와서 5분 주기(필터 없음)로 넘어가 생존 신호가 회복된다. 활동 인식
+            // 권한이 아예 없는 폰에서만 이 구멍이 남고, 그건 실기기에서 확인할
+            // 항목으로 known-issues 에 적어뒀다.
+            builder.setMinUpdateDistanceMeters(MOVING_MIN_UPDATE_DISTANCE_METERS)
+        }
+
+        val request = builder.build()
 
         val cb = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
@@ -97,9 +133,19 @@ class LocationCollector(private val context: Context) {
 
     private companion object {
         const val TAG = "LocationCollector"
-        const val MOVING_INTERVAL_MILLIS = 60_000L
+
+        /**
+         * 이동 중 주기. 60초에서 30초로 줄였다(2026-08-07).
+         *
+         * 60초 × MIN_MOVE_METERS 50m 조합은 걸을 때 점이 약 70m 마다 하나라 경로선이
+         * 모퉁이를 잘라먹었고, 차 안에서는 1km 에 한 점이었다. 설계서 §4.1 참고.
+         */
+        const val MOVING_INTERVAL_MILLIS = 30_000L
 
         /** 정지 중 주기. 설계서 §4.1 */
         const val STILL_INTERVAL_MILLIS = 5 * 60_000L
+
+        /** 이동 요청에만 거는 최소 이동 거리. 값의 근거는 requestUpdates() 주석. */
+        const val MOVING_MIN_UPDATE_DISTANCE_METERS = 20f
     }
 }
