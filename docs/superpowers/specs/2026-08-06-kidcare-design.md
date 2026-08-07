@@ -53,7 +53,8 @@
 
 | 의존성 | 용도 | 비고 |
 |---|---|---|
-| `com.kakao.maps.open:android` | 지도 표시, 경로 폴리라인, 역지오코딩 | 카카오 개발자 앱키 필요. Maven repo `https://devrepo.kakao.com/nexus/repository/kakaomap-releases/` 추가 (`settings.gradle.kts`와 일치) |
+| `org.osmdroid:osmdroid-android` | 지도 표시, 경로 폴리라인 | **2026-08-07 변경.** 등록·앱키 불필요(mavenCentral). 아래 "지도 SDK 교체" 참고 |
+| ~~`com.kakao.maps.open:android`~~ | ~~지도 표시, 경로 폴리라인, 역지오코딩~~ | 소유자가 앱키를 발급받지 않아 지도가 한 번도 안 그려져 osmdroid로 교체(§9). `gradle/libs.versions.toml`에 별칭만 "카카오로 되돌릴 때 쓴다" 주석과 함께 남겨뒀다 — 되돌아갈 경우를 대비한 것이며 지금은 참조되지 않는다. 역지오코딩(REST 키)은 별도 작업에서 처리 |
 | Firebase Auth (익명) | 기기 식별 | 계정 생성 불필요 |
 | Firebase Firestore | 위치·명령·예약·이벤트 저장 | |
 | Firebase Cloud Messaging | (4단계 후보, 현재 미사용) 명령/알림 즉시 전달 | 2026-08-07 Spark 결정으로 보류 — 지금은 Firestore 스냅샷 리스너로 대체(§2 "Firebase 요금제", §9) |
@@ -439,6 +440,7 @@ Spark 무료 요금제로 가기로 하면서(§2 "Firebase 요금제", §9) 아
 | 은닉 기능 없음 | 아이콘 숨김 | 스토커웨어 기법이고 정책 위반. 투명한 공유가 가족 관계에도 낫다 |
 | 기기관리자 권한 안 씀 | 삭제 방지 | 오작동 시 기기 초기화까지 얽히는 위험이 이득보다 크다 |
 | Views + ViewBinding | Compose | 기존 프로젝트 관례 유지. 지도 SDK가 View 기반이라 상호운용 비용도 없다 |
+| ~~카카오맵~~ → **osmdroid(OpenStreetMap)** | 카카오맵 유지, 앱키 발급 대기 | 2026-08-07 뒤집음. 소유자가 카카오 네이티브 앱키를 한 번도 발급받지 않아 1~3단계 내내 지도가 그려진 적이 없었다. osmdroid는 등록·앱키가 전혀 필요 없어 즉시 동작한다. 카카오로 되돌릴 여지를 남기려고 `gradle/libs.versions.toml`의 `kakao-map` 별칭과 `settings.gradle.kts`의 카카오 Maven 저장소는 지우지 않고 주석 처리만 했다 — API 매핑·검증 근거는 `.superpowers/map-swap-report.md` |
 
 ## 10. 남은 미결정 사항
 

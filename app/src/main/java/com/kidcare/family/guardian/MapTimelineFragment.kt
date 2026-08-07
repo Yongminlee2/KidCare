@@ -4,24 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
-import com.kakao.vectormap.KakaoMap
-import com.kakao.vectormap.KakaoMapReadyCallback
-import com.kakao.vectormap.LatLng
-import com.kakao.vectormap.MapLifeCycleCallback
-import com.kakao.vectormap.camera.CameraUpdateFactory
-import com.kakao.vectormap.label.Label
-import com.kakao.vectormap.label.LabelOptions
-import com.kakao.vectormap.label.LabelStyle
-import com.kakao.vectormap.label.LabelStyles
-import com.kakao.vectormap.route.RouteLine
-import com.kakao.vectormap.route.RouteLineOptions
-import com.kakao.vectormap.route.RouteLineSegment
-import com.kakao.vectormap.route.RouteLineStyle
-import com.kakao.vectormap.route.RouteLineStyles
-import com.kidcare.family.BuildConfig
 import com.kidcare.family.R
 import com.kidcare.family.core.FamilyRepository
 import com.kidcare.family.core.RoleStore
@@ -33,9 +19,12 @@ import com.kidcare.family.logic.DayPicker
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.Locale
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline
 
 /**
- * 보호자 메인. 카카오맵 위에 아이의 현재 위치를 찍는다.
+ * 보호자 메인. osmdroid 지도 위에 아이의 현재 위치를 찍는다.
  *
  * children/{childUid} 문서(= status. 설계서는 별도 하위 문서로 그렸지만
  * StatusReporter 가 문서 자체를 status 로 쓰기로 했다)를 실시간 구독해
@@ -43,15 +32,19 @@ import java.util.Locale
  *
  * 3단계 Task 5 가 지도 아래에 하루 요약 타임라인과 날짜 이동을 붙였다.
  * 3단계 Task 6 이 [drawRoute] 로 지도 위에 하루 경로 폴리라인을 붙였다.
+ * osmdroid 교체(카카오 앱키 미발급 문제 해결) 시점에 카카오 API 호출을 osmdroid로
+ * 옮겼다 — 지도가 그리는 내용과 동작 규칙은 그대로다. `.superpowers/map-swap-report.md`
+ * 에 API 매핑 근거를 적어뒀다.
  */
 class MapTimelineFragment : Fragment() {
 
     private var _binding: FragmentMapTimelineBinding? = null
     private val binding get() = _binding!!
 
-    private var kakaoMap: KakaoMap? = null
-    private var childLabel: Label? = null
-    private var routeLine: RouteLine? = null
+    // 아이 위치 마커. 처음 생길 때만 카메라를 이동시키기 위해 null 여부로
+    // "이미 그린 적 있는가"를 판정한다 — 아래 render() 참고.
+    private var childMarker: Marker? = null
+    private var routeLine: Polyline? = null
     private var statusListener: ListenerRegistration? = null
 
     // 자녀가 members 에 들어오는 순간을 계속 지켜본다(Task 8 이전엔 findChildUid 를
@@ -59,12 +52,6 @@ class MapTimelineFragment : Fragment() {
     // 전까지 "연결 안 됨"이 안 풀리는 문제가 있었다). 이 리스너 하나가 statusListener·
     // segmentListener 두 개를 필요할 때마다 다시 걸어 준다.
     private var joinedListener: ListenerRegistration? = null
-
-    // Firestore 스냅샷(특히 캐시 응답)은 onMapReady 보다 먼저 도착할 수 있다.
-    // 그 사이에는 지도에 아무것도 그릴 수 없으니 여기 잠깐 담아뒀다가
-    // onMapReady 에서 한 번 더 그린다. 반대로 onMapReady 가 먼저 끝나면
-    // render() 가 매번 kakaoMap 이 있는지 보고 바로 그리므로 이 값은 안 쓰인다.
-    private var pendingStatus: ChildStatusDoc? = null
 
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.KOREA)
 
@@ -91,13 +78,12 @@ class MapTimelineFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 타임라인은 지도와 무관하다 — 앱키가 없어 지도를 못 띄우는 개발기에서도
-        // 날짜 이동 UI 자체는 멀쩡히 그려져야 한다. subscribeSegments 가 childUid 를
-        // 못 구해 구독이 아예 안 걸리는 경우(앱키가 없거나, 아직 아이 폰이 첫 보고를
-        // 안 올린 첫 실행 구간) renderTimeline 이 한 번도 안 불릴 수 있는데, 그때
-        // 화면이 "아무 설명 없이 텅 빈 채로" 남으면 고장으로 읽힌다. 그래서 구독
-        // 결과를 기다리지 않고 여기서 빈 목록으로 한 번 먼저 그려 empty 안내부터
-        // 보여준다 — 실제 데이터가 오면 renderTimeline 이 다시 불려 덮어쓴다.
+        // 타임라인은 지도와 무관하다. subscribeSegments 가 childUid 를 못 구해 구독이
+        // 아예 안 걸리는 경우(아직 아이 폰이 첫 보고를 안 올린 첫 실행 구간) renderTimeline
+        // 이 한 번도 안 불릴 수 있는데, 그때 화면이 "아무 설명 없이 텅 빈 채로" 남으면
+        // 고장으로 읽힌다. 그래서 구독 결과를 기다리지 않고 여기서 빈 목록으로 한 번 먼저
+        // 그려 empty 안내부터 보여준다 — 실제 데이터가 오면 renderTimeline 이 다시 불려
+        // 덮어쓴다.
         timelineAdapter = TimelineAdapter(zone) { doc -> focusOn(doc.lat, doc.lng) }
         binding.timelineList.layoutManager = LinearLayoutManager(requireContext())
         binding.timelineList.adapter = timelineAdapter
@@ -106,40 +92,20 @@ class MapTimelineFragment : Fragment() {
         binding.nextDayButton.setOnClickListener { changeDay(1) }
         renderDayHeader()
 
-        // Fix 1: subscribe() 는 앱키 가드보다 반드시 먼저 불러야 한다. 예전엔 가드
-        // 뒤에 있어서, 앱키가 없는 빌드(지금 이 기기가 그렇다)에서는 여기 도달하지
-        // 못해 joinedListener·statusListener·segmentListener 가 셋 다 안 걸렸다 —
-        // segments/ 에 데이터가 가득해도 "이 날은 기록이 없어요"만 영원히 뜨는
-        // 상태였다. 데이터 구독은 지도와 무관하다(위 renderTimeline 주석과 같은
-        // 이유) — 아래 render()/drawRoute() 는 kakaoMap 이 null 이면 각각
-        // pendingStatus 에 담아두거나 그냥 return 하므로, 앱키가 없어 kakaoMap 이
-        // 끝까지 null 인 채로도 Kakao SDK 클래스를 하나도 건드리지 않는다.
+        // subscribe() 는 지도 초기화보다 먼저 부른다. 카카오 시절엔 앱키가 없는 기기에서
+        // subscribe() 호출부 자체가 앱키 가드 뒤에 있어 건너뛰어지는 사고가 있었다(관련
+        // 기록: docs/known-issues.md). osmdroid로 바뀌며 앱키 가드 자체가 없어져 같은
+        // 사고는 구조적으로 재발할 수 없지만, "데이터 구독은 지도 설정과 무관하며 항상
+        // 먼저 돈다"는 순서는 그대로 지킨다.
         subscribe()
 
-        if (BuildConfig.KAKAO_APP_KEY.isEmpty()) {
-            // 앱키가 없다(개발기에 아직 등록 전) — 지도를 아예 시작하지 않는다.
-            // 안내만 띄우고, 페어링·위치 수집·타임라인 구독 등 이 화면과 무관한
-            // 기능은 그대로 돈다.
-            binding.noKeyNotice.visibility = View.VISIBLE
-            return
-        }
-
-        binding.mapView.start(
-            object : MapLifeCycleCallback() {
-                override fun onMapDestroy() = Unit
-                override fun onMapError(error: Exception) {
-                    _binding?.statusBar?.text = getString(R.string.map_error, error.message ?: "")
-                }
-            },
-            object : KakaoMapReadyCallback() {
-                override fun onMapReady(map: KakaoMap) {
-                    // 늦게 도착한 콜백일 수 있다 — 화면이 이미 사라졌으면 무시한다.
-                    if (_binding == null) return
-                    kakaoMap = map
-                    pendingStatus?.let { render(it) }
-                }
-            },
-        )
+        // osmdroid는 mapView.start(...) 같은 비동기 준비 콜백이 없다 — MapView 는
+        // 위 FragmentMapTimelineBinding.inflate() 시점에 XML 인플레이트로 이미 완전히
+        // 생성되어 있고, 마커/폴리라인을 바로 추가해도 된다. 그래서 카카오 시절의
+        // pendingStatus(맵 준비 전에 도착한 Firestore 스냅샷을 잠깐 담아뒀다가 onMapReady
+        // 에서 다시 그리던 값)는 필요 없어져 지웠다 — render()/drawRoute() 는 이제
+        // _binding 널 체크만으로 충분하다.
+        binding.mapView.setMultiTouchControls(true)
     }
 
     /**
@@ -192,26 +158,24 @@ class MapTimelineFragment : Fragment() {
             timeFormat.format(status.at),
         )
 
-        val map = kakaoMap
-        if (map == null) {
-            pendingStatus = status
-            return
-        }
-        pendingStatus = null
-
-        val position = LatLng.from(status.lat, status.lng)
-        val label = childLabel
-        if (label == null) {
-            val styles = LabelStyles.from(
-                "child",
-                LabelStyle.from(R.drawable.marker_child).setAnchorPoint(0.5f, 1.0f),
-            )
-            childLabel = map.labelManager?.layer?.addLabel(
-                LabelOptions.from("child", position).setStyles(styles)
-            )
-            map.moveCamera(CameraUpdateFactory.newCenterPosition(position, 16))
+        val point = GeoPoint(status.lat, status.lng)
+        val marker = childMarker
+        if (marker == null) {
+            val newMarker = Marker(b.mapView)
+            newMarker.icon = ContextCompat.getDrawable(requireContext(), R.drawable.marker_child)
+            // 카카오 LabelStyle.setAnchorPoint(0.5f, 1.0f)와 같은 값 — 마커 아이콘의
+            // 가로 중앙·세로 맨 아래가 실제 좌표를 가리키게 한다(핀 모양 아이콘 전제).
+            newMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            newMarker.position = point
+            b.mapView.overlays.add(newMarker)
+            childMarker = newMarker
+            // 카메라는 마커가 "처음 생길 때"만 움직인다 — 이후 갱신에서는 부모가 이미
+            // 지도를 옮겨봤을 수 있으니 시점을 뺏지 않는다.
+            b.mapView.controller.setZoom(16.0)
+            b.mapView.controller.setCenter(point)
         } else {
-            label.moveTo(position)
+            marker.position = point
+            b.mapView.invalidate()
         }
     }
 
@@ -275,8 +239,10 @@ class MapTimelineFragment : Fragment() {
     }
 
     private fun focusOn(lat: Double, lng: Double) {
-        val map = kakaoMap ?: return
-        map.moveCamera(CameraUpdateFactory.newCenterPosition(LatLng.from(lat, lng), 16))
+        val b = _binding ?: return
+        val point = GeoPoint(lat, lng)
+        b.mapView.controller.setZoom(16.0)
+        b.mapView.controller.setCenter(point)
     }
 
     /**
@@ -289,35 +255,42 @@ class MapTimelineFragment : Fragment() {
      *
      * renderTimeline 은 스냅샷마다, 그리고 날짜를 넘길 때마다 불린다. 매번 새로
      * 선을 그리기 전에 지난 선을 지우지 않으면 날이 바뀔 때마다 선이 겹겹이
-     * 쌓여 지도가 낙서가 된다. 앱키가 없어 kakaoMap 이 없는 개발기에서는
-     * routeLineManager 에 접근할 이유도 없으므로 맨 앞에서 빠진다.
+     * 쌓여 지도가 낙서가 된다.
      */
     private fun drawRoute(docs: List<SegmentDoc>) {
-        val map = kakaoMap ?: return
-        val layer = map.routeLineManager?.layer ?: return
+        val b = _binding ?: return
 
-        // 위치 마커는 labelManager 의 레이어에 있어 별개다 — 여기서 지우는 건
-        // routeLineManager 레이어의 선뿐이고 마커는 건드리지 않는다.
-        routeLine?.let { layer.remove(it) }
+        // 위치 마커는 overlays 리스트의 다른 요소라 별개다 — 여기서는 이전 경로선만
+        // 지우고 마커는 건드리지 않는다.
+        routeLine?.let { b.mapView.overlays.remove(it) }
         routeLine = null
 
-        val positions = docs.map { LatLng.from(it.lat, it.lng) }
-        if (positions.size < 2) return // 점 하나로는 선이 안 된다.
+        val positions = docs.map { GeoPoint(it.lat, it.lng) }
+        if (positions.size < 2) {
+            b.mapView.invalidate() // 점 하나로는 선이 안 된다 — 지운 것만 반영하고 끝.
+            return
+        }
 
-        val styles = RouteLineStyles.from(RouteLineStyle.from(ROUTE_LINE_WIDTH, ROUTE_COLOR))
-        val segment = RouteLineSegment.from(positions, styles)
-        routeLine = layer.addRouteLine(RouteLineOptions.from(segment))
+        val polyline = Polyline(b.mapView)
+        // setColor/setWidth 는 구버전 API로 deprecated 됐다 — 실제 선을 그리는 Paint 를
+        // 직접 건드리는 쪽이 권장 방식이다.
+        polyline.outlinePaint.color = ROUTE_COLOR
+        polyline.outlinePaint.strokeWidth = ROUTE_LINE_WIDTH
+        polyline.setPoints(positions)
+        b.mapView.overlays.add(polyline)
+        routeLine = polyline
         // 카메라는 여기서 움직이지 않는다 — 부모가 이미 지도를 옮겨봤을 수 있으니
         // 마커가 처음 생길 때(render())만 이동하고, 경로 갱신으로는 시점을 뺏지 않는다.
+        b.mapView.invalidate()
     }
 
     override fun onResume() {
         super.onResume()
-        if (BuildConfig.KAKAO_APP_KEY.isNotEmpty()) _binding?.mapView?.resume()
+        _binding?.mapView?.onResume()
     }
 
     override fun onPause() {
-        if (BuildConfig.KAKAO_APP_KEY.isNotEmpty()) _binding?.mapView?.pause()
+        _binding?.mapView?.onPause()
         super.onPause()
     }
 
@@ -328,10 +301,11 @@ class MapTimelineFragment : Fragment() {
         statusListener = null
         segmentListener?.remove()
         segmentListener = null
-        kakaoMap = null
-        childLabel = null
+        // onDetach()는 osmdroid가 내부적으로 띄운 타일 다운로드 스레드·리시버를
+        // 정리한다 — 안 부르면 화면을 나갔다 들어올 때마다 조금씩 샌다.
+        _binding?.mapView?.onDetach()
+        childMarker = null
         routeLine = null
-        pendingStatus = null
         _binding = null
         super.onDestroyView()
     }

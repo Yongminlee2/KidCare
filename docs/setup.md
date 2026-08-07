@@ -211,34 +211,18 @@ cd /c/workAndroid/KidCare && ./gradlew.bat :app:assembleDebug && adb -s <아이�
 제조사 전용 기능이라 앱 코드로 감지·유도할 수 없다 — 사람이 수동으로 확인해야
 한다.
 
-## 카카오 지도 앱키 설정 (Task 10)
+## 지도 (osmdroid — 등록 절차 없음)
 
-보호자 화면 지도는 카카오맵 SDK를 쓴다. 앱키가 없으면 빌드는 되지만 지도
-자리에 "지도 키가 설정되지 않았습니다" 안내만 뜨고 나머지 기능(페어링·위치
-수집)은 그대로 동작한다 — 이 저장소를 처음 받은 사람은 아래 절차를 밟기
-전까지 이 상태로 개발을 계속할 수 있다.
-
-1. https://developers.kakao.com 로그인 → `내 애플리케이션` → `애플리케이션 추가하기`
-   - 앱 이름: 우리아이 지킴이 / 회사명: 개인
-2. 만든 앱 클릭 → 왼쪽 `앱 설정 > 플랫폼` → `Android 등록`
-   - 패키지명: `com.kidcare.family`
-   - 마켓 URL: 비워둠
-   - 키 해시: 아래 명령으로 얻는다
-     ```bash
-     keytool -exportcert -alias androiddebugkey \
-       -keystore "$USERPROFILE/.android/debug.keystore" \
-       -storepass android -keypass android | openssl sha1 -binary | openssl base64
-     ```
-     (keytool 은 JDK 안에 있다. 예: `C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe`)
-3. 왼쪽 `앱 설정 > 앱 키` → **네이티브 앱 키**를 복사
-4. `C:\workAndroid\KidCare\local.properties` 에 한 줄 추가 (이 파일은 git 에 안 올라간다):
-   ```properties
-   KAKAO_APP_KEY=여기에_네이티브_앱_키
-   ```
-5. 릴리스 APK를 만들 때는 릴리스 키스토어의 키 해시도 같은 자리(`앱 설정 >
-   플랫폼 > Android`)에 **추가로** 등록해야 한다. 디버그 키 해시만 등록하면
-   릴리스 빌드는 컴파일·실행은 되지만 지도만 조용히 안 뜬다(예외 없이
-   `onMapError` 콜백만 호출됨) — 배포 직전에 반드시 확인할 것.
+보호자 화면 지도는 osmdroid(OpenStreetMap) 를 쓴다. 카카오맵과 달리 앱키 발급이나
+플랫폼 등록이 필요 없다 — `implementation(libs.osmdroid.android)` 의존성만으로
+빌드하면 바로 동작한다. 원래는 카카오맵 SDK를 썼는데, 소유자가 카카오 네이티브
+앱키를 발급받지 않아 지도가 한 번도 그려진 적이 없어서 osmdroid로 교체했다
+(교체 근거는 `docs/superpowers/specs/2026-08-06-kidcare-design.md` §9 결정 기록,
+세부 API 매핑 근거는 `.superpowers/map-swap-report.md` 참고). 카카오 쪽 코드는
+`gradle/libs.versions.toml`의 `kakao-map` 별칭과 `settings.gradle.kts`의 카카오
+Maven 저장소에 "카카오로 되돌릴 때 쓴다"라는 주석과 함께 주석 처리된 채로 남아있다
+— 나중에 되돌리려면 그 두 곳의 주석을 풀고 `app/build.gradle.kts`에
+`implementation(libs.kakao.map)`을 다시 추가하면 된다.
 
 ### 두 폰 확인 (Task 10, 1~2단계 최종 확인)
 
@@ -252,13 +236,14 @@ adb -s <아이폰시리얼> install -r app/build/outputs/apk/debug/app-debug.apk
 
 1. 두 폰 `pm clear com.kidcare.family` → 페어링 → 아이폰 권한 전부 켜기
 2. 아이폰을 창가에 두고 1~2분 기다린다
-3. 엄마폰에 카카오 지도가 뜨고, 아이 위치에 파란 마커가 찍히는지 확인
+3. 엄마폰에 OpenStreetMap 지도가 뜨고, 아이 위치에 파란 마커가 찍히는지 확인
+   (등록 절차가 없으므로 첫 실행부터 바로 떠야 한다 — 안 뜨면 인터넷 연결부터 의심)
 4. 위쪽 카드에 `🔋 78% · 15:42 기준` 같은 문구가 보이는지 확인
 5. 아이폰을 들고 100m 이상 이동하면 엄마폰 마커가 앱을 만지지 않아도
    따라 움직이는지 확인
 6. 엄마폰 앱을 껐다 켜도 마지막 위치가 그대로 보이는지 확인
-7. `local.properties` 의 `KAKAO_APP_KEY` 를 지우고 다시 빌드하면 "지도 키가
-   설정되지 않았습니다" 가 뜨고 앱이 죽지 않는지 확인 (확인 후 키를 되돌린다)
+7. 지도를 손가락으로 확대/축소·이동해보고, 이후 위치 갱신이 와도 부모가 옮긴
+   시점이 유지되는지(마커가 처음 찍힐 때만 카메라가 움직여야 한다) 확인
 
 ## 카카오 REST API 키 (머무른 곳 이름 표시용)
 

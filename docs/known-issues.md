@@ -93,7 +93,18 @@ Cloudflare Workers 중계로 올릴 수 있어야 한다. 전송 수단을 바�
   `Fix`에 담고 `StatusReporter`가 그대로 저장한다. 단, **이 수정 이전에 이미 저장된
   points 문서는 speed 가 0으로 남아 있다** — 옛 데이터를 다룰 때 0을 "정지"로
   해석하면 안 된다.
-- `MapLifeCycleCallback.onMapDestroy()`가 비어 있다. `onDestroyView`에서 이미 정리한다.
+- **osmdroid 교체(2026-08-07)로 osmdroid의 기본 타일 서버(OpenStreetMap 공용 서버)를
+  그대로 쓴다.** 이건 등록도 비용도 없는 대신 커뮤니티가 제공하는 호의성 서비스라
+  자체 사용 정책(과도한 트래픽을 보내는 클라이언트를 차단할 수 있음)이 있다. 이
+  가족 앱은 두 가족 폰이 하루 종일 켜 둬도 나는 타일 요청량이 그 정책에 걸릴
+  규모가 전혀 아니라서 지금은 문제 삼지 않는다. 나중에 사용자가 크게 늘면(이
+  프로젝트는 가족끼리 사이드로드 전제라 사실상 해당 없지만) 자체 타일 서버나
+  유료 타일 공급자로 옮기는 걸 검토해야 한다. `KidCareApp.onCreate`에서
+  `Configuration.getInstance().userAgentValue`를 앱 고유값(`applicationId`)으로
+  설정해 둔 것도 이 정책 때문이다(요청 주체 식별 필수). 카카오맵으로 되돌아갈
+  경로는 여전히 살아있다 — `gradle/libs.versions.toml`의 `kakao-map` 별칭과
+  `settings.gradle.kts`의 카카오 Maven 저장소가 "카카오로 되돌릴 때 쓴다" 주석과
+  함께 남아있다.
 - `FamilyRepository.createFamily`가 family 문서 쓰기와 보호자 member 문서 쓰기를 마친
   뒤에 크래시하면(서버 시각 보정을 하려고 그 사이 순서를 바꿨다 — 3단계 Task 8),
   `GuardianPairingActivity.kt`는 `store.familyId`를 `createFamily`가 **반환한 뒤에만**

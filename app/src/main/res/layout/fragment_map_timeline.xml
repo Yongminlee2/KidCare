@@ -10,7 +10,7 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <com.kakao.vectormap.MapView
+        <org.osmdroid.views.MapView
             android:id="@+id/map_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
@@ -29,18 +29,6 @@
                 android:padding="16dp"
                 android:textAppearance="?attr/textAppearanceBodyLarge" />
         </com.google.android.material.card.MaterialCardView>
-
-        <!-- 앱키가 비어 있을 때(로컬 개발기 등)만 보인다. 지도만 가리고
-             페어링·위치 수집 등 나머지 기능에는 영향을 주지 않는다. -->
-        <TextView
-            android:id="@+id/no_key_notice"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="?attr/colorSurface"
-            android:gravity="center"
-            android:padding="32dp"
-            android:text="@string/map_no_key"
-            android:visibility="gone" />
     </FrameLayout>
 
     <LinearLayout
