@@ -23,6 +23,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.kidcare.family.R
+import kotlinx.coroutines.CancellationException
 
 /**
  * 폰찾기 벨. 알람 스트림으로 재생하므로 벨소리가 무음·진동이어도 울린다.
@@ -54,17 +55,25 @@ object FindPhoneController {
     // 때도 계속 살아있는 leak 이 된다.
     private var stopReceiver: BroadcastReceiver? = null
 
-    val isRinging: Boolean get() = player != null
+    // "지금 폰찾기 세션이 진행 중인가"를 player 존재 여부로 판단하지 않는다.
+    // buildPlayer() 가 벨소리 URI 를 못 찾거나 prepare() 가 실패하면 player 는
+    // null 로 남지만, 그 경우에도 진동·알림·5분 타이머·볼륨 복구 의무는 전부
+    // 정상적으로 살아있는 "진행 중" 세션이다 — player 유무만으로 판단하면
+    // 그 상태에서 두 번째 FIND_PHONE 이 새로 세션을 또 시작해 버린다.
+    private var ringing = false
+
+    val isRinging: Boolean get() = ringing
 
     fun start(context: Context) {
         // 이미 울리고 있으면 아무것도 하지 않는다 — 부모가 두 번 누르거나
         // Firestore 스냅샷이 같은 명령을 다시 흘려보내도(CommandHandler 의
         // handled 중복 제거로 대부분 걸러지지만, 재시작 직후처럼 걸러지지
-        // 않는 경로가 있어도) 여기서 한 번 더 막는다. 두 번째 MediaPlayer가
-        // 겹쳐 시작되면 소리가 두 겹으로 울리고, 저장해 둔 원래 볼륨값도
+        // 않는 경로가 있어도) 여기서 한 번 더 막는다. 두 번째 세션이 겹쳐
+        // 시작되면 소리가 두 겹으로 울릴 수 있고, 저장해 둔 원래 볼륨값도
         // 두 번째 호출이 "이미 최대로 올려놓은 값"으로 덮어써 버려 stop() 이
         // 원래 값이 아니라 최대값으로 복구하는 사고로 이어진다.
         if (isRinging) return
+        ringing = true
 
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val currentVolume = audio.getStreamVolume(AudioManager.STREAM_ALARM)
@@ -72,6 +81,14 @@ object FindPhoneController {
         // 볼륨을 '올리기 전에' 먼저 기록한다(FindPhoneStateStore.markRinging
         // 주석 참고) — 순서를 바꿔 올린 뒤에 기록하면, 그 사이 프로세스가
         // 죽었을 때 원래 값을 영영 잃는다. 그게 바로 이 기록이 막으려는 사고다.
+        //
+        // 이 뒤에 벨소리 준비가 실패해도(buildPlayer 참고) 이 순서를 바꾸지
+        // 않는다: 소리 없이 진동만 울리는 경로에서도 "볼륨을 최대로 올렸다가
+        // 나중에 되돌려야 한다"는 의무 자체는 동일하게 남아야 하고, 그 의무를
+        // player 성공 여부로 나누면 stop()/recoverIfNeeded() 가 "볼륨을
+        // 실제로 올렸었나"를 따로 추적해야 해서 상태가 두 갈래로 갈라진다.
+        // 이미 최대인 스트림에 다시 같은 값을 쓰는 건 해가 없는 반면, 상태
+        // 모델이 갈라지는 건 다음 사람이 stop() 을 읽을 때 헷갈릴 여지다.
         FindPhoneStateStore(context).markRinging(currentVolume)
 
         audio.setStreamVolume(
@@ -80,23 +97,7 @@ object FindPhoneController {
             0,
         )
 
-        val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-        player = MediaPlayer().apply {
-            // USAGE_ALARM 이 핵심이다 — 벨소리 스트림이 아니라 알람 스트림으로
-            // 재생하므로 링거가 무음·진동이어도, 방해 금지 접근 권한이 전혀
-            // 없어도 그대로 울린다(RingerController.hasDndAccess 와 무관한 경로).
-            setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-            )
-            setDataSource(context, uri)
-            isLooping = true
-            prepare()
-            start()
-        }
+        player = buildPlayer(context)
 
         vibrator = vibratorOf(context).also {
             it.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 600, 400), 0))
@@ -119,7 +120,55 @@ object FindPhoneController {
             stop(context)
         }.also { handler.postDelayed(it, AUTO_STOP_MILLIS) }
 
-        Log.i(TAG, "폰찾기 시작")
+        Log.i(TAG, if (player != null) "폰찾기 시작" else "폰찾기 시작 (소리 없이 진동만)")
+    }
+
+    /**
+     * 벨소리 MediaPlayer 를 준비한다. 실패(URI 를 못 찾음, prepare() 예외 등)를
+     * 이 함수 밖으로 내보내지 않는다 — start() 안에서 이 호출보다 앞서 이미
+     * 볼륨이 최대로 올라가고 복구 기록도 저장된 뒤라, 여기서 예외가
+     * CommandHandler 까지 새 나가면 그 예외 처리 경로(markFailed)가 도는 동안
+     * 앱이 죽거나 명령이 "실패"로만 남고, 아이 폰은 소리도 진동도 없이 그냥
+     * 조용한 채 볼륨만 최대로 남을 위험이 있다. 그래서 실패하면 null 을 돌려
+     * "소리 없이 진동만"으로 격하시킨다 — 소파 밑에서 진동하는 폰은 찾을 수
+     * 있지만 죽은 앱은 못 찾는다.
+     */
+    private fun buildPlayer(context: Context): MediaPlayer? {
+        val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+        if (uri == null) {
+            // 기본 알람음이 지정 안 된 롬, 사용자가 알림음을 지운 경우,
+            // 미디어스토어가 아직 안 채워진 기기 등에서 실제로 벌어진다.
+            Log.w(TAG, "알람음·벨소리 URI 를 둘 다 못 찾음 — 소리 없이 진동만 울린다")
+            return null
+        }
+
+        val candidate = MediaPlayer()
+        return try {
+            candidate.apply {
+                // USAGE_ALARM 이 핵심이다 — 벨소리 스트림이 아니라 알람 스트림으로
+                // 재생하므로 링거가 무음·진동이어도, 방해 금지 접근 권한이 전혀
+                // 없어도 그대로 울린다(RingerController.hasDndAccess 와 무관한 경로).
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+                setDataSource(context, uri)
+                isLooping = true
+                prepare()
+                start()
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "벨소리 준비 실패 — 소리 없이 진동만 울린다: uri=$uri", e)
+            // 절반쯤 만들어진 MediaPlayer 를 그대로 버리면 네이티브 리소스가
+            // 새므로, 실패한 인스턴스라도 release() 는 해 준다.
+            candidate.runCatching { release() }
+            null
+        }
     }
 
     fun stop(context: Context) {
@@ -141,6 +190,7 @@ object FindPhoneController {
         NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
 
         restoreVolume(context)
+        ringing = false
         Log.i(TAG, "폰찾기 중지")
     }
 
@@ -151,7 +201,7 @@ object FindPhoneController {
      * 함수가 불리는 시점(onCreate)에는 이 프로세스가 아직 명령을 단 하나도
      * 처리하지 않았다 — 명령 리스너는 onStartCommand 에서 그보다 나중에 걸린다
      * (TrackingService.subscribeToCommands 참고). 즉 이 시점의 isRinging
-     * (=player != null)은 이 프로세스 기준으로 항상 false 다: 이 프로세스는
+     * (=ringing 필드)은 이 프로세스 기준으로 항상 false 다: 이 프로세스는
      * FIND_PHONE 을 아직 한 번도 받아본 적이 없으니까. 그런데도
      * FindPhoneStateStore.inProgress 가 true 로 남아있다면, 그건 "지금 이
      * 프로세스가 울리고 있다"일 수가 없고 "이전 프로세스가 벨을(그리고 볼륨
