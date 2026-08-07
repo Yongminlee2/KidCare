@@ -89,6 +89,9 @@
     <string name="control_last_seen_minutes">%1$d분 전</string>
     <string name="control_last_seen_hours">%1$d시간 전</string>
     <string name="control_last_seen_days">%1$d일 전</string>
+    <!-- 아이 폰 시계가 앞서 있어 "몇 분 전"을 계산할 수 없을 때. 상대 표현("방금 전")을
+         쓰면 바로 윗줄의 "애기폰이 응답하지 않아요"와 부딪히므로 절대 시각만 보여준다. -->
+    <string name="control_last_seen_skewed">마지막 신호 %1$s (애기폰 시계 기준이라 정확하지 않아요)</string>
     <string name="control_error_ringer_denied">아이 폰에서 소리 설정 권한이 꺼져 있어요. 아이 폰 설정에서 켜야 바꿀 수 있어요.</string>
     <string name="control_error_child_failed">아이 폰이 이 명령을 처리하지 못했어요.</string>
 

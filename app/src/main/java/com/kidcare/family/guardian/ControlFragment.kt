@@ -24,6 +24,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * 관리 탭. 부모가 버튼을 누르면 아이 폰이 바뀐다.
@@ -58,6 +61,13 @@ class ControlFragment : Fragment() {
     /** 아이 폰이 마지막으로 상태를 올린 시각(UTC 밀리초). 0 이면 아직 한 번도 없다. */
     private var lastSeenAt: Long = 0L
 
+    /**
+     * 시계가 어긋난 것이 드러났을 때만 쓰는 절대 시각 표기([lastSeenPhrase] 참고).
+     * 평소에는 "12분 전" 쪽이 부모에게 훨씬 잘 읽히므로 이건 예외 경로 전용이다.
+     * Locale 은 MapTimelineFragment 의 시각 표기와 맞춘다.
+     */
+    private val lastSeenClockFormat = SimpleDateFormat("M월 d일 HH:mm", Locale.KOREA)
+
     private var timeoutJob: Job? = null
     private var findResetJob: Job? = null
     private var lockSaveJob: Job? = null
@@ -65,6 +75,28 @@ class ControlFragment : Fragment() {
     /** 60초가 지나 "응답 없음"을 이미 띄웠는가. 늦게 오는 pending/delivered 스냅샷이
      *  실패 문구를 다시 "전달 중…"으로 되돌리지 못하게 막는다. */
     private var timedOut = false
+
+    /**
+     * 지금 화면이 따라가고 있는 명령의 세대 번호. [send] 를 부를 때마다 하나씩 는다.
+     *
+     * 발행은 코루틴이라 "버튼을 눌렀다"와 "명령 문서 id 를 받았다" 사이에 네트워크
+     * 왕복이 한 번 있다. 버튼은 일부러 잠그지 않으므로([send] 주석) 부모가 진동을
+     * 눌렀다가 곧바로 무음으로 고치면 그 왕복 안에서 두 번째 발행이 시작되고, 두
+     * 코루틴이 **모두** [track] 에 도착한다. 세대 번호가 없으면 뒤에 도착한 쪽이
+     * `commandListener` 와 `timeoutJob` 을 그냥 덮어써서 이렇게 된다.
+     *
+     * - 먼저 붙은 리스너는 `remove()` 없이 참조를 잃는다 — 화면을 떠나도 안 떨어지는
+     *   Firestore 리스너가 하나 영구히 남는다.
+     * - 밀려난 첫 명령이 나중에 done/failed 가 되면 그 고아 리스너가 깨어나 **두 번째**
+     *   명령의 60초 타이머를 끄고, 부모가 보고 있지도 않은 명령의 "완료"를 적는다.
+     * - 그래서 두 번째 명령이 진짜로 먹통이 돼도 "애기폰이 응답하지 않아요"가 영영
+     *   안 뜬다 — 타이머가 이미 남의 손에 꺼졌기 때문이다.
+     *
+     * 그래서 발행 **전에** 세대를 붙잡아 두고, 왕복이 끝난 뒤·리스너 콜백 안·타임아웃
+     * 안에서 그 값이 아직 최신인지 확인한다. 최신이 아니면 화면도 타이머도 건드리지
+     * 않는다.
+     */
+    private var commandGeneration = 0
 
     /**
      * 부모가 방금 잠금 스위치로 만든 값. 아직 서버 스냅샷으로 되돌아오지 않았다.
@@ -209,6 +241,11 @@ class ControlFragment : Fragment() {
      * 자연스러운 행동이고, 그때 화면이 말해야 하는 것은 방금 누른 명령의 상태다.
      * 버튼을 잠그지 않는 이유이기도 하다: 응답이 60초까지 걸릴 수 있는데 그동안
      * 버튼이 죽어 있으면 화면이 고장 난 것처럼 보인다.
+     *
+     * 다만 여기서 끊는 것만으로는 모자란다. 발행은 왕복 한 번이 걸리는 코루틴이라
+     * 두 번째 누름이 첫 번째 왕복 **안에서** 시작될 수 있고, 그러면 두 코루틴이
+     * 나란히 [track] 까지 간다. 그래서 [commandGeneration] 으로 "지금 화면의 주인"을
+     * 하나로 못박는다 — 자세한 이유는 그 필드 주석에 적었다.
      */
     private fun send(
         type: String,
@@ -223,29 +260,59 @@ class ControlFragment : Fragment() {
         }
         stopTracking()
         timedOut = false
+        // 발행 결과를 기다리는 동안 부모가 다른 버튼을 누를 수 있다. 지금 이 순간의
+        // 세대를 붙잡아 두고, 왕복이 끝난 뒤 그 값이 아직 최신인지로 판단한다
+        // ([commandGeneration] 주석 참고).
+        val generation = ++commandGeneration
         renderCommand(CommandUi.Sending)
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val commandId = CommandRepository.send(fid, uid, type, payload)
                 _binding ?: return@launch
+                // onSent 는 세대와 상관없이 부른다. 이건 "화면 한 줄에 무엇을 적을까"가
+                // 아니라 "명령이 실제로 발행됐다"는 사실이고(폰찾기 버튼의 상태가 여기에
+                // 달려 있다), 부모가 그 사이에 다른 버튼을 눌렀다고 해서 아이 폰이
+                // 울리기 시작한 사실이 없어지지는 않는다.
                 onSent()
-                track(fid, uid, commandId)
+                // 기다리는 동안 더 새로운 명령이 나갔다면 화면은 그 명령의 것이다.
+                // 여기서 track() 을 부르면 남의 리스너와 타이머를 덮어쓴다 — 리스너를
+                // 아예 만들지 않으므로 remove() 를 빠뜨릴 길도 함께 없어진다.
+                if (generation != commandGeneration) return@launch
+                track(fid, uid, commandId, generation)
             } catch (e: CancellationException) {
                 // 화면을 떠나며 스코프가 취소된 것이다. 실패로 표시하면 안 된다.
                 throw e
             } catch (e: Exception) {
+                // 이미 밀려난 명령의 실패다. 부모가 지금 보고 있는 명령의 "전달 중…"을
+                // 실패 문구로 덮어쓰면, 정작 진행 중인 명령이 실패한 것처럼 보인다.
+                if (generation != commandGeneration) return@launch
                 val ctx = context ?: return@launch
                 renderCommand(CommandUi.Failed(errorMessage(ctx, e)))
             }
         }
     }
 
-    private fun track(fid: String, uid: String, commandId: String) {
+    /**
+     * 명령 문서 하나를 따라가기 시작한다.
+     *
+     * [generation] 은 [send] 가 발행 **전에** 붙잡아 둔 값이다. 리스너 콜백도 타임아웃도
+     * 그 값이 아직 최신일 때만 화면과 타이머를 만진다 — `ListenerRegistration.remove()`
+     * 는 "앞으로 오지 마라"는 뜻이지 이미 큐에 올라간 콜백까지 되돌리지는 않으므로,
+     * 리스너를 뗐다는 사실만 믿지 않고 콜백 안에서 한 번 더 확인한다.
+     */
+    private fun track(fid: String, uid: String, commandId: String, generation: Int) {
+        // 대입하기 전에 반드시 앞의 것을 뗀다. 지금 호출 경로에서는 send 앞머리가 이미
+        // 떼어 놓았지만, 이 한 줄이 있어야 "commandListener 를 remove() 없이 덮어쓰는
+        // 경로는 없다"가 이 함수만 읽어도 성립한다.
+        stopTracking()
         commandListener = CommandRepository.observeOne(
             fid, uid, commandId,
-            onChange = { doc -> onCommandChanged(doc) },
+            onChange = { doc ->
+                if (generation == commandGeneration) onCommandChanged(doc)
+            },
             onError = { e ->
+                if (generation != commandGeneration) return@observeOne
                 val message = errorMessageOrNull(e)
                 if (message != null) {
                     timeoutJob?.cancel()
@@ -256,7 +323,8 @@ class ControlFragment : Fragment() {
         )
         timeoutJob = viewLifecycleOwner.lifecycleScope.launch {
             delay(COMMAND_TIMEOUT_MILLIS)
-            onTimedOut()
+            if (generation != commandGeneration) return@launch
+            onTimedOut(generation)
         }
     }
 
@@ -287,7 +355,7 @@ class ControlFragment : Fragment() {
      * 살아나면 그때 실행된다. 그래서 리스너는 떼지 않는다: 늦게라도 done 이 오면
      * 위 [onCommandChanged] 가 "완료"로 고쳐 준다.
      */
-    private suspend fun onTimedOut() {
+    private suspend fun onTimedOut(generation: Int) {
         _binding ?: return
         timedOut = true
         // 마지막 신호 문구는 서버 시각을 물어보느라 잠깐 걸릴 수 있다. 그동안 스피너가
@@ -295,10 +363,15 @@ class ControlFragment : Fragment() {
         renderCommand(CommandUi.Failed(getString(R.string.control_command_timeout)))
 
         val elapsed = elapsedSinceLastSeen()
-        // 위 한 줄에서 화면을 떠났을 수 있다. 여기서부터는 붙잡아 둔 Context 로만
-        // 문자열을 만든다 — Fragment.getString 은 화면이 떨어져 나간 뒤에 부르면
-        // 그대로 예외다.
+        // 위 한 줄에서 화면을 떠났거나 부모가 새 명령을 눌렀을 수 있다. 여기서부터는
+        // 붙잡아 둔 Context 로만 문자열을 만든다 — Fragment.getString 은 화면이 떨어져
+        // 나간 뒤에 부르면 그대로 예외다.
+        //
+        // 세대도 여기서 다시 본다. 코루틴 취소만 믿을 수 없기 때문이다:
+        // FamilyRepository.serverNow 는 오프셋이 이미 캐시돼 있으면 정지점 없이 곧장
+        // 돌아오므로, 그 사이 timeoutJob 이 취소됐어도 이 줄까지 그대로 흘러온다.
         _binding ?: return
+        if (generation != commandGeneration) return
         val ctx = context ?: return
         renderCommand(
             CommandUi.Failed(
@@ -309,25 +382,44 @@ class ControlFragment : Fragment() {
 
     /**
      * 마지막 신호로부터 흐른 시간(밀리초). null 이면 아이 폰이 한 번도 신호를 준 적이 없다.
+     * **음수로 돌아올 수 있다** — 그 뜻과 처리는 [lastSeenPhrase] 참고.
      *
      * 기준 시각을 [FamilyRepository.serverNow] 로 얻는 이유: 부모 폰 시계가 뒤처져
      * 있으면 [System.currentTimeMillis] 로 뺀 값이 음수가 돼 "마지막 신호 -3분 전"이
      * 찍힌다.
      *
-     * 그래도 완전히 안전하지는 않다 — `lastSeenAt` 자체는 **아이 폰이 자기 시계로**
-     * 적은 값이라(child/StatusReporter) 아이 폰 시계가 앞서 있으면 여전히 음수가
-     * 나올 수 있다. 그래서 0 으로 자른다: 음수 시간을 보여주느니 "방금 전"이 낫다.
+     * 그래도 완전히 안전하지는 않다. `serverNow` 가 보정하는 것은 **부모 폰 시계**뿐인데
+     * `lastSeenAt` 은 **아이 폰이 자기 시계로** 적은 값이라(child/StatusReporter),
+     * 아이 폰 시계가 앞서 있으면 여전히 음수가 나온다. 예전에는 여기서 0 으로 잘랐는데
+     * 그게 "방금 전"이 돼서 바로 윗줄의 "애기폰이 응답하지 않아요"와 정면으로
+     * 부딪혔다 — 자르지 않고 음수를 그대로 넘긴다. 근본 해결은 docs/known-issues.md 7번.
      */
     private suspend fun elapsedSinceLastSeen(): Long? {
         val seen = lastSeenAt
         if (seen <= 0L) return null
         val now = FamilyRepository.serverNow(familyId, AuthGateway.currentUid())
-        return (now - seen).coerceAtLeast(0L)
+        return now - seen
     }
 
-    /** "마지막 신호 12분 전". 계산은 위에서 끝났고 여기서는 문장만 고른다. */
+    /**
+     * "마지막 신호 12분 전". 계산은 위에서 끝났고 여기서는 문장만 고른다.
+     *
+     * [elapsed] 가 음수면 아이 폰 시계가 부모 폰(서버 보정본)보다 앞서 있다는 뜻이고,
+     * 그 순간 우리는 마지막 신호가 **얼마나 오래됐는지 모른다.** 이때 상대 표현을 쓰면
+     * 안 된다: 바로 윗줄이 "애기폰이 응답하지 않아요"인데 그 아래에 "마지막 신호 방금
+     * 전"이 붙으면 두 줄이 서로를 부정해서 부모는 아무것도 알 수 없고 화면을 덜 믿게
+     * 된다. 그래서 경과 시간 대신 아이 폰이 적어 보낸 **절대 시각**을 그대로 보여주고,
+     * 그 값이 아이 폰 시계 기준이라 정확하지 않다는 것도 함께 말한다 — 모르는 것을
+     * 아는 척하지 않는 쪽이 항상 낫다.
+     */
     private fun lastSeenPhrase(ctx: Context, elapsed: Long?): String {
         if (elapsed == null) return ctx.getString(R.string.control_last_seen_never)
+        if (elapsed < 0L) {
+            return ctx.getString(
+                R.string.control_last_seen_skewed,
+                lastSeenClockFormat.format(Date(lastSeenAt)),
+            )
+        }
         val text = when {
             elapsed < MINUTE_MILLIS -> ctx.getString(R.string.control_last_seen_now)
             elapsed < HOUR_MILLIS -> ctx.getString(R.string.control_last_seen_minutes, elapsed / MINUTE_MILLIS)

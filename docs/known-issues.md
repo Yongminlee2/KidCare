@@ -91,6 +91,52 @@
 Cloudflare Workers 중계로 올릴 수 있어야 한다. 전송 수단을 바꿔도 호출하는 쪽 코드가
 그대로이도록 처음부터 감싸 둘 것. 설계서 §2에 근거가 적혀 있다.
 
+## 다음 단계로 넘기는 것 (제안)
+
+### 7. `lastSeenAt` 을 아이 폰 시계로 적는다 — 지금은 화면에서 가리기만 했다
+
+`child/StatusReporter`(48줄)는 `lastSeenAt = System.currentTimeMillis()`, 즉 **아이 폰
+자기 시계**로 적는다. 보호자 화면의 "마지막 신호 N분 전"은 `now - lastSeenAt`인데,
+`FamilyRepository.serverNow`가 보정하는 것은 **부모 폰 시계 절반뿐**이다. 아이 폰
+시계가 앞서 있으면 이 뺄셈이 음수가 된다.
+
+원래는 `coerceAtLeast(0)`으로 잘랐는데, 그러면 화면에 이렇게 나온다.
+
+```
+애기폰이 응답하지 않아요
+마지막 신호 방금 전
+```
+
+두 줄이 서로를 부정한다. 부모는 아무것도 알 수 없고 화면을 덜 믿게 된다 —
+"실패 문구 아래에서 스피너가 계속 돌던" 결함(아래 실기기 검증 절)과 같은 종류의,
+코드만 읽어서는 크기를 가늠하기 어려운 표시 결함이다.
+
+**지금 한 것(4단계 Task 9 리뷰 수정):** `ControlFragment`가 음수를 자르지 않고
+그대로 받아, 음수면 상대 표현을 **아예 쓰지 않는다.** 대신 아이 폰이 적어 보낸
+절대 시각을 그 출처와 함께 보여준다(`control_last_seen_skewed`:
+`마지막 신호 8월 7일 14:32 (애기폰 시계 기준이라 정확하지 않아요)`).
+거짓말을 멈춘 것이지 시계를 맞춘 것이 아니다.
+
+**제대로 고치려면:** `lastSeenAt`을 `FieldValue.serverTimestamp()`로 쓰면 값 자체가
+서버 시각이 되어 뺄셈의 양쪽이 같은 시계를 쓰게 된다 — 스큐가 근본에서 사라지고
+위 예외 경로도 필요 없어진다. **그런데 그냥은 안 된다:**
+
+- `ChildStatusDoc.lastSeenAt`은 `Long`인데(`core/model/Documents.kt` 54줄)
+  `FieldValue.serverTimestamp()`가 서버에 남기는 값은 `Timestamp`다. 타입이 어긋나면
+  보호자 쪽 `toObject<ChildStatusDoc>()`가 그 필드에서 깨진다 — **지도의 상태 구독까지
+  같이 죽는다**(`FamilyRepository.observeChildStatus`). 마지막 신호 문구 하나 고치려다
+  실시간 위치를 잃는 교환은 하면 안 된다.
+- 그래서 이 수정은 최소 세 곳이 함께 움직여야 한다: (a) `ChildStatusDoc.lastSeenAt`을
+  `Timestamp?`로 바꾸고 읽는 쪽을 전부 `.toDate().time`으로 옮기거나, (b) `Long` 필드는
+  그대로 두고 `lastSeenServerAt`을 `Timestamp?`로 **따로 추가**해 새 필드가 있으면
+  그걸 쓰고 없으면 옛 필드로 물러난다. (b)가 이미 올라가 있는 문서와 옛 버전을 깔고
+  있는 아이 폰을 깨뜨리지 않는다 — 마이그레이션 없이 굴러가는 쪽이다.
+- 어느 쪽이든 `child/`(StatusReporter)와 `core/model/`을 함께 고치는 일이라
+  "보호자 화면 한 곳 수정"으로 처리할 수 없어서 4단계 Task 9 범위 밖으로 뒀다.
+
+`firestore.rules`는 손댈 필요가 없다 — `children/{childUid}` 쓰기는 이미 아이 본인으로
+제한돼 있고 필드 타입을 검사하지 않는다.
+
 ## 남겨두기로 판단한 것 (고치지 않음)
 
 전수 리뷰에서 확인했지만 **실제 피해가 없어서 그대로 두기로** 한 것들이다.
