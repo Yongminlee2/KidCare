@@ -103,18 +103,51 @@ service cloud.firestore {
         allow delete: if memberOf(familyId) && roleIn(familyId) == 'guardian';
       }
 
-      // 주의: 이 규칙은 children/{childUid} 아래의 모든 문서를 그 아이 본인만
-      // 쓸 수 있게 만든다. 4단계(즉시 변경·폰찾기)에서 보호자가 명령(commands/)을
-      // 써야 하는데, 지금 이 규칙 그대로면 보호자의 쓰기가 막힌다.
-      // → 4단계에서 commands/ 전용 규칙을 따로 파서 이 match 를 고쳐야 한다.
-      // (Task 6 작성 시점 기준: 원격 명령은 FCM 푸시가 아니라 Firestore 스냅샷
-      //  리스너로 전달하기로 결정됐다 — Cloud Functions 없이, Spark 무료 요금제로
-      //  가려는 목적. 즉 보호자가 commands/ 문서를 직접 써야 하므로 이 구멍은
-      //  나중이 아니라 4단계에서 반드시 먼저 메워야 한다.)
-      match /children/{childUid}/{document=**} {
+      // 재귀 와일드카드(/{document=**})를 쓰지 않고 하위 컬렉션을 하나씩 적는다.
+      // 이유: 규칙은 OR 로 평가되므로 와일드카드를 남겨둔 채 commands 규칙만 더하면
+      // 아이도 계속 commands 에 쓸 수 있다. 그러면 아이가 자기 폰에 set_ringer(normal)
+      // 명령을 스스로 넣어 무음 예약을 무력화할 수 있다 — 이 앱의 위협 모델에는
+      // 아이 본인이 들어 있다.
+      match /children/{childUid} {
+        // 이 문서 자체가 status(현재 위치·배터리·현재 모드)다. 아이만 쓴다.
         allow read: if memberOf(familyId);
-        // 아이는 자기 아래에만 쓴다.
         allow write: if memberOf(familyId) && request.auth.uid == childUid;
+
+        match /points/{pointId} {
+          allow read: if memberOf(familyId);
+          allow write: if memberOf(familyId) && request.auth.uid == childUid;
+        }
+
+        match /segments/{segmentId} {
+          allow read: if memberOf(familyId);
+          allow write: if memberOf(familyId) && request.auth.uid == childUid;
+        }
+
+        // 명령은 방향이 반대다: 보호자가 만들고 아이가 실행 결과만 적는다.
+        match /commands/{commandId} {
+          allow read: if memberOf(familyId);
+          // 만드는 것은 보호자만. 항상 pending 으로 시작해야 한다 — 아이를 거치지 않고
+          // done 으로 위조된 명령이 화면에 "완료"로 보이는 것을 막는다.
+          allow create: if memberOf(familyId)
+                        && roleIn(familyId) == 'guardian'
+                        && request.resource.data.state == 'pending';
+          // 아이는 진행 상태만 갱신한다. type·payload 를 바꿀 수 없으므로
+          // "받은 명령을 다른 명령으로 바꿔치기"가 불가능하다.
+          allow update: if memberOf(familyId)
+                        && request.auth.uid == childUid
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['state', 'deliveredAt', 'doneAt', 'error']);
+          // 오래된 명령 정리는 보호자 몫.
+          allow delete: if memberOf(familyId) && roleIn(familyId) == 'guardian';
+        }
+      }
+
+      // "아이가 되돌리면 다시 바꾸기" 같은 가족 단위 설정. 보호자가 정하고 아이는 읽는다.
+      // families 문서에 필드를 더하지 않는 이유: 그 문서의 update 규칙은
+      // hasOnly(['inviteCode','inviteExpiresAt','name']) 로 잠겨 있어 새 필드를 못 쓴다.
+      match /settings/{settingId} {
+        allow read: if memberOf(familyId);
+        allow write: if memberOf(familyId) && roleIn(familyId) == 'guardian';
       }
 
       match /places/{id} {
