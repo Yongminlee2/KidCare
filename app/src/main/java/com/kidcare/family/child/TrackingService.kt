@@ -22,8 +22,10 @@ import com.google.android.gms.location.ActivityRecognition
 import com.google.android.gms.location.ActivityTransition
 import com.google.android.gms.location.ActivityTransitionRequest
 import com.google.android.gms.location.DetectedActivity
+import com.google.firebase.firestore.ListenerRegistration
 import com.kidcare.family.R
 import com.kidcare.family.core.AuthGateway
+import com.kidcare.family.core.CommandRepository
 import com.kidcare.family.core.RoleStore
 import com.kidcare.family.logic.Decision
 import com.kidcare.family.logic.Fix
@@ -47,6 +49,11 @@ class TrackingService : LifecycleService() {
     private var lastSegmentRebuildAt = 0L
     private val pointsCleaner = PointsCleaner()
     private var lastPointsCleanupAt = 0L
+
+    // 받은 명령을 분배·실행하는 곳(Task 3). 리스너 자체는 subscribeToCommands 가
+    // 걸고 뗀다.
+    private val commandHandler by lazy { CommandHandler(this) }
+    private var commandListener: ListenerRegistration? = null
 
     // onCreate 에서 확인한 결과. ChildHomeActivity 는 PermissionStep.firstMissing 이
     // null 일 때만(=모든 권한이 켜져 있을 때만) 이 서비스를 켜지만, 그 뒤 사용자가
@@ -183,8 +190,42 @@ class TrackingService : LifecycleService() {
             return START_NOT_STICKY
         }
 
+        subscribeToCommands(familyId)
+
         collector.start { fix -> handle(familyId, fix) }
         return START_STICKY
+    }
+
+    /**
+     * 명령 리스너를 (다시) 건다.
+     *
+     * onStartCommand 는 START_STICKY 재시작·BootReceiver·중복 시작으로 여러 번
+     * 불릴 수 있다. 기존 리스너를 먼저 떼지 않으면 그때마다 리스너가 하나씩 더
+     * 붙어 같은 명령 스냅샷이 여러 리스너에서 동시에 들어오고, CommandHandler.handle
+     * 이 병렬로 여러 번 불린다 — handled 중복 제거가 있어도 애초에 리스너가 여러
+     * 개면 그만큼 markDelivered 경합이 늘어난다. 그래서 매번 무조건 먼저 뗀다.
+     */
+    private fun subscribeToCommands(familyId: String) {
+        commandListener?.remove()
+        commandListener = null
+
+        // childUid 는 AuthGateway.currentUid() 로만 얻는다 — 로그인을 여기서
+        // 새로 시도하지 않는다(그건 handle() 의 위치 업로드 경로가 이미 한다).
+        // uid 가 없는 채로 구독하면 리스너가 아무것도 안 받는 채로 조용히
+        // 살아만 있어 명령이 영영 안 오는 상태를 알아챌 방법이 없다.
+        val childUid = AuthGateway.currentUid()
+        if (childUid == null) {
+            Log.w(TAG, "childUid 가 없어 명령을 구독하지 않는다 — 로그인 전이거나 세션이 끊긴 상태")
+            return
+        }
+        commandListener = CommandRepository.observePending(
+            familyId = familyId,
+            childUid = childUid,
+            onCommand = { cmd ->
+                lifecycleScope.launch { commandHandler.handle(familyId, childUid, cmd) }
+            },
+            onError = { e -> Log.w(TAG, "명령 리스너 실패 — 명령이 안 올 수 있다", e) },
+        )
     }
 
     private fun handle(familyId: String, fix: Fix) {
@@ -347,6 +388,10 @@ class TrackingService : LifecycleService() {
         unregisterActivityTransitions()
         activeCollector = null
         collector.stop()
+        // 명령 리스너도 같은 이유로 뗀다 — 서비스 없이 리스너만 남으면 handle() 을
+        // 부를 lifecycleScope 도 이미 취소된 상태라 부르는 순간 예외만 난다.
+        commandListener?.remove()
+        commandListener = null
         super.onDestroy()
     }
 
