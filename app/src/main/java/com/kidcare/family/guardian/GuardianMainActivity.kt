@@ -9,10 +9,9 @@ import com.kidcare.family.databinding.ActivityGuardianMainBinding
 /**
  * 보호자 메인 컨테이너. 하단 탭이 프래그먼트를 갈아 끼운다.
  *
- * 지금 탭은 둘이다 — 지도(3단계)와 관리(4단계 Task 9). 예약 탭은 화면이 만들어지는
- * 다음 작업(Task 10)에서, 알림 탭은 events/ 가 생기는 6단계에서 각각 붙인다. 화면이
- * 없는 탭을 미리 넣으면 눌러도 아무것도 없는 빈 탭이 되는데, 그건 부모 눈에 그냥
- * 고장이다.
+ * 지금 탭은 셋이다 — 지도(3단계), 관리·예약(4단계). 알림 탭은 events/ 가 생기는
+ * 6단계에서 붙인다. 화면이 없는 탭을 미리 넣으면 눌러도 아무것도 없는 빈 탭이 되는데,
+ * 그건 부모 눈에 그냥 고장이다.
  *
  * **replace 를 쓰지 않는다.** 프래그먼트를 태그로 찾아 두고 show/hide 로만 오간다.
  * replace 는 탭을 옮길 때마다 지도 프래그먼트를 새로 만들고, 그러면 osmdroid 가
@@ -36,6 +35,7 @@ class GuardianMainActivity : AppCompatActivity() {
     private val tabs = listOf(
         Tab(R.id.tab_map, TAG_MAP) { MapTimelineFragment() },
         Tab(R.id.tab_control, TAG_CONTROL) { ControlFragment() },
+        Tab(R.id.tab_schedule, TAG_SCHEDULE) { ScheduleFragment() },
     )
 
     /** 지금 보이는 탭. 같은 탭으로 두 번 부르는 호출을 걸러내는 데 쓴다. */
@@ -108,6 +108,7 @@ class GuardianMainActivity : AppCompatActivity() {
     private companion object {
         const val TAG_MAP = "tab_map"
         const val TAG_CONTROL = "tab_control"
+        const val TAG_SCHEDULE = "tab_schedule"
         const val KEY_SELECTED_TAB = "selected_tab"
     }
 }

@@ -68,6 +68,7 @@
 
     <string name="tab_map">지도</string>
     <string name="tab_control">관리</string>
+    <string name="tab_schedule">예약</string>
 
     <string name="control_section_ringer">지금 바로 바꾸기</string>
     <string name="control_mode_normal">🔔\n벨소리</string>
@@ -94,6 +95,79 @@
     <string name="control_last_seen_skewed">마지막 신호 %1$s (애기폰 시계 기준이라 정확하지 않아요)</string>
     <string name="control_error_ringer_denied">아이 폰에서 소리 설정 권한이 꺼져 있어요. 아이 폰 설정에서 켜야 바꿀 수 있어요.</string>
     <string name="control_error_child_failed">아이 폰이 이 명령을 처리하지 못했어요.</string>
+
+    <!-- ========================= 예약 탭 (시간대 규칙) ========================= -->
+    <string name="schedule_add">+ 규칙 추가</string>
+    <string name="schedule_empty">아직 정해둔 시간대가 없어요.\n아래 \'규칙 추가\'를 눌러\n\'평일 밤에는 무음\' 같은 규칙을 만들어 보세요.</string>
+    <string name="schedule_error_format">규칙을 불러오지 못했어요\n%1$s</string>
+    <string name="schedule_no_family">가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요.</string>
+    <string name="schedule_delete">삭제</string>
+
+    <!-- 목록 한 줄. 첫 칸이 요일, 둘째 칸이 시간대다. -->
+    <string name="schedule_row_title">%1$s · %2$s</string>
+    <!-- 대화상자에서 규칙을 가리킬 때 쓰는 한 줄 이름. 요일 · 시간대 · 모드. -->
+    <string name="schedule_summary">%1$s · %2$s · %3$s</string>
+    <string name="schedule_row_detail">%1$s</string>
+    <string name="schedule_row_detail_off">%1$s (꺼둠)</string>
+
+    <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="schedule_range">%1$s ~ %2$s</string>
+    <!-- 자정을 넘는 규칙. "22:00 ~ 07:00"만 쓰면 잘못 넣은 값처럼 보이므로
+         끝이 다음 날이라는 것을 글자로 말해준다. -->
+    <string name="schedule_range_overnight">%1$s ~ 다음 날 %2$s</string>
+    <string name="schedule_range_allday">하루 종일 (%1$s부터 24시간)</string>
+
+    <string name="schedule_days_everyday">매일</string>
+    <string name="schedule_days_weekday">평일</string>
+    <string name="schedule_days_weekend">주말</string>
+    <string name="schedule_days_none">요일 없음</string>
+    <string name="schedule_day_mon">월</string>
+    <string name="schedule_day_tue">화</string>
+    <string name="schedule_day_wed">수</string>
+    <string name="schedule_day_thu">목</string>
+    <string name="schedule_day_fri">금</string>
+    <string name="schedule_day_sat">토</string>
+    <string name="schedule_day_sun">일</string>
+
+    <string name="schedule_mode_normal">벨소리</string>
+    <string name="schedule_mode_vibrate">진동</string>
+    <string name="schedule_mode_silent">무음</string>
+
+    <string name="schedule_editor_title_new">새 규칙</string>
+    <string name="schedule_editor_title_edit">규칙 고치기</string>
+    <string name="schedule_editor_days_label">어떤 요일에</string>
+    <string name="schedule_editor_time_label">몇 시부터 몇 시까지</string>
+    <string name="schedule_editor_mode_label">그동안 아이 폰을</string>
+    <string name="schedule_editor_days_required">요일을 하나 이상 골라주세요. 요일을 안 고르면 이 규칙은 한 번도 켜지지 않아요.</string>
+    <string name="schedule_editor_start_title">시작 시각</string>
+    <string name="schedule_editor_end_title">끝나는 시각</string>
+    <string name="schedule_editor_save">저장</string>
+    <string name="schedule_editor_cancel">취소</string>
+
+    <string name="schedule_saving">저장 중…</string>
+    <string name="schedule_deleting">지우는 중…</string>
+    <!-- 오프라인이면 Firestore 쓰기가 서버 확인을 못 받고 계속 매달려 있는다. 화면을
+         영영 붙잡아 두는 대신 사실대로 말하고 놓아준다. -->
+    <string name="schedule_save_slow">저장 요청은 보냈지만 아직 서버 확인이 안 됐어요. 인터넷이 연결되면 저절로 저장돼요.</string>
+    <string name="schedule_sync_no_child">규칙을 저장했어요. 아이 폰이 연결되면 저절로 적용돼요.</string>
+    <string name="schedule_sync_failed_format">규칙은 저장했지만 아이 폰에 알리지 못했어요. 이 화면을 다시 열면 한 번 더 알릴게요.\n%1$s</string>
+    <string name="schedule_sync_slow">규칙은 저장했어요. 아이 폰에 알리는 것은 인터넷이 연결되면 끝나요.</string>
+
+    <string name="schedule_allday_title">하루 종일로 저장할까요?</string>
+    <string name="schedule_allday_message">시작과 끝이 %1$s(으)로 같아요.\n이대로 저장하면 고른 요일에는 24시간 내내 %2$s(으)로 바뀝니다.</string>
+    <string name="schedule_allday_confirm">하루 종일로 저장</string>
+    <string name="schedule_allday_cancel">시각 다시 고르기</string>
+
+    <string name="schedule_overlap_title">겹치는 규칙이 있어요</string>
+    <string name="schedule_overlap_message">이 시간대는 \'%1$s\' 규칙과 겹칩니다.\n겹치는 동안에는 나중에 만든 규칙이 이깁니다.</string>
+    <string name="schedule_overlap_message_more">이 시간대는 \'%1$s\' 외 %2$d개 규칙과 겹칩니다.\n겹치는 동안에는 나중에 만든 규칙이 이깁니다.</string>
+    <string name="schedule_overlap_confirm">그대로 저장</string>
+    <string name="schedule_overlap_cancel">고치기</string>
+
+    <string name="schedule_delete_title">이 규칙을 지울까요?</string>
+    <string name="schedule_delete_message">%1$s\n\n지우면 이 시간대에는 소리가 저절로 바뀌지 않아요.</string>
+    <string name="schedule_delete_confirm">지우기</string>
+    <string name="schedule_delete_cancel">그대로 두기</string>
 
     <string name="timeline_icon_stay">📍</string>
     <string name="timeline_icon_move">🚶</string>
