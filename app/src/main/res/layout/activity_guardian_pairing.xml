@@ -5,7 +5,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="32dp">
+    android:padding="32dp"
+    android:fitsSystemWindows="true">
 
     <TextView
         android:layout_width="wrap_content"
@@ -13,12 +14,16 @@
         android:text="@string/pairing_guardian_title"
         android:textAppearance="?attr/textAppearanceTitleMedium" />
 
+    <!-- 코드가 아직 없을 때(가족 생성 중, 또는 실패로 showCode() 가 한 번도 안 불린
+         상태)도 이 자리가 점 하나로 쪼그라들지 않도록 자리표시자를 기본값으로 둔다.
+         showCode() 가 불리면 실제 코드로 덮어써진다. -->
     <TextView
         android:id="@+id/code_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:letterSpacing="0.3"
+        android:text="@string/pairing_code_placeholder"
         android:textAppearance="?attr/textAppearanceDisplayMedium"
         android:textStyle="bold"
         tools:text="A2C4K9" />

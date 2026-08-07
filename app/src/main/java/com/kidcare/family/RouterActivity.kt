@@ -8,6 +8,7 @@ import com.kidcare.family.child.ChildHomeActivity
 import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.Role
 import com.kidcare.family.core.RoleStore
+import com.kidcare.family.core.errorMessage
 import com.kidcare.family.databinding.ActivityRouterBinding
 import com.kidcare.family.guardian.GuardianMainActivity
 import com.kidcare.family.onboarding.ChildPairingActivity
@@ -34,7 +35,7 @@ class RouterActivity : AppCompatActivity() {
             try {
                 AuthGateway.signIn()
             } catch (e: Exception) {
-                binding.statusText.text = getString(R.string.connect_failed, e.message ?: "")
+                binding.statusText.text = getString(R.string.connect_failed, errorMessage(this@RouterActivity, e))
                 return@launch
             }
             startActivity(Intent(this@RouterActivity, destination()))

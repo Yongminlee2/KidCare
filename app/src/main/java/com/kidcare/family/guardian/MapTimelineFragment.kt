@@ -12,6 +12,7 @@ import com.kidcare.family.R
 import com.kidcare.family.core.FamilyRepository
 import com.kidcare.family.core.RoleStore
 import com.kidcare.family.core.SegmentRepository
+import com.kidcare.family.core.errorMessage
 import com.kidcare.family.core.model.ChildStatusDoc
 import com.kidcare.family.core.model.SegmentDoc
 import com.kidcare.family.databinding.FragmentMapTimelineBinding
@@ -128,7 +129,7 @@ class MapTimelineFragment : Fragment() {
                 childUid = uid
                 attachChildListeners(familyId, uid)
             },
-            onError = { e -> _binding?.statusBar?.text = getString(R.string.map_error, e.message ?: "") },
+            onError = { e -> _binding?.statusBar?.text = getString(R.string.map_error, errorMessage(requireContext(), e)) },
         )
     }
 
@@ -144,7 +145,7 @@ class MapTimelineFragment : Fragment() {
             familyId,
             uid,
             onChange = { status -> render(status) },
-            onError = { e -> _binding?.statusBar?.text = getString(R.string.map_error, e.message ?: "") },
+            onError = { e -> _binding?.statusBar?.text = getString(R.string.map_error, errorMessage(requireContext(), e)) },
         )
         subscribeSegments()
     }
@@ -226,7 +227,7 @@ class MapTimelineFragment : Fragment() {
                 // "지도를 불러오지 못했어요"로 보인다 — 실제로는 지도가 멀쩡한데도.
                 // 다음 status 스냅샷이 10분 안에 이 문구를 덮어쓰긴 하지만, 그 전에
                 // 뜨는 짧은 순간에도 원인이 맞는 문구여야 한다.
-                _binding?.statusBar?.text = getString(R.string.timeline_error, e.message ?: "")
+                _binding?.statusBar?.text = getString(R.string.timeline_error, errorMessage(requireContext(), e))
             },
         )
     }

@@ -11,6 +11,7 @@ import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.FamilyRepository
 import com.kidcare.family.core.InviteCodeInfo
 import com.kidcare.family.core.RoleStore
+import com.kidcare.family.core.errorMessage
 import com.kidcare.family.databinding.ActivityGuardianPairingBinding
 import com.kidcare.family.guardian.GuardianMainActivity
 import kotlinx.coroutines.CancellationException
@@ -100,7 +101,7 @@ class GuardianPairingActivity : AppCompatActivity() {
                         familyId,
                         onJoined = { childUid -> goToMain(childUid) },
                         onError = { e ->
-                            binding.hintText.text = getString(R.string.pairing_failed, e.message ?: "")
+                            binding.hintText.text = getString(R.string.pairing_failed, errorMessage(this@GuardianPairingActivity, e))
                         },
                     )
                 }
@@ -116,7 +117,7 @@ class GuardianPairingActivity : AppCompatActivity() {
                 // hintText 를 덮어쓰면 안 되므로 그대로 다시 던져 코루틴 취소를 완성시킨다.
                 throw e
             } catch (e: Exception) {
-                binding.hintText.text = getString(R.string.pairing_failed, e.message ?: "")
+                binding.hintText.text = getString(R.string.pairing_failed, errorMessage(this@GuardianPairingActivity, e))
             }
         }
     }
@@ -136,7 +137,7 @@ class GuardianPairingActivity : AppCompatActivity() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                binding.hintText.text = getString(R.string.pairing_failed, e.message ?: "")
+                binding.hintText.text = getString(R.string.pairing_failed, errorMessage(this@GuardianPairingActivity, e))
             } finally {
                 binding.newCodeButton.isEnabled = true
             }

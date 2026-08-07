@@ -12,6 +12,7 @@ import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.FamilyRepository
 import com.kidcare.family.core.PairingException
 import com.kidcare.family.core.RoleStore
+import com.kidcare.family.core.errorMessage
 import com.kidcare.family.databinding.ActivityChildPairingBinding
 import com.kidcare.family.logic.InviteCode
 import kotlinx.coroutines.CancellationException
@@ -82,7 +83,7 @@ class ChildPairingActivity : AppCompatActivity() {
                     }
                 )
             } catch (e: Exception) {
-                showError(getString(R.string.pairing_failed, e.message ?: ""))
+                showError(getString(R.string.pairing_failed, errorMessage(this@ChildPairingActivity, e)))
             }
         }
     }
