@@ -70,6 +70,12 @@
     <string name="tab_control">관리</string>
     <string name="tab_schedule">예약</string>
 
+    <!-- 연결 끊김 배너(GuardianMainActivity). 아이가 앱을 '강제 종료'하면 안드로이드가
+         모든 알람과 부팅 신호를 끊어버리는데, 사이드로드 앱은 그걸 막을 수 없다.
+         막을 수 없으니 부모에게 무엇을 하면 되는지를 말한다 — 지금 상태(마지막 신호가
+         언제였는지)와 할 일(아이 폰에서 앱을 한 번 열기)을 한 문장씩. -->
+    <string name="guardian_disconnect_banner">⚠️ 애기폰에서 소식이 끊겼어요 (마지막 신호 %1$s)\n아이 폰에서 \'우리아이 지킴이\' 앱을 한 번 열어주세요. 그러면 다시 이어져요.</string>
+
     <string name="control_section_ringer">지금 바로 바꾸기</string>
     <string name="control_mode_normal">🔔\n벨소리</string>
     <string name="control_mode_vibrate">📳\n진동</string>
@@ -152,6 +158,10 @@
     <string name="schedule_sync_no_child">규칙을 저장했어요. 아이 폰이 연결되면 저절로 적용돼요.</string>
     <string name="schedule_sync_failed_format">규칙은 저장했지만 아이 폰에 알리지 못했어요. 이 화면을 다시 열면 한 번 더 알릴게요.\n%1$s</string>
     <string name="schedule_sync_slow">규칙은 저장했어요. 아이 폰에 알리는 것은 인터넷이 연결되면 끝나요.</string>
+    <!-- 목록 위에 계속 떠 있는 줄. 규칙은 저장됐지만 아이 폰이 아직 그 사실을 모른다 —
+         이 줄이 없으면 전달된 규칙과 안 된 규칙이 목록에서 똑같이 보인다. -->
+    <string name="schedule_sync_pending">아직 애기폰에 전달되지 않았어요. 애기폰은 지금도 예전 규칙대로 동작해요.</string>
+    <string name="schedule_sync_retry">다시 알리기</string>
 
     <string name="schedule_allday_title">하루 종일로 저장할까요?</string>
     <string name="schedule_allday_message">시작과 끝이 %1$s(으)로 같아요.\n이대로 저장하면 고른 요일에는 24시간 내내 %2$s(으)로 바뀝니다.</string>

@@ -1,5 +1,8 @@
 package com.kidcare.family.core.model
 
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.ServerTimestamp
+
 /**
  * Firestore 문서와 1:1 로 대응하는 데이터 클래스들.
  *
@@ -43,6 +46,35 @@ data class InviteCodeDoc(
     val expiresAt: Long = 0L,
 )
 
+/**
+ * children/{childUid} — 아이 폰의 현재 상태. 아이 폰이 위치를 올릴 때마다 덮어쓴다
+ * (child/StatusReporter).
+ *
+ * ## 마지막 신호 시각이 왜 두 개인가
+ *
+ * [lastSeenAt] 은 **아이 폰 자기 시계**로 적은 값이다. 보호자 화면의 "마지막 신호 N분
+ * 전"은 `지금 - lastSeenAt` 인데, 아이 폰 시계가 앞서 있으면 이 뺄셈이 음수가 되어
+ * "애기폰이 응답하지 않아요" 바로 아래에 "마지막 신호 방금 전"이 찍힌다 — 두 줄이
+ * 서로를 부정한다(docs/known-issues.md 7번).
+ *
+ * [lastSeenServerAt] 은 같은 순간을 **서버 시계**로 적는다. `@ServerTimestamp` 는
+ * "이 필드가 null 인 채로 쓰기가 나가면 서버가 자기 시각으로 채운다"는 뜻이라
+ * ([com.google.firebase.firestore.util.CustomClassMapper] 가 null 을
+ * `FieldValue.serverTimestamp()` 로 바꿔 보낸다), StatusReporter 는 이 필드를 아예
+ * 건드리지 않는다. 보호자 쪽 `serverNow` 도 서버 시각이므로 뺄셈의 양쪽이 같은 시계를
+ * 쓰게 되어 스큐가 근본에서 사라진다.
+ *
+ * **[lastSeenAt] 을 없애지 않고 둘 다 쓰는 이유**: 이미 서버에 올라가 있는 문서와, 옛
+ * 버전을 깔고 있는 아이 폰이 계속 쓰는 문서에는 [lastSeenServerAt] 이 없다. 타입을
+ * `Long` → `Timestamp` 로 갈아치우면 그런 문서에서 `toObject()` 가 그 필드에서 깨지고,
+ * 그러면 마지막 신호 한 줄이 아니라 **보호자 지도의 실시간 위치 구독까지 같이 죽는다**
+ * (`FamilyRepository.observeChildStatus`). 그래서 새 필드를 따로 더하고 읽는 쪽이
+ * "있으면 서버 값, 없으면 옛 값"으로 물러난다 — 마이그레이션 없이 굴러간다.
+ *
+ * 새 필드가 `Timestamp?` 라 [lastSeenAt] 과 단위가 다르다는 점에 주의할 것. 읽는 쪽은
+ * 반드시 `guardian/GuardianMainActivity.kt` 의 `ChildStatusDoc.lastSignal()` 하나만
+ * 지나가게 해서 이 판단을 여러 곳에 흩뿌리지 않는다.
+ */
 data class ChildStatusDoc(
     val lat: Double = 0.0,
     val lng: Double = 0.0,
@@ -52,6 +84,11 @@ data class ChildStatusDoc(
     val charging: Boolean = false,
     val ringerMode: String = "normal",
     val lastSeenAt: Long = 0L,
+    // 사용처 지정(@get:)이 필요하다: 이 애노테이션은 자바 애노테이션이라 코틀린
+    // 프로퍼티에는 못 붙고, 아무것도 안 적으면 private 백킹 필드로 간다. Firestore 가
+    // 쓰기에서 실제로 읽는 것은 게터 쪽 애노테이션이므로(BeanMapper.applyGetterAnnotations)
+    // 게터에 붙여야 의도가 코드에 그대로 드러난다.
+    @get:ServerTimestamp val lastSeenServerAt: Timestamp? = null,
 )
 
 data class PointDoc(

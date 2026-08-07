@@ -45,7 +45,14 @@ class StatusReporter {
                 battery = battery,
                 charging = charging,
                 ringerMode = ringerMode,
+                // 옛 필드는 그대로 계속 쓴다 — 아직 새 버전을 못 깐 보호자 폰이 있을 수
+                // 있고, 이 값 하나가 없으면 그 화면은 "마지막 신호"를 아예 못 만든다.
                 lastSeenAt = System.currentTimeMillis(),
+                // lastSeenServerAt 은 **일부러 넘기지 않는다.** 기본값 null 인 채로
+                // 나가면 Firestore 가 `FieldValue.serverTimestamp()` 로 바꿔 보내고
+                // 서버가 자기 시각으로 채운다(@ServerTimestamp, ChildStatusDoc 주석).
+                // 여기서 System.currentTimeMillis() 로 값을 채워 넣으면 아이 폰 시계가
+                // 그대로 들어가 새 필드를 만든 이유가 사라진다. 쓰기는 여전히 한 번이다.
             )
         ).await()
 

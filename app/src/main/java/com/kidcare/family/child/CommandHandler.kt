@@ -84,19 +84,36 @@ class CommandHandler(private val context: Context) {
             when (command.type) {
                 CommandType.SET_RINGER -> {
                     val mode = command.payload["mode"].orEmpty()
-                    if (!ringer.apply(mode)) {
-                        // 권한이 없거나(무음·진동은 방해 금지 접근이 필요) 모드 값이
-                        // 이상하면 조용히 무시하지 않고 실패로 남긴다 — 부모가 눌렀는데
-                        // 왜 안 바뀌는지 알 길이 없어지는 상황(Task 4 설계 의도)을 막는다.
-                        CommandRepository.markFailed(familyId, childUid, command.id, "ringer_denied")
-                        return
-                    }
                     // 즉시 변경은 다음 예약 경계까지만 유효하다(설계서 §4.3). "until"은
                     // 부모 폰이 보낸 값이 아니라 지금부터 자녀 폰이 직접 계산한다 — 두
                     // 폰의 시계·시간대가 다를 수 있고, 이 값을 실제로 강제하는(=이 즉시
                     // 변경을 끝내는) 쪽은 자녀 폰이므로 그 경계도 자녀 폰이 정해야 한다.
-                    state.overrideMode = mode
-                    state.overrideUntil = nextRuleBoundaryMillis(familyId)
+                    //
+                    // 경계 계산을 소리 모드 변경 **앞**으로 옮긴 이유(Task 10 리뷰):
+                    // 이 계산은 Firestore 를 한 번 다녀오는 suspend 함수다. 예전에는
+                    //     state.overrideMode = mode          // 즉시
+                    //     state.overrideUntil = 계산결과      // 왕복 뒤
+                    // 순서라, 그 왕복이 도는 동안 저장소에 "새 모드 + 지나간 옛 해제
+                    // 시각"이 남아 있었다. 그 사이에 예약 경계 알람이 자기 IO 코루틴에서
+                    // 깨어나면(ScheduleAlarmReceiver → ScheduleApplier.applyNow →
+                    // RingerController.desiredMode) 그 조합을 "만료된 즉시 변경"으로 읽어
+                    // 방금 만든 변경을 지우고 예약 모드를 다시 씌운다 — markDone 이
+                    // 부모에게 이미 "완료"라고 말한 뒤에.
+                    //
+                    // 이제 왕복이 먼저 끝나고, 모드와 해제 시각이 setOverride 한 번으로
+                    // 함께 보이게 된다(RingerStateStore.setOverride 주석). 두 값이 따로
+                    // 보이는 순간 자체가 없어진 것이라, 그 사이에 경계 알람이 아무리
+                    // 여러 번 깨어나도 옛 상태 아니면 새 상태 둘 중 하나만 본다.
+                    val until = nextRuleBoundaryMillis(familyId)
+                    if (!ringer.apply(mode)) {
+                        // 권한이 없거나(무음·진동은 방해 금지 접근이 필요) 모드 값이
+                        // 이상하면 조용히 무시하지 않고 실패로 남긴다 — 부모가 눌렀는데
+                        // 왜 안 바뀌는지 알 길이 없어지는 상황(Task 4 설계 의도)을 막는다.
+                        // 여기서 돌아가면 저장소는 손도 대지 않은 상태 그대로다.
+                        CommandRepository.markFailed(familyId, childUid, command.id, "ringer_denied")
+                        return
+                    }
+                    state.setOverride(mode, until)
                 }
                 CommandType.FIND_PHONE -> FindPhoneController.start(context)
                 CommandType.STOP_FIND -> FindPhoneController.stop(context)

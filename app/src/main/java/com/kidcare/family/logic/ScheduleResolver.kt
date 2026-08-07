@@ -16,8 +16,11 @@ import java.time.ZoneId
  *
  * 이 파일은 입력을 검증하지 않는다: [days] 가 비어 있으면 그 규칙은 조용히 아무
  * 날에도 적용되지 않고, [startMinute]/[endMinute] 이 0..1439 밖이면 구간이 그만큼
- * 밀릴 뿐 예외를 던지지 않는다. 둘 다 지금의 UI 로는 만들 수 없는 입력이라 여기서는
- * 막지 않았다 — 규칙 편집 화면이 생기면(Task 10) 그쪽에서 막아야 한다.
+ * 밀릴 뿐 예외를 던지지 않는다. 둘 다 규칙 편집 화면
+ * (`guardian/ScheduleFragment`)에서 이미 막혀 있다: 요일이 비면 저장 자체를 거부하고
+ * (`onSaveClicked` 의 첫 관문, `schedule_editor_days_required`), 시각은 시각 선택기
+ * (`MaterialTimePicker`)로만 고를 수 있어 0..1439 밖의 값이 들어올 길이 없다.
+ * 그래서 여기서는 방어를 겹치지 않는다.
  */
 data class ScheduleRule(
     val id: String,
@@ -73,9 +76,11 @@ object ScheduleResolver {
         // 정확히 24시간짜리 구간이 되어 "항상 적용" 이 된다. 이는 의도된 동작이다:
         // "00:00~00:00 무음" 처럼 부모가 하루 종일을 뜻하려고 같은 시각을 넣는 것은
         // 말이 되는 입력이다. 다만 부모가 실수로 두 칸에 같은 시각을 잘못 눌러도
-        // 똑같이 하루 종일 무음이 되고 화면에는 그걸 알려주는 것이 없다 — 이 파일은
-        // 그 구분을 하지 않는다. 규칙 입력 화면(Task 10)이 저장 전에 "하루 종일로
-        // 저장할까요?" 같은 확인을 반드시 넣어야 한다.
+        // 똑같이 하루 종일 무음이 되므로, 그 구분은 이 파일이 아니라 화면이 한다:
+        // 규칙 입력 화면(`guardian/ScheduleFragment.onSaveClicked`)이 저장 전에
+        // "하루 종일로 저장할까요?" 확인을 띄우고(schedule_allday_*), 목록과 편집
+        // 판은 그 규칙을 "하루 종일 (00:00부터 24시간)"으로 적어 준다
+        // (`ScheduleText.rangeText`).
         val endMinuteAbsolute = if (rule.endMinute <= rule.startMinute) {
             rule.endMinute + MINUTES_PER_DAY
         } else {

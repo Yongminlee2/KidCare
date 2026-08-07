@@ -53,9 +53,34 @@ class RingerStateStore(context: Context) {
         get() = prefs.getString(KEY_RULE_MODE, null)
         set(value) = prefs.edit().putString(KEY_RULE_MODE, value).apply()
 
+    /**
+     * 즉시 변경의 **모드와 해제 시각을 한 번에** 쓴다.
+     *
+     * 따로 쓰면 안 되는 이유(Task 10 리뷰에서 잡힌 경합): [CommandHandler] 가
+     * `overrideMode` 를 먼저 쓰고 `overrideUntil` 을 나중에 쓰면, 그 사이에 예약 경계
+     * 알람이 자기 IO 코루틴에서 깨어나 [RingerController.desiredMode] 를 부를 수 있다.
+     * 그 순간 저장소는 "새 모드 + 지나간 옛 해제 시각" 이라 만료로 판정되고,
+     * `desiredMode` 는 즉시 변경을 **지워버린 뒤** 예약 모드를 다시 적용한다 —
+     * 부모 화면에는 이미 "완료"가 떠 있는데 아이 폰은 예약 모드로 돌아가 있다.
+     *
+     * `SharedPreferences.Editor.apply()` 는 편집 묶음 전체를 메모리 맵에 **한 번에**
+     * 반영한 뒤(그 구간은 잠금 안이다) 디스크 쓰기만 뒤로 미룬다. 그래서 다른
+     * 스레드에서 `getString`/`getLong` 으로 읽는 쪽은 두 값을 항상 같이 보거나 같이
+     * 못 본다 — 반쯤 바뀐 상태를 볼 수 없다.
+     */
+    fun setOverride(mode: String, untilMillis: Long) {
+        prefs.edit()
+            .putString(KEY_MODE, mode)
+            .putLong(KEY_UNTIL, untilMillis)
+            .apply()
+    }
+
+    /** 지우는 것도 같은 이유로 한 번에 한다([setOverride] 주석). */
     fun clearOverride() {
-        overrideMode = null
-        overrideUntil = 0L
+        prefs.edit()
+            .remove(KEY_MODE)
+            .putLong(KEY_UNTIL, 0L)
+            .apply()
     }
 
     private companion object {

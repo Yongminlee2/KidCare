@@ -26,6 +26,7 @@ import com.kidcare.family.databinding.FragmentScheduleBinding
 import com.kidcare.family.logic.ScheduleResolver
 import com.kidcare.family.logic.ScheduleRule
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
@@ -51,6 +52,11 @@ import java.util.UUID
  * 자녀 폰이 `schedules/` 를 직접 구독하게 하면 명령이 필요 없어 보이지만, 상시
  * 유지해야 하는 리스너가 하나 늘어난다. 규칙 변경은 드문 일이라 그때만 명령 한 번을
  * 보내는 쪽이 싸다 — 이 선택은 계획서(4단계 Task 10 Step 2)의 판단이다.
+ *
+ * 그 명령이 아직 못 나갔으면 **목록 위에 그렇게 적는다**([renderPendingSync]).
+ * 안 적으면 전달에 실패한 규칙과 실제로 적용된 규칙이 똑같이 보이고, 부모는 정해뒀다고
+ * 믿는데 아이 폰은 옛 규칙대로 돈다. 그 깃발은 [ScheduleSyncStore] 에 남아 뒤로 가기와
+ * 앱 재시작을 넘긴다.
  *
  * ## 낙관적으로 그리지 않는다
  *
@@ -98,17 +104,31 @@ class ScheduleFragment : Fragment() {
     private var writeGeneration = 0
 
     /**
+     * 못 보낸 알림 깃발을 담아 두는 곳. 첫 접근은 [onViewCreated] 의 [renderPendingSync]
+     * 라 반드시 붙어 있는 동안 초기화되고, 그때 잡아 두는 것은 애플리케이션 컨텍스트라
+     * 화면이 사라진 뒤 코루틴에서 읽어도 안전하다.
+     */
+    private val syncStore by lazy { ScheduleSyncStore(requireContext().applicationContext) }
+
+    /**
      * 규칙을 건드렸는데 아직 [CommandType.SYNC_RULES] 를 확실히 보내지 못했는가.
      *
-     * 쓰기 **직전에** 세우고, 명령 발행이 성공한 뒤에만 내린다. 화면이 회전하거나
-     * 프로세스가 죽어도 [onSaveInstanceState] 로 살아남아, 다음에 이 화면이 열릴 때
-     * 한 번 더 보낸다. 이게 없으면 "삭제는 됐는데 알림은 못 보낸" 상태가 영구히 남고,
-     * 그때 자녀 폰에서는 이미 지워진 규칙의 알람이 한 번 더 울린다.
+     * 쓰기 **직전에** 세우고, 명령 발행이 성공한 뒤에만 내린다. 이게 없으면 "삭제는
+     * 됐는데 알림은 못 보낸" 상태가 영구히 남고, 그때 자녀 폰에서는 이미 지워진 규칙의
+     * 알람이 한 번 더 울린다.
      *
-     * 앱이 강제 종료되면(저장 상태 자체가 사라지면) 이 그물도 사라진다 — 그때는
-     * 자녀 폰이 재부팅·시각변경·서비스 재시작으로 규칙을 다시 읽을 때까지 어긋난다.
+     * 값은 [ScheduleSyncStore](SharedPreferences)에 둔다. 예전에는
+     * [onSaveInstanceState] 번들에만 있었는데 그건 회전만 넘기고 **뒤로 가기는 못
+     * 넘긴다** — 그 근거는 [ScheduleSyncStore] 문서에 적었다. 값을 바꾸면 곧바로
+     * 화면에도 반영한다: 전달 못 한 규칙과 전달된 규칙이 목록에서 똑같이 보이면
+     * 부모는 그 차이를 알 방법이 없다.
      */
-    private var pendingSync = false
+    private var pendingSync: Boolean
+        get() = syncStore.pendingSync
+        set(value) {
+            syncStore.pendingSync = value
+            renderPendingSync()
+        }
 
     // ------------------------------------------------------------ 편집 판 상태
     // 편집 중인 값은 전부 이 필드들이 정답이다. 뷰(토글 버튼)는 이 값을 비추기만 한다
@@ -139,6 +159,18 @@ class ScheduleFragment : Fragment() {
     private var editorEnabled = true
     private var editorPriority = 0
 
+    /**
+     * 이 화면이 **방금 부여한** 우선순위 중 가장 큰 값. [nextPriority] 가 [rules]
+     * (마지막 스냅샷)와 함께 본다.
+     *
+     * 스냅샷만 보면 같은 값을 두 번 줄 수 있다: 규칙 A 를 저장한 직후 그 문서가 담긴
+     * 스냅샷이 아직 안 왔는데 규칙 B 를 저장하면, 두 번의 `nextPriority()` 가 같은
+     * 최댓값을 읽어 **같은 우선순위**를 매긴다. [ScheduleResolver] 는 그래도 결과를
+     * 하나로 정하지만(우선순위가 같으면 늦게 시작한 구간이 이긴다) 그건 부모에게 약속한
+     * 규칙("나중에 만든 것이 이긴다")이 아니다 — 부모가 예측할 수 없는 승패가 된다.
+     */
+    private var lastAssignedPriority = 0
+
     /** 저장/삭제가 진행 중인가. 진행 중에는 저장 버튼을 잠가 같은 쓰기가 두 번 나가지 않게 한다. */
     private var editorBusy = false
 
@@ -149,6 +181,10 @@ class ScheduleFragment : Fragment() {
 
     /** 지금 떠 있는 확인 대화상자. 화면이 사라질 때 반드시 닫아야 창이 샌다는 경고가 안 뜬다. */
     private var activeDialog: AlertDialog? = null
+
+    /** 못 보낸 알림을 다시 보내는 중인 코루틴. 여러 재시도 경로가 겹쳐 같은 명령을
+     *  여러 번 밀어내지 않게 하나로 묶는다([retryPendingSync]). */
+    private var syncRetryJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -177,6 +213,7 @@ class ScheduleFragment : Fragment() {
         b.addButton.setOnClickListener { openEditor(null) }
         b.editorCancelButton.setOnClickListener { cancelEditor() }
         b.editorSaveButton.setOnClickListener { onSaveClicked() }
+        b.syncRetryButton.setOnClickListener { retryPendingSync() }
         b.startTimeButton.setOnClickListener { showTimePicker(TAG_PICK_START) }
         b.endTimeButton.setOnClickListener { showTimePicker(TAG_PICK_END) }
 
@@ -210,12 +247,34 @@ class ScheduleFragment : Fragment() {
         rebindTimePickers()
         renderEditor()
         renderList()
+        // 여기서 syncStore 가 처음 만들어진다(위 syncStore 주석). 지난 세션에서 못
+        // 보낸 알림이 있으면 화면을 열자마자 그 사실이 보여야 한다.
+        renderPendingSync()
         subscribe()
+    }
+
+    /**
+     * 탭을 옮겨도 이 프래그먼트는 죽지 않는다 — [GuardianMainActivity] 가 replace 가
+     * 아니라 show/hide 를 쓰기 때문이다. 그래서 **탭 전환에서는 [onResume] 이 아니라
+     * 이 콜백이 불린다.** 못 보낸 알림의 재시도를 여기에도 걸어두지 않으면, 부모가
+     * 실제로 가장 자주 하는 동작(예약 탭 다시 누르기)이 재시도 경로에서 통째로 빠진다.
+     */
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden) retryPendingSync()
+    }
+
+    /** 앱을 백그라운드에 뒀다가 돌아온 경우. 다른 탭을 보고 있을 때는 건드리지 않는다. */
+    override fun onResume() {
+        super.onResume()
+        if (!isHidden) retryPendingSync()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putBoolean(KEY_PENDING_SYNC, pendingSync)
+        // pendingSync 는 여기 담지 않는다 — 뒤로 가기를 못 넘겨서 SharedPreferences 로
+        // 옮겼다([ScheduleSyncStore]). 두 곳에 담으면 어느 쪽이 정답인지 흐려진다.
+        outState.putInt(KEY_LAST_ASSIGNED_PRIORITY, lastAssignedPriority)
         outState.putBoolean(KEY_EDITOR_VISIBLE, editorVisible)
         outState.putString(KEY_EDITOR_RULE_ID, editorRuleId)
         outState.putString(KEY_EDITOR_NEW_DOC_ID, editorNewDocId)
@@ -229,7 +288,7 @@ class ScheduleFragment : Fragment() {
 
     private fun restoreState(saved: Bundle?) {
         saved ?: return
-        pendingSync = saved.getBoolean(KEY_PENDING_SYNC, false)
+        lastAssignedPriority = saved.getInt(KEY_LAST_ASSIGNED_PRIORITY, 0)
         editorVisible = saved.getBoolean(KEY_EDITOR_VISIBLE, false)
         editorRuleId = saved.getString(KEY_EDITOR_RULE_ID)
         editorNewDocId = saved.getString(KEY_EDITOR_NEW_DOC_ID)
@@ -276,7 +335,9 @@ class ScheduleFragment : Fragment() {
                 if (uid == childUid) return@observeChildJoined
                 childUid = uid
                 // 지난 세션에서 못 보낸 알림이 있으면 아이 uid 를 알게 된 지금 보낸다.
-                if (pendingSync) resendPendingSync()
+                // 화면을 열자마자의 재시도([onResume])는 이 시점보다 앞서서 uid 가 없어
+                // 그냥 지나갔을 수 있다 — 그래서 이 경로도 함께 남겨둔다.
+                retryPendingSync()
             },
             onError = { e ->
                 val ctx = context ?: return@observeChildJoined
@@ -318,8 +379,18 @@ class ScheduleFragment : Fragment() {
     /**
      * 편집을 접는다. 세대를 올리는 이유: 저장을 눌러 왕복이 도는 중에 취소했다면,
      * 그 코루틴이 돌아와 이미 닫힌(또는 다른 규칙으로 다시 열린) 편집 판을 만지면 안 된다.
+     *
+     * **쓰기가 도는 중에는 취소도 막는다.** 예전에는 [setEditorBusy] 가 저장 버튼만
+     * 잠갔고 취소는 그대로 살아 있었는데, 그러면 이런 길이 열린다: 규칙 A 를 저장(느린
+     * 쓰기) → 취소 → 새 규칙 B 추가 → 저장. A 의 스냅샷이 아직 안 왔으므로 두
+     * [nextPriority] 호출이 같은 최댓값을 읽어 **같은 우선순위**를 매기고, 그러면
+     * "나중에 만든 것이 이긴다"는 부모와의 약속이 깨진다. 되돌아가는 길 자체를 잠깐
+     * 닫는 쪽이 확실하다 — 기다리는 시간은 쓰기 제한시간(15초)으로 이미 막혀 있고,
+     * 그동안 무슨 일이 벌어지는지는 편집 판 안의 "저장 중…"이 말해준다.
+     * (뒤로 가기도 이 함수를 지나므로 함께 막힌다.)
      */
     private fun cancelEditor() {
+        if (editorBusy) return
         writeGeneration++
         closeEditor()
     }
@@ -443,6 +514,13 @@ class ScheduleFragment : Fragment() {
             showEditorStatus(getString(R.string.schedule_no_family))
             return
         }
+        // 우선순위는 만든 순서다. 새 규칙에는 지금 있는 것들보다 하나 큰 값을
+        // 주고(=나중에 만든 것이 이긴다), 고치는 중이면 원래 값을 그대로 둔다 —
+        // 시각만 고쳤다고 규칙끼리의 승패가 뒤집히면 부모가 예측할 수 없다.
+        val priority = if (editorRuleId == null) nextPriority() else editorPriority
+        // 방금 준 값을 기억해 둔다. 이 규칙이 담긴 스냅샷이 돌아오기 전에 다음 규칙을
+        // 저장해도 같은 값을 또 주지 않기 위해서다([lastAssignedPriority] 주석).
+        if (editorRuleId == null) lastAssignedPriority = priority
         val doc = ScheduleDoc(
             // 새 규칙이면 편집을 열 때 정해 둔 ID 를 쓴다([editorNewDocId] 주석).
             id = editorRuleId ?: editorNewDocId ?: UUID.randomUUID().toString(),
@@ -451,10 +529,7 @@ class ScheduleFragment : Fragment() {
             endMinute = editorEndMinute,
             mode = editorMode,
             enabled = editorEnabled,
-            // 우선순위는 만든 순서다. 새 규칙에는 지금 있는 것들보다 하나 큰 값을
-            // 주고(=나중에 만든 것이 이긴다), 고치는 중이면 원래 값을 그대로 둔다 —
-            // 시각만 고쳤다고 규칙끼리의 승패가 뒤집히면 부모가 예측할 수 없다.
-            priority = if (editorRuleId == null) nextPriority() else editorPriority,
+            priority = priority,
         )
 
         val generation = ++writeGeneration
@@ -607,16 +682,30 @@ class ScheduleFragment : Fragment() {
     }
 
     /**
-     * 지난번에 못 보낸 [CommandType.SYNC_RULES] 를 화면이 다시 열릴 때 한 번 더 보낸다.
+     * 지난번에 못 보낸 [CommandType.SYNC_RULES] 를 한 번 더 보낸다.
      *
-     * Firestore 콜백에서 불리므로 화면이 이미 사라진 뒤일 수 있다. 그때
+     * 부르는 곳이 넷이다 — 아이 uid 를 알게 된 순간([subscribe] 의 onJoined), 예약 탭을
+     * 다시 눌렀을 때([onHiddenChanged]), 앱으로 돌아왔을 때([onResume]), 그리고 부모가
+     * 안내 줄의 '다시 알리기'를 눌렀을 때. 여러 경로를 두는 이유는 하나짜리 경로가
+     * 실제로 부모가 밟지 않는 길이었기 때문이다: 예전에는 onJoined 하나뿐이었는데
+     * [GuardianMainActivity] 가 show/hide 를 쓰므로 탭을 오가도 그 콜백은 다시 불리지
+     * 않는다.
+     *
+     * Firestore 콜백에서도 불리므로 화면이 이미 사라진 뒤일 수 있다. 그때
      * `viewLifecycleOwner` 를 건드리면 그대로 예외라 `_binding` 으로 먼저 막는다 —
      * `_binding` 이 살아 있다는 것은 뷰 생명주기가 아직 유효하다는 뜻이다.
      */
-    private fun resendPendingSync() {
+    private fun retryPendingSync() {
+        if (!pendingSync) return
+        // 아직 아이 uid 를 모른다. 여기서 notifyChild 를 부르면 "아이 폰이 연결되면
+        // 저절로 적용돼요"로 깃발을 내려버리는데, 그건 아이가 정말 없을 때 하는 말이지
+        // 리스너가 아직 첫 스냅샷을 못 받은 상태에서 할 말이 아니다. onJoined 가 곧
+        // 다시 부른다.
+        if (childUid == null) return
+        if (syncRetryJob?.isActive == true) return
         _binding ?: return
         val generation = writeGeneration
-        viewLifecycleOwner.lifecycleScope.launch {
+        syncRetryJob = viewLifecycleOwner.lifecycleScope.launch {
             try {
                 notifyChild(generation)
             } catch (e: CancellationException) {
@@ -628,8 +717,13 @@ class ScheduleFragment : Fragment() {
         }
     }
 
-    /** 새 규칙의 우선순위. 지금 있는 것 중 가장 큰 값보다 하나 크다(= 나중에 만든 것이 이긴다). */
-    private fun nextPriority(): Int = (rules.maxOfOrNull { it.priority } ?: 0) + 1
+    /**
+     * 새 규칙의 우선순위. 지금 있는 것 중 가장 큰 값보다 하나 크다(= 나중에 만든 것이
+     * 이긴다). 스냅샷이 아직 안 돌아온 규칙도 [lastAssignedPriority] 로 함께 센다 —
+     * 그 필드 주석에 이유가 있다.
+     */
+    private fun nextPriority(): Int =
+        maxOf(rules.maxOfOrNull { it.priority } ?: 0, lastAssignedPriority) + 1
 
     // ---------------------------------------------------------------- 시각 고르기
 
@@ -684,6 +778,18 @@ class ScheduleFragment : Fragment() {
         b.scheduleEmpty.visibility = if (rules.isEmpty()) View.VISIBLE else View.GONE
     }
 
+    /**
+     * "아직 애기폰에 전달되지 않았어요" 줄. [pendingSync] 가 바뀔 때마다 저절로 불린다
+     * (그 프로퍼티의 setter).
+     *
+     * 규칙별로 표시하지 않는 이유는 fragment_schedule.xml 의 주석에 적었다 — 깃발이
+     * 규칙 묶음 전체를 가리키는 신호 하나에 달려 있어서 나눌 수 있는 값이 아니다.
+     */
+    private fun renderPendingSync() {
+        val b = _binding ?: return
+        b.syncPendingBar.visibility = if (pendingSync) View.VISIBLE else View.GONE
+    }
+
     private fun renderEditor() {
         val b = _binding ?: return
         b.listPane.visibility = if (editorVisible) View.GONE else View.VISIBLE
@@ -726,10 +832,12 @@ class ScheduleFragment : Fragment() {
         setEditorBusy(editorBusy)
     }
 
+    /** 취소 버튼도 함께 잠근다 — 이유는 [cancelEditor] 주석. */
     private fun setEditorBusy(busy: Boolean) {
         editorBusy = busy
         val b = _binding ?: return
         b.editorSaveButton.isEnabled = !busy
+        b.editorCancelButton.isEnabled = !busy
         b.editorProgress.visibility = if (busy) View.VISIBLE else View.GONE
     }
 
@@ -780,6 +888,8 @@ class ScheduleFragment : Fragment() {
         scheduleListener = null
         joinedListener?.remove()
         joinedListener = null
+        syncRetryJob?.cancel()
+        syncRetryJob = null
         activeDialog?.dismiss()
         activeDialog = null
         backCallback?.remove()
@@ -812,7 +922,7 @@ class ScheduleFragment : Fragment() {
         const val TAG_PICK_START = "schedule_pick_start"
         const val TAG_PICK_END = "schedule_pick_end"
 
-        const val KEY_PENDING_SYNC = "pending_sync"
+        const val KEY_LAST_ASSIGNED_PRIORITY = "last_assigned_priority"
         const val KEY_EDITOR_VISIBLE = "editor_visible"
         const val KEY_EDITOR_RULE_ID = "editor_rule_id"
         const val KEY_EDITOR_NEW_DOC_ID = "editor_new_doc_id"

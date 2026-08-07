@@ -24,9 +24,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  * 관리 탭. 부모가 버튼을 누르면 아이 폰이 바뀐다.
@@ -58,15 +55,14 @@ class ControlFragment : Fragment() {
     private var familyId: String? = null
     private var childUid: String? = null
 
-    /** 아이 폰이 마지막으로 상태를 올린 시각(UTC 밀리초). 0 이면 아직 한 번도 없다. */
-    private var lastSeenAt: Long = 0L
-
     /**
-     * 시계가 어긋난 것이 드러났을 때만 쓰는 절대 시각 표기([lastSeenPhrase] 참고).
-     * 평소에는 "12분 전" 쪽이 부모에게 훨씬 잘 읽히므로 이건 예외 경로 전용이다.
-     * Locale 은 MapTimelineFragment 의 시각 표기와 맞춘다.
+     * 아이 폰이 마지막으로 남긴 신호. null 이면 아직 한 번도 없다.
+     *
+     * 시각뿐 아니라 **누구 시계로 적힌 값인지**도 함께 들고 있다([ChildSignal]) —
+     * 서버 시각이면 뺄셈의 양쪽이 같은 시계라 "12분 전"을 그대로 믿을 수 있고,
+     * 아이 폰 시계면 그럴 수 없다([lastSeenPhrase]).
      */
-    private val lastSeenClockFormat = SimpleDateFormat("M월 d일 HH:mm", Locale.KOREA)
+    private var lastSignal: ChildSignal? = null
 
     private var timeoutJob: Job? = null
     private var findResetJob: Job? = null
@@ -196,13 +192,22 @@ class ControlFragment : Fragment() {
         )
     }
 
-    /** 마지막 신호 시각만 쓴다 — 60초 무응답 문구에 붙일 값이다(설계서 §5). */
+    /**
+     * 마지막 신호 시각만 쓴다 — 60초 무응답 문구에 붙일 값이다(설계서 §5).
+     *
+     * 같은 스냅샷을 액티비티에도 넘긴다. 연결 끊김 배너가 리스너를 따로 붙이지 않고
+     * 이미 도는 리스너에 얹혀 사는 구조라서다
+     * ([GuardianMainActivity.reportChildStatus] 주석).
+     */
     private fun attachStatusListener(fid: String, uid: String) {
         statusListener?.remove()
         statusListener = FamilyRepository.observeChildStatus(
             fid,
             uid,
-            onChange = { status -> lastSeenAt = status.lastSeenAt },
+            onChange = { status ->
+                lastSignal = status.lastSignal()
+                (activity as? GuardianMainActivity)?.reportChildStatus(status)
+            },
             onError = { e -> showChildState(errorMessageOrNull(e)) },
         )
     }
@@ -362,7 +367,7 @@ class ControlFragment : Fragment() {
         // 계속 도는 일이 없도록 실패 표시를 먼저 확정하고, 문구는 뒤에 채워 넣는다.
         renderCommand(CommandUi.Failed(getString(R.string.control_command_timeout)))
 
-        val elapsed = elapsedSinceLastSeen()
+        val seen = elapsedSinceLastSeen()
         // 위 한 줄에서 화면을 떠났거나 부모가 새 명령을 눌렀을 수 있다. 여기서부터는
         // 붙잡아 둔 Context 로만 문자열을 만든다 — Fragment.getString 은 화면이 떨어져
         // 나간 뒤에 부르면 그대로 예외다.
@@ -375,58 +380,61 @@ class ControlFragment : Fragment() {
         val ctx = context ?: return
         renderCommand(
             CommandUi.Failed(
-                ctx.getString(R.string.control_command_timeout_format, lastSeenPhrase(ctx, elapsed))
+                ctx.getString(R.string.control_command_timeout_format, lastSeenPhrase(ctx, seen))
             )
         )
     }
 
+    /** 마지막 신호와, 그로부터 흐른 시간. 신호가 한 번도 없었으면 이 값 자체가 null 이다. */
+    private data class SeenElapsed(val signal: ChildSignal, val elapsedMillis: Long)
+
     /**
-     * 마지막 신호로부터 흐른 시간(밀리초). null 이면 아이 폰이 한 번도 신호를 준 적이 없다.
+     * 마지막 신호로부터 흐른 시간. null 이면 아이 폰이 한 번도 신호를 준 적이 없다.
      * **음수로 돌아올 수 있다** — 그 뜻과 처리는 [lastSeenPhrase] 참고.
      *
      * 기준 시각을 [FamilyRepository.serverNow] 로 얻는 이유: 부모 폰 시계가 뒤처져
      * 있으면 [System.currentTimeMillis] 로 뺀 값이 음수가 돼 "마지막 신호 -3분 전"이
      * 찍힌다.
      *
-     * 그래도 완전히 안전하지는 않다. `serverNow` 가 보정하는 것은 **부모 폰 시계**뿐인데
-     * `lastSeenAt` 은 **아이 폰이 자기 시계로** 적은 값이라(child/StatusReporter),
-     * 아이 폰 시계가 앞서 있으면 여전히 음수가 나온다. 예전에는 여기서 0 으로 잘랐는데
-     * 그게 "방금 전"이 돼서 바로 윗줄의 "애기폰이 응답하지 않아요"와 정면으로
-     * 부딪혔다 — 자르지 않고 음수를 그대로 넘긴다. 근본 해결은 docs/known-issues.md 7번.
+     * 아이 폰이 새 버전이면 [ChildSignal.fromServerClock] 이 true 이고, 그때는 뺄셈의
+     * 양쪽이 모두 **서버 시각**이라 아이 폰 시계가 어긋나 있어도 이 값이 정확하다
+     * (docs/known-issues.md 7번을 그렇게 닫았다). 옛 버전이면 아이 폰이 자기 시계로
+     * 적은 값이라 여전히 음수가 나올 수 있고, 그 예외 경로는 아래에서 다룬다.
      */
-    private suspend fun elapsedSinceLastSeen(): Long? {
-        val seen = lastSeenAt
-        if (seen <= 0L) return null
+    private suspend fun elapsedSinceLastSeen(): SeenElapsed? {
+        val signal = lastSignal ?: return null
         val now = FamilyRepository.serverNow(familyId, AuthGateway.currentUid())
-        return now - seen
+        return SeenElapsed(signal, now - signal.atMillis)
     }
 
     /**
      * "마지막 신호 12분 전". 계산은 위에서 끝났고 여기서는 문장만 고른다.
      *
-     * [elapsed] 가 음수면 아이 폰 시계가 부모 폰(서버 보정본)보다 앞서 있다는 뜻이고,
-     * 그 순간 우리는 마지막 신호가 **얼마나 오래됐는지 모른다.** 이때 상대 표현을 쓰면
-     * 안 된다: 바로 윗줄이 "애기폰이 응답하지 않아요"인데 그 아래에 "마지막 신호 방금
-     * 전"이 붙으면 두 줄이 서로를 부정해서 부모는 아무것도 알 수 없고 화면을 덜 믿게
-     * 된다. 그래서 경과 시간 대신 아이 폰이 적어 보낸 **절대 시각**을 그대로 보여주고,
-     * 그 값이 아이 폰 시계 기준이라 정확하지 않다는 것도 함께 말한다 — 모르는 것을
-     * 아는 척하지 않는 쪽이 항상 낫다.
+     * 경과가 음수인 경우가 둘인데 뜻이 전혀 다르다.
+     *
+     * - **서버 시각으로 잰 값**이 음수라면 그 크기는 [FamilyRepository.serverNow] 의
+     *   왕복 보정 오차(수백 밀리초)뿐이다. 실제로 방금 신호가 온 것이므로 "방금 전"이
+     *   정직하다.
+     * - **아이 폰 시계로 잰 값**(옛 버전 자녀 폰)이 음수면 아이 폰 시계가 부모 폰보다
+     *   앞서 있다는 뜻이고, 그 순간 우리는 마지막 신호가 얼마나 오래됐는지 **모른다.**
+     *   이때 상대 표현을 쓰면 안 된다: 바로 윗줄이 "애기폰이 응답하지 않아요"인데 그
+     *   아래에 "마지막 신호 방금 전"이 붙으면 두 줄이 서로를 부정해서 부모는 아무것도
+     *   알 수 없고 화면을 덜 믿게 된다. 그래서 경과 시간 대신 아이 폰이 적어 보낸
+     *   절대 시각을 그대로 보여주고, 그 값이 아이 폰 시계 기준이라 정확하지 않다는
+     *   것도 함께 말한다 — 모르는 것을 아는 척하지 않는 쪽이 항상 낫다.
      */
-    private fun lastSeenPhrase(ctx: Context, elapsed: Long?): String {
-        if (elapsed == null) return ctx.getString(R.string.control_last_seen_never)
-        if (elapsed < 0L) {
+    private fun lastSeenPhrase(ctx: Context, seen: SeenElapsed?): String {
+        if (seen == null) return ctx.getString(R.string.control_last_seen_never)
+        if (seen.elapsedMillis < 0L && !seen.signal.fromServerClock) {
             return ctx.getString(
                 R.string.control_last_seen_skewed,
-                lastSeenClockFormat.format(Date(lastSeenAt)),
+                LastSignalText.clockText(seen.signal.atMillis),
             )
         }
-        val text = when {
-            elapsed < MINUTE_MILLIS -> ctx.getString(R.string.control_last_seen_now)
-            elapsed < HOUR_MILLIS -> ctx.getString(R.string.control_last_seen_minutes, elapsed / MINUTE_MILLIS)
-            elapsed < DAY_MILLIS -> ctx.getString(R.string.control_last_seen_hours, elapsed / HOUR_MILLIS)
-            else -> ctx.getString(R.string.control_last_seen_days, elapsed / DAY_MILLIS)
-        }
-        return ctx.getString(R.string.control_last_seen_format, text)
+        return ctx.getString(
+            R.string.control_last_seen_format,
+            LastSignalText.elapsedText(ctx, seen.elapsedMillis.coerceAtLeast(0L)),
+        )
     }
 
     /**
@@ -619,10 +627,6 @@ class ControlFragment : Fragment() {
 
         /** child/FindPhoneController 의 5분 자동 정지와 같은 값(설계서 §4.5). */
         const val FIND_AUTO_STOP_MILLIS = 5 * 60 * 1000L
-
-        const val MINUTE_MILLIS = 60_000L
-        const val HOUR_MILLIS = 60 * MINUTE_MILLIS
-        const val DAY_MILLIS = 24 * HOUR_MILLIS
 
         const val KEY_FIND_STARTED_AT = "find_started_at"
     }

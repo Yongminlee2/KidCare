@@ -144,7 +144,14 @@ class MapTimelineFragment : Fragment() {
         statusListener = FamilyRepository.observeChildStatus(
             familyId,
             uid,
-            onChange = { status -> render(status) },
+            onChange = { status ->
+                render(status)
+                // 연결 끊김 배너는 액티비티 레이아웃에 있고 리스너를 따로 붙이지 않는다.
+                // 지도 탭은 앱을 켜면 항상 만들어지고 show/hide 라 탭을 옮겨도 살아
+                // 있으므로, 관리 탭을 한 번도 안 여는 부모에게도 이 경로로 값이 계속
+                // 들어간다([GuardianMainActivity.reportChildStatus] 주석).
+                (activity as? GuardianMainActivity)?.reportChildStatus(status)
+            },
             onError = { e -> _binding?.statusBar?.text = getString(R.string.map_error, errorMessage(requireContext(), e)) },
         )
         subscribeSegments()

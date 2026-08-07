@@ -29,6 +29,43 @@
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:visibility="gone" />
 
+        <!-- "규칙은 저장됐는데 아이 폰에 아직 못 알렸다"는 줄. 이게 없으면 전달에
+             실패한 규칙과 실제로 적용된 규칙이 목록에서 똑같이 보인다 — 부모는
+             정해뒀다고 믿는데 아이 폰은 옛 규칙대로 도는, 이 화면에서 가장 나쁜
+             실패다(ScheduleFragment.pendingSync 주석). 어느 규칙이 문제인지는
+             구분하지 않는다: 깃발은 "규칙 묶음 전체를 다시 읽어라"는 신호 하나에
+             달려 있어서 규칙별로 나눌 수 있는 값이 아니고, 부모가 할 수 있는 일도
+             '다시 알리기' 하나라 줄 하나면 충분하다. -->
+        <LinearLayout
+            android:id="@+id/sync_pending_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorErrorContainer"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/schedule_sync_pending"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnErrorContainer" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/sync_retry_button"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:minHeight="48dp"
+                android:text="@string/schedule_sync_retry" />
+        </LinearLayout>
+
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
