@@ -86,3 +86,42 @@ data class SegmentDoc(
     val placeName: String = "",
     val dayKey: String = "",
 )
+
+/**
+ * children/{childUid}/commands/{autoId} — 보호자가 쓰고 자녀가 실행한다.
+ *
+ * [id] 는 Firestore 문서 ID 라 문서 본문에는 없다. 읽어올 때 채워 넣는다
+ * (보호자 화면이 "이 명령"의 상태를 따라가려면 ID 가 필요하다).
+ *
+ * [payload] 를 Map<String,String> 으로 둔 이유: 명령 종류마다 필요한 값이 다른데
+ * 타입마다 필드를 늘리면 Firestore 문서가 빈 필드 투성이가 된다. 값이 몇 개 안 되고
+ * 전부 짧은 문자열이라 이 정도면 충분하다.
+ *
+ * 상태 전이는 pending -> delivered -> done|failed 한 방향뿐이다. 규칙이 자녀에게
+ * state/deliveredAt/doneAt/error 만 갱신하도록 제한하므로 type·payload 는 불변이다.
+ */
+data class CommandDoc(
+    val id: String = "",
+    val type: String = "",
+    val payload: Map<String, String> = emptyMap(),
+    val state: String = "",
+    val createdAt: Long = 0L,
+    val deliveredAt: Long = 0L,
+    val doneAt: Long = 0L,
+    val error: String = "",
+)
+
+object CommandType {
+    const val SET_RINGER = "set_ringer"
+    const val FIND_PHONE = "find_phone"
+    const val STOP_FIND = "stop_find"
+    /** 예약 규칙이 바뀌었으니 다시 읽어 알람을 새로 걸라는 신호. */
+    const val SYNC_RULES = "sync_rules"
+}
+
+object CommandState {
+    const val PENDING = "pending"
+    const val DELIVERED = "delivered"
+    const val DONE = "done"
+    const val FAILED = "failed"
+}
