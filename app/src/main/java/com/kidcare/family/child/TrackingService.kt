@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
+import android.media.AudioManager
 import android.os.BatteryManager
 import android.os.Build
 import android.util.Log
@@ -59,6 +60,11 @@ class TrackingService : LifecycleService() {
     // 모드인지 매 업로드마다 다시 읽어야 하므로 캐시하지 않는다.
     private val ringerController by lazy { RingerController(this) }
 
+    // 잠금 스위치가 켜져 있을 때 아이가 모드를 바꾸면 되돌린다(Task 5). onCreate 에서
+    // 코드로 등록하고 onDestroy 에서 반드시 해제한다 — 매니페스트 정적 등록은 서비스가
+    // 안 떠 있을 때도 깨어나 배터리만 먹는다(RingerModeReceiver 주석 참고).
+    private var ringerReceiver: RingerModeReceiver? = null
+
     // onCreate 에서 확인한 결과. ChildHomeActivity 는 PermissionStep.firstMissing 이
     // null 일 때만(=모든 권한이 켜져 있을 때만) 이 서비스를 켜지만, 그 뒤 사용자가
     // 시스템 설정에서 위치 권한을 직접 끌 수 있고, BootReceiver 는 권한을 전혀
@@ -95,6 +101,14 @@ class TrackingService : LifecycleService() {
         // collector 를 계속 붙들어 leak 이 된다.
         activeCollector = collector
         registerActivityTransitions()
+
+        ringerReceiver = RingerModeReceiver(ringerController, RingerStateStore(this)).also {
+            ContextCompat.registerReceiver(
+                this, it,
+                IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION),
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+        }
     }
 
     /**
@@ -395,6 +409,13 @@ class TrackingService : LifecycleService() {
         unregisterActivityTransitions()
         activeCollector = null
         collector.stop()
+        // 되돌리기 리시버도 같은 이유로 뗀다 — cancelPending 을 먼저 부르지 않으면
+        // 서비스가 죽은 뒤 3초 지연 중이던 Runnable 이 죽은 컨트롤러를 붙든 채 터진다.
+        ringerReceiver?.let {
+            it.cancelPending()
+            unregisterReceiver(it)
+        }
+        ringerReceiver = null
         // 명령 리스너도 같은 이유로 뗀다 — 서비스 없이 리스너만 남으면 handle() 을
         // 부를 lifecycleScope 도 이미 취소된 상태라 부르는 순간 예외만 난다.
         commandListener?.remove()

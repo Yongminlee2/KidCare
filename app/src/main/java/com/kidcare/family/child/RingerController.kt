@@ -52,6 +52,22 @@ class RingerController(private val context: Context) {
         }
     }
 
+    /**
+     * 지금 강제돼야 할 모드. null 이면 아무것도 강제하지 않는다.
+     *
+     * 즉시 변경은 [RingerStateStore.overrideUntil] 까지만 유효하다. 0 이면
+     * 해제 시각이 없다는 뜻이라 계속 유효하다 — 적용 중인 예약 규칙이 하나도
+     * 없을 때가 그렇다(설계서 §4.3). 예약 규칙은 Task 8 에서 여기에 합쳐진다.
+     */
+    fun desiredMode(state: RingerStateStore, nowMillis: Long = System.currentTimeMillis()): String? {
+        val until = state.overrideUntil
+        if (until != 0L && nowMillis >= until) {
+            state.clearOverride()
+            return null
+        }
+        return state.overrideMode
+    }
+
     private companion object {
         const val TAG = "RingerController"
     }
