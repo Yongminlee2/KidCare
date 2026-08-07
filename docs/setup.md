@@ -126,13 +126,15 @@ Task 6 작업 시점 기준으로 익명 인증은 이미 사용 설정돼 있�
 `adb logcat -s CommandRepository:*`를 띄워 `PERMISSION_DENIED`가 찍히지 않는지 본다.
 찍히면 콘솔에 옛 규칙이 그대로 남아있다는 뜻이다 — 게시를 다시 확인한다.
 
-**주의 (4단계에서 반드시 먼저 처리할 것):** `firestore.rules` 의
-`children/{childUid}/{document=**}` 규칙은 그 아래 전부를 아이 본인만 쓸 수 있게
-막는다. 원격 명령(`commands/`)은 보호자가 써야 하는데, 이 프로젝트는 Cloud
-Functions 없이 Spark 무료 요금제로 가기 위해 FCM 푸시 대신 **Firestore 스냅샷
-리스너**로 명령을 전달하기로 했다 — 즉 보호자 쓰기가 막힌 채로는 즉시 변경·폰찾기
-기능 자체가 동작하지 않는다. 4단계 계획에 `commands/` 전용 규칙 분리를 반드시
-넣는다.
+**처리됨 (4단계 Task 1):** 예전에는 `firestore.rules`의
+`children/{childUid}/{document=**}` 재귀 와일드카드가 그 아래 전부를 아이 본인만
+쓸 수 있게 막아서, 원격 명령(`commands/`)에 보호자가 쓸 수 없었다. 이 프로젝트는
+Cloud Functions 없이 Spark 무료 요금제로 가기 위해 FCM 푸시 대신 **Firestore
+스냅샷 리스너**로 명령을 전달하기로 했으므로 보호자가 `commands/` 문서를 직접
+써야만 즉시 변경·폰찾기 기능이 동작한다 — 4단계 Task 1에서 와일드카드를 없애고
+`points`·`segments`·`commands`를 하위 컬렉션별로 나눠 보호자의 `commands`
+쓰기를 열었다(`commands`는 보호자만 `create`, 아이는 진행 상태만 `update`).
+자세한 이유는 `docs/known-issues.md` 5번 참고.
 
 ### fix round 1 (보안 리뷰) — `inviteCodes` 컬렉션 추가
 

@@ -126,17 +126,36 @@ service cloud.firestore {
         // 명령은 방향이 반대다: 보호자가 만들고 아이가 실행 결과만 적는다.
         match /commands/{commandId} {
           allow read: if memberOf(familyId);
-          // 만드는 것은 보호자만. 항상 pending 으로 시작해야 한다 — 아이를 거치지 않고
-          // done 으로 위조된 명령이 화면에 "완료"로 보이는 것을 막는다.
+          // 만드는 것은 보호자만. 항상 pending 으로 시작해야 한다 — 보호자가 처음부터
+          // done 으로 위조해서 만드는 것은 여기서 막는다. (생성 시점 한정: 만들어진
+          // 뒤에 아이가 done 으로 "도달"하는 경로를 막는 건 이 규칙이 아니라 아래
+          // update 의 상태 전이 제약이 맡는다 — 여기서 다 막는다고 착각하지 말 것.)
           allow create: if memberOf(familyId)
                         && roleIn(familyId) == 'guardian'
                         && request.resource.data.state == 'pending';
           // 아이는 진행 상태만 갱신한다. type·payload 를 바꿀 수 없으므로
           // "받은 명령을 다른 명령으로 바꿔치기"가 불가능하다.
+          // state 전이는 앞으로만 허용한다: pending→delivered/failed,
+          // delivered→done/failed. done·failed 는 종료 상태라 그 이후로는 state 를
+          // 포함한 어떤 update 도 통과하지 않는다(문서가 사실상 잠긴다). 이게 없으면
+          // 아이가 pending 을 곧장 done 으로 바꿔 "실행하지 않고 완료로 위장"할 수
+          // 있었다 — delete 를 막아도 done 으로 덮어써 버리면 사실상 명령을 지운
+          // 것과 같은 효과였다.
+          // 이 제약도 "폰이 실제로 울렸는지"까지는 검증하지 못한다. 아이가
+          // pending→delivered→done 순서만 지키면 여전히 아무것도 실행하지 않고
+          // 종료 상태에 도달할 수 있다 — 이건 규칙으로 막을 수 있는 범위 밖이라
+          // docs/known-issues.md(남겨두기로 판단한 것)에 남겨뒀다.
           allow update: if memberOf(familyId)
                         && request.auth.uid == childUid
                         && request.resource.data.diff(resource.data).affectedKeys()
-                             .hasOnly(['state', 'deliveredAt', 'doneAt', 'error']);
+                             .hasOnly(['state', 'deliveredAt', 'doneAt', 'error'])
+                        && (
+                             (resource.data.state == 'pending'
+                              && request.resource.data.state in ['delivered', 'failed'])
+                             ||
+                             (resource.data.state == 'delivered'
+                              && request.resource.data.state in ['done', 'failed'])
+                        );
           // 오래된 명령 정리는 보호자 몫.
           allow delete: if memberOf(familyId) && roleIn(familyId) == 'guardian';
         }
