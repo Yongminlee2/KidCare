@@ -48,7 +48,12 @@
         android:textAppearance="?attr/textAppearanceBodySmall"
         tools:text="이 번호는 10분 뒤에 만료돼요" />
 
+    <!-- 기본값은 보이는 상태다 — onCreate 가 곧바로 startPairing() 을 부르므로
+         화면이 뜨는 첫 순간부터 실제로 로그인/가족 생성/초대코드 발급이 진행 중이다.
+         코드가 뜨면(showCode) 끄고, 실패하면(각 catch) 끄고, "새 번호 받기"를
+         누르면(refreshCode) 다시 켠다 — GuardianPairingActivity.kt 참고. -->
     <ProgressBar
+        android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp" />

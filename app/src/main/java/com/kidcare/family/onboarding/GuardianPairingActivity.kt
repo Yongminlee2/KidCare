@@ -2,6 +2,7 @@ package com.kidcare.family.onboarding
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.firestore.ListenerRegistration
@@ -111,12 +112,19 @@ class GuardianPairingActivity : AppCompatActivity() {
                 // catch 보다 반드시 먼저 와야 한다 — 순서가 바뀌면 이 타임아웃도
                 // "정상적인 화면 이탈 취소"로 오인돼 그대로 다시 던져지고, 정작
                 // 보여줘야 할 오프라인 안내가 삼켜진다.
+                //
+                // 실패했으니 스피너도 끈다 — 안 끄면 "연결 실패" 문구 바로 아래에서
+                // 스피너가 계속 돌아 아직 뭔가 진행 중인 것처럼 보인다(실기기에서
+                // 확인된 결함, known-issues.md 참고).
+                binding.progressBar.visibility = View.GONE
                 binding.hintText.text = getString(R.string.pairing_offline)
             } catch (e: CancellationException) {
                 // 화면 이탈(되돌리기 버튼, onDestroy)로 인한 정상 취소다. 실패로 취급해
                 // hintText 를 덮어쓰면 안 되므로 그대로 다시 던져 코루틴 취소를 완성시킨다.
                 throw e
             } catch (e: Exception) {
+                // 위 TimeoutCancellationException 과 같은 이유로 스피너를 끈다.
+                binding.progressBar.visibility = View.GONE
                 binding.hintText.text = getString(R.string.pairing_failed, errorMessage(this@GuardianPairingActivity, e))
             }
         }
@@ -126,6 +134,9 @@ class GuardianPairingActivity : AppCompatActivity() {
     private fun refreshCode() {
         val familyId = store.familyId ?: return
         binding.newCodeButton.isEnabled = false
+        // 새 코드를 받으러 서버에 다시 다녀오는 진짜 네트워크 작업이 시작되니
+        // 스피너를 다시 켠다. showCode() 가 성공하면 끄고, 실패하면 아래 catch 에서 끈다.
+        binding.progressBar.visibility = View.VISIBLE
         refreshJob = lifecycleScope.launch {
             try {
                 withTimeout(SETUP_TIMEOUT_MILLIS) {
@@ -133,10 +144,12 @@ class GuardianPairingActivity : AppCompatActivity() {
                 }
             } catch (e: TimeoutCancellationException) {
                 // 위 startPairing() 과 같은 이유로 CancellationException 보다 먼저 잡는다.
+                binding.progressBar.visibility = View.GONE
                 binding.hintText.text = getString(R.string.pairing_offline)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                binding.progressBar.visibility = View.GONE
                 binding.hintText.text = getString(R.string.pairing_failed, errorMessage(this@GuardianPairingActivity, e))
             } finally {
                 binding.newCodeButton.isEnabled = true
@@ -152,6 +165,11 @@ class GuardianPairingActivity : AppCompatActivity() {
         binding.expiryText.text = getString(R.string.pairing_code_expiry_format, minutesLeft)
         binding.hintText.setText(R.string.pairing_guardian_hint)
         binding.newCodeButton.isEnabled = true
+        // 코드가 떴다 = 서버와 주고받던 작업이 끝나고 "아이가 번호를 넣기를 기다리는"
+        // 상태로 넘어간 것이다. 스피너는 "곧 끝나는 작업 중"이라는 신호인데, 아이가
+        // 언제 폰을 들지는 알 수 없어 계속 돌리면 오히려 거짓 신호가 된다. 대기 상태는
+        // 위 hintText 안내문이 이미 설명하므로 스피너는 끈다.
+        binding.progressBar.visibility = View.GONE
     }
 
     private fun goToMain(childUid: String) {
