@@ -1,17 +1,7 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.services)
 }
-
-val localProps = Properties().apply {
-    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
-}
-// REST 키는 지도용 앱키와 다른 키다(용도가 다르다) — 좌표를 주소로 바꾸는 coord2address
-// 호출에만 쓴다. 없으면 빈 문자열이고, 이 경우 PlaceNamer 가 네트워크 호출 없이 null 을
-// 돌려줘서 머무른 곳이 이름 없이 표시될 뿐 빌드나 실행이 막히지 않는다.
-val kakaoRestKey: String = localProps.getProperty("KAKAO_REST_KEY") ?: ""
 
 android {
     namespace = "com.kidcare.family"
@@ -23,7 +13,6 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1"
-        buildConfigField("String", "KAKAO_REST_KEY", "\"$kakaoRestKey\"")
     }
 
     buildFeatures {

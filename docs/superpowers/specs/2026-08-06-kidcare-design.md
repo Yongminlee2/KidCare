@@ -294,12 +294,13 @@ Spark 무료 요금제로 가기로 하면서(§2 "Firebase 요금제", §9) 아
 - 머무름이 끝나는 조건: 반경 100m를 벗어난 지점이 **연속 2개** 나올 때. (1개는 GPS 튐일 수 있음)
 - `stay`가 아닌 구간은 `move`. 이동 거리는 지점 간 거리의 합.
 - 5분 미만의 짧은 정지는 `move` 안에 흡수한다(신호 대기 등).
-- **장소 이름**: ① `places/`에 등록된 반경 안이면 그 이름, ② 아니면 카카오 로컬 API
-  역지오코딩으로 "○○동 123-4", ③ 조회 실패 시(응답 실패든, `KAKAO_REST_KEY`가
-  없어 애초에 API를 부르지 않든) "머무른 곳". 이전 판은 이 문구를 "알 수 없는
-  장소"로 적었는데 실제 구현(`PlaceNamer`/`TimelineAdapter`)은 "머무른 곳"을
-  쓴다 — 정정. `KAKAO_REST_KEY`가 없는 빌드에서는 머무른 모든 구간이 항상 이
-  문구로만 보인다.
+- **장소 이름**: ① `places/`에 등록된 반경 안이면 그 이름, ② 아니면(2026-08-07
+  변경) OpenStreetMap Nominatim 역지오코딩으로 상호·건물명 또는 "○○동 [도로명]",
+  ③ 조회 실패 시(응답 실패든 네트워크 오류든) "머무른 곳". 이전 판은 이 문구를
+  "알 수 없는 장소"로 적었는데 실제 구현(`PlaceNamer`/`TimelineAdapter`)은
+  "머무른 곳"을 쓴다 — 정정. Nominatim은 키 등록이 없어 이제 조회 실패는
+  네트워크 문제일 때만 일어난다(카카오 REST 키 미발급으로 인한 상시 실패가 아님).
+  근거·응답 예시는 `.superpowers/geocoder-swap-report.md` 참고.
 - 구간 계산은 자녀 폰에서 한다. 보호자 폰이 하루치 원시 점(최대 ~500개)을 매번 읽으면
   느리고 Firestore 읽기 사용량도 커진다. 요약본은 하루 20~30건이면 충분하다.
 
@@ -441,6 +442,7 @@ Spark 무료 요금제로 가기로 하면서(§2 "Firebase 요금제", §9) 아
 | 기기관리자 권한 안 씀 | 삭제 방지 | 오작동 시 기기 초기화까지 얽히는 위험이 이득보다 크다 |
 | Views + ViewBinding | Compose | 기존 프로젝트 관례 유지. 지도 SDK가 View 기반이라 상호운용 비용도 없다 |
 | ~~카카오맵~~ → **osmdroid(OpenStreetMap)** | 카카오맵 유지, 앱키 발급 대기 | 2026-08-07 뒤집음. 소유자가 카카오 네이티브 앱키를 한 번도 발급받지 않아 1~3단계 내내 지도가 그려진 적이 없었다. osmdroid는 등록·앱키가 전혀 필요 없어 즉시 동작한다. 카카오로 되돌릴 여지를 남기려고 `gradle/libs.versions.toml`의 `kakao-map` 별칭과 `settings.gradle.kts`의 카카오 Maven 저장소는 지우지 않고 주석 처리만 했다 — API 매핑·검증 근거는 `.superpowers/map-swap-report.md` |
+| ~~카카오 로컬 REST API~~ → **Nominatim(OpenStreetMap)** | 카카오 로컬 유지, REST 키 발급 대기 | 2026-08-07 뒤집음. 소유자가 카카오 REST 키를 발급받지 않아 머무른 곳 이름이 항상 "머무른 곳"으로만 나왔다. Nominatim은 키 등록이 전혀 필요 없다. 대신 호의성 공개 서버라 초당 1건 제한·식별 User-Agent·캐싱·전환 가능성을 요구하는 사용 정책이 있어 `PlaceNamer`가 이를 지키도록 구현했다(근거·응답 예시는 `.superpowers/geocoder-swap-report.md`). 카카오 쪽 REST 키 플러밍(`BuildConfig.KAKAO_REST_KEY`, `local.properties`)은 제거했다 |
 
 ## 10. 남은 미결정 사항
 

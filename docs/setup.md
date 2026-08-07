@@ -245,14 +245,7 @@ adb -s <아이폰시리얼> install -r app/build/outputs/apk/debug/app-debug.apk
 7. 지도를 손가락으로 확대/축소·이동해보고, 이후 위치 갱신이 와도 부모가 옮긴
    시점이 유지되는지(마커가 처음 찍힐 때만 카메라가 움직여야 한다) 확인
 
-## 카카오 REST API 키 (머무른 곳 이름 표시용)
+## 주소 조회 (머무른 곳 이름 표시용) — 키 등록 불필요
 
-네이티브 앱 키를 받은 그 화면(`앱 설정 > 앱 키`)에 **REST API 키**가 같이 있다.
-같이 복사해서 `local.properties` 에 한 줄 더 넣는다:
-
-```properties
-KAKAO_REST_KEY=여기에_REST_API_키
-```
-
-없어도 앱은 정상 동작한다 — 머무른 곳이 이름 없이 "머무른 곳"으로만 표시될 뿐이다.
-이 키는 좌표를 주소로 바꾸는 데만 쓴다(카카오 로컬 `coord2address`).
+2026-08-07부터 OpenStreetMap Nominatim을 쓴다. 카카오 REST 키처럼 발급받아 넣을
+것이 없다 — `PlaceNamer`가 등록 없이 바로 동작한다.

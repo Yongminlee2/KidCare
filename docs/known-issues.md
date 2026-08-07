@@ -105,6 +105,19 @@ Cloudflare Workers 중계로 올릴 수 있어야 한다. 전송 수단을 바�
   경로는 여전히 살아있다 — `gradle/libs.versions.toml`의 `kakao-map` 별칭과
   `settings.gradle.kts`의 카카오 Maven 저장소가 "카카오로 되돌릴 때 쓴다" 주석과
   함께 남아있다.
+- **역지오코딩 교체(2026-08-07)로 `PlaceNamer`가 OpenStreetMap Nominatim의 공개
+  reverse 서버를 쓴다.** 이것도 osmdroid 타일 서버와 같은 성격의 호의성 서비스라
+  자체 사용 정책(초당 최대 1건, 식별 가능한 User-Agent, 결과 캐싱, 요청 시 다른
+  서비스로 전환 가능해야 함)이 있다. `PlaceNamer`는 요청 전 컴패니언(프로세스
+  전체) 뮤텍스로 초당 1건을 지키고, 좌표 4자리 단위로 결과를 캐시하며(실패는
+  캐시하지 않는다), `USER_AGENT` 상수로 앱을 식별한다 — 자세한 내용은
+  `.superpowers/geocoder-swap-report.md` 참고. 이 가족 앱은 자녀 폰 1대가 하루에
+  머무름을 많이 잡아야 수십 건이라 이 정책에 걸릴 트래픽이 전혀 아니다. 나중에
+  사용자가 크게 늘면(사이드로드 가족 앱 전제라 사실상 해당 없지만) 자체 지오코더를
+  세우거나 유료 지오코더로 옮기는 걸 검토해야 한다. 카카오 로컬 API로 되돌아갈
+  경로도 여전히 남아있다 — 이전 구현(REST 키 + `coord2address` 호출)은 이 교체
+  이전 커밋의 `PlaceNamer.kt`에 그대로 있고, `local.properties`에 `KAKAO_REST_KEY`를
+  다시 받아 `app/build.gradle.kts`에 `buildConfigField`만 되살리면 된다.
 - `FamilyRepository.createFamily`가 family 문서 쓰기와 보호자 member 문서 쓰기를 마친
   뒤에 크래시하면(서버 시각 보정을 하려고 그 사이 순서를 바꿨다 — 3단계 Task 8),
   `GuardianPairingActivity.kt`는 `store.familyId`를 `createFamily`가 **반환한 뒤에만**
