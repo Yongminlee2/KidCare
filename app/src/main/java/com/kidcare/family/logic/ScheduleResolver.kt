@@ -13,6 +13,11 @@ import java.time.ZoneId
  * 이면 자정을 넘는 규칙이다 (예: 22:00~07:00 은 1320..420).
  * 요일은 항상 **시작 시각이 속한 날** 기준으로 판정한다 — "평일 22:00~07:00" 은
  * 금요일 밤에 시작해 토요일 새벽까지 이어지지만, 토요일은 요일 집합에 없다.
+ *
+ * 이 파일은 입력을 검증하지 않는다: [days] 가 비어 있으면 그 규칙은 조용히 아무
+ * 날에도 적용되지 않고, [startMinute]/[endMinute] 이 0..1439 밖이면 구간이 그만큼
+ * 밀릴 뿐 예외를 던지지 않는다. 둘 다 지금의 UI 로는 만들 수 없는 입력이라 여기서는
+ * 막지 않았다 — 규칙 편집 화면이 생기면(Task 10) 그쪽에서 막아야 한다.
  */
 data class ScheduleRule(
     val id: String,
@@ -64,6 +69,13 @@ object ScheduleResolver {
         val dayStart = anchorDate.atStartOfDay(zone).toInstant().toEpochMilli()
         val startAt = dayStart + rule.startMinute * MINUTE_MILLIS
         // 자정을 넘는 규칙: 끝이 시작보다 이르거나 같으면 다음 날로 넘긴다.
+        // startMinute == endMinute 인 경우도 이 분기를 탄다 — 그러면 [시작, 끝) 이
+        // 정확히 24시간짜리 구간이 되어 "항상 적용" 이 된다. 이는 의도된 동작이다:
+        // "00:00~00:00 무음" 처럼 부모가 하루 종일을 뜻하려고 같은 시각을 넣는 것은
+        // 말이 되는 입력이다. 다만 부모가 실수로 두 칸에 같은 시각을 잘못 눌러도
+        // 똑같이 하루 종일 무음이 되고 화면에는 그걸 알려주는 것이 없다 — 이 파일은
+        // 그 구분을 하지 않는다. 규칙 입력 화면(Task 10)이 저장 전에 "하루 종일로
+        // 저장할까요?" 같은 확인을 반드시 넣어야 한다.
         val endMinuteAbsolute = if (rule.endMinute <= rule.startMinute) {
             rule.endMinute + MINUTES_PER_DAY
         } else {
@@ -100,8 +112,8 @@ object ScheduleResolver {
         val today = Instant.ofEpochMilli(atMillis).atZone(zone).toLocalDate()
 
         // 지금 시각을 포함하는 구간 후보: 오늘과 어제 시작한 것만 보면 충분하다.
-        // 자정 넘김 규칙이라도 최대 하루치(24시간 미만)만 이어지므로, 그저께 시작한
-        // 구간이 오늘까지 이어질 수는 없다.
+        // 자정 넘김 규칙이라도 길이는 최대 24시간(시작==끝이면 정확히 24시간, 그 외엔
+        // 그보다 짧다)을 넘지 않으므로, 그저께 시작한 구간이 오늘까지 이어질 수는 없다.
         val activeCandidates = rules.flatMap { expand(it, zone, today, daysBefore = 1, daysAfter = 0) }
             .filter { atMillis >= it.startAt && atMillis < it.endAt }
 
@@ -129,6 +141,11 @@ object ScheduleResolver {
         val anchor = LocalDate.of(2000, 1, 3) // 임의의 월요일. 요일만 맞으면 어떤 주여도 된다.
         val zone = ZoneId.of("UTC") // 겹침 판정은 규칙끼리의 상대 위치만 보므로 시간대는 무관하다.
 
+        // candidate 는 자기 자신의 enabled 값과 무관하게 항상 켜진 것으로 취급한다
+        // (.copy(enabled = true)). 이건 "저장 전 겹침 경고" 용도라서 그렇다 — 부모가
+        // 지금 꺼 둔 규칙을 편집하는 중이어도, 나중에 켰을 때 다른 규칙과 부딪힐지는
+        // 미리 알고 싶어한다. 반대로 비교 대상인 other 쪽은 아래에서 enabled 를 그대로
+        // 걸러낸다: 이미 꺼져 있는 다른 규칙과는 지금 겹쳐도 경고할 대상이 아니다.
         val candidateIntervals = expand(candidate.copy(enabled = true), zone, anchor, daysBefore = 0, daysAfter = 6)
         if (candidateIntervals.isEmpty()) return emptyList()
 
