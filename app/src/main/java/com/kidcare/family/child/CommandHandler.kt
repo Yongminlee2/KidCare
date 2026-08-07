@@ -90,8 +90,8 @@ class CommandHandler(private val context: Context) {
                     state.overrideMode = mode
                     state.overrideUntil = command.payload["until"]?.toLongOrNull() ?: 0L
                 }
-                CommandType.FIND_PHONE -> Log.i(TAG, "FIND_PHONE 수신 (Task 6 에서 구현)")
-                CommandType.STOP_FIND -> Log.i(TAG, "STOP_FIND 수신 (Task 6 에서 구현)")
+                CommandType.FIND_PHONE -> FindPhoneController.start(context)
+                CommandType.STOP_FIND -> FindPhoneController.stop(context)
                 CommandType.SYNC_RULES -> Log.i(TAG, "SYNC_RULES 수신 (Task 8 에서 구현)")
                 else -> {
                     // 모르는 종류를 조용히 무시하면 보호자 화면에 "전달 중"으로

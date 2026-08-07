@@ -55,6 +55,12 @@
     <string name="tracking_notification_title">위치 공유 중</string>
     <string name="tracking_notification_text">부모님께 내 위치를 알려주고 있어요</string>
 
+    <string name="channel_find_phone">폰 찾기</string>
+    <string name="find_phone_title">엄마가 폰을 찾고 있어요</string>
+    <string name="find_phone_stop">찾았어요 (소리 끄기)</string>
+    <string name="find_phone_notification_title">엄마가 폰을 찾고 있어요</string>
+    <string name="find_phone_notification_text">눌러서 소리를 끌 수 있어요</string>
+
     <string name="map_no_child">아직 아이 폰이 연결되지 않았어요.</string>
     <string name="map_error">지도를 불러오지 못했어요\n%1$s</string>
     <string name="timeline_error">기록을 불러오지 못했어요\n%1$s</string>

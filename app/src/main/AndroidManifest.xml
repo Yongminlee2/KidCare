@@ -15,6 +15,10 @@
          이 권한은 매니페스트 선언만으로는 부여되지 않는다 — 사람이 설정 목록
          화면(ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)에서 직접 켜야 한다. -->
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <!-- 폰찾기 전체화면 알림에 쓴다. 안드로이드 14(API 34)부터는 전화·알람 앱이
+         아니면 이 권한이 자동 승인되지 않는다 — FindPhoneController 는 이걸
+         전제하지 않고, 소리·진동은 이 권한과 무관하게 알람 스트림으로 울린다. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
     <application
         android:name=".KidCareApp"
@@ -37,6 +41,16 @@
         <activity android:name=".onboarding.PermissionActivity" android:exported="false" />
         <activity android:name=".guardian.GuardianMainActivity" android:exported="false" />
         <activity android:name=".child.ChildHomeActivity" android:exported="false" />
+        <!-- 알림의 전체화면 인텐트·중지 액션이 여는 화면. 시스템(우리 앱이 스스로
+             건 PendingIntent)만 열 수 있으면 되므로 exported=false. 최근 앱
+             목록에는 안 남긴다(excludeFromRecents) — 아이가 나중에 최근 앱에서
+             다시 열어 헷갈릴 이유가 없다. singleTask 로 둬 알림을 여러 번 눌러도
+             인스턴스가 하나만 남는다. -->
+        <activity
+            android:name=".child.FindPhoneActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true" />
 
         <service
             android:name=".child.TrackingService"
