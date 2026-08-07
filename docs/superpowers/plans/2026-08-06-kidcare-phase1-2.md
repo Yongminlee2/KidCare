@@ -23,7 +23,7 @@
 - 비밀값은 git에 올리지 않는다: `local.properties`(카카오 앱키), `app/google-services.json`, `keystore.properties`, `*.jks`
 - 모든 시각은 UTC 밀리초(`System.currentTimeMillis()`)로 저장한다. 표시할 때만 기기 시간대로 바꾼다.
 - 사용자 대상 문자열은 전부 한국어이며 `res/values/strings.xml`에 둔다. 코드에 하드코딩하지 않는다.
-- 커밋 메시지는 한국어. **AI/Claude 관련 표기(Co-Authored-By 포함)를 넣지 않는다.**
+- 커밋 메시지는 한국어. 저자는 `Yongminlee2 <dydals5678@gmail.com>` 단독으로 두고, 공동 저자 트레일러를 넣지 않는다.
 - git 저자는 `Yongminlee2 <dydals5678@gmail.com>`. 이 저장소에는 전역 git identity가 없으므로 `git -c user.name=... -c user.email=...` 형태로 커밋하거나 `git config user.name/user.email`을 저장소에 설정한다.
 - 브랜치를 나누지 않고 `main`에 직접 커밋한다.
 

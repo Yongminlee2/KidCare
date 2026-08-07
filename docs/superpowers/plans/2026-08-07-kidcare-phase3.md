@@ -24,7 +24,7 @@
 - 주석은 한국어로, *왜* 그런지를 적는다. 기존 `core/AuthGateway.kt`·`logic/LocationFilter.kt` 문체를 따른다.
 - 모든 시각은 UTC 밀리초(`System.currentTimeMillis()`)로 저장하고, 표시할 때만 기기 시간대로 바꾼다.
 - 코루틴에서 `CancellationException`은 반드시 다시 던진다. 이 저장소는 같은 버그를 네 번 고쳤다 — `onboarding/GuardianPairingActivity.kt`의 catch 순서가 표준이다.
-- 커밋 메시지는 한국어. 저자 `Yongminlee2 <dydals5678@gmail.com>`. **AI/Claude 관련 표기를 넣지 않는다**(`Co-Authored-By` 포함).
+- 커밋 메시지는 한국어. 저자는 `Yongminlee2 <dydals5678@gmail.com>` 단독으로 두고, 공동 저자 트레일러를 넣지 않는다.
 - 비밀값은 커밋하지 않는다: `local.properties`, `app/google-services.json`, `keystore.properties`, `*.jks`
 - 빌드 시 `export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"` 가 필요하다. JVM 테스트 워커가 `ClassNotFoundException: GradleWorkerMain`으로 죽으면 `./gradlew.bat --stop` 후 재시도한다(`gradle.properties`의 `-Dfile.encoding=MS949`가 이미 대응한다). `GRADLE_USER_HOME` 우회나 `C:\workAndroid\gradle-user-ascii`는 쓰지 않는다 — 후자는 한글 홈으로 가는 정션이라 무효다.
 - **`firestore.rules`를 수정하지 않는다.** 보안 리뷰 3회·재작성 2회를 거친 파일이다. 이 단계가 새로 쓰는 `segments/`와 `points/` 삭제는 기존 `match /children/{childUid}/{document=**}` 규칙이 이미 덮는다(자녀 본인 쓰기 허용, 가족 멤버 읽기 허용). 규칙 변경이 필요해 보이면 진행하지 말고 BLOCKED로 보고한다.

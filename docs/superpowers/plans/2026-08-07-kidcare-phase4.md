@@ -24,7 +24,7 @@
 - 모든 시각은 UTC 밀리초로 저장하고, 표시할 때만 기기 시간대로 바꾼다.
 - 코루틴에서 `CancellationException`은 반드시 다시 던진다. `runCatching`은 이걸 삼키므로 `onFailure` 안에서 다시 던진다. **이 저장소는 같은 버그를 일곱 번 고쳤다** — `onboarding/GuardianPairingActivity.kt`의 catch 순서가 표준이다.
 - 사용자에게 보이는 실패 문구는 반드시 `core/ErrorText.errorMessage(context, throwable)`를 거친다. SDK 영문 원문을 그대로 노출하지 않는다(3단계 실기기 검증에서 잡힌 결함).
-- 커밋 메시지는 한국어. 저자 `Yongminlee2 <dydals5678@gmail.com>`. **AI/Claude 관련 표기를 넣지 않는다**(`Co-Authored-By` 포함).
+- 커밋 메시지는 한국어. 저자는 `Yongminlee2 <dydals5678@gmail.com>` 단독으로 두고, 공동 저자 트레일러를 넣지 않는다.
 - 빌드 시 `export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"` 가 필요하다. 테스트 워커가 `ClassNotFoundException: GradleWorkerMain`으로 죽으면 `./gradlew.bat --stop` 후 재시도(`gradle.properties`의 `-Dfile.encoding=MS949`가 이미 대응). `GRADLE_USER_HOME` 우회나 `C:\workAndroid\gradle-user-ascii`는 쓰지 않는다 — 후자는 한글 홈으로 가는 정션이다.
 - **현재 단위 테스트 49개.** 어느 작업이든 기존 49개를 깨뜨리면 안 된다.
 - `adb`를 실행하지 않는다. 실기기 확인은 사람이 한다. 각 작업의 확인 절차는 보고서에 적는다.
