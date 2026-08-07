@@ -217,9 +217,33 @@ class TrackingService : LifecycleService() {
         }
 
         subscribeToCommands(familyId)
+        refreshSchedule(familyId)
 
         collector.start { fix -> handle(familyId, fix) }
         return START_STICKY
+    }
+
+    /**
+     * 예약 규칙을 다시 읽어 적용하고 다음 경계 알람을 건다(Task 8).
+     *
+     * 재부팅·시각변경·SYNC_RULES 는 [ScheduleAlarmReceiver] 가 각자 트리거를 받아
+     * 처리하지만, 그 셋 중 아무것도 아직 안 일어난 상태(막 페어링을 끝내고 이
+     * 서비스가 처음 뜨는 경우, 부모가 이미 규칙을 만들어 둔 채로 아이 폰에 앱을
+     * 새로 깐 경우)에는 알람이 걸린 적 자체가 없다. onStartCommand 는 서비스가
+     * (재)시작될 때마다 불리므로 여기서도 한 번 걸어야 그런 첫 순간을 놓치지 않는다.
+     * ScheduleApplier.refresh 는 실패해도(오프라인 등) 내부에서 재시도 알람으로
+     * 물러나므로 여기서 별도 재시도 로직은 두지 않는다.
+     */
+    private fun refreshSchedule(familyId: String) {
+        lifecycleScope.launch {
+            try {
+                ScheduleApplier(this@TrackingService).refresh(familyId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "서비스 시작 시 예약 규칙 적용 실패", e)
+            }
+        }
     }
 
     /**

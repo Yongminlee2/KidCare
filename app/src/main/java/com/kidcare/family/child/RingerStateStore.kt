@@ -39,6 +39,20 @@ class RingerStateStore(context: Context) {
         get() = prefs.getBoolean(KEY_LOCK, false)
         set(value) = prefs.edit().putBoolean(KEY_LOCK, value).apply()
 
+    /**
+     * 예약 규칙이 지금 강제하는 모드(Task 8). [ScheduleApplier] 가 규칙을 다시 읽을
+     * 때마다(경계 알람, 재부팅, SYNC_RULES) 갱신한다. null 이면 지금 적용 중인 규칙이
+     * 없다는 뜻이다.
+     *
+     * Firestore 가 아니라 여기(로컬)에 캐시하는 이유는 [overrideMode]·[overrideUntil]
+     * 과 같다: [RingerController.desiredMode] 를 부르는 [RingerModeReceiver](되돌리기)는
+     * 네트워크 왕복 없이 즉시 판단해야 하고, 규칙을 마지막으로 읽은 뒤 오프라인이
+     * 되더라도 그 판단은 계속 가능해야 한다.
+     */
+    var ruleMode: String?
+        get() = prefs.getString(KEY_RULE_MODE, null)
+        set(value) = prefs.edit().putString(KEY_RULE_MODE, value).apply()
+
     fun clearOverride() {
         overrideMode = null
         overrideUntil = 0L
@@ -48,5 +62,6 @@ class RingerStateStore(context: Context) {
         const val KEY_MODE = "override_mode"
         const val KEY_UNTIL = "override_until"
         const val KEY_LOCK = "lock_enabled"
+        const val KEY_RULE_MODE = "rule_mode"
     }
 }

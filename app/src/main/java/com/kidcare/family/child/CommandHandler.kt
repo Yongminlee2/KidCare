@@ -3,9 +3,13 @@ package com.kidcare.family.child
 import android.content.Context
 import android.util.Log
 import com.kidcare.family.core.CommandRepository
+import com.kidcare.family.core.ScheduleRepository
 import com.kidcare.family.core.model.CommandDoc
 import com.kidcare.family.core.model.CommandType
+import com.kidcare.family.core.toRule
+import com.kidcare.family.logic.ScheduleResolver
 import kotlinx.coroutines.CancellationException
+import java.time.ZoneId
 
 /**
  * 받은 명령 하나를 실행하고 결과를 되돌려 적는다.
@@ -31,6 +35,11 @@ class CommandHandler(private val context: Context) {
     // RingerStateStore 가 SharedPreferences 를 감싸므로 매번 열고 닫을 필요가 없어서다.
     private val ringer = RingerController(context)
     private val state = RingerStateStore(context)
+
+    // SYNC_RULES 가 쓴다(Task 8). ScheduleApplier 는 상태가 없으므로(협력자 두 개를
+    // 그때그때 새로 만들 뿐) 매번 새로 만들어도 비용이 크지 않다 — 그래도 다른
+    // 협력자들과 통일해 필드로 둔다.
+    private val scheduleApplier = ScheduleApplier(context)
 
     suspend fun handle(familyId: String, childUid: String, command: CommandDoc) {
         if (!handled.add(command.id)) {
@@ -83,16 +92,18 @@ class CommandHandler(private val context: Context) {
                         return
                     }
                     // 즉시 변경은 다음 예약 경계까지만 유효하다(설계서 §4.3). "until"은
-                    // 지금은 부모 폰이 보낸 값을 그대로 쓰는 임시값이다 — Task 8 이 이걸
-                    // 자녀 폰이 직접 계산한 경계로 바꾼다. 두 폰의 시계·시간대가 다를 수
-                    // 있어서, 규칙을 실제로 강제하는(=지금 이) 폰이 끝나는 시각도 직접
-                    // 정해야 하기 때문이다.
+                    // 부모 폰이 보낸 값이 아니라 지금부터 자녀 폰이 직접 계산한다 — 두
+                    // 폰의 시계·시간대가 다를 수 있고, 이 값을 실제로 강제하는(=이 즉시
+                    // 변경을 끝내는) 쪽은 자녀 폰이므로 그 경계도 자녀 폰이 정해야 한다.
                     state.overrideMode = mode
-                    state.overrideUntil = command.payload["until"]?.toLongOrNull() ?: 0L
+                    state.overrideUntil = nextRuleBoundaryMillis(familyId)
                 }
                 CommandType.FIND_PHONE -> FindPhoneController.start(context)
                 CommandType.STOP_FIND -> FindPhoneController.stop(context)
-                CommandType.SYNC_RULES -> Log.i(TAG, "SYNC_RULES 수신 (Task 8 에서 구현)")
+                // 규칙이 바뀌었으니 다시 읽어 알람을 새로 건다(Task 8). refresh() 안에서
+                // 이미 네트워크 실패를 잡아 재시도 알람으로 물러나므로, 여기서 실패해도
+                // (아래 catch 로 내려가) 예약이 완전히 멈추지는 않는다.
+                CommandType.SYNC_RULES -> scheduleApplier.refresh(familyId)
                 else -> {
                     // 모르는 종류를 조용히 무시하면 보호자 화면에 "전달 중"으로
                     // 영원히 멈춰 보인다. delivered 는 이미 성공했으니
@@ -122,6 +133,29 @@ class CommandHandler(private val context: Context) {
                 Log.w(TAG, "failed 표시 실패 — 문서가 delivered 로 멈춰 있을 수 있다: ${command.id}", e2)
             }
         }
+    }
+
+    /**
+     * SET_RINGER 의 즉시 변경이 풀리는 시각(설계서 §4.3). 지금 규칙을 읽어 다음 경계를
+     * 구한다 — 규칙이 하나도 없으면(활성·비활성 통틀어) [ScheduleResolver.resolveAt] 의
+     * nextBoundaryMillis 가 null 이고, 그걸 0(해제 시각 없음, [RingerStateStore.overrideUntil]
+     * 문서 참고)으로 바꿔 돌려준다.
+     *
+     * 규칙을 못 읽으면(오프라인 등)도 0 으로 물러난다: 즉시 변경이 무기한으로 남을 뿐이고,
+     * 그 뒤 SYNC_RULES 나 재부팅·시각변경으로 [ScheduleApplier.refresh] 가 다시 돌면
+     * (state.ruleMode 가 갱신되고) [RingerController.desiredMode] 가 다시 규칙을 반영한다 —
+     * 명령 자체를 실패로 되돌리는 것보다, 즉시 변경만은 확실히 적용하고 경계 계산을
+     * 나중으로 미루는 쪽이 부모의 의도("지금 당장 이 모드로")에 더 가깝다.
+     */
+    private suspend fun nextRuleBoundaryMillis(familyId: String): Long = try {
+        val rules = ScheduleRepository.fetchSchedules(familyId).map { it.toRule() }
+        ScheduleResolver.resolveAt(rules, System.currentTimeMillis(), ZoneId.systemDefault())
+            .nextBoundaryMillis ?: 0L
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Log.w(TAG, "예약 규칙을 못 읽어 즉시 변경 해제 시각을 못 정함 — 무기한으로 둔다", e)
+        0L
     }
 
     private companion object {

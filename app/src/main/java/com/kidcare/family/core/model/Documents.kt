@@ -125,3 +125,36 @@ object CommandState {
     const val DONE = "done"
     const val FAILED = "failed"
 }
+
+/**
+ * families/{familyId}/schedules/{id} — 시간대 규칙 하나(설계서 §4.3).
+ *
+ * 필드 이름·의미는 [com.kidcare.family.logic.ScheduleRule] 과 같다 — 저 클래스는
+ * 순수 판정 로직(ScheduleResolver)이 쓰는 안드로이드 비의존 모델이고, 이 클래스는
+ * 그 문서 표현이다. 굳이 하나로 합치지 않는 이유: ScheduleRule 은 [logic] 패키지
+ * 소속이라 안드로이드·Firestore 를 몰라야 하는데(JVM 단위 테스트 대상), 이 클래스는
+ * Firestore 의 toObject() 를 쓰려면 모든 필드에 기본값이 있는 빈 생성자가 필요하고
+ * [days] 도 Set 이 아니라 List 여야 한다(Firestore 는 배열을 List 로 매핑한다).
+ *
+ * [id] 는 Firestore 문서 ID 라 문서 본문에는 없다. 읽어올 때 채운다
+ * ([CommandDoc.id] 와 같은 이유).
+ */
+data class ScheduleDoc(
+    val id: String = "",
+    val days: List<Int> = emptyList(),
+    val startMinute: Int = 0,
+    val endMinute: Int = 0,
+    val mode: String = "",
+    val enabled: Boolean = true,
+    val priority: Int = 0,
+)
+
+/**
+ * families/{familyId}/settings/ringer — "아이가 되돌리면 다시 바꾸기" 스위치(설계서 §4.4).
+ *
+ * settings 컬렉션 자체는 Task 1 이 규칙과 함께 추가했다(가족 단위 설정을 담는
+ * 자리). ringer 문서 하나만 지금은 쓴다.
+ */
+data class RingerSettingsDoc(
+    val lockEnabled: Boolean = false,
+)
