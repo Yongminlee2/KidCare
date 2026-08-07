@@ -31,7 +31,11 @@ import com.kidcare.family.R
  * — 부모 폰 배터리가 나갔다든지 — 에서 아이 폰이 수업 시간 내내 울리는 사고를 막는다.
  *
  * 알람 볼륨을 최대로 올리기 전에 원래 값을 기억했다가 멈출 때 되돌린다.
- * 안 그러면 아이 폰의 알람 소리가 영구히 최대가 된다.
+ * 안 그러면 아이 폰의 알람 소리가 영구히 최대가 된다. 그 기억은 메모리가
+ * 아니라 [FindPhoneStateStore](SharedPreferences)에 남긴다 — 벨이 우는 도중
+ * 프로세스가 죽으면(시스템의 메모리 회수든, 아이가 강제 종료하는 것이든) 메모리
+ * 필드는 함께 사라지지만, 다음에 뜨는 프로세스가 [recoverIfNeeded] 로 복구할 수
+ * 있으려면 그 기록이 프로세스보다 오래 살아남아야 한다.
  *
  * CommandHandler 는 TrackingService 안에서만 이 오브젝트를 부른다(Task 3) — 즉
  * 벨이 울리는 동안은 그 서비스가 이미 포그라운드로 띄워 둔 프로세스 안에서
@@ -41,7 +45,6 @@ object FindPhoneController {
 
     private var player: MediaPlayer? = null
     private var vibrator: Vibrator? = null
-    private var savedAlarmVolume: Int? = null
     private val handler = Handler(Looper.getMainLooper())
     private var autoStop: Runnable? = null
 
@@ -64,7 +67,13 @@ object FindPhoneController {
         if (isRinging) return
 
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        savedAlarmVolume = audio.getStreamVolume(AudioManager.STREAM_ALARM)
+        val currentVolume = audio.getStreamVolume(AudioManager.STREAM_ALARM)
+
+        // 볼륨을 '올리기 전에' 먼저 기록한다(FindPhoneStateStore.markRinging
+        // 주석 참고) — 순서를 바꿔 올린 뒤에 기록하면, 그 사이 프로세스가
+        // 죽었을 때 원래 값을 영영 잃는다. 그게 바로 이 기록이 막으려는 사고다.
+        FindPhoneStateStore(context).markRinging(currentVolume)
+
         audio.setStreamVolume(
             AudioManager.STREAM_ALARM,
             audio.getStreamMaxVolume(AudioManager.STREAM_ALARM),
@@ -131,12 +140,48 @@ object FindPhoneController {
 
         NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
 
-        savedAlarmVolume?.let {
-            val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            audio.setStreamVolume(AudioManager.STREAM_ALARM, it, 0)
-        }
-        savedAlarmVolume = null
+        restoreVolume(context)
         Log.i(TAG, "폰찾기 중지")
+    }
+
+    /**
+     * TrackingService.onCreate 에서 프로세스가 새로 뜰 때마다 한 번 부른다.
+     *
+     * 왜 여기서는 "지금 실제로 울리고 있는 벨을 잘못 끌" 걱정이 없는가: 이
+     * 함수가 불리는 시점(onCreate)에는 이 프로세스가 아직 명령을 단 하나도
+     * 처리하지 않았다 — 명령 리스너는 onStartCommand 에서 그보다 나중에 걸린다
+     * (TrackingService.subscribeToCommands 참고). 즉 이 시점의 isRinging
+     * (=player != null)은 이 프로세스 기준으로 항상 false 다: 이 프로세스는
+     * FIND_PHONE 을 아직 한 번도 받아본 적이 없으니까. 그런데도
+     * FindPhoneStateStore.inProgress 가 true 로 남아있다면, 그건 "지금 이
+     * 프로세스가 울리고 있다"일 수가 없고 "이전 프로세스가 벨을(그리고 볼륨
+     * 복구를) 끝내지 못한 채 죽었다"는 뜻일 수밖에 없다 — 그래서 여기서
+     * 무조건 복구해도 안전하다.
+     *
+     * 벨소리·진동 자체는 걱정할 게 없다(프로세스와 함께 이미 멎었다). 여기서
+     * 되돌릴 것은 볼륨과, 시스템이 프로세스와 무관하게 들고 있어 프로세스가
+     * 죽어도 안 사라지는 알림뿐이다.
+     */
+    fun recoverIfNeeded(context: Context) {
+        if (!FindPhoneStateStore(context).inProgress) return
+        Log.w(TAG, "이전 프로세스가 폰찾기 벨을 끄지 못하고 죽음 — 볼륨을 되돌리고 알림을 정리한다")
+        restoreVolume(context)
+        NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
+    }
+
+    /**
+     * 기록(inProgress)이 있으면 볼륨을 되돌리고 기록을 지운다. 없으면(=애초에
+     * 안 울리고 있었거나 이미 복구/정지가 끝났으면) 아무 것도 하지 않는다 —
+     * STOP_FIND 가 아무것도 안 울릴 때 와도 여기서 예외 없이 조용히 지나간다.
+     */
+    private fun restoreVolume(context: Context) {
+        val state = FindPhoneStateStore(context)
+        if (!state.inProgress) return
+        val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        // 0 도 정상적인 알람 볼륨이다(FindPhoneStateStore 주석 참고) — 그래서
+        // 값 자체가 아니라 위에서 이미 확인한 inProgress 로만 복구 여부를 정했다.
+        audio.setStreamVolume(AudioManager.STREAM_ALARM, state.savedAlarmVolume, 0)
+        state.clear()
     }
 
     /**

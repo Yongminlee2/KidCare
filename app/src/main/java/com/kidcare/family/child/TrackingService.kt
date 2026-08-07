@@ -81,6 +81,14 @@ class TrackingService : LifecycleService() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // 프로세스가 새로 뜰 때마다 가장 먼저 한다 — 아래 위치 권한 분기와
+        // 무관하게 해야 한다. 이전 프로세스가 폰찾기 벨을 끄지 못한 채(볼륨
+        // 복구도 못한 채) 죽었을 수 있는데, 그 복구를 "위치 권한이 있어야만"
+        // 하게 묶어두면 위치 권한이 꺼진 폰에서는 다음날 아침까지도 알람이
+        // 최대 볼륨으로 남는다(FindPhoneController.recoverIfNeeded 주석 참고).
+        FindPhoneController.recoverIfNeeded(this)
+
         hasLocationPermission = ContextCompat.checkSelfPermission(
             this, Manifest.permission.ACCESS_FINE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED
