@@ -1,6 +1,7 @@
 package com.kidcare.family.onboarding
 
 import android.Manifest
+import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -48,6 +49,19 @@ enum class PermissionStep(val titleRes: Int, val reasonRes: Int) {
             // minSdk 26 전체에서 버전 분기 없이 그대로 쓸 수 있다.
             val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
             return pm.isIgnoringBatteryOptimizations(context.packageName)
+        }
+    },
+
+    // BATTERY_UNRESTRICTED 뒤, ACTIVITY_RECOGNITION 앞에 둔다 — 소리 제어는 이 앱의
+    // 핵심 기능(부모가 자녀 폰을 무음·진동으로 바꾸는 것)이라, 있으나 없으나 앱이
+    // 돌아가는 활동 인식보다 먼저 물어야 한다.
+    DND_ACCESS(R.string.perm_dnd_title, R.string.perm_dnd_reason) {
+        override fun isGranted(context: Context): Boolean {
+            // 무음·진동으로 바꾸는 것은 "방해 금지" 정책을 건드리는 일이라
+            // 안드로이드가 별도 권한을 요구한다. 목록 화면에서 사람이 직접 켜야 하고
+            // 런타임 대화상자로는 못 받는다.
+            val nm = context.getSystemService(NotificationManager::class.java)
+            return nm.isNotificationPolicyAccessGranted
         }
     },
 

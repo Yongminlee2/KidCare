@@ -31,6 +31,7 @@ class StatusReporter {
         fix: Fix,
         battery: Int,
         charging: Boolean,
+        ringerMode: String,
     ) {
         val childRef = db.collection("families").document(familyId)
             .collection("children").document(childUid)
@@ -43,6 +44,7 @@ class StatusReporter {
                 at = fix.at,
                 battery = battery,
                 charging = charging,
+                ringerMode = ringerMode,
                 lastSeenAt = System.currentTimeMillis(),
             )
         ).await()

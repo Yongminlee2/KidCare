@@ -36,6 +36,8 @@
     <string name="perm_battery_title">배터리 최적화 제외</string>
     <string name="perm_battery_reason">이걸 안 켜면 폰이 앱을 잠재워서 위치가 끊겨요. 설정 화면에서 \'허용\'을 골라주세요.</string>
     <string name="perm_battery_hint">설정 화면이 열리면 목록에서 \'우리아이 지킴이\'를 찾아 \'제한 없음\'으로 바꿔주세요.</string>
+    <string name="perm_dnd_title">소리 설정 바꾸기</string>
+    <string name="perm_dnd_reason">부모님이 소리·진동을 바꿔줄 수 있게 하는 권한이에요. 목록에서 \'우리아이 지킴이\'를 찾아 켜주세요.</string>
     <string name="perm_activity_title">움직임 감지</string>
     <string name="perm_activity_reason">걷고 있는지 가만히 있는지 알면, 가만히 있을 때는 위치를 덜 자주 확인해서 배터리를 아낄 수 있어요.</string>
     <string name="perm_grant">켜기</string>

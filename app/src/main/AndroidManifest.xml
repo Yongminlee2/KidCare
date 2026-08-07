@@ -11,6 +11,10 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <!-- 무음·진동 전환은 방해 금지 정책을 건드리는 일이라 별도 권한이 필요하다.
+         이 권한은 매니페스트 선언만으로는 부여되지 않는다 — 사람이 설정 목록
+         화면(ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)에서 직접 켜야 한다. -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
     <application
         android:name=".KidCareApp"

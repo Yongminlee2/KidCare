@@ -55,6 +55,10 @@ class TrackingService : LifecycleService() {
     private val commandHandler by lazy { CommandHandler(this) }
     private var commandListener: ListenerRegistration? = null
 
+    // status 문서의 ringerMode 를 채우는 데 쓴다(Task 4) — 지금 실제로 무슨 소리
+    // 모드인지 매 업로드마다 다시 읽어야 하므로 캐시하지 않는다.
+    private val ringerController by lazy { RingerController(this) }
+
     // onCreate 에서 확인한 결과. ChildHomeActivity 는 PermissionStep.firstMissing 이
     // null 일 때만(=모든 권한이 켜져 있을 때만) 이 서비스를 켜지만, 그 뒤 사용자가
     // 시스템 설정에서 위치 권한을 직접 끌 수 있고, BootReceiver 는 권한을 전혀
@@ -276,7 +280,10 @@ class TrackingService : LifecycleService() {
         lifecycleScope.launch {
             try {
                 val childUid = AuthGateway.currentUid() ?: AuthGateway.signIn()
-                reporter.report(familyId, childUid, fix, batteryPercent(), isCharging())
+                reporter.report(
+                    familyId, childUid, fix, batteryPercent(), isCharging(),
+                    ringerController.currentMode(),
+                )
                 // 성공했을 때만 갱신한다. 실패한 fix 를 '올린 걸로' 쳐 버리면 다음 판정이
                 // 그 위치를 기준으로 거리를 재서, 진짜 새 위치가 와도 SKIP_TOO_CLOSE 로
                 // 계속 버려질 수 있다.

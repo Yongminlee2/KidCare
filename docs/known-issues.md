@@ -128,8 +128,11 @@ Cloudflare Workers 중계로 올릴 수 있어야 한다. 전송 수단을 바�
   강제 종료돼야 하고, 그래도 역할 선택 화면으로 되돌아갈 뿐이다.
 - 로그인만 하면 아무나 빈 가족 문서를 만들 수 있다. 무료 요금제 한도를 스스로 깎아먹는
   자해일 뿐이고, Cloud Functions 없이는 막을 방법이 없다.
-- `Documents.kt`에 아직 쓰는 데가 없는 필드들(`fcmToken`, `appVersion`, `ringerMode`,
+- `Documents.kt`에 아직 쓰는 데가 없는 필드들(`fcmToken`, `appVersion`,
   `charging`, `lastSeenAt`). 다음 단계에서 쓴다.
+  `ChildStatusDoc.ringerMode`는 4단계 Task 4에서 실제 값을 쓰기 시작했다 —
+  `TrackingService`가 매 위치 업로드마다 `RingerController(this).currentMode()`를
+  읽어 `StatusReporter.report(...)`에 넘긴다.
   `PointDoc.speed`는 3단계 Task 3에서 고쳤다 — `LocationCollector`가 `loc.speed`를
   `Fix`에 담고 `StatusReporter`가 그대로 저장한다. 단, **이 수정 이전에 이미 저장된
   points 문서는 speed 가 0으로 남아 있다** — 옛 데이터를 다룰 때 0을 "정지"로

@@ -137,6 +137,12 @@ class PermissionActivity : AppCompatActivity() {
                 // 대신 이 목록 화면을 쓴다 — 전자는 플레이 정책상 특정 앱만 쓸 수 있다.
                 startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
 
+            PermissionStep.DND_ACCESS ->
+                // 방해 금지 접근도 배터리 예외처럼 런타임 다이얼로그가 없다 — 목록
+                // 화면에서 사람이 직접 앱을 찾아 켜야 한다. 이 분기를 빠뜨리면 버튼이
+                // 아무 일도 안 해서 아이가 이 화면에서 영영 못 나간다.
+                startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+
             PermissionStep.ACTIVITY_RECOGNITION ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     requestOrOpenSettings(step, Manifest.permission.ACTIVITY_RECOGNITION)
@@ -180,6 +186,9 @@ class PermissionActivity : AppCompatActivity() {
                 null
             }
         PermissionStep.BATTERY_UNRESTRICTED -> null
+        // 방해 금지 접근도 배터리 예외와 같은 이유로 null 이다 — 목록 화면 전용이라
+        // ActivityResultContracts.RequestPermission 으로 요청할 permission 문자열이 없다.
+        PermissionStep.DND_ACCESS -> null
         PermissionStep.ACTIVITY_RECOGNITION ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 Manifest.permission.ACTIVITY_RECOGNITION

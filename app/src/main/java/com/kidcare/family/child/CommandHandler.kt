@@ -14,8 +14,8 @@ import kotlinx.coroutines.CancellationException
  * 캐시분과 서버분이 잇달아 오거나 재연결 시 다시 흘러올 수 있어서, 이게 없으면
  * 폰찾기 벨이 두 번 울린다(계약은 [CommandRepository.observePending] 참고).
  *
- * [context] 는 지금은 쓰지 않는다 — Task 4~6 이 여기에 [RingerController] 같은
- * 안드로이드 API 를 쓰는 컨트롤러를 붙일 때 필요해서 생성자에 미리 받아 둔다.
+ * [context] 는 [RingerController]·[RingerStateStore] 같은 안드로이드 API 를 쓰는
+ * 컨트롤러를 만드는 데 쓴다(Task 4). Task 5~6 이 같은 이유로 컨트롤러를 더 붙일 수 있다.
  */
 class CommandHandler(private val context: Context) {
 
@@ -26,6 +26,11 @@ class CommandHandler(private val context: Context) {
             return added
         }
     }
+
+    // SET_RINGER 가 쓰는 두 협력자. 명령마다 새로 만들지 않고 필드로 두는 이유는
+    // RingerStateStore 가 SharedPreferences 를 감싸므로 매번 열고 닫을 필요가 없어서다.
+    private val ringer = RingerController(context)
+    private val state = RingerStateStore(context)
 
     suspend fun handle(familyId: String, childUid: String, command: CommandDoc) {
         if (!handled.add(command.id)) {
@@ -68,7 +73,23 @@ class CommandHandler(private val context: Context) {
 
         try {
             when (command.type) {
-                CommandType.SET_RINGER -> Log.i(TAG, "SET_RINGER 수신 (Task 4 에서 구현)")
+                CommandType.SET_RINGER -> {
+                    val mode = command.payload["mode"].orEmpty()
+                    if (!ringer.apply(mode)) {
+                        // 권한이 없거나(무음·진동은 방해 금지 접근이 필요) 모드 값이
+                        // 이상하면 조용히 무시하지 않고 실패로 남긴다 — 부모가 눌렀는데
+                        // 왜 안 바뀌는지 알 길이 없어지는 상황(Task 4 설계 의도)을 막는다.
+                        CommandRepository.markFailed(familyId, childUid, command.id, "ringer_denied")
+                        return
+                    }
+                    // 즉시 변경은 다음 예약 경계까지만 유효하다(설계서 §4.3). "until"은
+                    // 지금은 부모 폰이 보낸 값을 그대로 쓰는 임시값이다 — Task 8 이 이걸
+                    // 자녀 폰이 직접 계산한 경계로 바꾼다. 두 폰의 시계·시간대가 다를 수
+                    // 있어서, 규칙을 실제로 강제하는(=지금 이) 폰이 끝나는 시각도 직접
+                    // 정해야 하기 때문이다.
+                    state.overrideMode = mode
+                    state.overrideUntil = command.payload["until"]?.toLongOrNull() ?: 0L
+                }
                 CommandType.FIND_PHONE -> Log.i(TAG, "FIND_PHONE 수신 (Task 6 에서 구현)")
                 CommandType.STOP_FIND -> Log.i(TAG, "STOP_FIND 수신 (Task 6 에서 구현)")
                 CommandType.SYNC_RULES -> Log.i(TAG, "SYNC_RULES 수신 (Task 8 에서 구현)")
