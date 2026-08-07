@@ -15,7 +15,12 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
+        <!-- 지도는 상태바 뒤까지 그린다(타일이 화면 끝까지 차야 지도답다). 하지만 이
+             카드는 글자라서 가려지면 못 읽는다 — 실기기에서 배터리 문구가 상태바
+             시계와 겹쳐 찍혔다. 위쪽 여백은 MapTimelineFragment 가 상태바 높이만큼
+             더해 준다. -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/status_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="top"

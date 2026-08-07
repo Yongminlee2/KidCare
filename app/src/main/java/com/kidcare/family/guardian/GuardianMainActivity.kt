@@ -4,6 +4,9 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kidcare.family.R
@@ -88,10 +91,35 @@ class GuardianMainActivity : AppCompatActivity() {
      */
     private var bannerJob: Job? = null
 
+    /**
+     * 상태바·내비게이션바가 차지하는 높이. 인셋 리스너가 채워 넣는다.
+     *
+     * 화면마다 이 값을 쓰는 방식이 달라서 액티비티가 한 곳에서 나눠준다. 지도는
+     * 상태바 **뒤까지** 그려야 지도다운데(타일이 화면 끝까지 차야 한다), 관리·예약은
+     * 첫 줄이 상태바 시계와 겹쳐 읽을 수 없게 된다 — 실기기에서 "지금 바로 바꾸기"가
+     * 시계 위에 겹쳐 찍힌 것을 보고 넣은 처리다. 프래그먼트마다 각자 인셋을 먹으면
+     * 배너가 떴을 때 여백이 두 번 들어가므로, 누가 먹을지는 여기서 정한다.
+     */
+    private var topInset: Int = 0
+
+    /** 배너가 레이아웃에서 원래 갖고 있던 위쪽 여백(px). 인셋을 여기에 더한다. */
+    private var bannerBaseTopPadding: Int = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGuardianMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        bannerBaseTopPadding = binding.disconnectBanner.paddingTop
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            topInset = bars.top
+            // 하단 탭은 늘 내비게이션바를 피한다. 지도와 달리 탭은 가려지면
+            // 누를 수가 없어서, 뒤로 깔아둘 이유가 없다.
+            binding.bottomNav.updatePadding(bottom = bars.bottom)
+            applyTopInset()
+            insets
+        }
 
         binding.bottomNav.setOnItemSelectedListener { item ->
             val tab = tabs.firstOrNull { it.menuId == item.itemId }
@@ -145,6 +173,32 @@ class GuardianMainActivity : AppCompatActivity() {
         // 막히지만, 두 방어선 중 이쪽이 근본이라 함께 둔다.
         tx.commitNow()
         currentTabId = tab.menuId
+        applyTopInset()
+    }
+
+    /**
+     * 상태바 높이를 누가 먹을지 정한다.
+     *
+     * 순서가 곧 규칙이다. 배너가 떠 있으면 배너가 먹는다 — 배너는 맨 위에 있고,
+     * 그게 안 읽히면 배너를 만든 이유가 없어진다. 배너가 없으면 지도 탭만 빼고
+     * 프래그먼트 자리가 먹는다. 지도는 상태바 뒤까지 타일을 채워야 하고, 지도에는
+     * 가려질 글자가 없다.
+     *
+     * 둘 중 하나만 먹는다는 것이 요점이다. 양쪽이 다 먹으면 배너가 뜬 순간 상태바
+     * 높이만큼 빈 칸이 두 번 생겨 화면이 아래로 밀린다.
+     */
+    private fun applyTopInset() {
+        val bannerShown = binding.disconnectBanner.visibility == View.VISIBLE
+        // 배너가 레이아웃에서 이미 갖고 있던 위쪽 여백(12dp)에 상태바 높이를 **더한다**.
+        // 그냥 덮어쓰면 배너가 안 떠 있을 때 그 12dp 까지 같이 사라져 글자가 배경에
+        // 딱 붙는다.
+        binding.disconnectBanner.updatePadding(
+            top = bannerBaseTopPadding + if (bannerShown) topInset else 0,
+        )
+        val mapShown = currentTabId == R.id.tab_map
+        binding.fragmentContainer.updatePadding(
+            top = if (bannerShown || mapShown) 0 else topInset,
+        )
     }
 
     // ------------------------------------------------------------ 연결 끊김 배너
@@ -199,6 +253,7 @@ class GuardianMainActivity : AppCompatActivity() {
         val signal = lastSignal
         if (signal == null || !signal.fromServerClock) {
             binding.disconnectBanner.visibility = View.GONE
+        applyTopInset()
             return
         }
         // 부모 폰 시계도 어긋날 수 있으므로 기준 시각은 서버 보정본을 쓴다
@@ -213,9 +268,11 @@ class GuardianMainActivity : AppCompatActivity() {
         val elapsed = now - signal.atMillis
         if (elapsed < DISCONNECT_THRESHOLD_MILLIS) {
             binding.disconnectBanner.visibility = View.GONE
+        applyTopInset()
             return
         }
         binding.disconnectBanner.visibility = View.VISIBLE
+        applyTopInset()
         binding.disconnectBanner.text = getString(
             R.string.guardian_disconnect_banner,
             LastSignalText.elapsedText(this, elapsed),

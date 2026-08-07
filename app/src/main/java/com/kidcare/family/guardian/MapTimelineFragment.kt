@@ -4,7 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.MarginLayoutParams
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
@@ -83,6 +87,16 @@ class MapTimelineFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // 지도만 상태바 뒤까지 그리고, 그 위에 뜬 상태 카드는 상태바 아래로 내린다.
+        // 레이아웃에 적힌 12dp 여백에 상태바 높이를 **더한다** — 덮어쓰면 상태바가
+        // 없는 화면에서 카드가 위에 딱 붙는다.
+        val cardBaseTopMargin = (binding.statusCard.layoutParams as MarginLayoutParams).topMargin
+        ViewCompat.setOnApplyWindowInsetsListener(binding.statusCard) { v, insets ->
+            val top = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top
+            v.updateLayoutParams<MarginLayoutParams> { topMargin = cardBaseTopMargin + top }
+            insets
+        }
 
         // 타임라인은 지도와 무관하다. subscribeSegments 가 childUid 를 못 구해 구독이
         // 아예 안 걸리는 경우(아직 아이 폰이 첫 보고를 안 올린 첫 실행 구간) renderTimeline
