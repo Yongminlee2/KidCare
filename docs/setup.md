@@ -190,6 +190,41 @@ Task 6 최초 버전은 `families`를 `inviteCode` 필드로 query(`whereEqualTo
 으로 충분하다(등호/정렬이 서로 다른 필드일 때만 복합 색인이 필요하다). 확인차
 검토했고, 별도 조치는 없다.
 
+### 복합 색인 하나 더 (4단계 — 명령이 하나도 안 갈 때)
+
+**색인이 두 개다.** 3단계 것만 만들고 넘어가면 4단계 기능이 통째로 죽는다.
+
+`FirestoreCommandTransport.observePending`은 `state`(같음 조건) + `createdAt`(정렬)을
+같이 쓴다. 위 `segments` 색인과는 **별개의 색인**이라 따로 만들어야 한다. 없으면
+자녀 폰의 명령 리스너가 `FAILED_PRECONDITION`으로 붙지 못하고, 그 결과
+**소리·진동 즉시 변경, 핸드폰 찾기, 예약 재적용(`sync_rules`)이 전부 안 간다.**
+
+무서운 건 증상이 조용하다는 것이다. 보내는 쪽(부모 폰)은 쓰기가 성공하므로
+`전달 중…`에서 60초를 기다린 뒤 "애기폰이 응답하지 않아요"만 뜬다 — 애기폰이
+꺼진 것과 색인이 없는 것이 화면에서 똑같이 보인다. 원인은 **자녀 폰** 로그에만
+남는다:
+
+```bash
+adb logcat -s TrackingService:W
+```
+
+`명령 리스너 실패 — 명령이 안 올 수 있다` 줄에 색인 생성 URL이 통째로 들어 있다.
+그 URL을 열고 `만들기`를 누른다.
+
+**누른 뒤 바로 되지 않는다.** 몇 분 동안은 같은 자리에서 메시지만 바뀐다:
+
+```
+FAILED_PRECONDITION: The query requires an index.
+    That index is currently building and cannot be used yet.
+```
+
+`색인이 없다`가 아니라 `만드는 중이다`로 바뀌었으면 제대로 만든 것이다. 상태가
+`사용 설정됨`이 될 때까지 기다렸다가 자녀 폰 앱을 다시 켠다(리스너는 서비스가
+시작될 때 붙으므로, 색인이 준비돼도 앱을 다시 켜기 전에는 안 붙는다).
+
+손으로 만들려면 컬렉션 `families/{familyId}/children/{childUid}/commands` 아래에
+`state` 오름차순 → `createdAt` 오름차순.
+
 ## 자녀 권한 온보딩 기기 확인 (Task 7)
 
 Task 7은 코드만 작성했고 실기기 확인은 사람이 직접 한다. 확인 절차:
