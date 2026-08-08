@@ -100,6 +100,21 @@
                 android:value="firestore_event_listener_without_fcm" />
         </service>
 
+        <!-- 부모가 맞춘 알람이 우는 5분 동안만 사는 서비스(5단계 whole-branch 리뷰).
+             매니페스트 리시버 하나에서 시작되는 알람이라, 이게 없으면 위치 권한이 꺼져
+             TrackingService 가 안 뜨는 폰에서 포그라운드 컴포넌트가 하나도 없는 채로
+             5분을 울리게 된다 — 시스템이 회수하면 소리가 조용히 끊긴다. specialUse 를
+             고른 이유(shortService 3분 상한, mediaPlayback 은 미디어가 아님)는 그 클래스
+             주석에 있다. -->
+        <service
+            android:name=".child.RemoteAlarmService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="parent_set_alarm_clock_ringing" />
+        </service>
+
         <receiver
             android:name=".child.BootReceiver"
             android:exported="true">

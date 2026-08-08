@@ -2,6 +2,7 @@ package com.kidcare.family.child
 
 import android.annotation.SuppressLint
 import android.app.AlarmManager
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -62,7 +63,18 @@ import java.time.ZoneId
  * ## 5분이면 스스로 멈춘다
  *
  * 아이가 못 듣거나 무시해도 수업 시간 내내 울지 않는다([FindPhoneController] 와 같은 값,
- * 설계서 §4.5). 스누즈는 두지 않았다 — 근거는 [showNotification] 참고.
+ * 설계서 §4.5). 스누즈는 두지 않았다 — 근거는 [buildRingNotification] 참고.
+ *
+ * ## 우는 동안은 [RemoteAlarmService] 가 프로세스를 붙든다
+ *
+ * [ring] 은 [RemoteAlarmService] 가 부른다(그 서비스를 못 띄운 갈래에서만
+ * [RemoteAlarmReceiver] 가 직접 부른다). [FindPhoneController] 는 자기가 도는 곳이
+ * 언제나 `TrackingService` 가 이미 포그라운드로 띄워 둔 프로세스 안이라 별도 서비스를
+ * 두지 않았지만(그 클래스 주석), 이쪽은 그 전제가 통째로 없다 — 알람은 매니페스트
+ * 리시버 하나에서 시작하고, 그 순간 이 앱에 포그라운드 서비스가 하나도 없을 수 있다.
+ * 위치 권한이 꺼진 폰이 정확히 그 상태다: `TrackingService` 는 스스로 멈추지만
+ * `AlarmManager` 예약은 그대로 남아 있어서, 부모가 맞춘 알람은 **포그라운드가 아닌
+ * 프로세스에서** 5분을 울려야 한다. 그건 시스템이 언제 회수해도 이상하지 않은 프로세스다.
  */
 object RemoteAlarmController {
 
@@ -77,6 +89,18 @@ object RemoteAlarmController {
      * 의무는 그대로 살아 있는 "진행 중" 세션이다.
      */
     private var ringing = false
+
+    /**
+     * 알람이 멎었을 때 [RemoteAlarmService] 를 함께 내리는 손잡이. [ring] 이 받아 두고
+     * [stop] 이 부른다.
+     *
+     * 서비스가 5분 타이머를 자기 쪽에 따로 두지 않고 이 통로로 얻어가는 이유: 알람이
+     * 멎는 길이 넷이다(아이가 알림을 누름, 부모가 취소, 5분 자동 정지, 새 알람이
+     * 겹침). 서비스가 자기 시계로 5분을 세면 아이가 10초 만에 끈 뒤에도 서비스가
+     * 4분 50초를 더 살고, 그동안 **끌 수 없는 포그라운드 알림 하나**가 아이 폰에
+     * 남는다 — 포그라운드 알림은 서비스가 살아 있는 동안 `cancel()` 이 안 먹는다.
+     */
+    private var onStopped: (() -> Unit)? = null
 
     // ------------------------------------------------------------------ 걸기·끄기
 
@@ -175,15 +199,18 @@ object RemoteAlarmController {
     // ------------------------------------------------------------------ 울리기
 
     /**
-     * 알람이 울 시각이 됐다([RemoteAlarmReceiver] 가 부른다).
+     * 알람이 울 시각이 됐다([RemoteAlarmService] 가 부른다).
      *
      * 기록을 **울리기 전에** 지운다. 이 알람은 한 번만 우는 것이고, 지우지 않으면 우는
      * 도중 프로세스가 죽었을 때 다음 프로세스의 [recoverIfNeeded] 가 이미 울린 알람을
      * 다시 걸어 버린다.
+     *
+     * [onStopped] 는 알람이 어떤 이유로든 멎었을 때 **한 번** 불린다(그 필드 주석).
      */
-    fun ring(context: Context) {
+    fun ring(context: Context, onStopped: () -> Unit = {}) {
         if (ringing) return
         ringing = true
+        this.onStopped = onStopped
 
         val store = RemoteAlarmStore(context)
         val label = store.label
@@ -220,6 +247,13 @@ object RemoteAlarmController {
 
         NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
         ringing = false
+
+        // 서비스를 내리는 것은 **맨 마지막**이다. 먼저 내리면 아직 재생기가 살아 있는
+        // 동안 프로세스가 포그라운드에서 내려온다. null 로 비우는 것은 죽은 서비스
+        // 인스턴스를 이 오브젝트(프로세스 수명)가 계속 붙들지 않게 하려는 것이다.
+        val finish = onStopped
+        onStopped = null
+        finish?.invoke()
     }
 
     /**
@@ -274,9 +308,12 @@ object RemoteAlarmController {
      * ([FindPhoneController.showNotification] 과 같은 사정) 그 화면은 어차피 "되면 좋은 것"
      * 인데, 헤드업 알림은 항상 뜬다. 있으면 좋은 것 하나를 위해 확실한 것을 복잡하게 만들지
      * 않았다.
+     *
+     * 알림을 **만들기만 하고 띄우지는 않는** 이유: [RemoteAlarmService] 가 이것으로
+     * 포그라운드에 올라간다. 서비스가 자기 알림을 따로 만들면 아이 폰에 알림이 두 개
+     * 뜨고, 그중 하나는 '끄기' 버튼이 없는 쪽이라 아이가 그걸 누르며 헤맨다.
      */
-    @SuppressLint("MissingPermission")
-    private fun showNotification(context: Context, label: String) {
+    internal fun buildRingNotification(context: Context, label: String): Notification {
         val manager = context.getSystemService(NotificationManager::class.java)
         if (manager.getNotificationChannel(CHANNEL_ID) == null) {
             manager.createNotificationChannel(
@@ -300,7 +337,7 @@ object RemoteAlarmController {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        return NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle(label.ifBlank { context.getString(R.string.remote_alarm_title) })
             .setContentText(context.getString(R.string.remote_alarm_notification_text))
@@ -314,8 +351,18 @@ object RemoteAlarmController {
             .setContentIntent(stop)
             .addAction(0, context.getString(R.string.remote_alarm_stop), stop)
             .build()
+    }
 
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+    /**
+     * 알림을 실제로 띄운다. [RemoteAlarmService] 가 이미 같은 ID 로 포그라운드에
+     * 올라가 있으면 이 호출은 그 알림을 같은 내용으로 갱신할 뿐이라 눈에 보이는 변화가
+     * 없다. **서비스가 포그라운드 승격에 실패한 갈래**에서만 뜻이 있다 — 그때도 아이는
+     * 알람을 끌 손잡이가 있어야 한다.
+     */
+    @SuppressLint("MissingPermission")
+    private fun showNotification(context: Context, label: String) {
+        NotificationManagerCompat.from(context)
+            .notify(NOTIFICATION_ID, buildRingNotification(context, label))
     }
 
     // ------------------------------------------------------------------ 도구
@@ -410,8 +457,8 @@ object RemoteAlarmController {
 
     private const val CHANNEL_ID = "remote_alarm"
 
-    /** 위치 공유 1001, 폰찾기 1002 다음 칸. */
-    private const val NOTIFICATION_ID = 1003
+    /** 위치 공유 1001, 폰찾기 1002 다음 칸. [RemoteAlarmService] 도 이 칸으로 승격한다. */
+    internal const val NOTIFICATION_ID = 1003
 
     private const val REQUEST_CODE_TRIGGER = 5001
     private const val REQUEST_CODE_STOP = 5002

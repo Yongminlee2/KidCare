@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">우리아이 지킴이</string>
     <string name="connecting">연결 중…</string>
+    <!-- 목록 화면 셋(알림·장소·예약)이 첫 스냅샷을 기다리는 동안 빈 목록 자리에 뜬다.
+         "아직 없어요"와 오류 사이의 세 번째 상태다 — 왜 필요한지는
+         guardian/ListLoadState.kt 주석에 있다. -->
+    <string name="list_loading">불러오는 중이에요…</string>
     <string name="uid_format">내 기기 ID\n%1$s</string>
     <string name="connect_failed">연결 실패\n%1$s</string>
     <string name="role_title">누구의 폰인가요?</string>

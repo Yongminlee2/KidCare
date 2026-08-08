@@ -55,6 +55,9 @@ class AlertFragment : Fragment() {
     /** 마지막 스냅샷. 최신순으로 온다. */
     private var events: List<EventDoc> = emptyList()
 
+    /** 목록을 불러왔는가. 세 상태를 왜 구분하는지는 [ListLoad] 주석에 있다. */
+    private var listLoad = ListLoad.LOADING
+
     /** 이번에 화면을 열었을 때 안 읽은 상태였던 ID 들(클래스 주석). */
     private val highlight = mutableSetOf<String>()
 
@@ -116,7 +119,11 @@ class AlertFragment : Fragment() {
     private fun subscribe() {
         val fid = RoleStore(requireContext()).familyId
         if (fid == null) {
+            // 구독을 시작조차 못 한다 = 목록을 못 불러온 것이다. 여기서 LOADING 으로
+            // 두면 "불러오는 중이에요"가 영원히 떠 있는다.
+            listLoad = ListLoad.FAILED
             showState(getString(R.string.alert_no_family))
+            renderList()
             return
         }
         familyId = fid
@@ -126,7 +133,9 @@ class AlertFragment : Fragment() {
             onError = { e ->
                 val ctx = context ?: return@observeEvents
                 _binding ?: return@observeEvents
+                listLoad = ListLoad.FAILED
                 showState(getString(R.string.alert_error_format, errorMessage(ctx, e)))
+                renderList()
             },
         )
     }
@@ -134,6 +143,7 @@ class AlertFragment : Fragment() {
     private fun onEventsChanged(docs: List<EventDoc>) {
         _binding ?: return
         events = docs
+        listLoad = ListLoad.LOADED
         // 화면이 보이는 동안 새로 온 것도 그 자리에서 읽음이 된다 — 부모가 보고 있는데
         // 안 읽음으로 남겨두면 알림줄에도 한 번 더 뜬다.
         if (visible) consumeUnread()
@@ -249,7 +259,7 @@ class AlertFragment : Fragment() {
         val b = _binding ?: return
         adapter.setUnread(highlight.toSet())
         adapter.submitList(events)
-        b.alertEmpty.visibility = if (events.isEmpty()) View.VISIBLE else View.GONE
+        b.alertEmpty.renderEmptyState(listLoad, events.isEmpty(), R.string.alert_empty)
     }
 
     /** 목록 위의 한 줄. null 이면 감춘다. */

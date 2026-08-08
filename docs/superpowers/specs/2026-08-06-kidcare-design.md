@@ -240,10 +240,43 @@ families/{familyId}
     mode: "normal" | "vibrate" | "silent"
     enabled, priority
 
-  events/{id}
-    type: "enter" | "exit" | "low_battery" | "power_off"
-        | "signal_lost" | "permission_off" | "command_failed"
-    at, childUid, placeName, detail, read
+  events/{id}   (아이 폰만 만들고 부모는 읽기 + read 표시만. 값의 정답은 코드의
+                 core/model/Documents.kt `EventType` 상수다 — 아래 목록이 그것과
+                 다르면 코드가 맞다. 2026-08-08 전수 리뷰에서 실제로 어긋나 있었다:
+                 이 표는 "enter"/"exit" 라고 적었는데 코드는 place_enter/place_exit 를
+                 쓰고 있었고, 안 만들기로 한 종류 둘이 살아있는 것처럼 적혀 있었다)
+    type: "place_enter" | "place_exit" | "low_battery" | "permission_off"
+                                           (지금 실제로 쓰이는 네 가지가 전부다.
+                                            firestore.rules 는 이 목록을 **일부러**
+                                            검사하지 않는다 — 값으로 잠그면 종류가 늘
+                                            때마다 사람이 콘솔에서 규칙을 다시 게시해야
+                                            하고, 잊으면 그 종류만 조용히 죽는다.
+                                            그러니 이 약속을 지키는 것은 앱 코드뿐이다)
+    at              (**Long 밀리초**. Firestore Timestamp 로 바꾸면 규칙의 at 창
+                     비교(과거 24시간 ~ 미래 1시간)가 절대 성립하지 않아 모든 이벤트
+                     쓰기가 조용히 거부된다 — 부모 화면에는 "아무 일도 없는 날"로 보인다)
+    childUid        (규칙이 request.auth.uid 와 대조한다)
+    placeName, detail
+    read            (만들 때 반드시 false — 규칙이 강제한다. 아이가 미리 읽음으로
+                     만들어 부모의 안 읽음 목록에서 지워버리는 것을 막는다)
+
+    없는 종류도 결정이다. 다시 붙이기 전에 여기를 읽을 것:
+      power_off      — **만들지 않는다.** 안드로이드가 ACTION_SHUTDOWN 을 보장하지
+                       않아(방전·배터리 분리·강제 종료에서는 안 온다) "어떤 날은 오고
+                       어떤 날은 안 오는" 신호가 된다. 부모는 그 부재를 "안 꺼졌다"로
+                       읽으므로, 제일 필요한 날에만 거짓말하는 기능이 된다. 상수조차
+                       두지 않았다 — 상수만 있고 쓰는 데가 없으면 다음 사람이 "배선만
+                       하면 되는 미완성"으로 읽는다. known-issues 13.
+      command_failed — **만들지 않는다.** CommandHandler 가 이미 명령 문서에
+                       failed + error 를 적고, 부모는 방금 그 버튼을 누른 화면
+                       (ControlFragment)에서 실패 사유를 그대로 본다. 이벤트를 또 쓰면
+                       쓰기 하나를 더 내고 같은 실패를 두 번 보여줄 뿐이다. 상수는
+                       EventType 에 남아 있지만 쓰는 곳이 없다.
+      signal_lost    — **구조적으로 쓸 수 없다.** 아이 폰은 자기 침묵을 스스로 보고할
+                       수 없고, 규칙의 childUid == request.auth.uid 때문에 부모도
+                       이벤트를 만들 수 없다. 그 자리는 연결 끊김 배너
+                       (logic/DisconnectRule)가 "물어봤는데 대답이 없다"로 정직하게
+                       덮는다. 상수만 남아 있다.
 ```
 
 ### 보안 규칙
@@ -472,12 +505,37 @@ Spark 무료 요금제로 가기로 하면서(§2 "Firebase 요금제", §9) 아
 
 ### 4.6 장소 판정 (GeofenceEvaluator)
 
-- `GeofencingClient`(OS 제공)를 1차로 쓴다. 배터리 효율이 좋다.
-- 지오펜스는 최대 100개까지 등록 가능하나, 실용상 20개로 제한한다.
+*(2026-08-08 전수 리뷰에서 코드와 대조해 고쳤다. 아래는 구현된 그대로다.)*
+
+- **판정은 언제나 `GeofenceEvaluator` 한 곳에서만 한다.** `GeofencingClient`(OS 제공)는
+  깨워 주는 역할이고, 그 전환 콜백도 위치 점 하나로 바뀌어 같은 판정기를 지난다
+  (`child/PlaceGeofenceReceiver` → `TrackingService.notifyGeofenceCrossing`). OS 콜백에서
+  이벤트를 바로 쓰면 아래의 히스테리시스·중복 억제를 통째로 건너뛰게 된다.
+- 그래서 판정은 **위치 점마다도** 돈다. 삼성 기기가 절전 상태에서 전환을 몇 분씩 늦게
+  주기 때문이다. `SKIP_TOO_CLOSE`(직전 점에서 25m 미만 이동)로 업로드에서 걸러진 점도
+  판정에는 넘긴다 — 경계를 몇 걸음 넘는 순간이 정확히 그 모양이다.
+- 지오펜스는 OS 한도가 100개지만 **20개로 제한한다**(`PlaceWatcher.MAX_GEOFENCES`,
+  부모 화면도 `PlaceFragment.MAX_PLACES` 로 같은 값에서 막는다). 20개를 넘으면
+  **이름순으로** 자른다 — 읽어온 순서로 자르면 잘리는 장소가 날마다 달라진다.
 - **히스테리시스**: 진입은 반경 그대로, 이탈은 반경 + 50m를 넘어야 인정한다.
   경계에 앉아 있을 때 도착/이탈 알림이 반복되는 것을 막는다.
-- 같은 장소의 같은 방향 이벤트는 5분 안에 중복 발행하지 않는다.
-- `BOOT_COMPLETED` 후 지오펜스를 재등록한다(OS가 재부팅 시 지운다).
+- **중복 억제는 장소별이고 방향을 가리지 않는다.** 한 장소에서 알림을 한 번 내보내면
+  5분 안에는 그 장소의 다음 알림을 — 도착이든 이탈이든 — 내보내지 않는다. 방향별로
+  세면 문 앞에서 들락거리는 아이가 도착·이탈을 번갈아 계속 내보낼 수 있다.
+  그 5분 시계는 **실제로 부모에게 알린 순간**에만 다시 돈다(`PlaceState.lastEventAt`) —
+  알리지 않기로 한 전환이 시계를 밀면 아무도 못 본 사건 때문에 다음 진짜 알림이 죽는다.
+- **처음 보는 장소는 알리지 않고 상태만 심는다.** 부모가 아이가 이미 안에 있는 곳에
+  장소를 만드는 것이 가장 흔한 경우인데, 그때 "도착했어요"를 보내면 세 시간 전에
+  일어난 도착을 지금 시각으로 지어내는 것이 된다.
+- 오차가 100m(`LocationFilter.FALLBACK_MAX_ACCURACY_METERS`)를 넘는 점은 판정에 쓰지
+  않고 **상태도 건드리지 않는다.** 건드리면 다음 좋은 점에서 가짜 전환이 하나 생긴다.
+- 장소마다 도착·이탈 알림을 따로 끌 수 있다. 끈 방향도 `inside` 는 갱신한다 —
+  안 그러면 반대 방향 알림까지 영영 못 나간다.
+- `BOOT_COMPLETED` 후 지오펜스를 재등록한다(OS가 재부팅 시 지운다). 재등록은
+  `BootReceiver` 가 직접 하지 않고 그것이 띄우는 `TrackingService.onStartCommand` 에서
+  한다 — "부팅 뒤에 무엇을 다시 거는가"를 파일 둘로 나누지 않으려는 것이다.
+- 등록할 때 `INITIAL_TRIGGER_ENTER` 는 켜지 않는다. 이미 안에 있다는 사실은 상태
+  저장소가 알고 있어 새 정보가 아니고, 폰만 한 번 깨우고 끝이다.
 
 ## 5. 오류 처리
 

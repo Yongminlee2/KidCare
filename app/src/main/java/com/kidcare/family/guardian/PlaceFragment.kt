@@ -84,6 +84,9 @@ class PlaceFragment : Fragment() {
     /** 마지막 스냅샷. 개수 상한 판정이 이 목록을 읽는다. */
     private var places: List<PlaceDoc> = emptyList()
 
+    /** 목록을 불러왔는가. 세 상태를 왜 구분하는지는 [ListLoad] 주석에 있다. */
+    private var listLoad = ListLoad.LOADING
+
     /**
      * 아이의 마지막 확인 위치. 새 장소를 만들 때 지도의 시작점이다.
      * 한 번만 읽는다(아래 [subscribe] 의 onJoined) — 정확한 현재 위치가 아니라
@@ -320,7 +323,10 @@ class PlaceFragment : Fragment() {
     private fun subscribe() {
         val fid = RoleStore(requireContext()).familyId
         if (fid == null) {
+            // 구독을 시작조차 못 한다 = 목록을 못 불러온 것이다([AlertFragment.subscribe] 와 같다).
+            listLoad = ListLoad.FAILED
             showState(getString(R.string.place_no_family))
+            renderList()
             return
         }
         familyId = fid
@@ -331,7 +337,9 @@ class PlaceFragment : Fragment() {
             onError = { e ->
                 val ctx = context ?: return@observePlaces
                 _binding ?: return@observePlaces
+                listLoad = ListLoad.FAILED
                 showState(getString(R.string.place_error_format, errorMessage(ctx, e)))
+                renderList()
             },
         )
 
@@ -390,6 +398,7 @@ class PlaceFragment : Fragment() {
         // 자녀 폰이 지오펜스 20개를 자를 때 쓰는 기준도 이름순이라 두 화면이 같은 순서를
         // 본다(PlaceWatcher.registerGeofences).
         places = docs.sortedWith(compareBy({ it.name }, { it.id }))
+        listLoad = ListLoad.LOADED
         renderList()
     }
 
@@ -700,7 +709,7 @@ class PlaceFragment : Fragment() {
     private fun renderList() {
         val b = _binding ?: return
         adapter.submitList(places)
-        b.placeEmpty.visibility = if (places.isEmpty()) View.VISIBLE else View.GONE
+        b.placeEmpty.renderEmptyState(listLoad, places.isEmpty(), R.string.place_empty)
 
         val full = places.size >= MAX_PLACES
         b.addButton.isEnabled = !full

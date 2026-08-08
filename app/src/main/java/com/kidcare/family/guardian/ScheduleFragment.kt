@@ -87,6 +87,9 @@ class ScheduleFragment : Fragment() {
     /** 마지막 스냅샷. 겹침 판정과 새 규칙의 priority 계산이 이 목록을 읽는다. */
     private var rules: List<ScheduleDoc> = emptyList()
 
+    /** 목록을 불러왔는가. 세 상태를 왜 구분하는지는 [ListLoad] 주석에 있다. */
+    private var listLoad = ListLoad.LOADING
+
     /**
      * 지금 화면이 책임지는 쓰기의 세대 번호. 쓰기를 시작할 때마다, 그리고 편집을
      * 취소할 때마다 하나씩 는다.
@@ -314,7 +317,10 @@ class ScheduleFragment : Fragment() {
     private fun subscribe() {
         val fid = RoleStore(requireContext()).familyId
         if (fid == null) {
+            // 구독을 시작조차 못 한다 = 목록을 못 불러온 것이다([AlertFragment.subscribe] 와 같다).
+            listLoad = ListLoad.FAILED
             showState(getString(R.string.schedule_no_family))
+            renderList()
             return
         }
         familyId = fid
@@ -325,7 +331,9 @@ class ScheduleFragment : Fragment() {
             onError = { e ->
                 val ctx = context ?: return@observeSchedules
                 _binding ?: return@observeSchedules
+                listLoad = ListLoad.FAILED
                 showState(getString(R.string.schedule_error_format, errorMessage(ctx, e)))
+                renderList()
             },
         )
 
@@ -354,6 +362,7 @@ class ScheduleFragment : Fragment() {
         rules = docs.sortedWith(
             compareBy<ScheduleDoc> { it.startMinute }.thenBy { it.endMinute }.thenBy { it.id }
         )
+        listLoad = ListLoad.LOADED
         renderList()
     }
 
@@ -775,7 +784,7 @@ class ScheduleFragment : Fragment() {
     private fun renderList() {
         val b = _binding ?: return
         adapter.submitList(rules)
-        b.scheduleEmpty.visibility = if (rules.isEmpty()) View.VISIBLE else View.GONE
+        b.scheduleEmpty.renderEmptyState(listLoad, rules.isEmpty(), R.string.schedule_empty)
     }
 
     /**
