@@ -17,14 +17,31 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="28dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tab_control"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="20dp"
+            android:text="@string/control_header_subtitle"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
         <!-- 아이 폰이 아직 안 붙었거나 상태를 못 읽을 때만 보인다. 평소에는 GONE. -->
         <TextView
             android:id="@+id/child_state"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="12dp"
+            android:paddingBottom="16dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:visibility="gone" />
@@ -33,7 +50,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/control_section_ringer"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -48,37 +65,49 @@
                 android:id="@+id/mode_normal_button"
                 style="@style/Widget.KidCare.Button.Tonal"
                 android:layout_width="0dp"
-                android:layout_height="76dp"
+                android:layout_height="64dp"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
                 android:insetLeft="0dp"
                 android:insetRight="0dp"
-                android:paddingHorizontal="2dp"
-                android:text="@string/control_mode_normal" />
+                android:paddingHorizontal="8dp"
+                android:text="@string/control_mode_normal"
+                app:icon="@drawable/ic_volume_up"
+                app:iconGravity="textStart"
+                app:iconPadding="6dp"
+                app:iconSize="22dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/mode_vibrate_button"
                 style="@style/Widget.KidCare.Button.Tonal"
                 android:layout_width="0dp"
-                android:layout_height="76dp"
+                android:layout_height="64dp"
                 android:layout_marginHorizontal="6dp"
                 android:layout_weight="1"
                 android:insetLeft="0dp"
                 android:insetRight="0dp"
-                android:paddingHorizontal="2dp"
-                android:text="@string/control_mode_vibrate" />
+                android:paddingHorizontal="8dp"
+                android:text="@string/control_mode_vibrate"
+                app:icon="@drawable/ic_vibration"
+                app:iconGravity="textStart"
+                app:iconPadding="6dp"
+                app:iconSize="22dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/mode_silent_button"
                 style="@style/Widget.KidCare.Button.Tonal"
                 android:layout_width="0dp"
-                android:layout_height="76dp"
+                android:layout_height="64dp"
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
                 android:insetLeft="0dp"
                 android:insetRight="0dp"
-                android:paddingHorizontal="2dp"
-                android:text="@string/control_mode_silent" />
+                android:paddingHorizontal="8dp"
+                android:text="@string/control_mode_silent"
+                app:icon="@drawable/ic_volume_off"
+                app:iconGravity="textStart"
+                app:iconPadding="6dp"
+                app:iconSize="22dp" />
         </LinearLayout>
 
         <com.google.android.material.materialswitch.MaterialSwitch
@@ -106,11 +135,16 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/find_button"
             android:layout_width="match_parent"
-            android:layout_height="76dp"
+            android:layout_height="64dp"
             android:text="@string/control_find_phone"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:textColor="@color/on_berry"
-            app:backgroundTint="@color/berry" />
+            app:backgroundTint="@color/berry"
+            app:icon="@drawable/ic_find_phone"
+            app:iconGravity="textStart"
+            app:iconPadding="10dp"
+            app:iconSize="24dp"
+            app:iconTint="@color/on_berry" />
 
         <TextView
             android:layout_width="match_parent"
@@ -145,7 +179,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/control_section_message"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
 
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/message_chips"
@@ -210,10 +244,14 @@
             android:id="@+id/message_send_button"
             style="@style/Widget.KidCare.Button.Tonal"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="58dp"
             android:layout_marginTop="8dp"
             android:text="@string/control_message_send"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            app:icon="@drawable/ic_send"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:iconSize="22dp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -238,7 +276,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/control_section_alarm"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
 
         <!-- 걸어 둔 알람이 없으면 GONE. -->
         <TextView
@@ -256,7 +294,11 @@
             android:layout_width="match_parent"
             android:layout_height="64dp"
             android:layout_marginTop="10dp"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            app:icon="@drawable/ic_alarm"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:iconSize="22dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/alarm_label_layout"
@@ -281,10 +323,14 @@
             android:id="@+id/alarm_set_button"
             style="@style/Widget.KidCare.Button.Tonal"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="58dp"
             android:layout_marginTop="8dp"
             android:text="@string/control_alarm_set"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            app:icon="@drawable/ic_alarm"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:iconSize="22dp" />
 
         <!-- 폰찾기의 '이미 울리고 있다면 소리 끄기'와 같은 자리·같은 이유로 항상 살아
              있다. 부모 폰의 기억이 만료됐거나 다른 폰에서 걸었어도 여기서 끌 수 있어야

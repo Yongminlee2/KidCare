@@ -45,7 +45,7 @@ import com.kidcare.family.onboarding.PermissionStep
  *   ([com.kidcare.family.logic.DisconnectRule]). 게다가 OEM 의 자동 절전 관리가 사람
  *   손 없이 이 값을 껐다 켰다 하는 기기가 있어, 알리기 시작하면 헛경보가 섞인다.
  * - [PermissionStep.ACTIVITY_RECOGNITION] — 없어도 앱이 망가지지 않는다. 수집 주기가
- *   이동(30초) 고정으로 돌 뿐이라 위치는 오히려 더 촘촘하다(그 enum 주석 참고).
+ *   이동(5초) 고정으로 돌 뿐이라 위치는 오히려 더 촘촘하다(그 enum 주석 참고).
  *
  * ## 한 번만 알린다 — 프로세스가 죽어도
  *

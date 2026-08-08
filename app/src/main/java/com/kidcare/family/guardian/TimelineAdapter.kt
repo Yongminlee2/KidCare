@@ -49,8 +49,8 @@ class TimelineAdapter(
                 nameLat = doc.lat, nameLng = doc.lng,
             )
 
-            binding.iconText.text = context.getString(
-                if (stay) R.string.timeline_icon_stay else R.string.timeline_icon_move
+            binding.iconText.setImageResource(
+                if (stay) R.drawable.ic_tab_place else R.drawable.ic_route
             )
             binding.titleText.text = if (stay) {
                 doc.placeName.ifEmpty { context.getString(R.string.timeline_unknown_place) }

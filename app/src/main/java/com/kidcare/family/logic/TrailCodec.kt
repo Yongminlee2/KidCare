@@ -1,5 +1,10 @@
 package com.kidcare.family.logic
 
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.floor
+
 /**
  * 하루치 위치 점을 줄 단위 문자열로 바꾸고 되돌린다.
  *
@@ -10,7 +15,7 @@ package com.kidcare.family.logic
  *
  * 형식이 줄 단위 CSV 인 이유는 세 가지다.
  *  - **덧붙이기만 하면 된다.** 한 점이 한 줄이라 새 점이 생길 때마다 파일 끝에 한 줄을
- *    붙이면 끝이다. JSON 배열이나 SharedPreferences 였다면 30초마다 하루치 전체를
+ *    붙이면 끝이다. JSON 배열이나 SharedPreferences 였다면 5초마다 하루치 전체를
  *    다시 써야 한다(하루 수백 번의 전체 쓰기 = 쓸데없는 플래시 마모).
  *  - **새 의존성이 없다.** JSON 라이브러리를 들이지 않기로 한 제약을 지킨다.
  *  - **테스트로 고정할 수 있다.** `org.json` 은 안드로이드 프레임워크 클래스라 JVM
@@ -31,17 +36,12 @@ object TrailCodec {
      * 200KB 안쪽이고, 같은 문서에 함께 담기는 구간 요약(하루 20~30개)까지 더해도
      * 상한의 4분의 1을 안 넘는다.
      *
-     * 정상적인 하루는 약 520점이다(이동 30초·정지 5분 주기 + LocationFilter 의
-     * 25m/10분 문턱). 즉 2000은 정상치의 네 배가 되는 지점이고, 여기에 닿는 날은
-     * 이미 어딘가 고장난 날이다(수집 주기가 폭주했거나, 자정 판정이 어긋나 이틀치가
-     * 한 dayKey 에 몰렸거나). 그런 날에도 **문서 쓰기 자체는 성공해야 한다** —
-     * 1MB 를 넘기면 그 날의 기록이 통째로 안 올라가고, 부모 화면은 아무 설명 없이
-     * 비어 보인다.
+     * 이동 중 5초 점을 모두 로컬에 남기면 2,000개를 넘는 날이 정상적으로 생길 수 있다.
+     * 그래도 1MB를 넘으면 그 날의 기록이 통째로 업로드되지 않으므로 서버 문서는 이
+     * 상한을 지킨다. 원본은 아이 폰의 하루 파일에 그대로 있고 서버로 보낼 때만 줄인다.
      *
-     * 넘칠 때 **오래된 쪽을 버린다**([capped]). 균등하게 솎아내는 방법도 있지만
-     * 그러면 하루 전체가 반쪽 해상도가 되는데, 넘치는 날은 애초에 비정상이고 부모가
-     * 실제로 묻는 것은 "지금 어디 있냐"라서 최근 구간이 온전한 쪽이 낫다. 오래된
-     * 앞부분은 그날 이미 여러 번 올라갔던 내용이기도 하다.
+     * 넘칠 때는 앞부분을 버리지 않고 [capped]가 하루 전체에서 경로 모양을 잘 설명하는
+     * 점을 고른다. 출발점·도착점과 큰 회전은 남고, 같은 직선 위의 촘촘한 점부터 빠진다.
      */
     const val MAX_POINTS = 2000
 
@@ -70,7 +70,70 @@ object TrailCodec {
         return Fix(lat = lat, lng = lng, accuracy = accuracy, at = at, speed = speed)
     }
 
-    /** [MAX_POINTS] 를 넘으면 **가장 오래된 쪽을 버리고** 최근 것만 남긴다. */
-    fun capped(points: List<Fix>): List<Fix> =
-        if (points.size <= MAX_POINTS) points else points.takeLast(MAX_POINTS)
+    /**
+     * [MAX_POINTS]를 넘으면 LTTB(Largest Triangle Three Buckets) 방식으로 하루 전체를
+     * 대표하는 점을 고른다. 시계열 그래프 대신 위·경도를 삼각형 면적으로 비교하므로
+     * 직선상의 반복점보다 실제 경로가 꺾이는 점이 우선해서 남는다.
+     */
+    fun capped(points: List<Fix>): List<Fix> {
+        if (points.size <= MAX_POINTS) return points
+
+        val result = ArrayList<Fix>(MAX_POINTS)
+        val bucketWidth = (points.size - 2).toDouble() / (MAX_POINTS - 2)
+        val longitudeScale = cos(points.first().lat * PI / 180.0)
+        var selectedIndex = 0
+        result += points.first()
+
+        for (bucket in 0 until MAX_POINTS - 2) {
+            val averageStart = (floor((bucket + 1) * bucketWidth).toInt() + 1)
+                .coerceAtMost(points.size)
+            val averageEnd = (floor((bucket + 2) * bucketWidth).toInt() + 1)
+                .coerceAtMost(points.size)
+
+            var averageX = 0.0
+            var averageY = 0.0
+            val averageCount = averageEnd - averageStart
+            if (averageCount > 0) {
+                for (index in averageStart until averageEnd) {
+                    averageX += points[index].lng * longitudeScale
+                    averageY += points[index].lat
+                }
+                averageX /= averageCount
+                averageY /= averageCount
+            } else {
+                averageX = points.last().lng * longitudeScale
+                averageY = points.last().lat
+            }
+
+            val rangeStart = (floor(bucket * bucketWidth).toInt() + 1)
+                .coerceAtMost(points.lastIndex)
+            val rangeEnd = (floor((bucket + 1) * bucketWidth).toInt() + 1)
+                .coerceAtMost(points.lastIndex)
+
+            val selected = points[selectedIndex]
+            val selectedX = selected.lng * longitudeScale
+            val selectedY = selected.lat
+            var largestArea = -1.0
+            var nextSelectedIndex = rangeStart
+
+            for (index in rangeStart until rangeEnd) {
+                val candidate = points[index]
+                val candidateX = candidate.lng * longitudeScale
+                val area = abs(
+                    (selectedX - averageX) * (candidate.lat - selectedY) -
+                        (selectedX - candidateX) * (averageY - selectedY)
+                )
+                if (area > largestArea) {
+                    largestArea = area
+                    nextSelectedIndex = index
+                }
+            }
+
+            result += points[nextSelectedIndex]
+            selectedIndex = nextSelectedIndex
+        }
+
+        result += points.last()
+        return result
+    }
 }

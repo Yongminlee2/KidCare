@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">우리아이 지킴이</string>
+    <string name="app_brand_short">KIDCARE</string>
     <string name="connecting">연결 중…</string>
     <!-- 목록 화면 셋(알림·장소·예약)이 첫 스냅샷을 기다리는 동안 빈 목록 자리에 뜬다.
          "아직 없어요"와 오류 사이의 세 번째 상태다 — 왜 필요한지는
@@ -116,7 +117,7 @@
          docs/known-issues.md 12번) 화면의 점은 항상 "마지막으로 확인한 위치"다.
          그래서 배터리 옆에 그게 언제였는지를 반드시 함께 적는다 — "지금 위치"라고
          읽히면 안 된다. -->
-    <string name="map_status_format">🔋 %1$d%%   ·   %2$s 확인한 위치예요</string>
+    <string name="map_status_format">%1$d%% · %2$s 확인한 위치예요</string>
     <string name="map_status_never">아직 위치를 확인한 적이 없어요. \'지금 위치 확인\'을 눌러주세요.</string>
     <string name="map_locate_now">지금 위치 확인</string>
     <string name="map_locating">애기폰에 물어보는 중…</string>
@@ -133,16 +134,17 @@
          막을 수 없으니 부모에게 무엇을 하면 되는지를 말한다 — 지금 상태(언제 물어본
          것에 대답이 없는지)와 할 일(아이 폰에서 앱을 한 번 열기)을 한 문장씩.
          "마지막 신호"가 아니라 "마지막 물음"인 이유는 DisconnectRule 주석 참고. -->
-    <string name="guardian_disconnect_banner">⚠️ %1$s 보낸 요청에 애기폰이 아직 대답하지 않았어요\n아이 폰에서 \'우리아이 지킴이\' 앱을 한 번 열어주세요. 그러면 다시 이어져요.</string>
+    <string name="guardian_disconnect_banner">%1$s 보낸 요청에 애기폰이 아직 대답하지 않았어요\n아이 폰에서 \'우리아이 지킴이\' 앱을 한 번 열어주세요. 그러면 다시 이어져요.</string>
 
+    <string name="control_header_subtitle">소리, 메시지, 알람을 아이 폰으로 바로 보내세요.</string>
     <string name="control_section_ringer">지금 바로 바꾸기</string>
-    <string name="control_mode_normal">🔔\n벨소리</string>
-    <string name="control_mode_vibrate">📳\n진동</string>
-    <string name="control_mode_silent">🔕\n무음</string>
+    <string name="control_mode_normal">벨소리</string>
+    <string name="control_mode_vibrate">진동</string>
+    <string name="control_mode_silent">무음</string>
     <string name="control_lock_switch">아이가 되돌리면 다시 바꾸기</string>
     <string name="control_lock_hint">아이가 소리를 바꿔도 몇 초 뒤에 부모님이 정한 대로 돌아가요.</string>
-    <string name="control_find_phone">📢 핸드폰 찾기</string>
-    <string name="control_find_stop">🔇 소리 끄기</string>
+    <string name="control_find_phone">핸드폰 찾기</string>
+    <string name="control_find_stop">소리 끄기</string>
     <string name="control_find_stop_hint">이미 울리고 있다면 소리 끄기</string>
     <string name="control_find_hint">무음이어도 큰 소리로 울려요. 5분이 지나면 저절로 멈춰요.</string>
     <string name="control_command_sending">전달 중…</string>
@@ -174,7 +176,7 @@
     <string name="control_message_chip_come_home">집으로 와</string>
     <string name="control_message_chip_meal">밥 먹었어?</string>
     <string name="control_message_hint">아이에게 할 말</string>
-    <string name="control_message_send">✉️ 보내기</string>
+    <string name="control_message_send">메시지 보내기</string>
     <!-- 아이 쪽에서 무슨 일이 벌어지는지 미리 말해준다. 소리가 안 난다는 것과
          아이가 답하는 방법이 '확인했어요' 하나뿐이라는 것, 둘 다 부모가 알아야
          기다림을 오해하지 않는다. -->
@@ -188,10 +190,10 @@
 
     <!-- ====================== 관리 탭: 알람 맞추기 ====================== -->
     <string name="control_section_alarm">알람 맞추기</string>
-    <string name="control_alarm_time_format">⏰ %1$s</string>
+    <string name="control_alarm_time_format">%1$s</string>
     <string name="control_alarm_picker_title">몇 시에 울릴까요?</string>
     <string name="control_alarm_label_hint">알람 이름 (예: 학원 가야 해)</string>
-    <string name="control_alarm_set">⏰ 이 시각에 알람 맞추기</string>
+    <string name="control_alarm_set">이 시각에 알람 맞추기</string>
     <string name="control_alarm_cancel">맞춰둔 알람 끄기</string>
     <!-- 부모가 한 번 읽고 알아야 하는 것 넷: 한 번만 운다는 것, 시각을 푸는 쪽이
          애기폰이라는 것(그래서 여행 중이면 애기폰 시간대로 운다), 아이도 알람이
@@ -200,14 +202,16 @@
     <!-- 애기폰이 '완료'라고 답한 뒤. '울려요'라고 쓰지 않는 이유: 아이가 앱을 강제
          종료하면 알람 예약이 지워지는데 그 사실은 부모 폰에 도착하지 않는다.
          그때 부모에게 말해주는 것은 이 줄이 아니라 연결 끊김 배너다. -->
-    <string name="control_alarm_state_confirmed">⏰ 애기폰에 %1$s 알람이 맞춰져 있어요</string>
-    <string name="control_alarm_state_pending">⏰ %1$s 알람을 보냈어요 · 애기폰 대답을 기다리는 중이에요</string>
+    <string name="control_alarm_state_confirmed">애기폰에 %1$s 알람이 맞춰져 있어요</string>
+    <string name="control_alarm_state_pending">%1$s 알람을 보냈어요 · 애기폰 대답을 기다리는 중이에요</string>
     <!-- 위 두 줄의 %1$s 자리. 이름을 안 적었으면 시각만 들어간다. -->
     <string name="control_alarm_state_labeled">%1$s \'%2$s\'</string>
     <string name="control_error_alarm_exact_denied">애기폰에서 \'알람 및 리마인더\' 권한이 꺼져 있어 알람을 맞추지 못했어요. 아이 폰 설정 → 앱 → \'우리아이 지킴이\' → 알람 및 리마인더에서 켜주세요.</string>
 
     <!-- ========================= 예약 탭 (시간대 규칙) ========================= -->
-    <string name="schedule_add">+ 규칙 추가</string>
+    <string name="schedule_header_title">생활 소리 예약</string>
+    <string name="schedule_header_subtitle">요일과 시간에 맞춰 벨소리·진동·무음을 자동으로 바꿔요.</string>
+    <string name="schedule_add">규칙 추가</string>
     <string name="schedule_empty">아직 정해둔 시간대가 없어요.\n아래 \'규칙 추가\'를 눌러\n\'평일 밤에는 무음\' 같은 규칙을 만들어 보세요.</string>
     <string name="schedule_error_format">규칙을 불러오지 못했어요\n%1$s</string>
     <string name="schedule_no_family">가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요.</string>
@@ -222,6 +226,7 @@
 
     <string name="schedule_time_format">%1$02d:%2$02d</string>
     <string name="schedule_range">%1$s ~ %2$s</string>
+    <string name="schedule_range_separator">–</string>
     <!-- 자정을 넘는 규칙. "22:00 ~ 07:00"만 쓰면 잘못 넣은 값처럼 보이므로
          끝이 다음 날이라는 것을 글자로 말해준다. -->
     <string name="schedule_range_overnight">%1$s ~ 다음 날 %2$s</string>
@@ -284,7 +289,9 @@
     <string name="schedule_delete_cancel">그대로 두기</string>
 
     <!-- ============================ 장소 탭 (지오펜스) ============================ -->
-    <string name="place_add">+ 장소 추가</string>
+    <string name="place_header_title">안심 장소</string>
+    <string name="place_header_subtitle">학교나 학원을 등록하면 도착과 출발을 알려드려요.</string>
+    <string name="place_add">장소 추가</string>
     <string name="place_empty">아직 정해둔 장소가 없어요.\n아래 \'장소 추가\'를 눌러\n\'학교\', \'학원\' 같은 곳을 정해 보세요.\n아이가 도착하거나 나서면 알려드릴게요.</string>
     <string name="place_error_format">장소를 불러오지 못했어요\n%1$s</string>
     <string name="place_no_family">가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요.</string>
@@ -350,6 +357,8 @@
     <!-- 상시 수신 스위치. 켜기 전에 무엇이 생기는지 먼저 말한다 — 남의 폰 알림줄에
          표시를 하나 심는 일이라 기본값이 꺼짐이고, 끄면 무엇이 달라지는지도 함께
          적는다(AlertService 클래스 주석의 판단을 부모의 말로 옮긴 것). -->
+    <string name="alert_header_title">아이 소식</string>
+    <string name="alert_header_subtitle">도착, 배터리, 연결 상태를 시간순으로 모아봐요.</string>
     <string name="alert_service_switch">알림 바로 받기</string>
     <string name="alert_service_hint">켜면 앱을 안 보고 있어도 아이 소식이 바로 와요. 대신 이 폰 알림줄에 \'알림 받는 중\' 표시가 하나 계속 떠 있고 배터리를 조금 더 씁니다. 꺼두면 앱을 열었을 때만 확인할 수 있어요.</string>
     <!-- 알림 권한을 거절했을 때. 서비스는 켜지 않는다 — 알림이 안 뜨는데 상시 표시만
@@ -365,8 +374,8 @@
 
     <!-- 목록 한 줄: '🏫 학교에 도착했어요 · 오후 3시 12분'. -->
     <string name="alert_row">%1$s · %2$s</string>
-    <string name="alert_place_enter">📍 %1$s에 도착했어요</string>
-    <string name="alert_place_exit">👟 %1$s에서 나섰어요</string>
+    <string name="alert_place_enter">%1$s에 도착했어요</string>
+    <string name="alert_place_exit">%1$s에서 나섰어요</string>
     <!-- 아래 넷은 5단계 Task 7 이 만드는 사건이다. 읽는 쪽을 먼저 붙여 둔 이유는
          core/model/Documents.kt 의 EventType 주석 참고.
          둘(low_battery·permission_off)은 Task 7 에서 실제로 쓰기 시작했고,
@@ -374,10 +383,10 @@
          수는 없고(연결 끊김 배너가 부모 폰에서 그 자리를 덮는다), 명령 실패는 부모가
          보고 있는 관리 화면의 상태 줄이 이미 말한다. 문구를 지우지 않고 두는 이유는
          모르는 type 이 왔을 때 alert_unknown 으로 떨어지는 것보다 낫기 때문이다. -->
-    <string name="alert_low_battery">🔋 애기폰 배터리가 얼마 안 남았어요</string>
-    <string name="alert_permission_off">⚠️ 애기폰에서 권한이 꺼졌어요</string>
-    <string name="alert_signal_lost">📵 애기폰이 한동안 대답하지 않았어요</string>
-    <string name="alert_command_failed">❗ 애기폰에 보낸 요청이 실패했어요</string>
+    <string name="alert_low_battery">애기폰 배터리가 얼마 안 남았어요</string>
+    <string name="alert_permission_off">애기폰에서 권한이 꺼졌어요</string>
+    <string name="alert_signal_lost">애기폰이 한동안 대답하지 않았어요</string>
+    <string name="alert_command_failed">애기폰에 보낸 요청이 실패했어요</string>
 
     <!-- 사건 한 줄 아래에 붙는 설명(EventDoc.detail). 아이 폰이 만들어 넣는 값이라
          부모 폰의 앱 버전과 무관하게 그대로 보인다. -->
@@ -387,18 +396,18 @@
          것과 글자가 달라지면 아이가 못 찾는다. -->
     <string name="event_detail_permission">%1$s — 애기폰에서 다시 켜주세요</string>
     <!-- 앱이 모르는 종류의 사건. 뜻은 몰라도 언제 무슨 일이 있었다는 사실은 남긴다. -->
-    <string name="alert_unknown">🔔 새로운 소식이 있어요</string>
+    <string name="alert_unknown">새로운 소식이 있어요</string>
 
     <string name="alert_empty">아직 온 알림이 없어요.\n\'장소\' 탭에서 학교나 학원을 정해두면\n아이가 도착하거나 나설 때 여기에 쌓여요.</string>
     <string name="alert_error_format">알림을 불러오지 못했어요\n%1$s</string>
     <string name="alert_no_family">가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요.</string>
 
-    <string name="timeline_icon_stay">📍</string>
-    <string name="timeline_icon_move">🚶</string>
     <string name="timeline_unknown_place">머무른 곳</string>
     <string name="timeline_move_title">이동 %1$s</string>
     <string name="timeline_detail">%1$s · %2$s</string>
     <string name="timeline_empty">이 날은 기록이 없어요</string>
+    <string name="timeline_expand">이동 기록 펼치기</string>
+    <string name="timeline_collapse">이동 기록 접기</string>
     <string name="day_prev">이전 날</string>
     <string name="day_next">다음 날</string>
 </resources>

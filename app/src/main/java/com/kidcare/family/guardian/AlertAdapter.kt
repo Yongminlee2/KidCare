@@ -50,6 +50,7 @@ class AlertAdapter : ListAdapter<EventDoc, AlertAdapter.Holder>(Diff) {
         fun bind(doc: EventDoc) {
             val context = binding.root.context
             binding.titleText.text = AlertText.line(context, doc)
+            binding.eventIcon.setImageResource(AlertText.icon(doc))
 
             // detail 은 Task 7 이 채우는 자리다(배터리 몇 %, 어떤 권한이 꺼졌는지).
             // 비어 있으면 줄 자체를 없앤다 — 빈 줄이 남으면 줄 높이만 들쭉날쭉해진다.
@@ -105,6 +106,17 @@ object AlertText {
         // 있다. 줄을 통째로 버리지 않는 이유: 뜻은 몰라도 "무슨 일이 언제 있었다"는
         // 사실은 남는데, 버리면 부모 화면에서 그 사건이 아예 없던 일이 된다.
         else -> context.getString(R.string.alert_unknown)
+    }
+
+    /** UI-only icon mapping; event wording and delivery behavior remain unchanged. */
+    fun icon(doc: EventDoc): Int = when (doc.type) {
+        EventType.PLACE_ENTER -> R.drawable.ic_tab_place
+        EventType.PLACE_EXIT -> R.drawable.ic_route
+        EventType.LOW_BATTERY -> R.drawable.ic_battery
+        EventType.PERMISSION_OFF -> R.drawable.ic_shield_alert
+        EventType.SIGNAL_LOST -> R.drawable.ic_signal_off
+        EventType.COMMAND_FAILED -> R.drawable.ic_error
+        else -> R.drawable.ic_tab_alert
     }
 
     /**

@@ -29,6 +29,10 @@
     android:viewportWidth="120"
     android:viewportHeight="120">
 
+    <path
+        android:pathData="M60,4 a55,55 0 1,0 0,110 a55,55 0 1,0 0,-110 Z"
+        android:fillColor="@color/mascot_bg" />
+
     <!-- 새싹 줄기. 얼굴 정수리(y=30)에서 위로 뻗는다. -->
     <path
         android:pathData="M60,34 L60,20"
@@ -49,7 +53,7 @@
         android:pathData="M22,68 a38,38 0 1,0 76,0 a38,38 0 1,0 -76,0 Z"
         android:fillColor="@color/mascot_face"
         android:strokeColor="@color/mascot_line"
-        android:strokeWidth="4" />
+        android:strokeWidth="3.5" />
 
     <!-- 볼. 눈보다 먼저 그려야 눈 위로 올라타지 않는다. -->
     <path

@@ -24,6 +24,7 @@ import com.kidcare.family.core.model.ChildStatusDoc
 import com.kidcare.family.core.model.CommandState
 import com.kidcare.family.core.model.CommandType
 import com.kidcare.family.core.model.SegmentDoc
+import com.kidcare.family.core.model.TrailPoint
 import com.kidcare.family.databinding.FragmentMapTimelineBinding
 import com.kidcare.family.logic.DayPicker
 import kotlinx.coroutines.CancellationException
@@ -112,6 +113,8 @@ class MapTimelineFragment : Fragment() {
     // 그대로 재사용하고 다시 조회하지 않는다.
     private var childUid: String? = null
     private lateinit var timelineAdapter: TimelineAdapter
+    private var timelineExpanded = false
+    private var focusChildOnNextLoad = false
 
     /** 연결 끊김 배너의 판정 재료를 적는 곳([RequestLog], DisconnectRule 주석 참고). */
     private val requestLog by lazy { RequestLog(requireContext().applicationContext) }
@@ -127,6 +130,8 @@ class MapTimelineFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        timelineExpanded = savedInstanceState?.getBoolean(KEY_TIMELINE_EXPANDED) ?: false
 
         // 지도만 상태바 뒤까지 그리고, 그 위에 뜬 상태 카드는 상태바 아래로 내린다.
         // 레이아웃에 적힌 12dp 여백에 상태바 높이를 **더한다** — 덮어쓰면 상태바가
@@ -147,10 +152,15 @@ class MapTimelineFragment : Fragment() {
         renderTimeline(emptyList())
         binding.prevDayButton.setOnClickListener { changeDay(-1) }
         binding.nextDayButton.setOnClickListener { changeDay(1) }
+        binding.timelineToggleButton.setOnClickListener {
+            timelineExpanded = !timelineExpanded
+            renderTimelinePanel()
+        }
         binding.locateButton.setOnClickListener { locateNow() }
         binding.locateButton.isEnabled = false
         binding.statusBar.text = getString(R.string.map_no_child)
         renderDayHeader()
+        renderTimelinePanel()
 
         subscribe()
 
@@ -211,7 +221,10 @@ class MapTimelineFragment : Fragment() {
                 // 몇 초를 쉰다 — 뒤에 두면 이미 손에 든 하루 기록이 그 시간만큼 화면에
                 // 안 나오고, 그동안 화면은 옛 날짜의 목록을 그대로 보여준다.
                 timelineLoad = ListLoad.LOADED
-                renderTimeline(trail?.segments ?: emptyList())
+                renderTimeline(
+                    trail?.segments ?: emptyList(),
+                    trail?.points ?: emptyList(),
+                )
                 renderStatus(status)
             } catch (e: CancellationException) {
                 // 화면을 떠났거나 다음 읽기가 이 읽기를 밀어낸 것이다. 실패가 아니다.
@@ -308,6 +321,7 @@ class MapTimelineFragment : Fragment() {
                         stopTracking()
                         recordAnswer()
                         renderLocating(false)
+                        focusChildOnNextLoad = true
                         reload()
                     }
                     CommandState.FAILED -> {
@@ -422,6 +436,7 @@ class MapTimelineFragment : Fragment() {
         val point = GeoPoint(status.lat, status.lng)
         drawAccuracyCircle(point, status.accuracy)
         val marker = childMarker
+        val shouldFocusChild = marker == null || focusChildOnNextLoad
         if (marker == null) {
             val newMarker = Marker(b.mapView)
             newMarker.icon = ContextCompat.getDrawable(requireContext(), R.drawable.marker_child)
@@ -433,12 +448,15 @@ class MapTimelineFragment : Fragment() {
             childMarker = newMarker
             // 카메라는 마커가 "처음 생길 때"만 움직인다 — 이후 갱신에서는 부모가 이미
             // 지도를 옮겨봤을 수 있으니 시점을 뺏지 않는다.
-            b.mapView.controller.setZoom(16.0)
-            b.mapView.controller.setCenter(point)
         } else {
             marker.position = point
-            b.mapView.invalidate()
         }
+        if (shouldFocusChild) {
+            b.mapView.controller.setZoom(CHILD_FOCUS_ZOOM)
+            b.mapView.controller.setCenter(point)
+            focusChildOnNextLoad = false
+        }
+        b.mapView.invalidate()
     }
 
     /**
@@ -513,11 +531,23 @@ class MapTimelineFragment : Fragment() {
             !DayPicker.isFuture(DayPicker.shift(dayKey, 1), zone, System.currentTimeMillis())
     }
 
-    private fun renderTimeline(docs: List<SegmentDoc>) {
+    private fun renderTimelinePanel() {
+        val b = _binding ?: return
+        b.timelineContent.visibility = if (timelineExpanded) View.VISIBLE else View.GONE
+        b.timelineToggleButton.rotation = if (timelineExpanded) 180f else 0f
+        b.timelineToggleButton.contentDescription = getString(
+            if (timelineExpanded) R.string.timeline_collapse else R.string.timeline_expand,
+        )
+    }
+
+    private fun renderTimeline(
+        docs: List<SegmentDoc>,
+        points: List<TrailPoint> = emptyList(),
+    ) {
         _binding ?: return
         timelineAdapter.submitList(docs)
         renderTimelineEmpty(docs.isEmpty())
-        drawRoute(docs)
+        drawRoute(points, docs)
     }
 
     /**
@@ -532,24 +562,22 @@ class MapTimelineFragment : Fragment() {
     private fun focusOn(lat: Double, lng: Double) {
         val b = _binding ?: return
         val point = GeoPoint(lat, lng)
-        b.mapView.controller.setZoom(16.0)
+        b.mapView.controller.setZoom(CHILD_FOCUS_ZOOM)
         b.mapView.controller.setCenter(point)
     }
 
     /**
      * 하루 경로를 선으로 그린다.
      *
-     * 구간 요약의 좌표만 잇는다 — 원시 점을 전부 쓰면 하루 수백 개라 느리고, 요약
-     * 좌표(머무름 중심 + 이동 끝점)만으로도 "어디서 어디로"는 충분히 보인다. 원시
-     * 점은 같은 문서 안에 함께 올라와 있지만(`TrailDoc.points`) 이 선에는 안 쓴다.
-     * SegmentBuilder 가 이동 구간의 끝을 앞뒤 머무름과 이어붙이도록 만들어 놨기
-     * 때문에 이 선은 끊기지 않는다.
+     * 새 하루 문서에서는 `TrailDoc.points`의 원시 위치점을 시간순으로 잇는다. 구간
+     * 끝점만 이으면 골목과 회전 구간이 잘려 보호자가 실제 이동선을 확인하기 어렵기
+     * 때문이다. 원시점이 없던 옛 문서는 구간 좌표로 대신 그려 호환성을 유지한다.
      *
      * renderTimeline 은 읽기마다, 그리고 날짜를 넘길 때마다 불린다. 매번 새로 선을
      * 그리기 전에 지난 선을 지우지 않으면 날이 바뀔 때마다 선이 겹겹이 쌓여 지도가
      * 낙서가 된다.
      */
-    private fun drawRoute(docs: List<SegmentDoc>) {
+    private fun drawRoute(points: List<TrailPoint>, docs: List<SegmentDoc>) {
         val b = _binding ?: return
 
         // 위치 마커는 overlays 리스트의 다른 요소라 별개다 — 여기서는 이전 경로선만
@@ -557,7 +585,14 @@ class MapTimelineFragment : Fragment() {
         routeLine?.let { b.mapView.overlays.remove(it) }
         routeLine = null
 
-        val positions = docs.map { GeoPoint(it.lat, it.lng) }
+        // 하루 문서에는 필터를 통과한 원시 위치점이 이미 함께 들어 있다. 예전에는 구간
+        // 요약의 끝점만 이어 실제 골목과 회전을 많이 잘라냈다. 원시점이 있는 새 기록은
+        // 전부 이어 그리고, 옛 문서는 구간 좌표를 이용해 계속 표시한다.
+        val positions = if (points.size >= 2) {
+            points.sortedBy { it.at }.map { GeoPoint(it.lat, it.lng) }
+        } else {
+            docs.map { GeoPoint(it.lat, it.lng) }
+        }
         if (positions.size < 2) {
             b.mapView.invalidate() // 점 하나로는 선이 안 된다 — 지운 것만 반영하고 끝.
             return
@@ -586,6 +621,11 @@ class MapTimelineFragment : Fragment() {
         super.onPause()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean(KEY_TIMELINE_EXPANDED, timelineExpanded)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onDestroyView() {
         joinedListener?.remove()
         joinedListener = null
@@ -609,16 +649,19 @@ class MapTimelineFragment : Fragment() {
         /** 명령 발행(서버 확인)을 기다리는 시간. 근거는 [ControlFragment.SEND_TIMEOUT_MILLIS]. */
         private const val SEND_TIMEOUT_MILLIS = 15_000L
 
+        private const val KEY_TIMELINE_EXPANDED = "timeline_expanded"
+        private const val CHILD_FOCUS_ZOOM = 18.0
+
         private const val ROUTE_LINE_WIDTH = 14f
-        private const val ROUTE_COLOR = 0xFF3D6DF5.toInt()
+        private const val ROUTE_COLOR = 0xFF287D70.toInt()
 
         // 경로선과 같은 파랑에 알파만 크게 낮춘 값이다. 색을 따로 만들지 않는 이유:
         // 새 색은 "다른 무언가"라는 신호를 주는데, 이 원은 마커가 가리키는 그 위치의
         // 불확실성일 뿐 별개의 대상이 아니다. 채움 0x22(약 13%)는 아래 지도 타일의
         // 도로·건물 이름이 그대로 읽히는 정도라 영역을 '칠한' 느낌이 안 난다.
-        private const val ACCURACY_FILL_COLOR = 0x223D6DF5
+        private const val ACCURACY_FILL_COLOR = 0x22287D70
         // 테두리는 채움보다 조금만 진하게. 진하면 지오펜스 경계선처럼 보인다.
-        private const val ACCURACY_STROKE_COLOR = 0x553D6DF5
+        private const val ACCURACY_STROKE_COLOR = 0x55287D70
         // 경로선(14f)의 1/7. 가늘어야 '경계'가 아니라 '번짐'으로 읽힌다.
         private const val ACCURACY_STROKE_WIDTH = 2f
     }

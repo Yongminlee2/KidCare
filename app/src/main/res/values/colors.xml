@@ -1,150 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    색종이 팔레트 — 낮.
-
-    이 앱은 두 사람이 본다. 걱정하는 엄마와, 감시당하는 기분이 들면 안 되는 아이다.
-    그래서 흔한 민트+베이비핑크 파스텔도, 크림+세리프+테라코타도 쓰지 않았다.
-    한국 초등학생 책상 위의 것들 — 색종이·색연필·알림장 스티커 — 에서 가져왔다.
-    따뜻한 종이 바닥 하나에 색연필 넉 자루(하늘·살구·풀·자두)를 얹은 구성이다.
-
-    같은 팔레트를 두 화면이 다르게 쓴다. 보호자 화면은 조용하고 넓게(바탕이 거의
-    전부 종이색), 아이 화면은 밝고 크게(색연필을 크게 쓴다).
-
-    **여기 있는 이름은 values-night/colors.xml 에 하나도 빠짐없이 같은 이름으로
-    있어야 한다.** 밤 모드 전환은 테마를 하나 더 만드는 게 아니라 이 파일 한 장을
-    갈아 끼우는 것으로 끝난다 — 테마·레이아웃·드로어블은 전부 @color 이름만 쓴다.
--->
 <resources>
-
-    <!-- ============================== 바탕 ============================== -->
-    <!-- 순백이 아니라 아주 살짝 노란 흰색. 베이지가 아니다 — 베이지까지 가면
-         화면이 낡아 보이고, 순백이면 아이 화면의 색연필 색이 튄다. -->
-    <color name="paper">#FFFCF7</color>
-    <!-- 카드·시트처럼 바탕 위에 한 겹 올라가는 면. 종이 위에 얹은 흰 종이. -->
+    <!-- Calm family-care palette: clean surfaces, reassuring teal, warm secondary accents. -->
+    <color name="paper">#F5F8F7</color>
     <color name="paper_card">#FFFFFF</color>
-    <!-- 접힌 자국 — 구분선보다 넓게 칠하는 면(입력칸 안쪽 등). -->
-    <color name="paper_fold">#F2EBE0</color>
+    <color name="paper_fold">#E8F0EE</color>
 
-    <!-- ============================== 글자 ============================== -->
-    <!-- 순검정 금지. 갈색빛이 도는 부드러운 검정이라 종이 위에서 눈이 덜 아프다.
-         paper 대비 9.9:1. -->
-    <color name="ink">#4A4038</color>
-    <!--
-        보조 설명.
+    <color name="ink">#172522</color>
+    <color name="ink_soft">#52635F</color>
+    <color name="on_accent">#FFFFFF</color>
 
-        기획서의 #8A8079 를 그대로 쓰면 paper 위에서 3.8:1 로, 본문 크기 글자의
-        WCAG AA(4.5:1)에 못 미친다. 이 색이 붙는 자리가 하필 "이 번호는 10분 뒤에
-        만료돼요", "마지막 신호 12분 전" 처럼 **읽혀야만 뜻이 있는 한 줄들**이라
-        어둡게 내렸다. 지금 paper 위 5.6:1, 흰 카드 위 5.7:1, paper_fold 위 4.9:1 —
-        어느 바닥에 놓여도 통과한다. ink(9.9:1)와는 여전히 뚜렷하게 갈려서
-        "본문 / 보조" 위계는 그대로다.
-    -->
-    <color name="ink_soft">#6F645C</color>
-    <!-- 색연필 위에 얹는 글자. 하늘·살구·풀은 다 밝은 색이라 흰 글자가 안 읽힌다
-         (흰 글자는 sky 위에서 2.1:1). ink 를 얹으면 4.8~5.4:1 로 통과한다. -->
-    <color name="on_accent">#4A4038</color>
+    <color name="sky">#287D70</color>
+    <color name="sky_soft">#D8EEE9</color>
+    <color name="apricot">#F2A65A</color>
+    <color name="apricot_soft">#FFF0DF</color>
+    <color name="on_apricot_soft">#4A2B0D</color>
+    <color name="grass">#4EA970</color>
+    <color name="grass_soft">#DDF3E4</color>
+    <color name="berry">#ED7272</color>
+    <color name="berry_soft">#FCE7E7</color>
+    <color name="on_berry">#3D1515</color>
+    <color name="on_berry_soft">#4B1717</color>
+    <color name="berry_ink">#A23E3E</color>
 
-    <!-- ============================ 색연필 넷 ============================ -->
-    <!-- 하늘 — primary. 보호자 화면의 기본 동작. -->
-    <color name="sky">#6FBBE5</color>
-    <color name="sky_soft">#DCF0FA</color>
-    <!-- 살구 — secondary. 아이 쪽 동작과 부드러운 강조. -->
-    <color name="apricot">#FFA96B</color>
-    <color name="apricot_soft">#FFE8D6</color>
-    <!--
-        살구 알약(모드 버튼·하단 탭 선택 표시) 위의 글자·아이콘.
-
-        낮에는 잉크와 같은 값이라 토큰을 따로 둘 이유가 없어 보이지만, 밤에 갈라진다.
-        밤의 살구 컨테이너는 어두운 갈색일 수밖에 없는데(주황을 어둡게 하면 갈색이다)
-        그 위에 흰 글자를 얹으면 버튼 셋이 나란히 흙덩이로 보인다 — 실기기 S20 에서
-        그렇게 나왔다. 밤에는 글자를 살구색으로 되돌려 "이건 살구 버튼"이라고
-        말하게 한다. 색 이름이 갈라지는 자리라 토큰이 필요하다.
-    -->
-    <color name="on_apricot_soft">#4A4038</color>
-
-    <!-- 풀 — tertiary. "잘 있어요". 새싹이의 머리 색이기도 하다. -->
-    <color name="grass">#7DCB88</color>
-    <color name="grass_soft">#E2F5E5</color>
-    <!-- 자두 — error. "문제 있어요"지만 새빨강이 아니다. 이 앱의 경고는 대부분
-         "아이 폰이 대답을 안 해요" 같은 것이라, 피 색으로 겁을 줄 일이 아니다. -->
-    <color name="berry">#F26D8F</color>
-    <color name="berry_soft">#FFE0E8</color>
-    <!--
-        자두 위에 얹는 글자.
-
-        berry 는 밝아서 흰 글자는 2.9:1, ink 도 3.5:1 로 둘 다 본문 기준에 못 미친다.
-        경고 문구가 안 읽히면 그건 경고가 아니므로 자두를 잉크까지 졸인 색을 따로
-        뒀다 — berry 위 4.7:1, berry_soft 위 11:1.
-    -->
-    <color name="on_berry">#3F2831</color>
-    <color name="on_berry_soft">#3F2831</color>
-    <!--
-        **글자로 쓰는 자두.** colorError 가 이 값이다.
-
-        기획의 berry 를 그대로 colorError 에 넣었더니 종이 위에서 2.8:1 밖에 안 됐다.
-        M3 에서 colorError 가 실제로 쓰이는 자리는 면이 아니라 글자·아이콘이다 —
-        "요일을 하나 이상 골라주세요", 규칙 줄의 '삭제'. 그 자리에서 안 읽히면
-        오류 색을 쓴 의미가 없다. 그래서 colorError 는 종이 위 8.2:1 짜리 진한
-        자두로 두고, **면으로 칠하는 밝은 자두가 필요한 곳은 @color/berry 를 직접
-        부른다**(핸드폰 찾기 버튼 하나뿐이다).
-    -->
-    <color name="berry_ink">#8A2B47</color>
-
-    <!-- ============================== 테두리 ============================== -->
-    <!-- 외곽선 버튼의 선. 컨트롤 경계는 3:1 이 필요해서(WCAG 1.4.11) 흔히 쓰는
-         연회색으로는 모자란다 — paper 위 3.4:1 짜리로 골랐다. -->
-    <color name="line">#948880</color>
-    <!-- 장식용 구분선. 읽을 것이 아니라 나누기만 하는 선이라 훨씬 옅어도 된다. -->
-    <color name="line_soft">#E8DFD4</color>
-
-    <!--
-        상태바·내비게이션바 아이콘을 어둡게 그릴지.
-
-        색 파일에 불리언이 있는 게 어색해 보이지만 여기가 맞는 자리다: 이 값이
-        뒤집혀야 하는 조건이 정확히 "바탕이 밝은가"이고, 그 판단이 이 파일 한 장에
-        모여 있다. 따로 values/bools.xml 을 만들면 낮/밤 파일이 넷으로 늘고,
-        테마를 values-night 에 복제하면 스타일 전체가 갈라진다.
-    -->
+    <color name="line">#71827E</color>
+    <color name="line_soft">#D8E3E0</color>
     <bool name="light_system_bars">true</bool>
 
-    <!-- ============================== 새싹이 ============================== -->
-    <!--
-        새싹이 전용 고정색. **values-night 에 넣지 말 것** — 안 넣는 것이 이 색들의
-        존재 이유다.
-
-        처음엔 새싹이도 팔레트 이름(apricot_soft·ink·berry_soft)을 그대로 썼다.
-        밤 모드 실기기에서 보니 얼굴이 배경과 같이 어두워져 눈 둘만 뜬 검은 덩어리가
-        됐다. 팔레트 이름은 "바탕과 글자"의 관계를 담고 있어 낮/밤에 뒤집히는 게
-        맞지만, 새싹이는 바탕도 글자도 아니라 **캐릭터**다. 캐릭터의 얼굴색은 밤이
-        됐다고 바뀌지 않는다.
-
-        값은 낮 팔레트에서 그대로 가져왔고 marker_child.xml 의 리터럴과도 같다 —
-        지도 핀과 큰 판이 같은 아이여야 한다.
-    -->
-    <color name="mascot_face">#FFE8D6</color>
-    <color name="mascot_line">#4A4038</color>
-    <color name="mascot_cheek">#FFE0E8</color>
-    <color name="mascot_leaf">#7DCB88</color>
-    <!--
-        런처 아이콘 뒤판.
-
-        **왜 리터럴인가.** 값은 sky_soft 와 같지만 @color/sky_soft 를 부르지 않았다.
-        런처 아이콘은 앱이 아니라 홈 화면이 그린다 — 앱이 떠 있지 않을 때도 거기
-        있고 앱의 밤 모드를 따라가지도 않는다. 이름을 부르면 values-night 의
-        sky_soft(#2A3B4C, 어두운 남색)로 뒤집힐 여지가 남고, 그러면 밤에 아이콘이
-        어두운 판에 어두운 얼굴이 된다 — 위 mascot_* 들이 생겨난 사고 그대로다.
-
-        **왜 진한 하늘(sky, #6FBBE5)이 아닌가.** 처음엔 지도 핀(marker_child)과 같은
-        진한 하늘로 뒀다. 48dp 로 구워 보니 머리 위 새싹이 사라졌다 — 풀색(#7DCB88)과
-        진한 하늘은 밝기가 거의 같아서(대비 1.1:1) 색은 달라도 작아지면 한 덩어리가
-        된다. 새싹이 없는 새싹이는 그냥 스마일이고, 그러면 아이콘을 그린 이유가
-        없어진다. 옅은 하늘 위에서는 1.7:1 이라 48dp 에서도 잎 둘이 보인다.
-
-        **왜 얼굴색(mascot_face)이 아닌가.** 뒤판이 얼굴과 같으면 실루엣이 통째로
-        사라진다. 실제로 구워 보면 테두리만 뜬 도넛이 된다.
-
-        옅어서 판의 존재감이 약한 것은 얼굴 테두리(mascot_line, 뒤판 대비 8.3:1)가
-        받는다. 흰 벽지에서도 어두운 벽지에서도 확인했다.
-    -->
-    <color name="mascot_bg">#DCF0FA</color>
+    <!-- Fixed brand illustration colors; these intentionally do not change in night mode. -->
+    <color name="mascot_face">#FFD9A8</color>
+    <color name="mascot_line">#173E37</color>
+    <color name="mascot_cheek">#FFB8B8</color>
+    <color name="mascot_leaf">#3B9B73</color>
+    <color name="mascot_bg">#CFEDE7</color>
 </resources>

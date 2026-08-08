@@ -1,57 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    색종이 팔레트 — 밤.
-
-    values/colors.xml 과 **이름이 하나도 어긋나면 안 된다.** 테마·레이아웃·드로어블은
-    전부 이름만 부르므로, 밤 모드는 이 파일 한 장만 갈아 끼우면 끝난다. 반대로
-    여기에 이름 하나가 빠지면 그 자리만 낮 색으로 남아 밤 화면에 흰 조각이 뜬다.
-
-    바탕이 검정이 아니라 깊은 자주빛 남색인 것이 이 팔레트의 밤이다. 검정으로 가면
-    낮의 "따뜻한 종이"와 이어지지 않고 그냥 다른 앱이 된다.
--->
 <resources>
+    <color name="paper">#101917</color>
+    <color name="paper_card">#17231F</color>
+    <color name="paper_fold">#21312D</color>
 
-    <!-- ============================== 바탕 ============================== -->
-    <color name="paper">#221D2B</color>
-    <color name="paper_card">#2E2839</color>
-    <color name="paper_fold">#322C3E</color>
+    <color name="ink">#EFF7F4</color>
+    <color name="ink_soft">#B2C3BE</color>
+    <color name="on_accent">#082E27</color>
 
-    <!-- ============================== 글자 ============================== -->
-    <!-- paper 대비 14.1:1. -->
-    <color name="ink">#F2EDE6</color>
-    <!-- paper 대비 6.5:1, paper_card 위 5.6:1, paper_fold 위 5.3:1 — 낮과 달리
-         기획서 값을 그대로 써도 전부 통과해서 손대지 않았다. -->
-    <color name="ink_soft">#A99FB5</color>
-    <!-- 밤에는 색연필이 더 밝아지므로 그 위에 얹는 글자가 바탕색 쪽으로 뒤집힌다
-         (sky 위 9.5:1, apricot 위 10.0:1, grass 위 9.8:1). -->
-    <color name="on_accent">#221D2B</color>
+    <color name="sky">#68CDBA</color>
+    <color name="sky_soft">#193D35</color>
+    <color name="apricot">#F5B66B</color>
+    <color name="apricot_soft">#3C2B1A</color>
+    <color name="on_apricot_soft">#FFD6A5</color>
+    <color name="grass">#7AD996</color>
+    <color name="grass_soft">#193624</color>
+    <color name="berry">#FF9292</color>
+    <color name="berry_soft">#3D2222</color>
+    <color name="on_berry">#321010</color>
+    <color name="on_berry_soft">#FFD1D1</color>
+    <color name="berry_ink">#FFAAAA</color>
 
-    <!-- ============================ 색연필 넷 ============================ -->
-    <!-- 밝기를 올려 어두운 바닥에서도 색이 남게 한다. *_soft 는 낮과 방향이 반대다 —
-         "옅은 색면"이 아니라 "그 색으로 물든 어두운 면"이어야 밤에 면으로 읽힌다. -->
-    <color name="sky">#8FCDF0</color>
-    <color name="sky_soft">#2A3B4C</color>
-    <color name="apricot">#FFBC86</color>
-    <color name="apricot_soft">#4A3226</color>
-    <!-- 살구 알약 위 글자. 낮의 잉크색 대신 살구로 되돌린다(values/colors.xml 주석). -->
-    <color name="on_apricot_soft">#FFD3AE</color>
-    <color name="grass">#93D89D</color>
-    <color name="grass_soft">#29392E</color>
-    <color name="berry">#F98CA8</color>
-    <color name="berry_soft">#4A2634</color>
-    <!-- berry 위 7.3:1. -->
-    <color name="on_berry">#221D2B</color>
-    <!-- berry_soft 가 어두운 면이 됐으므로 그 위 글자는 낮과 반대로 밝아진다
-         (11.1:1). 낮에는 두 값이 같았지만 밤에는 반드시 갈라져야 한다. -->
-    <color name="on_berry_soft">#F2EDE6</color>
-    <!-- 밤에는 "진하게 졸인 자두"가 성립하지 않는다(어두운 바닥에 어두운 글자).
-         밝은 자두 그대로가 곧 읽히는 글자색이다 — paper 위 7.3:1. -->
-    <color name="berry_ink">#F98CA8</color>
-
-    <!-- ============================== 테두리 ============================== -->
-    <!-- paper 대비 3.6:1 — 낮과 같은 기준(컨트롤 경계 3:1)으로 골랐다. -->
-    <color name="line">#7C7189</color>
-    <color name="line_soft">#3D3648</color>
-
+    <color name="line">#8CA09B</color>
+    <color name="line_soft">#2D423C</color>
     <bool name="light_system_bars">false</bool>
 </resources>

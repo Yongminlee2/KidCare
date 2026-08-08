@@ -27,7 +27,7 @@ class LocationCollector(private val context: Context) {
 
     private val client = LocationServices.getFusedLocationProviderClient(context)
     private var callback: LocationCallback? = null
-    private var onFixCallback: ((Fix) -> Unit)? = null
+    private var onFixCallback: ((Fix, Boolean) -> Unit)? = null
 
     // 활동 인식이 아직 아무것도 알려주지 않았을 때의 기본값. true(이동)로 두는 이유는
     // 둘이다 — 서비스가 막 켜졌을 때 첫 위치를 늦지 않게 잡아야 하고, 이미 가만히
@@ -41,7 +41,7 @@ class LocationCollector(private val context: Context) {
      * 여기 도달했다는 것은 그 확인을 통과했다는 뜻이다.
      */
     @SuppressLint("MissingPermission")
-    fun start(onFix: (Fix) -> Unit) {
+    fun start(onFix: (Fix, Boolean) -> Unit) {
         onFixCallback = onFix
         requestUpdates()
     }
@@ -72,22 +72,19 @@ class LocationCollector(private val context: Context) {
         //
         // 배터리는 우선순위 플래그보다 **깨어나는 빈도**가 지배한다. 정지 주기 5분은
         // 그대로 두므로 GPS 는 5분에 한 번 짧게 잡고 그 사이에는 무선을 재운다 —
-        // 이동(30초)과 비교하면 같은 HIGH_ACCURACY 라도 duty cycle 이 1/10 이다.
+        // 이동(5초)과 비교하면 같은 HIGH_ACCURACY 라도 깨우는 횟수가 1/60이다.
         // 실기기에서 하루 소모를 재 보고 그래도 과하면 사용자용 "배터리 아끼기"
         // 토글을 다는 것이 다음 수순이다(docs/known-issues.md).
         val builder = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, interval)
-            .setMinUpdateIntervalMillis(interval / 2)
+            .setMinUpdateIntervalMillis(interval)
 
         if (moving) {
             // 이동 상태인데 실제로는 가만히 있는 폰(활동 인식 권한이 없어 moving 이
-            // true 로 굳은 경우가 대표적이다)을 30초마다 깨우지 않으려는 것이다.
+            // true 로 굳은 경우가 대표적이다)을 5초마다 깨우지 않으려는 것이다.
             //
-            // 20m 인 이유는 LocationFilter.MIN_MOVE_METERS(25m)를 **넘지 않기 위해서**다.
-            // 이 값이 25m 이상이면 무선 계층이 LocationFilter 가 올렸을 fix 를 먼저
-            // 삼켜버려, "얼마나 움직여야 올리는가"를 정하는 곳이 두 군데로 갈린다 —
-            // 그 판단은 단위테스트로 고정된 LocationFilter 한 곳에만 있어야 한다.
-            // 20m 는 좋은 fix 의 흔들림(보통 3~8m)보다는 위라, 진짜로 멈춰 있는 폰의
-            // 잡음성 깨우기는 걸러진다.
+            // 3m는 보행 5초(보통 5~8m)를 삼키지 않으면서 아주 작은 좌표 흔들림은
+            // 무선 계층에서 먼저 줄이는 값이다. 최종 기록 여부는 정확도 반경과 속도를
+            // 함께 보는 MovementTrailFilter가 결정한다.
             //
             // 대가가 있다: 완전히 멈춘 폰은 콜백 자체가 안 와서 LocationFilter 의
             // 하트비트(10분)가 탈 fix 가 없어질 수 있다. 그래서 **정지 요청에는
@@ -103,7 +100,7 @@ class LocationCollector(private val context: Context) {
         val cb = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 val loc = result.lastLocation ?: return
-                onFix(Fix(loc.latitude, loc.longitude, loc.accuracy, loc.time, loc.speed))
+                onFix(Fix(loc.latitude, loc.longitude, loc.accuracy, loc.time, loc.speed), moving)
             }
         }
         callback = cb
@@ -135,17 +132,17 @@ class LocationCollector(private val context: Context) {
         const val TAG = "LocationCollector"
 
         /**
-         * 이동 중 주기. 60초에서 30초로 줄였다(2026-08-07).
+         * 이동 중에는 모퉁이를 놓치지 않도록 5초마다 후보 위치를 받는다.
          *
          * 60초 × MIN_MOVE_METERS 50m 조합은 걸을 때 점이 약 70m 마다 하나라 경로선이
          * 모퉁이를 잘라먹었고, 차 안에서는 1km 에 한 점이었다. 설계서 §4.1 참고.
          */
-        const val MOVING_INTERVAL_MILLIS = 30_000L
+        const val MOVING_INTERVAL_MILLIS = 5_000L
 
         /** 정지 중 주기. 설계서 §4.1 */
         const val STILL_INTERVAL_MILLIS = 5 * 60_000L
 
         /** 이동 요청에만 거는 최소 이동 거리. 값의 근거는 requestUpdates() 주석. */
-        const val MOVING_MIN_UPDATE_DISTANCE_METERS = 20f
+        const val MOVING_MIN_UPDATE_DISTANCE_METERS = 3f
     }
 }

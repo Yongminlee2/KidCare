@@ -15,6 +15,7 @@
     일정한 원이 줄마다 같은 자리에 서면 목록이 세로로 정렬돼 하루 흐름이 잡힌다.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
@@ -23,13 +24,15 @@
     android:paddingHorizontal="16dp"
     android:paddingVertical="10dp">
 
-    <TextView
+    <ImageView
         android:id="@+id/icon_text"
         android:layout_width="42dp"
         android:layout_height="42dp"
-        android:background="@drawable/bg_sticker"
-        android:gravity="center"
-        android:textSize="20sp" />
+        android:background="@drawable/bg_icon_soft"
+        android:importantForAccessibility="no"
+        android:padding="10dp"
+        android:src="@drawable/ic_tab_place"
+        app:tint="@color/sky" />
 
     <LinearLayout
         android:layout_width="0dp"

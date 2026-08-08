@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
     android:orientation="vertical">
 
     <FrameLayout
@@ -50,6 +51,14 @@
                 android:paddingEnd="10dp"
                 android:paddingVertical="10dp">
 
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_marginEnd="10dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_battery"
+                    app:tint="@color/sky" />
+
                 <TextView
                     android:id="@+id/status_bar"
                     android:layout_width="0dp"
@@ -84,63 +93,101 @@
          가르는 자리라 종이색을 깔고 아래에 선을 하나 긋는다. 안 그러면 목록 첫 줄이
          지도에 매달린 것처럼 보인다. -->
     <LinearLayout
+        android:id="@+id/timeline_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorSurface"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="4dp"
-        android:paddingVertical="4dp">
+        android:elevation="8dp"
+        android:orientation="vertical">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/prev_day_button"
-            style="@style/Widget.KidCare.Button.Text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/day_prev" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="4dp">
 
-        <TextView
-            android:id="@+id/day_header"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/prev_day_button"
+                style="@style/Widget.KidCare.Button.Text"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@string/day_prev"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minWidth="0dp"
+                android:text=""
+                app:icon="@drawable/ic_chevron_left"
+                app:iconPadding="0dp"
+                app:iconTint="?attr/colorOnSurfaceVariant" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/next_day_button"
-            style="@style/Widget.KidCare.Button.Text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/day_next" />
+            <TextView
+                android:id="@+id/day_header"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/next_day_button"
+                style="@style/Widget.KidCare.Button.Text"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@string/day_next"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minWidth="0dp"
+                android:text=""
+                app:icon="@drawable/ic_chevron_right"
+                app:iconPadding="0dp"
+                app:iconTint="?attr/colorOnSurfaceVariant" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/timeline_toggle_button"
+                style="@style/Widget.KidCare.Button.Text"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@string/timeline_expand"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minWidth="0dp"
+                android:text=""
+                app:icon="@drawable/ic_expand_more"
+                app:iconPadding="0dp"
+                app:iconTint="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/timeline_content"
+            android:layout_width="match_parent"
+            android:layout_height="240dp"
+            android:visibility="gone">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?attr/colorOutlineVariant" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/timeline_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingTop="4dp"
+                android:paddingBottom="8dp" />
+
+            <TextView
+                android:id="@+id/timeline_empty"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:padding="24dp"
+                android:text="@string/timeline_empty"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
+        </FrameLayout>
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?attr/colorOutlineVariant" />
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/timeline_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingBottom="8dp" />
-
-        <TextView
-            android:id="@+id/timeline_empty"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:padding="24dp"
-            android:text="@string/timeline_empty"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:visibility="gone" />
-    </FrameLayout>
 </LinearLayout>

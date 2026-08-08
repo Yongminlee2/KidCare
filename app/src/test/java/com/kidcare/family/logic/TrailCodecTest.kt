@@ -53,13 +53,27 @@ class TrailCodecTest {
     }
 
     @Test
-    fun `상한을 넘으면 오래된 쪽을 버리고 최근 것만 남긴다`() {
+    fun `상한을 넘으면 출발과 도착을 남기고 하루 전체에서 고른다`() {
         val points = (1..TrailCodec.MAX_POINTS + 500).map { fix(it.toLong()) }
         val capped = TrailCodec.capped(points)
         assertEquals(TrailCodec.MAX_POINTS, capped.size)
-        // 가장 최근 점(=지금 어디 있냐에 대한 답)은 반드시 남아야 한다.
+        assertEquals(points.first(), capped.first())
         assertEquals(points.last(), capped.last())
-        assertEquals(501L, capped.first().at)
+        assertTrue(capped.zipWithNext().all { (a, b) -> a.at < b.at })
+    }
+
+    @Test
+    fun `상한을 넘겨도 경로의 큰 회전점은 남긴다`() {
+        val cornerIndex = TrailCodec.MAX_POINTS / 2
+        val points = (0..TrailCodec.MAX_POINTS + 500).map { index ->
+            fix(
+                at = index.toLong(),
+                lat = if (index == cornerIndex) 37.9 else 37.5665,
+                lng = 126.9780 + index * 0.000001,
+            )
+        }
+        val capped = TrailCodec.capped(points)
+        assertTrue(capped.contains(points[cornerIndex]))
     }
 
     @Test
@@ -69,9 +83,8 @@ class TrailCodecTest {
     }
 
     @Test
-    fun `상한이 정상 하루치보다 넉넉하다`() {
-        // 정상적인 하루는 약 520점이다. 상한이 그보다 작으면 멀쩡한 날의 기록이
-        // 매일 잘려 나간다 — 이 테스트가 그런 값 변경을 막는다.
-        assertTrue(TrailCodec.MAX_POINTS >= 1000)
+    fun `서버 경로 상한은 이천 점이다`() {
+        // 이보다 키우는 것은 Firestore 문서 크기 측정 없이 해서는 안 된다.
+        assertEquals(2_000, TrailCodec.MAX_POINTS)
     }
 }

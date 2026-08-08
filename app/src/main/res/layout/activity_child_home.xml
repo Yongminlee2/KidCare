@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    아이가 보는 화면. 이 앱에서 디자인이 가장 많은 일을 하는 자리다.
-
-    아이는 이 앱을 지우고 싶어할 수도 있는 나이다. 화면에 상태 문구만 있으면 그건
-    감시 프로그램의 상태창이고, 아이는 그렇게 읽는다. 그래서 화면의 절반을 새싹이에게
-    준다 — 문구는 하나도 숨기지 않되(무엇을 하는 앱인지 아이가 알아야 한다는 원칙은
-    ChildHomeActivity 주석 참고) 그 사실을 전하는 목소리를 바꾸는 것이다.
-
-    ScrollView 로 감싼 이유: 큰 글꼴 설정에서 마스코트 200dp + 제목 + 설명 + 버튼이
-    작은 화면 세로를 넘어선다. 그때 잘리는 것이 하필 '권한 켜러 가기' 버튼이라
-    아이가 고칠 방법을 잃는다.
--->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
@@ -20,54 +9,84 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:minHeight="520dp"
         android:orientation="vertical"
-        android:gravity="center"
-        android:minHeight="400dp"
-        android:padding="32dp">
-
-        <ImageView
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/ic_mascot" />
-
-        <!-- id 가 필요해진 이유: 가족에서 빠지면 이 큰 글씨가 그대로 "이어져 있어요"라고
-             말하는데, 바로 아래 줄은 "연결이 풀렸어요"라고 말한다. 한 화면의 두 줄이
-             서로를 부정하면 아이는 둘 다 안 믿는다(같은 실패를 known-issues 7번에서
-             한 번 겪었다). ChildHomeActivity 가 상황에 맞는 쪽으로 갈아 끼운다. -->
-        <TextView
-            android:id="@+id/home_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:gravity="center"
-            android:text="@string/child_home_title"
-            android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="28dp">
 
         <TextView
-            android:id="@+id/child_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_icon_soft"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.12"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="7dp"
+            android:text="@string/app_brand_short"
+            android:textColor="@color/sky"
+            android:textSize="12sp" />
+
+        <Space
+            android:layout_width="1dp"
+            android:layout_height="64dp" />
+
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLowest"
+            app:shapeAppearance="@style/ShapeAppearance.KidCare.ExtraLarge"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
 
-        <!-- 이 화면이 "지금 뭔가 안 되고 있다"고 말할 때마다 바로 아래에서 다음 행동을
-             대는 버튼. 글자와 동작은 ChildHomeActivity 가 상황마다 갈아 끼운다
-             (권한 켜러 가기 / Google Play 서비스 고치기 / 다시 연결하기).
-             평소엔 안 보인다.
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingHorizontal="24dp"
+                android:paddingTop="28dp"
+                android:paddingBottom="24dp">
 
-             셋을 각각 버튼으로 두지 않는 이유: 한 번에 하나만 뜨는 상태들이라 버튼이
-             셋이면 아무 일도 안 하는 버튼 둘이 늘 함께 보인다. 아이 화면에서 그건
-             "뭘 눌러야 하는지 모르겠다"와 같은 말이다. -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/action_button"
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:layout_marginTop="24dp"
-            android:visibility="gone"
-            android:text="@string/child_go_to_permission"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+                <ImageView
+                    android:layout_width="156dp"
+                    android:layout_height="156dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_mascot" />
+
+                <TextView
+                    android:id="@+id/home_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:gravity="center"
+                    android:text="@string/child_home_title"
+                    android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+
+                <TextView
+                    android:id="@+id/child_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/action_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:layout_marginTop="22dp"
+                    android:text="@string/child_go_to_permission"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <Space
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
     </LinearLayout>
 </ScrollView>

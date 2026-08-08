@@ -8,6 +8,7 @@ import com.kidcare.family.core.model.TrailDoc
 import com.kidcare.family.core.model.TrailPoint
 import com.kidcare.family.logic.DayPicker
 import com.kidcare.family.logic.Fix
+import com.kidcare.family.logic.MovementTrailFilter
 import com.kidcare.family.logic.SegmentBuilder
 import com.kidcare.family.logic.SegmentType
 import com.kidcare.family.logic.TrailCodec
@@ -79,11 +80,11 @@ class TrailUploader(
     /**
      * 위치 한 점을 쌓는다. **Firestore 에는 아무것도 안 나간다.**
      *
-     * [TrackingService] 는 `LocationFilter.decide()` 가 승인한 점만 여기로 넘긴다 —
-     * 거절된 점을 넣으면 버퍼가 쓸데없이 커지고 구간 계산도 흔들린다.
+     * [TrackingService] 는 `MovementTrailFilter.shouldRecord()`가 이동으로 인정한 점만
+     * 여기로 넘긴다. 정지 상태와 GPS 오차 반경 안의 흔들림은 파일에 들어오지 않는다.
      *
      * 파일 덧붙이기를 코루틴으로 빼지 않고 부른 스레드에서 그대로 한다. 50바이트
-     * 한 줄을 30초에 한 번 붙이는 일이라 메인 스레드에서도 1ms 아래이고, 무엇보다
+     * 한 줄을 이동 중 5초에 한 번 붙이는 일이라 메인 스레드에서도 1ms 아래이고, 무엇보다
      * [buffer] 를 만지는 스레드가 하나로 유지되어 별도 잠금이 필요 없어진다.
      */
     fun onCollected(fix: Fix) {
@@ -121,10 +122,15 @@ class TrailUploader(
             Log.d(TAG, "업로드 생략: 오늘 확보한 점이 하나도 없다")
             return
         }
-        // 상한을 넘으면 오래된 쪽을 버린다(TrailCodec.MAX_POINTS 주석 — 문서 1MB
-        // 상한을 넘겨 그 날 기록이 통째로 안 올라가는 일을 막는 안전장치다).
-        val points = TrailCodec.capped(buffer.toList())
-        val segments = buildSegments(points)
+        // 상한을 넘으면 하루 전체의 경로 모양을 보존해 대표점을 고른다
+        // (TrailCodec.MAX_POINTS 주석 — 문서 1MB 상한을 넘겨 그 날 기록이 통째로
+        // 안 올라가는 일을 막는 안전장치다).
+        val rawPoints = buffer.toList()
+        val points = TrailCodec.capped(rawPoints)
+        // 화면의 경로선은 대표점으로도 충분하지만, 머무름 구간은 같은 장소에 있던
+        // 두 점 사이의 시간 차이가 중요하다. 서버 상한에 맞춘 뒤 계산하면 그 경계점이
+        // 빠질 수 있으므로 구간 요약은 아이 폰에 있는 원본 전체로 만든다.
+        val segments = buildSegments(rawPoints)
         TrailRepository.save(
             familyId, childUid,
             TrailDoc(

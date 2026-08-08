@@ -10,6 +10,7 @@
     fitsSystemWindows 이유는 activity_router.xml 주석 참고.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -44,16 +45,24 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/guardian_button"
         android:layout_width="match_parent"
-        android:layout_height="72dp"
+        android:layout_height="64dp"
         android:layout_marginBottom="12dp"
         android:text="@string/role_guardian"
-        android:textAppearance="?attr/textAppearanceTitleMedium" />
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        app:icon="@drawable/ic_guardian"
+        app:iconGravity="textStart"
+        app:iconPadding="10dp"
+        app:iconSize="24dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/child_button"
         style="@style/Widget.KidCare.Button.Tonal"
         android:layout_width="match_parent"
-        android:layout_height="72dp"
+        android:layout_height="64dp"
         android:text="@string/role_child"
-        android:textAppearance="?attr/textAppearanceTitleMedium" />
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        app:icon="@drawable/ic_child"
+        app:iconGravity="textStart"
+        app:iconPadding="10dp"
+        app:iconSize="24dp" />
 </LinearLayout>

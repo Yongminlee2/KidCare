@@ -32,6 +32,7 @@ import com.kidcare.family.core.model.CommandType
 import com.kidcare.family.logic.Decision
 import com.kidcare.family.logic.Fix
 import com.kidcare.family.logic.LocationFilter
+import com.kidcare.family.logic.MovementTrailFilter
 import com.kidcare.family.onboarding.PermissionStep
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -53,6 +54,9 @@ class TrackingService : LifecycleService() {
      * 이름이 거짓이 됐다. LocationFilter.decide 의 "직전 점" 역할은 그대로다.
      */
     private var lastFix: Fix? = null
+
+    /** 상태 보고용 25m 필터와 별개로, 이동 경로 파일에 마지막으로 남긴 5초 점. */
+    private var lastTrailFix: Fix? = null
 
     private val trailUploader by lazy { TrailUploader(this) }
 
@@ -171,9 +175,9 @@ class TrackingService : LifecycleService() {
     private fun registerActivityTransitions() {
         if (!PermissionStep.ACTIVITY_RECOGNITION.isGranted(this)) {
             // 권한이 없으면 등록 자체를 건너뛴다. LocationCollector 는 moving=true 로
-            // 시작해 그대로 유지되므로 30초 주기가 계속된다 — 배터리보다 위치
+            // 시작해 그대로 유지되므로 5초 주기가 계속된다 — 배터리보다 위치
             // 신뢰성이 먼저다.
-            Log.i(TAG, "활동 인식 권한 없음 — 이동(30초) 고정으로 계속 동작")
+            Log.i(TAG, "활동 인식 권한 없음 — 이동(5초) 고정으로 계속 동작")
             return
         }
         val request = ActivityTransitionRequest(
@@ -275,7 +279,7 @@ class TrackingService : LifecycleService() {
         // onDestroy 에서 반드시 null 로 되돌린다.
         activePlaceHook = { fix -> evaluatePlaces(familyId, fix) }
 
-        collector.start { fix -> handle(familyId, fix) }
+        collector.start { fix, moving -> handle(familyId, fix, moving) }
         return START_STICKY
     }
 
@@ -329,7 +333,7 @@ class TrackingService : LifecycleService() {
      * **부르는 곳이 둘이고, 둘이 서로의 사각을 덮는다.**
      * - [onStartCommand]: 서비스가 (재)시작될 때마다. 권한 취소로 프로세스가 죽었다
      *   살아난 직후가 여기다 — 위치 권한이 꺼진 경우 이것 말고는 기회가 없다.
-     * - [handle]: 위치 점이 들어올 때마다(이동 30초·정지 5분). 서비스가 계속 살아 있는
+     * - [handle]: 위치 점이 들어올 때마다(이동 5초·정지 5분). 서비스가 계속 살아 있는
      *   동안 꺼지는 권한(방해 금지 접근은 런타임 권한이 아니라 프로세스도 안 죽는다)과
      *   서서히 닳는 배터리는 이쪽이 잡는다.
      *
@@ -410,7 +414,7 @@ class TrackingService : LifecycleService() {
         )
     }
 
-    private fun handle(familyId: String, fix: Fix) {
+    private fun handle(familyId: String, fix: Fix, moving: Boolean) {
         // 이 fix 를 받아들일지와 무관하게 먼저 한다(5단계 Task 7). 아래 판정에서 걸러지는
         // 점(너무 가깝다·오차가 크다)이라도 "이 폰이 아직 살아 있고 지금 배터리와 권한이
         // 이렇다"는 사실은 똑같이 유효하다. 판정 안쪽으로 넣으면 신호가 나쁜 날에는 배터리
@@ -422,10 +426,10 @@ class TrackingService : LifecycleService() {
         // 전환이 다시 올 수 없어 아이가 실제로 움직이기 시작해도 5분 주기에 영원히
         // 갇힌다 — "정지 5분은 진짜 정지 전환이 있을 때만"이라는 규칙이 깨진다.
         // fix 는 정지 중에도 최소 5분마다 한 번은 여기를 지나가므로, 매 fix 마다
-        // 확인하면 늦어도 한 주기 안에 감지한다. 되돌릴 값은 5분이 아니라 30초다 —
+        // 확인하면 늦어도 한 주기 안에 감지한다. 되돌릴 값은 5분이 아니라 5초다 —
         // 위치 신뢰성이 배터리보다 먼저다.
         if (transitionsRegistered && !PermissionStep.ACTIVITY_RECOGNITION.isGranted(this)) {
-            Log.w(TAG, "활동 인식 권한이 도중에 취소됨 — 구독 해제하고 이동(30초)으로 되돌림")
+            Log.w(TAG, "활동 인식 권한이 도중에 취소됨 — 구독 해제하고 이동(5초)으로 되돌림")
             unregisterActivityTransitions()
             collector.onMovingChanged(true)
         }
@@ -441,6 +445,15 @@ class TrackingService : LifecycleService() {
         if (previous != null && fix.at < previous.at) {
             Log.w(TAG, "시계가 거꾸로 감: lastFix.at=${previous.at} > fix.at=${fix.at} — lastFix 초기화")
             lastFix = null
+            lastTrailFix = null
+        }
+
+        // 경로 기록은 상태 보고의 25m/10분 필터보다 먼저, 별개로 판단한다. 그래야
+        // 보행 중 5초 점이 SKIP_TOO_CLOSE로 사라지지 않는다. 정지 상태·오차 반경 안의
+        // 흔들림·비현실적 순간이동은 MovementTrailFilter가 제외한다.
+        if (MovementTrailFilter.shouldRecord(lastTrailFix, fix, moving)) {
+            trailUploader.onCollected(fix)
+            lastTrailFix = fix
         }
 
         val decision = LocationFilter.decide(lastFix, fix)
@@ -487,7 +500,6 @@ class TrackingService : LifecycleService() {
         // 문서 생성 한 번을 했고, 그게 하루 약 1,040번이 되어 무료 한도를 55배
         // 넘겼다(docs/known-issues.md 12번).
         lastFix = fix
-        trailUploader.onCollected(fix)
 
         // 하루 한 번 안전 업로드. 부모가 하루 종일 앱을 안 열어도 그날 기록이 서버에
         // 한 번은 남아야 한다 — 아이 폰을 잃어버리거나 망가뜨리면 폰 안의 파일은

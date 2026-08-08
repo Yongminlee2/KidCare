@@ -7,37 +7,70 @@
     받을지 정하는 화면이어야, 켜 둔 사실과 그 대가를 잊지 않는다.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- 상시 수신 스위치와 그 대가. saveEnabled=false 인 이유는 fragment_place.xml 의
-         스위치들과 같다 — 켜짐/꺼짐의 정답은 저장된 값이고 뷰는 그걸 비추기만 한다.
-         뷰가 스스로 상태를 복원하면 서비스가 실제로 도는지와 어긋난다. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurfaceVariant"
         android:orientation="vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="10dp">
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/service_switch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="52dp"
-            android:saveEnabled="false"
-            android:text="@string/alert_service_switch"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="12dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/alert_service_hint"
-            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:text="@string/alert_header_title"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/alert_header_subtitle"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
+
+    <!-- 상시 수신 스위치와 그 대가. saveEnabled=false 인 이유는 fragment_place.xml 의
+         스위치들과 같다 — 켜짐/꺼짐의 정답은 저장된 값이고 뷰는 그걸 비추기만 한다.
+         뷰가 스스로 상태를 복원하면 서비스가 실제로 도는지와 어긋난다. -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="8dp"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+        app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium"
+        app:strokeWidth="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp">
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/service_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="52dp"
+                android:saveEnabled="false"
+                android:text="@string/alert_service_switch"
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/alert_service_hint"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- 오류·안내 한 줄. 평소에는 GONE. -->
     <TextView
@@ -59,7 +92,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingVertical="4dp" />
+            android:paddingTop="4dp"
+            android:paddingBottom="12dp" />
 
         <!-- 빈 목록을 그냥 비워두면 부모는 "고장인가"를 먼저 의심한다. 알림이 없다는
              사실과, 알림이 생기려면 무엇을 해야 하는지를 함께 적는다. -->

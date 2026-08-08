@@ -1,57 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    테마 아이콘(안드로이드 13+)의 단색 판.
-
-    ## 왜 앞판을 재활용하지 못하는가
-
-    런처는 이 그림의 **알파만** 쓰고 색은 제 테마색 하나로 덮어버린다. 그래서
-    ic_launcher_foreground 를 그대로 넣으면 얼굴 면·볼·눈·웃음이 전부 같은 색이 되어
-    눈코입 없는 동그란 덩어리가 나온다. 색이 아니라 **빈 곳**으로 얼굴을 그려야 한다.
-
-    - 얼굴을 면이 아니라 **테두리 고리**로 그렸다. 고리 안쪽이 비어 있으므로 그 위의
-      눈·웃음이 다시 보인다. 대신 고리가 얇으면 사라지므로 앞판(4)보다 굵은 5 다.
-    - 줄기를 y=40 에서 끊었다. 고리 안쪽이 비어 있어서 앞판처럼 43 까지 내리면
-      머리 속을 가르는 금 하나가 된다. 40 이면 끝이 고리 띠(37.5~42.5) 안에 묻힌다.
-    - 볼은 없다. 앞판에서 뺀 이유(48dp 에서 얼룩)에 더해, 단색에서는 눈과 구분되지
-      않아 점이 넷인 얼굴이 된다.
-
-    좌표와 안전 원 계산은 ic_launcher_foreground.xml 주석과 같다. 색(#000000)은
-    런처가 덮어쓰므로 아무 의미가 없다 — 그래서 mascot_* 를 부르지 않는다.
-    부르면 "이 색이 쓰인다"고 읽히는데 사실이 아니다.
--->
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-
-    <path
-        android:pathData="M54,40 L54,27"
-        android:strokeColor="#000000"
-        android:strokeWidth="5.5"
-        android:strokeLineCap="round" />
-    <path
-        android:pathData="M52,38 C45,38 38,34 38,30 C45,30 52,34 52,38 Z"
-        android:fillColor="#000000" />
-    <path
-        android:pathData="M56,34 C62,34 68,30 68,27 C62,27 56,30 56,34 Z"
-        android:fillColor="#000000" />
-
-    <path
-        android:pathData="M33,61 a21,21 0 1,0 42,0 a21,21 0 1,0 -42,0 Z"
-        android:strokeColor="#000000"
-        android:strokeWidth="5" />
-
-    <path
-        android:pathData="M41.5,58 a4.5,4.5 0 1,0 9,0 a4.5,4.5 0 1,0 -9,0 Z"
-        android:fillColor="#000000" />
-    <path
-        android:pathData="M57.5,58 a4.5,4.5 0 1,0 9,0 a4.5,4.5 0 1,0 -9,0 Z"
-        android:fillColor="#000000" />
-
-    <path
-        android:pathData="M46.5,68 Q54,74 61.5,68"
-        android:strokeColor="#000000"
-        android:strokeWidth="3.6"
-        android:strokeLineCap="round" />
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#000000" android:fillType="evenOdd" android:pathData="M54,18 C36.33,18 24,31.29 24,48 C24,69 54,90 54,90 C54,90 84,69 84,48 C84,31.29 71.67,18 54,18 Z M54,28 C65.05,28 74,36.95 74,48 C74,59.05 65.05,68 54,68 C42.95,68 34,59.05 34,48 C34,36.95 42.95,28 54,28 Z" />
+    <path android:fillColor="#000000" android:pathData="M54,58 C52.5,56.4 44,50.5 44,44.2 C44,40.8 46.7,38.2 50.1,38.2 C52,38.2 53.7,39.1 54.8,40.6 C55.9,39.1 57.6,38.2 59.5,38.2 C62.9,38.2 65.6,40.8 65.6,44.2 C65.6,50.5 57,56.4 54,58 Z" />
+    <path android:fillColor="#000000" android:pathData="M52,23 C44,23 39,18 39,12 C47,12 52,17 52,23 Z M56,21 C63,21 68,16 68,11 C61,11 56,16 56,21 Z" />
 </vector>
