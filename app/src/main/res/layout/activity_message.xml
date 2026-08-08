@@ -29,7 +29,7 @@
             android:layout_height="120dp"
             android:layout_marginBottom="16dp"
             android:importantForAccessibility="no"
-            android:src="@drawable/ic_mascot" />
+            android:src="@drawable/mascot_3d" />
 
         <TextView
             android:layout_width="wrap_content"
