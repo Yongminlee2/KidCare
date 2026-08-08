@@ -46,8 +46,14 @@
     <string name="perm_denied_permanently">방금 거부돼서 이 화면에서는 다시 물어볼 수 없어요. \'설정에서 켜기\'를 누르면 앱 설정으로 가요. 거기서 권한을 켜주세요.</string>
     <string name="perm_open_settings">설정에서 켜기</string>
 
-    <string name="child_home_title">위치 공유 중</string>
-    <string name="child_sharing_on">지금 내 위치가 부모님께 공유되고 있어요.</string>
+    <!-- 아이 홈 화면의 두 줄. 사실은 하나도 안 바꿨고 말투만 바꿨다.
+         "위치 공유 중"은 시스템이 사람에게 통보하는 말투다 — 아이가 자기 폰에서
+         매일 보는 첫 문장이 그것이면 이 앱은 아이 편이 아니라 아이를 지켜보는 쪽의
+         물건이 된다. 그렇다고 무슨 앱인지 흐리면 안 된다(ChildHomeActivity 주석의
+         원칙: 몰래 감시하지 않는다). 그래서 하는 일은 그대로 다 적고, 왜 하는지를
+         한 줄 덧붙였다. 친근함은 글자가 아니라 새싹이가 나른다. -->
+    <string name="child_home_title">엄마 아빠랑 이어져 있어요</string>
+    <string name="child_sharing_on">지금 내가 어디 있는지 엄마 아빠가 볼 수 있어요.\n길을 잃어도 금방 찾아올 수 있게요.</string>
     <string name="child_permission_missing">%1$s 이(가) 꺼져 있어요.\n켜야 위치가 전달됩니다.</string>
     <string name="child_go_to_permission">권한 켜러 가기</string>
 

@@ -1,59 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 규칙 한 줄. 왼쪽 글자 뭉치를 누르면 고치기, 스위치는 켬/끔, 오른쪽 끝은 삭제다.
      세 동작이 한 줄에 있으므로 누르는 자리를 겹치지 않게 나눴다 — 글자 뭉치만
-     클릭 가능하게 두고 줄 전체에는 클릭을 걸지 않는다. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     클릭 가능하게 두고 줄 전체에는 클릭을 걸지 않는다.
+
+     카드로 감싼 이유: 한 줄에 누를 곳이 셋이라 줄과 줄의 경계가 안 보이면 옆 규칙의
+     삭제 버튼을 누르기 쉽다. 흰 종이 한 장씩 떼어 놓으면 "이 규칙"의 범위가 눈에
+     보인다. 색종이 방향과도 맞는다 — 규칙 하나가 색종이 한 장이다. -->
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:baselineAligned="false"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingHorizontal="12dp"
-    android:paddingVertical="4dp">
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="5dp">
 
     <LinearLayout
-        android:id="@+id/row_body"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:minHeight="48dp"
-        android:orientation="vertical"
-        android:paddingHorizontal="4dp"
-        android:paddingVertical="8dp">
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="4dp"
+        android:paddingVertical="6dp">
 
-        <TextView
-            android:id="@+id/title_text"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:id="@+id/row_body"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceBodyLarge" />
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="48dp"
+            android:orientation="vertical"
+            android:paddingHorizontal="4dp"
+            android:paddingVertical="8dp">
 
-        <TextView
-            android:id="@+id/detail_text"
-            android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/title_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+            <TextView
+                android:id="@+id/detail_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/enabled_switch"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceBodySmall" />
+            android:layout_marginStart="8dp"
+            android:minHeight="48dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/delete_button"
+            style="@style/Widget.KidCare.Button.Text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:insetLeft="0dp"
+            android:insetRight="0dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="8dp"
+            android:text="@string/schedule_delete"
+            android:textColor="?attr/colorError"
+            app:iconPadding="0dp" />
     </LinearLayout>
-
-    <com.google.android.material.materialswitch.MaterialSwitch
-        android:id="@+id/enabled_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:minHeight="48dp" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/delete_button"
-        style="@style/Widget.Material3.Button.TextButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:insetLeft="0dp"
-        android:insetRight="0dp"
-        android:minWidth="0dp"
-        android:paddingHorizontal="8dp"
-        android:text="@string/schedule_delete"
-        app:iconPadding="0dp" />
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

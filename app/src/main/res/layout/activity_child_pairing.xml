@@ -1,10 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    아이 페어링. 아이가 숫자를 옮겨 적는 화면이라 입력칸 하나가 주인공이다.
+
+    입력칸은 테마의 외곽선 방식(Widget.KidCare.TextField)을 그대로 받는다 —
+    바꾼 이유(힌트 글자 대비)는 themes.xml 에 적어뒀다.
+
+    오류 줄은 자두빛 면 위에 놓는다. 글자 색만 바꾸면 큰 글씨 화면에서 다른 회색
+    설명들과 섞여서 "왜 연결이 안 되는지"가 눈에 안 들어온다.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="32dp">
+    android:padding="32dp"
+    android:fitsSystemWindows="true">
+
+    <ImageView
+        android:layout_width="104dp"
+        android:layout_height="104dp"
+        android:layout_marginBottom="16dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_mascot" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -12,7 +29,7 @@
         android:layout_marginBottom="24dp"
         android:gravity="center"
         android:text="@string/pairing_child_title"
-        android:textAppearance="?attr/textAppearanceTitleMedium" />
+        android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
@@ -22,10 +39,12 @@
             android:id="@+id/code_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:hint="@string/pairing_child_hint"
             android:inputType="textCapCharacters"
             android:maxLength="8"
             android:letterSpacing="0.2"
+            android:paddingVertical="20dp"
             android:textAppearance="?attr/textAppearanceHeadlineMedium" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -34,8 +53,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
+        android:background="?attr/colorErrorContainer"
         android:gravity="center"
-        android:textColor="?attr/colorError"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorOnErrorContainer"
         android:visibility="gone" />
 
     <com.google.android.material.button.MaterialButton
@@ -44,7 +67,8 @@
         android:layout_height="64dp"
         android:layout_marginTop="24dp"
         android:enabled="false"
-        android:text="@string/pairing_child_join" />
+        android:text="@string/pairing_child_join"
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
 
     <!-- 입력·오류 표시와 아래쪽 되돌리기 버튼 사이를 벌려서, 되돌리기가
          주요 동작처럼 보이지 않고 화면 맨 아래의 보조 동작으로 보이게 한다. -->
@@ -55,7 +79,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/reset_role_button"
-        style="@style/Widget.Material3.Button.TextButton"
+        style="@style/Widget.KidCare.Button.Text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/pairing_reset_role_button" />

@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    보호자 페어링. 이 화면에서 부모가 하는 일은 딱 하나 — 여섯 글자를 소리 내어
+    읽어주는 것이다. 그래서 번호를 흰 종이 카드 한 장에 크게 얹어 화면의 다른
+    무엇과도 헷갈리지 않게 했다. 카드 테두리는 팔레트의 옅은 선이라 도장처럼
+    튀지 않는다.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,22 +18,34 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:text="@string/pairing_guardian_title"
-        android:textAppearance="?attr/textAppearanceTitleMedium" />
+        android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
-    <!-- 코드가 아직 없을 때(가족 생성 중, 또는 실패로 showCode() 가 한 번도 안 불린
-         상태)도 이 자리가 점 하나로 쪼그라들지 않도록 자리표시자를 기본값으로 둔다.
-         showCode() 가 불리면 실제 코드로 덮어써진다. -->
-    <TextView
-        android:id="@+id/code_text"
-        android:layout_width="wrap_content"
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:letterSpacing="0.3"
-        android:text="@string/pairing_code_placeholder"
-        android:textAppearance="?attr/textAppearanceDisplayMedium"
-        android:textStyle="bold"
-        tools:text="A2C4K9" />
+        app:cardBackgroundColor="?attr/colorPrimaryContainer"
+        app:shapeAppearance="@style/ShapeAppearance.KidCare.ExtraLarge"
+        app:strokeWidth="0dp">
+
+        <!-- 코드가 아직 없을 때(가족 생성 중, 또는 실패로 showCode() 가 한 번도 안 불린
+             상태)도 이 자리가 점 하나로 쪼그라들지 않도록 자리표시자를 기본값으로 둔다.
+             showCode() 가 불리면 실제 코드로 덮어써진다. -->
+        <TextView
+            android:id="@+id/code_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:letterSpacing="0.25"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="28dp"
+            android:text="@string/pairing_code_placeholder"
+            android:textAppearance="?attr/textAppearanceDisplayMedium"
+            android:textColor="?attr/colorOnPrimaryContainer"
+            tools:text="A2C4K9" />
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/hint_text"
@@ -35,7 +54,8 @@
         android:layout_marginTop="24dp"
         android:gravity="center"
         android:text="@string/pairing_guardian_hint"
-        android:textAppearance="?attr/textAppearanceBodyMedium" />
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorOnSurfaceVariant" />
 
     <!-- inviteExpiresAt 에서 계산한 스냅샷 한 줄이다(실시간 카운트다운 아님 —
          타이머를 두면 onDestroy 이후에도 살아남을 위험이 있어 일부러 안 둔다). -->
@@ -46,6 +66,7 @@
         android:layout_marginTop="8dp"
         android:gravity="center"
         android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
         tools:text="이 번호는 10분 뒤에 만료돼요" />
 
     <!-- 기본값은 보이는 상태다 — onCreate 가 곧바로 startPairing() 을 부르므로
@@ -56,11 +77,11 @@
         android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp" />
+        android:layout_marginTop="28dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/new_code_button"
-        style="@style/Widget.Material3.Button.TonalButton"
+        style="@style/Widget.KidCare.Button.Tonal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
@@ -75,7 +96,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/reset_role_button"
-        style="@style/Widget.Material3.Button.TextButton"
+        style="@style/Widget.KidCare.Button.Text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/pairing_reset_role_button" />

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 탭이 둘 이상이 되면서 컨테이너 하나로는 부족해졌다. 위쪽은 프래그먼트 자리,
      아래는 하단 탭이다. 컨테이너에 weight 를 줘서 탭 높이를 뺀 나머지를 전부
-     차지하게 한다 — 지도가 탭 뒤로 잘려 들어가지 않게 하려는 것이다. -->
+     차지하게 한다 — 지도가 탭 뒤로 잘려 들어가지 않게 하려는 것이다.
+
+     **이 파일에는 fitsSystemWindows 를 걸지 않는다.** 상태바 높이를 누가 먹을지는
+     GuardianMainActivity.applyTopInset() 이 배너 유무와 현재 탭을 보고 정한다
+     (지도는 상태바 뒤까지 그려야 하고 관리·예약은 아래로 내려야 한다). 여기에
+     fitsSystemWindows 를 걸면 그 판단 위에 여백이 한 번 더 얹혀 화면이 밀린다. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -12,13 +17,18 @@
          (GuardianMainActivity.renderBanner). 프래그먼트 컨테이너 **밖**, 탭보다 위에
          두는 것이 요점이다 — 지도만 보는 부모도, 관리 탭을 연 부모도 같은 자리에서
          같은 문장을 본다. 오류 색을 쓰는 이유는 이게 "알아두면 좋은 정보"가 아니라
-         "지금 위치 추적이 멈춰 있다"는 뜻이기 때문이다. -->
+         "지금 위치 추적이 멈춰 있다"는 뜻이기 때문이다.
+
+         **android:paddingTop 값을 바꿔도 된다.** applyTopInset() 은 화면이 뜰 때
+         여기 적힌 값을 bannerBaseTopPadding 으로 읽어 두고 거기에 상태바 높이를
+         더한다 — 값을 하드코딩해 둔 곳이 없다. -->
     <TextView
         android:id="@+id/disconnect_banner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorErrorContainer"
-        android:padding="12dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnErrorContainer"
         android:visibility="gone" />
@@ -29,9 +39,18 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
+    <!-- 탭 띠를 바탕에서 떼어놓는 선. 하단 탭의 그림자(elevation)를 껐기 때문에
+         이 선이 없으면 흰 탭 띠가 종이색 바탕에 녹아 어디까지가 탭인지 흐려진다.
+         종이 위에서는 그림자보다 선이 맞다(themes.xml 의 Widget.KidCare.BottomNav). -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorOutlineVariant" />
+
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:labelVisibilityMode="labeled"
         app:menu="@menu/guardian_bottom_nav" />
 </LinearLayout>

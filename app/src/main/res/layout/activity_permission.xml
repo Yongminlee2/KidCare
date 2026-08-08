@@ -1,40 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    권한 온보딩. 아이가 보는 화면이고, 단계마다 같은 자리에서 글자만 바뀐다
+    (PermissionActivity 가 step_title/step_reason/step_hint 를 갈아 끼운다).
+
+    설명을 하늘빛 면에 얹은 이유: 이 화면은 "켜기"를 여러 번 눌러야 끝나는데,
+    누를 때마다 제목만 바뀌면 진도가 나가는 건지 같은 화면에 갇힌 건지 알기 어렵다.
+    색면이 있으면 '읽을 곳'이 고정돼서 바뀐 부분이 눈에 띈다.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="32dp">
+    android:padding="32dp"
+    android:fitsSystemWindows="true">
+
+    <ImageView
+        android:layout_width="104dp"
+        android:layout_height="104dp"
+        android:layout_marginBottom="20dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_mascot" />
 
     <TextView
         android:id="@+id/step_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
-    <TextView
-        android:id="@+id/step_reason"
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="center"
-        android:textAppearance="?attr/textAppearanceBodyLarge" />
+        android:layout_marginTop="20dp"
+        app:cardBackgroundColor="?attr/colorPrimaryContainer"
+        app:shapeAppearance="@style/ShapeAppearance.KidCare.Large"
+        app:strokeWidth="0dp">
 
-    <!-- 배터리 예외 단계처럼, 눌러도 이 앱이 자동으로 골라지지 않고 목록에서
-         직접 찾아야 하는 단계에서만 채워서 보여준다. 평소엔 gone. -->
-    <TextView
-        android:id="@+id/step_hint"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:gravity="center"
-        android:visibility="gone"
-        android:textAppearance="?attr/textAppearanceBodyMedium" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/step_reason"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorOnPrimaryContainer" />
+
+            <!-- 배터리 예외 단계처럼, 눌러도 이 앱이 자동으로 골라지지 않고 목록에서
+                 직접 찾아야 하는 단계에서만 채워서 보여준다. 평소엔 gone. -->
+            <TextView
+                android:id="@+id/step_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnPrimaryContainer"
+                android:visibility="gone" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/grant_button"
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:layout_marginTop="40dp"
-        android:text="@string/perm_grant" />
+        android:layout_marginTop="36dp"
+        android:text="@string/perm_grant"
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
 </LinearLayout>

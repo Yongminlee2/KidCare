@@ -1,37 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    앱의 첫인상. 여기서 색이 갈린다.
+
+    보호자 = 하늘색 채운 버튼, 아이 = 살구빛 토널 버튼. 두 역할이 위아래로 놓인
+    똑같은 회색 버튼 둘이면 무엇을 고르는 화면인지 색으로는 아무 말도 못 한다.
+    이 대비는 팔레트의 primary/secondary 를 그대로 쓴 것이라 새 색을 만들지 않았고,
+    같은 짝이 앱 전체에서 "보호자 쪽 / 아이 쪽"으로 반복된다.
+
+    fitsSystemWindows 이유는 activity_router.xml 주석 참고.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="32dp">
+    android:padding="32dp"
+    android:fitsSystemWindows="true">
+
+    <ImageView
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginBottom="20dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_mascot" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="10dp"
+        android:gravity="center"
         android:text="@string/role_title"
         android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
+        android:layout_marginBottom="36dp"
         android:gravity="center"
         android:text="@string/role_subtitle"
-        android:textAppearance="?attr/textAppearanceBodyMedium" />
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorOnSurfaceVariant" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/guardian_button"
         android:layout_width="match_parent"
         android:layout_height="72dp"
-        android:layout_marginBottom="16dp"
-        android:text="@string/role_guardian" />
+        android:layout_marginBottom="12dp"
+        android:text="@string/role_guardian"
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/child_button"
-        style="@style/Widget.Material3.Button.OutlinedButton"
+        style="@style/Widget.KidCare.Button.Tonal"
         android:layout_width="match_parent"
         android:layout_height="72dp"
-        android:text="@string/role_child" />
+        android:text="@string/role_child"
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
 </LinearLayout>

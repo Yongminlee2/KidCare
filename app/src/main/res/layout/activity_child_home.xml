@@ -1,32 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+    아이가 보는 화면. 이 앱에서 디자인이 가장 많은 일을 하는 자리다.
+
+    아이는 이 앱을 지우고 싶어할 수도 있는 나이다. 화면에 상태 문구만 있으면 그건
+    감시 프로그램의 상태창이고, 아이는 그렇게 읽는다. 그래서 화면의 절반을 새싹이에게
+    준다 — 문구는 하나도 숨기지 않되(무엇을 하는 앱인지 아이가 알아야 한다는 원칙은
+    ChildHomeActivity 주석 참고) 그 사실을 전하는 목소리를 바꾸는 것이다.
+
+    ScrollView 로 감싼 이유: 큰 글꼴 설정에서 마스코트 200dp + 제목 + 설명 + 버튼이
+    작은 화면 세로를 넘어선다. 그때 잘리는 것이 하필 '권한 켜러 가기' 버튼이라
+    아이가 고칠 방법을 잃는다.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="32dp">
+    android:fillViewport="true"
+    android:fitsSystemWindows="true">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/child_home_title"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall" />
-
-    <TextView
-        android:id="@+id/child_status"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:orientation="vertical"
         android:gravity="center"
-        android:textAppearance="?attr/textAppearanceBodyMedium" />
+        android:minHeight="400dp"
+        android:padding="32dp">
 
-    <!-- 권한이 빠진 채로 이 화면에 오는 경우(페어링 직후 앱이 죽는 등)를 위한 복구
-         동작. 평소엔 안 보이다가, 빠진 권한이 있을 때만 onResume 에서 켠다. -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/go_to_permission_button"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_marginTop="24dp"
-        android:visibility="gone"
-        android:text="@string/child_go_to_permission" />
-</LinearLayout>
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_mascot" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text="@string/child_home_title"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+
+        <TextView
+            android:id="@+id/child_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <!-- 권한이 빠진 채로 이 화면에 오는 경우(페어링 직후 앱이 죽는 등)를 위한 복구
+             동작. 평소엔 안 보이다가, 빠진 권한이 있을 때만 onResume 에서 켠다. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/go_to_permission_button"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="24dp"
+            android:visibility="gone"
+            android:text="@string/child_go_to_permission"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+    </LinearLayout>
+</ScrollView>

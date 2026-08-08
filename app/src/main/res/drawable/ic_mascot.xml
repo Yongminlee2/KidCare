@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    새싹이 — 이 앱의 얼굴. 큰 판(아이 홈 화면 200dp).
+
+    ## 왜 마스코트가 필요한가
+
+    아이 홈 화면은 "네 위치가 부모님께 가고 있다"고 말하는 화면이다. 글자만 두면
+    그건 감시 소프트웨어의 상태창이다. 새싹이가 그 문장 위에 앉아 있으면 같은 사실이
+    아이에게 다르게 도착한다 — 숨기지 않으면서 무섭지 않게. 지도의 핀도 같은 얼굴이라
+    (marker_child.xml) 엄마가 지도에서 보는 것이 점이 아니라 아이가 된다.
+
+    ## 왜 새싹인가
+
+    동그란 얼굴에 점 눈 둘과 웃음만 그리면 세상 어디에나 있는 스마일이 된다. 머리에
+    새싹 하나를 얹으면 실루엣만으로 구분되고, 자라는 아이라는 뜻도 겹친다. 색은
+    팔레트의 풀색 그대로라 새 색을 만들지 않았다.
+
+    ## 그리는 규칙
+
+    - 선은 굵게, 개수는 적게. 같은 얼굴이 24dp 짜리 핀으로도 살아야 한다.
+    - 색은 @color 이름으로만 쓴다 — 밤 모드에서 색 파일 한 장이 바뀌면 새싹이도 함께
+      바뀐다.
+    - 눈은 원, 웃음은 획(stroke)이다. 웃음을 채우기(fill)로 그리면 작아질 때 뭉친다.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- 새싹 줄기. 얼굴 정수리(y=30)에서 위로 뻗는다. -->
+    <path
+        android:pathData="M60,34 L60,20"
+        android:strokeColor="@color/grass"
+        android:strokeWidth="6"
+        android:strokeLineCap="round" />
+
+    <!-- 잎 둘. 좌우 크기와 높이를 일부러 어긋나게 해서 도장처럼 보이지 않게 한다. -->
+    <path
+        android:pathData="M58,27 C47,27 40,20 40,11 C51,11 58,18 58,27 Z"
+        android:fillColor="@color/grass" />
+    <path
+        android:pathData="M62,22 C72,22 78,16 78,8 C68,8 62,14 62,22 Z"
+        android:fillColor="@color/grass" />
+
+    <!-- 얼굴. 살구빛 면에 잉크 테두리 — 흰 배경에서도 종이 카드 위에서도 윤곽이 남는다. -->
+    <path
+        android:pathData="M22,68 a38,38 0 1,0 76,0 a38,38 0 1,0 -76,0 Z"
+        android:fillColor="@color/apricot_soft"
+        android:strokeColor="@color/ink"
+        android:strokeWidth="4" />
+
+    <!-- 볼. 눈보다 먼저 그려야 눈 위로 올라타지 않는다. -->
+    <path
+        android:pathData="M31,80 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z"
+        android:fillColor="@color/berry_soft" />
+    <path
+        android:pathData="M75,80 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z"
+        android:fillColor="@color/berry_soft" />
+
+    <!-- 눈. 얼굴 중심(y=68)보다 살짝 위에 둔다 — 정중앙에 두면 어른 얼굴이 된다. -->
+    <path
+        android:pathData="M41,63 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 Z"
+        android:fillColor="@color/ink" />
+    <path
+        android:pathData="M69,63 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 Z"
+        android:fillColor="@color/ink" />
+
+    <!-- 웃음. 둥근 끝(round cap)이라 획이 뚝 끊기지 않는다. -->
+    <path
+        android:pathData="M50,80 Q60,91 70,80"
+        android:strokeColor="@color/ink"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+</vector>

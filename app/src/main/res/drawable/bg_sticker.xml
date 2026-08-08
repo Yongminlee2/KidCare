@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    타임라인 한 줄 왼쪽의 동그란 색면. 알림장에 붙이는 스티커 자리다.
+
+    이모지 하나만 덩그러니 두면 줄마다 왼쪽 여백이 들쭉날쭉해 보이고, 목록이
+    "글자 뭉치"로 읽힌다. 지름이 일정한 색면을 깔면 눈이 그 원을 따라 아래로
+    내려가서 하루 흐름이 한눈에 잡힌다. 색을 하나만 쓰는 이유: 색으로 머무름과
+    이동을 구분하려면 코드가 색을 골라야 하는데, 그 구분은 이미 이모지가 하고 있다.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/sky_soft" />
+</shape>

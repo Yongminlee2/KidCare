@@ -1,9 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    지도 위 아이 마커 — 새싹이가 핀 안에 들어앉은 모습.
+
+    ## 왜 점이 아니라 얼굴인가
+
+    엄마가 지도를 여는 순간은 대개 걱정될 때다. 그때 화면에 있어야 하는 것은
+    좌표를 가리키는 점이 아니라 아이다. 큰 판(ic_mascot.xml)과 같은 얼굴이라
+    아이 폰에 뜨는 그림과 엄마 지도에 뜨는 그림이 같은 아이로 읽힌다.
+
+    ## 24dp 에서 살아남게 만든 방법
+
+    이 그림의 진짜 시험은 지도 위 27dp 다. 큰 판을 그대로 줄이면 얼굴이 죽처럼 뭉친다.
+    그래서 같은 얼굴이되 비율을 다시 짰다.
+
+    - **깎아냈다.** 볼과 얼굴 테두리를 뺐다. 27dp 에서 볼 홍조는 얼룩으로만 보이고,
+      테두리는 흰 얼굴과 하늘색 핀의 경계를 흐린다.
+    - **키웠다.** 얼굴을 핀 폭의 2/3(반지름 13/24)까지, 눈을 얼굴 반지름의 1/4 까지
+      키웠다. 27dp 로 그리면 얼굴 지름 약 15dp, 눈 지름 약 3.4dp — 눈이 점으로 남는다.
+    - **대비를 세웠다.** 하늘색 핀 + 흰 얼굴 + 잉크 이목구비. 지도 타일은 밝기가
+      제각각이라 핀 둘레에 흰 테두리를 둘러 어떤 타일 위에서도 실루엣이 끊기지
+      않게 했다.
+    - **위쪽에 새싹만 남겼다.** 얼굴이 뭉개져도 "머리에 초록 싹이 난 파란 핀"이라는
+      실루엣은 남는다.
+
+    ## 왜 이 파일만 @color 를 안 쓰는가
+
+    이 그림이 놓이는 바닥은 앱이 아니라 **OSM 타일**이고, 타일은 앱의 밤 모드를
+    따라가지 않는다 — 밤에도 지도는 그대로 밝다. 그런데 @color 로 칠하면 밤에
+    얼굴(paper_card)이 어두운 자주색으로, 눈(ink)이 크림색으로 뒤집힌다. 밝은
+    지도 위의 어두운 얼굴은 다른 앱처럼 보이고, 무엇보다 둘 중 하나만 뒤집히는
+    수정이 언젠가 들어오면 얼굴이 통째로 사라진다(흰 얼굴 + 크림색 눈).
+    바닥이 안 변하니 이 그림도 변하면 안 된다. 값은 낮 팔레트 그대로다.
+
+    ## 크기와 기준점
+
+    viewport 48x64(3:4)를 그대로 dp 로 옮겨 27x36dp. MapTimelineFragment 가
+    ANCHOR_CENTER/ANCHOR_BOTTOM 으로 붙이므로 **핀 끝(24,62)이 실제 좌표**다 —
+    아래쪽에 여백을 남기면 그만큼 위치가 어긋난다.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="36dp"
+    android:width="27dp"
     android:height="36dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
+    android:viewportWidth="48"
+    android:viewportHeight="64">
+
+    <!-- 새싹. 핀보다 먼저 그려서 핀 몸통이 줄기 밑동을 덮게 한다. -->
     <path
-        android:fillColor="#FF3D6DF5"
-        android:pathData="M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13c0,-3.87 -3.13,-7 -7,-7zM12,11.5c-1.38,0 -2.5,-1.12 -2.5,-2.5s1.12,-2.5 2.5,-2.5 2.5,1.12 2.5,2.5 -1.12,2.5 -2.5,2.5z" />
+        android:pathData="M24,15 L24,5"
+        android:strokeColor="#7DCB88"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M23,11 C17,11 13,7.5 13,2 C19,2 23,5.5 23,11 Z"
+        android:fillColor="#7DCB88" />
+    <path
+        android:pathData="M25,9 C31,9 35,5.5 35,0 C29,0 25,3.5 25,9 Z"
+        android:fillColor="#7DCB88" />
+
+    <!-- 핀 몸통. 호(arc) 없이 대칭 곡선 넷으로만 그린다 — 렌더러마다 다르게 해석될
+         여지가 없고, 나중에 비율을 손볼 때 숫자 네 개만 만지면 된다. -->
+    <path
+        android:pathData="M24,12 C13.5,12 5,20.5 5,31 C5,45 24,62 24,62 C24,62 43,45 43,31 C43,20.5 34.5,12 24,12 Z"
+        android:fillColor="#6FBBE5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5" />
+
+    <!-- 얼굴. 핀 폭 대비 크게 잡는 것이 24dp 가독성의 핵심이다. -->
+    <path
+        android:pathData="M11,29 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0 Z"
+        android:fillColor="#FFFFFF" />
+
+    <path
+        android:pathData="M16,27 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 Z"
+        android:fillColor="#4A4038" />
+    <path
+        android:pathData="M26,27 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 Z"
+        android:fillColor="#4A4038" />
+
+    <path
+        android:pathData="M19,33.5 Q24,37.5 29,33.5"
+        android:strokeColor="#4A4038"
+        android:strokeWidth="2.4"
+        android:strokeLineCap="round" />
 </vector>

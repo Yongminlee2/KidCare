@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 관리 탭. 부모가 버튼 하나로 아이 폰을 바꾸는 화면이라 버튼을 크게 두고,
      누른 뒤 무슨 일이 벌어졌는지를 맨 아래 한 줄이 계속 말해준다.
-     작은 화면·큰 글꼴 설정에서도 아래쪽 버튼이 잘리지 않도록 ScrollView 로 감쌌다. -->
+     작은 화면·큰 글꼴 설정에서도 아래쪽 버튼이 잘리지 않도록 ScrollView 로 감쌌다.
+
+     소리 모드 버튼 셋을 채운 버튼에서 토널로 내렸다. 셋 다 진한 하늘색이면 화면에
+     "지금 눌러야 할 것"이 셋으로 보이는데, 실제로 이 셋은 서로 대등한 선택지고
+     이 화면에서 진짜 강한 동작은 아래쪽 핸드폰 찾기 하나뿐이다. 색의 세기로
+     그 위계를 말한다. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -21,6 +26,7 @@
             android:layout_height="wrap_content"
             android:paddingBottom="12dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:visibility="gone" />
 
         <TextView
@@ -32,7 +38,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
             android:baselineAligned="false"
             android:orientation="horizontal">
 
@@ -40,8 +46,9 @@
                  큰 글꼴 설정에서 말줄임(…)으로 잘려 무슨 버튼인지 알 수 없어진다. -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/mode_normal_button"
+                style="@style/Widget.KidCare.Button.Tonal"
                 android:layout_width="0dp"
-                android:layout_height="72dp"
+                android:layout_height="76dp"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
                 android:insetLeft="0dp"
@@ -51,8 +58,9 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/mode_vibrate_button"
+                style="@style/Widget.KidCare.Button.Tonal"
                 android:layout_width="0dp"
-                android:layout_height="72dp"
+                android:layout_height="76dp"
                 android:layout_marginHorizontal="6dp"
                 android:layout_weight="1"
                 android:insetLeft="0dp"
@@ -62,8 +70,9 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/mode_silent_button"
+                style="@style/Widget.KidCare.Button.Tonal"
                 android:layout_width="0dp"
-                android:layout_height="72dp"
+                android:layout_height="76dp"
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
                 android:insetLeft="0dp"
@@ -85,7 +94,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/control_lock_hint"
-            android:textAppearance="?attr/textAppearanceBodySmall" />
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
         <View
             android:layout_width="match_parent"
@@ -96,25 +106,26 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/find_button"
             android:layout_width="match_parent"
-            android:layout_height="72dp"
+            android:layout_height="76dp"
             android:text="@string/control_find_phone"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="?attr/colorOnError"
-            app:backgroundTint="?attr/colorError" />
+            android:textColor="@color/on_berry"
+            app:backgroundTint="@color/berry" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="8dp"
             android:text="@string/control_find_hint"
-            android:textAppearance="?attr/textAppearanceBodySmall" />
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
         <!-- 앱을 새로 열었을 때는 아이 폰이 울리고 있는지 알 방법이 없다.
              그래서 '찾기' 버튼과 별개로 언제든 끌 수 있는 길을 하나 열어둔다
              (ControlFragment.renderFindButton 주석 참고). -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/find_stop_button"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.KidCare.Button.Text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"

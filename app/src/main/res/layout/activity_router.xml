@@ -1,17 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    앱을 열자마자 0.5~2초쯤 스쳐 지나가는 화면(로그인·역할 확인). 글자 한 줄만 있으면
+    그 짧은 순간이 "아직 안 켜진 앱"으로 보인다. 새싹이를 세워두면 같은 시간이
+    시작 화면이 된다.
+
+    fitsSystemWindows: targetSdk 36 이라 시스템이 화면을 상태바 뒤까지 늘린다. 지도만
+    그 뒤까지 그려야 하고(MapTimelineFragment) 나머지 화면은 전부 상태바 아래에서
+    시작해야 한다 — 이 한 줄이 그 규칙의 화면별 표현이다.
+-->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <ImageView
+        android:id="@+id/mascot"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:layout_marginBottom="16dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_mascot"
+        app:layout_constraintBottom_toTopOf="@id/status_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <TextView
         android:id="@+id/status_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall"
+        android:gravity="center"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/mascot" />
 </androidx.constraintlayout.widget.ConstraintLayout>

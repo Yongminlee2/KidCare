@@ -18,14 +18,23 @@
         <!-- 지도는 상태바 뒤까지 그린다(타일이 화면 끝까지 차야 지도답다). 하지만 이
              카드는 글자라서 가려지면 못 읽는다 — 실기기에서 배터리 문구가 상태바
              시계와 겹쳐 찍혔다. 위쪽 여백은 MapTimelineFragment 가 상태바 높이만큼
-             더해 준다. -->
+             더해 준다.
+
+             **layout_margin 을 지우면 안 된다.** 프래그먼트가 화면이 뜰 때 여기
+             topMargin 을 읽어 기준값으로 삼고 거기에 상태바 높이를 더한다.
+             margin 자체가 없어지면 더할 기준이 사라진다.
+
+             카드는 이 앱에서 유일하게 그림자를 쓰는 자리다(테마 기본은 0dp). 진짜로
+             지도 위에 떠 있는 종이 한 장이라 테두리만으로는 타일과 안 갈린다. -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/status_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="top"
             android:layout_margin="12dp"
-            app:cardCornerRadius="16dp">
+            app:cardElevation="6dp"
+            app:shapeAppearance="@style/ShapeAppearance.KidCare.Large"
+            app:strokeWidth="0dp">
 
             <!-- 왼쪽 글자가 "언제 확인한 위치인지"를 말하고, 오른쪽 버튼이 "다시
                  물어보기"다. 두 개가 반드시 한 줄에 함께 있어야 한다 — 주기적 보고가
@@ -37,7 +46,9 @@
                 android:baselineAligned="false"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:paddingStart="16dp"
+                android:paddingEnd="10dp"
+                android:paddingVertical="10dp">
 
                 <TextView
                     android:id="@+id/status_bar"
@@ -54,25 +65,36 @@
                     android:layout_marginEnd="8dp"
                     android:visibility="gone" />
 
+                <!-- 카드가 지도를 가리는 넓이를 줄이려고 버튼 높이만 기본(56dp)에서
+                     내렸다. 여백(inset)까지 0 으로 둬야 실제 높이가 내려간다. -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/locate_button"
+                    style="@style/Widget.KidCare.Button.Tonal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="48dp"
                     android:text="@string/map_locate_now" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </FrameLayout>
 
+    <!-- 날짜 이동 줄. 지도(사진처럼 꽉 찬 면)와 타임라인(종이 위 목록) 사이를
+         가르는 자리라 종이색을 깔고 아래에 선을 하나 긋는다. 안 그러면 목록 첫 줄이
+         지도에 매달린 것처럼 보인다. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingHorizontal="8dp">
+        android:paddingHorizontal="4dp"
+        android:paddingVertical="4dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/prev_day_button"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.KidCare.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/day_prev" />
@@ -87,11 +109,16 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/next_day_button"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.KidCare.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/day_next" />
     </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorOutlineVariant" />
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -110,8 +137,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
+            android:padding="24dp"
             android:text="@string/timeline_empty"
             android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:visibility="gone" />
     </FrameLayout>
 </LinearLayout>

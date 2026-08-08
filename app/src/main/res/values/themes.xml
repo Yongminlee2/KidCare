@@ -1,5 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    테마 — 색종이.
+
+    ## 왜 여기에 다 몰아넣었나
+
+    이 앱에는 화면이 열셋 있고, 그 화면들을 만든 사람은 앞으로도 뷰를 하나씩 더 붙일
+    것이다. 색·모서리·글자 크기를 레이아웃마다 적어두면 **새로 붙인 뷰만 옛 모습으로
+    남는 일**이 반드시 생긴다. 그래서 규칙은 전부 테마 속성에 걸고, 레이아웃은
+    "무엇을 놓는가"만 말한다. 레이아웃에 색이나 sp 값이 적혀 있다면 그건 여기서
+    못 거는 예외라는 뜻이고, 그 자리에는 이유가 주석으로 붙어 있어야 한다.
+
+    ## 왜 values-night/themes.xml 이 없나
+
+    낮/밤 차이는 전부 색 이름 뒤에 숨겼다(values-night/colors.xml). 테마를 밤용으로
+    복제하면 스타일이 두 벌로 갈라져서, 한쪽만 고치는 순간 밤 화면이 조용히 낡는다.
+-->
 <resources xmlns:tools="http://schemas.android.com/tools">
+
     <style name="Theme.KidCare" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorSurface</item>
+
+        <!-- ======================= 색: 하늘(primary) ======================= -->
+        <item name="colorPrimary">@color/sky</item>
+        <item name="colorOnPrimary">@color/on_accent</item>
+        <item name="colorPrimaryContainer">@color/sky_soft</item>
+        <item name="colorOnPrimaryContainer">@color/ink</item>
+
+        <!-- ====================== 색: 살구(secondary) ====================== -->
+        <!-- 하단 탭의 선택 표시(activeIndicator)와 토널 버튼이 이 색을 쓴다.
+             아이 쪽 동작·부드러운 강조가 전부 여기로 모인다. -->
+        <item name="colorSecondary">@color/apricot</item>
+        <item name="colorOnSecondary">@color/on_accent</item>
+        <item name="colorSecondaryContainer">@color/apricot_soft</item>
+        <item name="colorOnSecondaryContainer">@color/ink</item>
+
+        <!-- ======================= 색: 풀(tertiary) ======================= -->
+        <item name="colorTertiary">@color/grass</item>
+        <item name="colorOnTertiary">@color/on_accent</item>
+        <item name="colorTertiaryContainer">@color/grass_soft</item>
+        <item name="colorOnTertiaryContainer">@color/ink</item>
+
+        <!-- ======================== 색: 자두(error) ======================== -->
+        <!-- 연결 끊김 배너·예약 전달 실패 줄·오류 문구가 이 넷을 쓴다.
+             colorError 가 밝은 berry 가 아닌 이유는 colors.xml 의 berry_ink 주석 참고
+             (한 줄로 줄이면: colorError 는 면이 아니라 글자로 쓰인다). -->
+        <item name="colorError">@color/berry_ink</item>
+        <item name="colorOnError">@color/paper_card</item>
+        <item name="colorErrorContainer">@color/berry_soft</item>
+        <item name="colorOnErrorContainer">@color/on_berry_soft</item>
+
+        <!-- =========================== 색: 종이 =========================== -->
+        <item name="android:colorBackground">@color/paper</item>
+        <item name="colorOnBackground">@color/ink</item>
+        <item name="colorSurface">@color/paper</item>
+        <item name="colorOnSurface">@color/ink</item>
+        <item name="colorSurfaceVariant">@color/paper_fold</item>
+        <item name="colorOnSurfaceVariant">@color/ink_soft</item>
+        <!-- 카드는 바탕보다 한 겹 위다. M3 는 이 다섯 단계를 골라 쓰므로 전부
+             지정해야 어떤 컴포넌트를 새로 붙여도 종이색을 벗어나지 않는다. -->
+        <item name="colorSurfaceContainerLowest">@color/paper_card</item>
+        <item name="colorSurfaceContainerLow">@color/paper_card</item>
+        <item name="colorSurfaceContainer">@color/paper_card</item>
+        <item name="colorSurfaceContainerHigh">@color/paper_fold</item>
+        <item name="colorSurfaceContainerHighest">@color/paper_fold</item>
+        <item name="colorOutline">@color/line</item>
+        <item name="colorOutlineVariant">@color/line_soft</item>
+
+        <!-- ============================ 모서리 ============================ -->
+        <!-- 이 앱이 "유아틱"해지는 지점의 대부분이 여기다. M3 기본값보다 한참 둥글다.
+             구·신 이름을 모두 걸어 둔다 — 컴포넌트마다 참조하는 이름이 달라서
+             한쪽만 걸면 다이얼로그나 시간 선택기 같은 데가 각진 채로 남는다. -->
+        <item name="shapeAppearanceCornerExtraSmall">@style/ShapeAppearance.KidCare.ExtraSmall</item>
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.KidCare.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.KidCare.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.KidCare.Large</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearance.KidCare.ExtraLarge</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.KidCare.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.KidCare.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.KidCare.Large</item>
+
+        <!-- ============================= 글자 ============================= -->
+        <!-- 폰트 파일은 안 넣는다(라이선스 + APK 용량). 개성은 전부 크기 단계에서
+             나온다 — 화면 제목 26sp 볼드, 본문 17sp, 페어링 번호 34sp 볼드. -->
+        <item name="textAppearanceDisplayLarge">@style/TextAppearance.KidCare.DisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/TextAppearance.KidCare.DisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/TextAppearance.KidCare.DisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.KidCare.HeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.KidCare.HeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.KidCare.HeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.KidCare.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.KidCare.TitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.KidCare.TitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.KidCare.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.KidCare.BodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.KidCare.BodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.KidCare.LabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.KidCare.LabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.KidCare.LabelSmall</item>
+
+        <!-- =========================== 컴포넌트 =========================== -->
+        <item name="materialButtonStyle">@style/Widget.KidCare.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.KidCare.Button.Outlined</item>
+        <item name="materialCardViewStyle">@style/Widget.KidCare.Card</item>
+        <item name="bottomNavigationStyle">@style/Widget.KidCare.BottomNav</item>
+        <item name="textInputStyle">@style/Widget.KidCare.TextField</item>
+
+        <!-- ========================= 시스템 바 ========================= -->
+        <!-- targetSdk 36 이라 시스템이 화면을 상태바 뒤까지 늘린다. 그래서 바 색은
+             거의 무시되고(안드로이드 15+), 실제로 중요한 것은 아이콘 명암이다 —
+             종이색 위에 흰 시계가 뜨면 시각을 못 읽는다. 낮/밤 판단은 색 파일에
+             있는 light_system_bars 하나가 한다. -->
+        <item name="android:statusBarColor" tools:targetApi="l">@color/paper</item>
+        <item name="android:navigationBarColor">@color/paper</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">@bool/light_system_bars</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">@bool/light_system_bars</item>
+        <item name="android:windowBackground">@color/paper</item>
+    </style>
+
+    <!-- ================================ 모서리 ================================ -->
+    <!-- Material 의 ShapeAppearance 부모를 물려받지 않고 직접 적는다 — 어차피
+         두 항목이 전부라, 라이브러리 판올림 때 부모 스타일 이름이 바뀌어도 안 깨진다. -->
+    <style parent="" name="ShapeAppearance.KidCare.ExtraSmall">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style parent="" name="ShapeAppearance.KidCare.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">14dp</item>
+    </style>
+
+    <style parent="" name="ShapeAppearance.KidCare.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
+    </style>
+
+    <style parent="" name="ShapeAppearance.KidCare.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">28dp</item>
+    </style>
+
+    <style parent="" name="ShapeAppearance.KidCare.ExtraLarge">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">36dp</item>
+    </style>
+
+    <!-- 버튼은 완전한 알약. 높이가 얼마든 항상 반원이 되도록 퍼센트로 준다. -->
+    <style parent="" name="ShapeAppearance.KidCare.Pill">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- ================================= 글자 ================================= -->
+    <!--
+        폰트 파일 없이 개성을 내는 방법은 크기 단계와 줄 간격뿐이다.
+
+        - 크기: 기획 값(제목 26 / 본문 17 / 번호 34)이 **실제로 그 자리에 쓰이는
+          단계**에 오도록 배치했다. 이 앱은 화면 제목에 HeadlineSmall, 본문에
+          BodyMedium, 페어링 번호에 DisplayMedium 을 쓴다.
+        - 줄 간격: android:lineHeight 로 준다. API 28 부터의 속성이지만 이 앱의
+          TextView 는 Material 테마가 MaterialTextView 로 바꿔 끼우고, 그쪽이
+          하위 버전에서도 이 값을 읽어 적용한다(minSdk 26 에서도 동작).
+        - 대문자 변환은 어디에도 없다. 한글에는 뜻이 없고, 영문 버튼에서도
+          "SAVE" 는 이 앱의 말투가 아니다.
+    -->
+    <style name="TextAppearance.KidCare.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:textSize">40sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:lineHeight">50sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <!-- 보호자 페어링 번호가 쓰는 단계. 기획의 display 34sp bold. -->
+    <style name="TextAppearance.KidCare.DisplayMedium" parent="TextAppearance.Material3.DisplayMedium">
+        <item name="android:textSize">34sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:lineHeight">44sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <style name="TextAppearance.KidCare.DisplaySmall" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:textSize">30sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:lineHeight">40sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <style name="TextAppearance.KidCare.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:textSize">30sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:lineHeight">40sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <!-- 아이 페어링 입력칸이 쓰는 단계. -->
+    <style name="TextAppearance.KidCare.HeadlineMedium" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textSize">28sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:lineHeight">38sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <!-- 화면 제목이 전부 쓰는 단계. 기획의 headline 26sp bold. -->
+    <style name="TextAppearance.KidCare.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:textSize">26sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:lineHeight">36sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <style name="TextAppearance.KidCare.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textSize">22sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:lineHeight">30sp</item>
+    </style>
+
+    <!-- 구역 제목("지금 바로 바꾸기", "어떤 요일에")이 쓰는 단계. 기획의 title 20sp medium. -->
+    <style name="TextAppearance.KidCare.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:lineHeight">28sp</item>
+    </style>
+
+    <style name="TextAppearance.KidCare.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:lineHeight">26sp</item>
+    </style>
+
+    <style name="TextAppearance.KidCare.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textSize">18sp</item>
+        <item name="android:lineHeight">28sp</item>
+    </style>
+
+    <!-- 이 앱 본문의 기본값. 기획의 body 17sp — Material 기본(14sp)보다 훨씬 크다.
+         엄마는 흘끗 보고, 아이는 읽는다. -->
+    <style name="TextAppearance.KidCare.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textSize">17sp</item>
+        <item name="android:lineHeight">27sp</item>
+    </style>
+
+    <style name="TextAppearance.KidCare.BodySmall" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textSize">15sp</item>
+        <item name="android:lineHeight">23sp</item>
+    </style>
+
+    <!--
+        LabelLarge 만 기획의 14sp 를 안 따른다.
+
+        MaterialButton 의 글자가 이 단계를 쓴다. 본문이 17sp 인데 버튼 글자가 14sp 면
+        가장 크게 눌러야 할 것이 화면에서 가장 작은 글자가 된다. 16sp 로 올렸다.
+        기획의 "label 14sp medium" 은 실제로 라벨로 쓰이는 LabelMedium 이 지킨다.
+    -->
+    <style name="TextAppearance.KidCare.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="TextAppearance.KidCare.LabelMedium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="TextAppearance.KidCare.LabelSmall" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- =============================== 컴포넌트 =============================== -->
+
+    <!-- 기본 버튼. 알약 + 대문자 변환 없음이 전부다. 나머지 색은 테마의 primary 를
+         그대로 받는다 — 레이아웃에서 backgroundTint 를 적을 일이 없어야 한다. -->
+    <style name="Widget.KidCare.Button" parent="Widget.Material3.Button">
+        <item name="shapeAppearance">@style/ShapeAppearance.KidCare.Pill</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">56dp</item>
+    </style>
+
+    <!-- 외곽선 버튼. 선 굵기를 기본 1dp 로 둔다 — 요일 토글 일곱 개가 붙어 있어서
+         굵히면 이음매에서 두 배로 겹쳐 보인다. -->
+    <style name="Widget.KidCare.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="shapeAppearance">@style/ShapeAppearance.KidCare.Pill</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- 토널. 살구빛 면이라 "누를 수 있지만 주요 동작은 아님"으로 읽힌다. -->
+    <style name="Widget.KidCare.Button.Tonal" parent="Widget.Material3.Button.TonalButton">
+        <item name="shapeAppearance">@style/ShapeAppearance.KidCare.Pill</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- 글자만 있는 보조 동작. 눌리는 자국(ripple)만 알약이면 된다. -->
+    <style name="Widget.KidCare.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="shapeAppearance">@style/ShapeAppearance.KidCare.Pill</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!--
+        카드. 흰 종이 한 장.
+
+        그림자 대신 옅은 테두리로 떠 있음을 말한다 — 종이색 바탕에 그림자를 깔면
+        회색이 번져서 따뜻함이 죽는다. 지도 위에 뜨는 카드처럼 정말로 떠 있어야
+        하는 자리에서만 레이아웃이 cardElevation 을 따로 올린다.
+    -->
+    <style name="Widget.KidCare.Card" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">@color/paper_card</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.KidCare.Medium</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">@color/line_soft</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <!-- 하단 탭. 선택 표시가 살구 알약이 된다(colorSecondaryContainer). 그림자를
+         빼고 레이아웃이 1dp 선을 대신 긋는다 — 종이 위에는 선이 그림자보다 맞다. -->
+    <style name="Widget.KidCare.BottomNav" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">@color/paper_card</item>
+        <item name="elevation">0dp</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.KidCare.BottomNav.Indicator</item>
+    </style>
+
+    <style name="Widget.KidCare.BottomNav.Indicator"
+        parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:width">72dp</item>
+        <item name="android:height">36dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.KidCare.Pill</item>
+    </style>
+
+    <!--
+        입력칸을 외곽선 방식으로 바꾼 데는 읽기 문제가 있다.
+
+        기본(Filled)은 칸 안쪽을 colorSurfaceVariant 로 칠하는데, 그 위에 놓인 힌트
+        글자(colorOnSurfaceVariant)가 4.1:1 로 본문 기준에 못 미쳤다. 외곽선 방식은
+        칸 안쪽이 종이색 그대로라 같은 글자가 5.6:1 이 된다. 덤으로 둥근 모서리가
+        칸 전체에 돌아서 이 팔레트와도 맞는다.
+    -->
+    <style name="Widget.KidCare.TextField"
+        parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="shapeAppearance">@style/ShapeAppearance.KidCare.Small</item>
+        <item name="boxStrokeWidth">2dp</item>
     </style>
 </resources>

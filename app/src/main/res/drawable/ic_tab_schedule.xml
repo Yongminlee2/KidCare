@@ -1,11 +1,27 @@
-<!-- 하단 탭 '예약' 아이콘(시계 모양). 색 처리는 ic_tab_map 과 같다 —
-     BottomNavigationView 가 itemIconTint 로 덧입히므로 여기서는 모양만 정한다. -->
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    하단 탭 '예약'(시계). 색 처리는 ic_tab_map 과 같다.
+
+    테두리를 두껍게 하고 바늘을 둥근 끝 획으로 그렸다 — 바늘을 채우기(fill)로
+    그리면 24dp 에서 끝이 뾰족하게 남아 다른 두 아이콘의 둥근 맛과 어긋난다.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+
+    <!-- 테두리. 바깥 원에서 안쪽 원을 evenOdd 로 뚫는다. -->
     <path
         android:fillColor="#FF000000"
-        android:pathData="M11.99,2C6.47,2 2,6.48 2,12s4.47,10 9.99,10C17.52,22 22,17.52 22,12S17.52,2 11.99,2zM12,20c-4.42,0 -8,-3.58 -8,-8s3.58,-8 8,-8 8,3.58 8,8 -3.58,8 -8,8zM12.5,7L11,7v6l5.25,3.15 0.75,-1.23 -4.5,-2.67z" />
+        android:fillType="evenOdd"
+        android:pathData="M2.5,12 a9.5,9.5 0 1,0 19,0 a9.5,9.5 0 1,0 -19,0 Z M5.2,12 a6.8,6.8 0 1,1 13.6,0 a6.8,6.8 0 1,1 -13.6,0 Z" />
+
+    <!-- 바늘 -->
+    <path
+        android:pathData="M12,7.4 L12,12.2 L15.4,14.2"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
 </vector>

@@ -27,6 +27,7 @@
             android:layout_height="wrap_content"
             android:padding="16dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:visibility="gone" />
 
         <!-- "규칙은 저장됐는데 아이 폰에 아직 못 알렸다"는 줄. 이게 없으면 전달에
@@ -56,14 +57,18 @@
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnErrorContainer" />
 
+            <!-- 글자 버튼의 기본 글자색은 colorPrimary(하늘)인데, 이 버튼만은
+                 자두빛 면 위에 앉는다 — 하늘색 글자를 그대로 두면 1.7:1 로 사실상
+                 안 보인다. 면 위의 글자색으로 맞춘다. -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/sync_retry_button"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.KidCare.Button.Text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:minHeight="48dp"
-                android:text="@string/schedule_sync_retry" />
+                android:text="@string/schedule_sync_retry"
+                android:textColor="?attr/colorOnErrorContainer" />
         </LinearLayout>
 
         <FrameLayout
@@ -87,13 +92,14 @@
                 android:padding="24dp"
                 android:text="@string/schedule_empty"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
         </FrameLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/add_button"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="60dp"
             android:layout_margin="16dp"
             android:text="@string/schedule_add"
             android:textAppearance="?attr/textAppearanceTitleMedium" />
@@ -121,7 +127,7 @@
                 android:id="@+id/editor_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceTitleLarge" />
+                android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -292,6 +298,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
 
             <TextView
@@ -381,7 +388,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/editor_cancel_button"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.KidCare.Button.Text"
                     android:layout_width="0dp"
                     android:layout_height="56dp"
                     android:layout_weight="1"

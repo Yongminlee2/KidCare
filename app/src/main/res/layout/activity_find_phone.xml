@@ -1,22 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    '엄마가 폰을 찾고 있어요' 전체화면. 폰이 크게 울리는 동안 떠 있다.
+
+    바탕을 살구빛으로 깐 이유: 소리는 이미 최대인데 화면까지 자두색(경고)으로 만들면
+    아이가 "내가 뭘 잘못했나"로 읽는다. 이건 사고가 아니라 엄마가 폰을 못 찾는
+    상황이라, 눈에는 띄되 겁주지 않는 색이 맞다. 대신 소리를 끄는 버튼은 화면에서
+    가장 진한 색(하늘 채운 버튼)으로 두어 무엇을 누르면 되는지가 즉시 보이게 한다.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/colorSecondaryContainer"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="32dp">
+    android:padding="32dp"
+    android:fitsSystemWindows="true">
+
+    <ImageView
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:layout_marginBottom="24dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_mascot" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="@string/find_phone_title"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+        android:textAppearance="?attr/textAppearanceHeadlineSmall"
+        android:textColor="?attr/colorOnSecondaryContainer" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/find_phone_stop_button"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="88dp"
         android:layout_marginTop="32dp"
-        android:text="@string/find_phone_stop" />
+        android:text="@string/find_phone_stop"
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
 </LinearLayout>
