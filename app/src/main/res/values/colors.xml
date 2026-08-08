@@ -95,4 +95,23 @@
         테마를 values-night 에 복제하면 스타일 전체가 갈라진다.
     -->
     <bool name="light_system_bars">true</bool>
+
+    <!-- ============================== 새싹이 ============================== -->
+    <!--
+        새싹이 전용 고정색. **values-night 에 넣지 말 것** — 안 넣는 것이 이 색들의
+        존재 이유다.
+
+        처음엔 새싹이도 팔레트 이름(apricot_soft·ink·berry_soft)을 그대로 썼다.
+        밤 모드 실기기에서 보니 얼굴이 배경과 같이 어두워져 눈 둘만 뜬 검은 덩어리가
+        됐다. 팔레트 이름은 "바탕과 글자"의 관계를 담고 있어 낮/밤에 뒤집히는 게
+        맞지만, 새싹이는 바탕도 글자도 아니라 **캐릭터**다. 캐릭터의 얼굴색은 밤이
+        됐다고 바뀌지 않는다.
+
+        값은 낮 팔레트에서 그대로 가져왔고 marker_child.xml 의 리터럴과도 같다 —
+        지도 핀과 큰 판이 같은 아이여야 한다.
+    -->
+    <color name="mascot_face">#FFE8D6</color>
+    <color name="mascot_line">#4A4038</color>
+    <color name="mascot_cheek">#FFE0E8</color>
+    <color name="mascot_leaf">#7DCB88</color>
 </resources>
