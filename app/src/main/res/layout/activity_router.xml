@@ -28,15 +28,38 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed" />
 
+    <!-- 폭을 wrap_content 에서 0dp(=제약 폭 채우기)로 바꿨다. 성공 경로에서는 "연결
+         중…" 네 글자뿐이라 차이가 없지만, 실패하면 여기에 두 줄짜리 안내가 들어온다 —
+         wrap_content 는 양쪽 제약을 무시하고 화면 밖으로 넘어가 그 안내가 잘린다. -->
     <TextView
         android:id="@+id/status_text"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
         android:gravity="center"
         android:textAppearance="?attr/textAppearanceTitleMedium"
         android:textColor="?attr/colorOnSurfaceVariant"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/retry_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/mascot" />
+
+    <!-- 로그인이 실패했을 때만 보인다. 이게 없던 동안 이 화면은 실패 문구 한 줄이
+         전부여서, 앱을 강제로 껐다 켜는 것 말고는 나갈 길이 없었다(6단계 Task 3).
+         평소에는 GONE 이라 체인에서 빠지므로 시작 화면 모양은 그대로다. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/retry_button"
+        android:layout_width="wrap_content"
+        android:layout_height="56dp"
+        android:layout_marginTop="24dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:text="@string/router_retry"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/status_text" />
 </androidx.constraintlayout.widget.ConstraintLayout>

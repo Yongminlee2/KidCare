@@ -306,6 +306,42 @@ object FamilyRepository {
         return familyId
     }
 
+    /**
+     * 이 기기가 **아직 이 가족의 멤버인가.** 서버가 확답을 안 준 동안은 null 이다.
+     *
+     * 자녀 홈 화면이 "위치를 공유하고 있어요"를 말해도 되는지 묻는 자리다. 부모가
+     * 가족을 정리했거나 멤버 문서가 사라지면 자녀 폰의 쓰기는 전부 조용히 거부되는데,
+     * 화면은 그 사실을 알 길이 없어 며칠이고 공유 중이라고 말했다(6단계 Task 3).
+     *
+     * **삼중 상태(true/false/null)여야 하는 이유가 둘이다.**
+     *
+     * 1. **오프라인.** 이 `get()` 은 캐시로 대답하고, 캐시에 없는 문서는 예외 없이
+     *    "없는 문서"로 온다(docs/known-issues.md 19번). 그대로 믿으면 비행기 모드에서
+     *    "연결이 풀렸어요"를 띄운다 — 그건 이 앱이 제일 두려워하는 거짓말이다.
+     *    캐시본이면서 문서가 없으면 **모른다**(null)로 답한다.
+     * 2. **문서가 지워지면 "없는 문서"가 아니라 읽기 자체가 막힌다.** 이 문서의 read
+     *    규칙은 `memberOf(familyId)` 하나뿐이고, 그 함수가 검사하는 것이 바로
+     *    `members/{내 uid}` 의 존재다(firestore.rules). 즉 **이 읽기의
+     *    PERMISSION_DENIED 는 "내가 이 가족에 없다"와 같은 말**이라 false 로 옮긴다.
+     *
+     * 대가 하나: 규칙을 아직 안 게시했거나 잘못 게시한 경우도 같은 PERMISSION_DENIED 라
+     * 구분할 수 없다. 클라이언트가 그 둘을 가려낼 방법은 없고, 화면이 안내하는 다음
+     * 행동("새 번호를 받아 다시 연결")을 따라가도 페어링 화면이 그 상황을 다시
+     * `error_server_setup` 으로 정확히 안내하므로 아이가 갇히지는 않는다.
+     */
+    suspend fun isStillMember(familyId: String, uid: String): Boolean? = try {
+        val snapshot = db.collection("families").document(familyId)
+            .collection("members").document(uid).get().await()
+        if (snapshot.metadata.isFromCache && !snapshot.exists()) null else snapshot.exists()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: FirebaseFirestoreException) {
+        if (e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) false else null
+    } catch (e: Exception) {
+        Log.w(TAG, "가족 멤버 확인 실패 — 화면은 아무 말도 하지 않는다: familyId=$familyId", e)
+        null
+    }
+
     /** 가족의 자녀 uid 를 찾는다. 아직 자녀가 안 붙었으면 null. */
     suspend fun findChildUid(familyId: String): String? =
         db.collection("families").document(familyId).collection("members")
