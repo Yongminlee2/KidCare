@@ -1,6 +1,7 @@
 package com.kidcare.family.guardian
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -23,9 +24,8 @@ import java.util.Locale
 /**
  * 보호자 메인 컨테이너. 하단 탭이 프래그먼트를 갈아 끼운다.
  *
- * 지금 탭은 넷이다 — 지도(3단계), 관리·예약(4단계), 장소(5단계). 알림 탭은 events/ 를
- * 읽는 화면이 생기는 5단계 Task 4 에서 붙인다. 화면이 없는 탭을 미리 넣으면 눌러도
- * 아무것도 없는 빈 탭이 되는데, 그건 부모 눈에 그냥 고장이다.
+ * 지금 탭은 다섯이다 — 지도(3단계), 관리·예약(4단계), 장소·알림(5단계). 다섯을 접지
+ * 않고 그대로 둔 근거(실제 칸 너비)는 guardian_bottom_nav.xml 주석에 적었다.
  *
  * **replace 를 쓰지 않는다.** 프래그먼트를 태그로 찾아 두고 show/hide 로만 오간다.
  * replace 는 탭을 옮길 때마다 지도 프래그먼트를 새로 만들고, 그러면 osmdroid 가
@@ -83,6 +83,7 @@ class GuardianMainActivity : AppCompatActivity() {
      */
     private val tabs = listOf(
         Tab(R.id.tab_map, TAG_MAP) { MapTimelineFragment() },
+        Tab(R.id.tab_alert, TAG_ALERT) { AlertFragment() },
         Tab(R.id.tab_control, TAG_CONTROL) { ControlFragment() },
         Tab(R.id.tab_schedule, TAG_SCHEDULE) { ScheduleFragment() },
         Tab(R.id.tab_place, TAG_PLACE) { PlaceFragment() },
@@ -146,7 +147,12 @@ class GuardianMainActivity : AppCompatActivity() {
         // BottomNavigationView 도 자기 선택 상태를 스스로 복원한다. 그래도 어느 탭이
         // 선택돼 있었는지는 우리가 직접 기억해 둔다 — 복원 순서(뷰 상태 복원은
         // onCreate 뒤)에 기대지 않고 여기서 곧장 옳은 탭을 띄우기 위해서다.
-        val startTabId = savedInstanceState?.getInt(KEY_SELECTED_TAB) ?: R.id.tab_map
+        // 알림을 눌러 들어온 경우에는 저장된 탭보다 그쪽이 먼저다 — 부모가 방금 본
+        // 한 줄을 찾으러 온 것인데 지도가 뜨면 다시 헤매게 된다([AlertService]).
+        val startTabId = when {
+            intent.getBooleanExtra(EXTRA_OPEN_ALERTS, false) -> R.id.tab_alert
+            else -> savedInstanceState?.getInt(KEY_SELECTED_TAB) ?: R.id.tab_map
+        }
         val startTab = tabs.firstOrNull { it.menuId == startTabId } ?: tabs.first()
         binding.bottomNav.selectedItemId = startTab.menuId
         // 위 대입이 선택 리스너를 부를 수도, (이미 그 항목이 선택돼 있었다면)
@@ -154,6 +160,25 @@ class GuardianMainActivity : AppCompatActivity() {
         // showTab 은 몇 번을 불러도 결과가 같으므로(태그로 찾고 없을 때만 add)
         // 여기서 한 번 더 직접 불러 "첫 화면이 비어 있는" 경우를 원천봉쇄한다.
         showTab(startTab)
+    }
+
+    /**
+     * 이미 떠 있는 화면 위로 알림을 눌러 들어온 경우. [AlertService] 의 PendingIntent
+     * 가 CLEAR_TOP|SINGLE_TOP 이라 액티비티를 새로 만들지 않고 여기로 들어온다.
+     *
+     * `setIntent` 를 반드시 부른다 — 안 부르면 이 뒤에 회전이 일어났을 때 [onCreate]
+     * 가 옛 인텐트를 다시 읽어 탭이 되돌아간다.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (!intent.getBooleanExtra(EXTRA_OPEN_ALERTS, false)) return
+        val tab = tabs.firstOrNull { it.menuId == R.id.tab_alert } ?: return
+        binding.bottomNav.selectedItemId = tab.menuId
+        // selectedItemId 대입이 이미 선택돼 있던 탭이면 선택 리스너를 안 부른다.
+        // showTab 은 여러 번 불려도 결과가 같으므로 여기서 한 번 더 직접 부른다
+        // (onCreate 가 같은 이유로 하는 것과 같다).
+        showTab(tab)
     }
 
     /**
@@ -282,17 +307,21 @@ class GuardianMainActivity : AppCompatActivity() {
         outState.putInt(KEY_SELECTED_TAB, binding.bottomNav.selectedItemId)
     }
 
-    private companion object {
-        const val TAG_MAP = "tab_map"
-        const val TAG_CONTROL = "tab_control"
-        const val TAG_SCHEDULE = "tab_schedule"
-        const val TAG_PLACE = "tab_place"
-        const val KEY_SELECTED_TAB = "selected_tab"
+    companion object {
+        /** 알림을 눌러 들어왔다는 표시([AlertService] 가 담는다). */
+        const val EXTRA_OPEN_ALERTS = "open_alerts"
+
+        private const val TAG_MAP = "tab_map"
+        private const val TAG_ALERT = "tab_alert"
+        private const val TAG_CONTROL = "tab_control"
+        private const val TAG_SCHEDULE = "tab_schedule"
+        private const val TAG_PLACE = "tab_place"
+        private const val KEY_SELECTED_TAB = "selected_tab"
 
         /** 시간이 흐른 것만으로 다시 판정하는 간격([bannerJob] 주석 참고). 30분
          *  기준에 대해 1분 오차면 충분하고, 1분에 한 번 도는 비용은 무시할 만하다.
          *  판정 자체는 서버를 안 건드리므로 이 반복에 통신 비용이 전혀 없다. */
-        const val BANNER_RECHECK_MILLIS = 60 * 1000L
+        private const val BANNER_RECHECK_MILLIS = 60 * 1000L
     }
 }
 

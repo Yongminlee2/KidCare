@@ -310,6 +310,24 @@ data class EventDoc(
 object EventType {
     const val PLACE_ENTER = "place_enter"
     const val PLACE_EXIT = "place_exit"
+
+    // 아래 넷은 **아직 아무도 쓰지 않는다.** 만드는 쪽은 5단계 Task 7(상황 경고)이고,
+    // 여기 미리 두는 이유는 읽는 쪽(알림 탭)이 이미 이 값들을 한국어 한 줄로 옮길 수
+    // 있어야 하기 때문이다. 값 이름을 나중에 정하게 두면 만드는 쪽과 읽는 쪽이 다른
+    // 문자열을 쓰게 되고, 그러면 이벤트는 멀쩡히 올라오는데 부모 화면에는 "새로운
+    // 알림이 있어요"라는 뜻 없는 한 줄만 뜬다 — 조용히 고장 나는 모양이다.
+
+    /** 배터리가 처음 15% 아래로 내려갔을 때. detail 에 남은 퍼센트를 적는다. */
+    const val LOW_BATTERY = "low_battery"
+
+    /** 위치·방해금지 같은 권한이 켜져 있다가 꺼졌을 때. detail 에 어떤 권한인지 적는다. */
+    const val PERMISSION_OFF = "permission_off"
+
+    /** 아이 폰이 한동안 아무 대답도 하지 않았을 때. */
+    const val SIGNAL_LOST = "signal_lost"
+
+    /** 부모가 보낸 명령이 아이 폰에서 실패했을 때. detail 에 이유를 적는다. */
+    const val COMMAND_FAILED = "command_failed"
 }
 
 /**

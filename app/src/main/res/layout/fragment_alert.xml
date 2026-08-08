@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    알림 탭. 위에서부터 상시 수신 스위치 · 상태 한 줄 · 목록이다.
+
+    스위치를 목록 **위**에 둔 이유: 부모 폰 알림줄에 표시가 하나 생기는 일이라
+    설정 화면 안쪽에 숨기면 안 된다. 부모가 알림을 보러 오는 화면이 곧 알림을 어떻게
+    받을지 정하는 화면이어야, 켜 둔 사실과 그 대가를 잊지 않는다.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- 상시 수신 스위치와 그 대가. saveEnabled=false 인 이유는 fragment_place.xml 의
+         스위치들과 같다 — 켜짐/꺼짐의 정답은 저장된 값이고 뷰는 그걸 비추기만 한다.
+         뷰가 스스로 상태를 복원하면 서비스가 실제로 도는지와 어긋난다. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurfaceVariant"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp">
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/service_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:saveEnabled="false"
+            android:text="@string/alert_service_switch"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/alert_service_hint"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+    </LinearLayout>
+
+    <!-- 오류·안내 한 줄. 평소에는 GONE. -->
+    <TextView
+        android:id="@+id/alert_state"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/alert_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingVertical="4dp" />
+
+        <!-- 빈 목록을 그냥 비워두면 부모는 "고장인가"를 먼저 의심한다. 알림이 없다는
+             사실과, 알림이 생기려면 무엇을 해야 하는지를 함께 적는다. -->
+        <TextView
+            android:id="@+id/alert_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="24dp"
+            android:text="@string/alert_empty"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

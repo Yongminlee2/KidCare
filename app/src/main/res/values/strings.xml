@@ -81,6 +81,7 @@
     <string name="map_locate_no_fix">애기폰이 아직 위치를 못 잡았어요. 잠시 뒤에 다시 눌러주세요.</string>
 
     <string name="tab_map">지도</string>
+    <string name="tab_alert">알림</string>
     <string name="tab_control">관리</string>
     <string name="tab_schedule">예약</string>
     <string name="tab_place">장소</string>
@@ -259,6 +260,40 @@
     <string name="place_delete_message">%1$s\n\n지우면 이곳에 도착하거나 나서도 알림이 오지 않아요.</string>
     <string name="place_delete_confirm">지우기</string>
     <string name="place_delete_cancel">그대로 두기</string>
+
+    <!-- ============================== 알림 탭 ============================== -->
+    <!-- 상시 수신 스위치. 켜기 전에 무엇이 생기는지 먼저 말한다 — 남의 폰 알림줄에
+         표시를 하나 심는 일이라 기본값이 꺼짐이고, 끄면 무엇이 달라지는지도 함께
+         적는다(AlertService 클래스 주석의 판단을 부모의 말로 옮긴 것). -->
+    <string name="alert_service_switch">알림 바로 받기</string>
+    <string name="alert_service_hint">켜면 앱을 안 보고 있어도 아이 소식이 바로 와요. 대신 이 폰 알림줄에 \'알림 받는 중\' 표시가 하나 계속 떠 있고 배터리를 조금 더 씁니다. 꺼두면 앱을 열었을 때만 확인할 수 있어요.</string>
+    <!-- 알림 권한을 거절했을 때. 서비스는 켜지 않는다 — 알림이 안 뜨는데 상시 표시만
+         남는 것이 제일 나쁜 조합이라, 켠 척하지 않고 사실대로 말한다. -->
+    <string name="alert_notification_denied">알림 권한이 꺼져 있어서 켤 수 없어요. 폰 설정 → 앱 → \'우리아이 지킴이\' → 알림에서 켜주세요.</string>
+
+    <string name="channel_alert_service">알림 받는 중</string>
+    <string name="channel_alert">아이 소식</string>
+    <string name="alert_service_notification_title">알림 받는 중</string>
+    <string name="alert_service_notification_text">아이 소식을 바로 알려드릴 수 있게 켜져 있어요. 알림 탭에서 끌 수 있어요.</string>
+    <!-- 안 읽은 것이 여럿일 때 알림 하나에 접어 넣는 꼬리말. -->
+    <string name="alert_notification_more">외 %1$d건</string>
+
+    <!-- 목록 한 줄: '🏫 학교에 도착했어요 · 오후 3시 12분'. -->
+    <string name="alert_row">%1$s · %2$s</string>
+    <string name="alert_place_enter">📍 %1$s에 도착했어요</string>
+    <string name="alert_place_exit">👟 %1$s에서 나섰어요</string>
+    <!-- 아래 넷은 5단계 Task 7 이 만드는 사건이다. 읽는 쪽을 먼저 붙여 둔 이유는
+         core/model/Documents.kt 의 EventType 주석 참고. -->
+    <string name="alert_low_battery">🔋 애기폰 배터리가 얼마 안 남았어요</string>
+    <string name="alert_permission_off">⚠️ 애기폰에서 권한이 꺼졌어요</string>
+    <string name="alert_signal_lost">📵 애기폰이 한동안 대답하지 않았어요</string>
+    <string name="alert_command_failed">❗ 애기폰에 보낸 요청이 실패했어요</string>
+    <!-- 앱이 모르는 종류의 사건. 뜻은 몰라도 언제 무슨 일이 있었다는 사실은 남긴다. -->
+    <string name="alert_unknown">🔔 새로운 소식이 있어요</string>
+
+    <string name="alert_empty">아직 온 알림이 없어요.\n\'장소\' 탭에서 학교나 학원을 정해두면\n아이가 도착하거나 나설 때 여기에 쌓여요.</string>
+    <string name="alert_error_format">알림을 불러오지 못했어요\n%1$s</string>
+    <string name="alert_no_family">가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요.</string>
 
     <string name="timeline_icon_stay">📍</string>
     <string name="timeline_icon_move">🚶</string>

@@ -8,6 +8,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- 보호자 폰의 알림 상시 수신(AlertService). 왜 dataSync 가 아니라 specialUse 인지는
+         그 클래스 주석에 적었다 — 요약하면 안드로이드 15부터 dataSync 는 하루 6시간만
+         돌 수 있어서, 나머지 18시간 동안 알림이 조용히 안 오게 된다. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
@@ -69,6 +73,19 @@
             android:name=".child.TrackingService"
             android:exported="false"
             android:foregroundServiceType="location" />
+
+        <!-- 보호자 폰에서 events/ 를 상시 구독하는 서비스(5단계 Task 4). FCM 이 없어
+             아이 폰이 부모 폰을 깨울 방법이 없다는 것이 이 서비스의 존재 이유다.
+             기본값은 꺼짐이고 부모가 알림 탭에서 켠다. -->
+        <service
+            android:name=".guardian.AlertService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <!-- API 34+ 는 specialUse 를 쓸 때 무슨 용도인지 문자열로 밝히기를 요구한다. -->
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="firestore_event_listener_without_fcm" />
+        </service>
 
         <receiver
             android:name=".child.BootReceiver"
