@@ -1,7 +1,13 @@
 # KidCare — 자녀 관리 안드로이드 앱 설계서
 
 작성일: 2026-08-06
-상태: 초안 (사용자 검토 대기)
+마지막 대조: 2026-08-08 — 6단계(구현 계획 번호) 완료 시점에 코드와 한 줄씩 맞춰봤다.
+상태: 구현 중. 단계 번호가 이 문서와 계획서에서 서로 다르다 — **§7 의 대조표를 먼저 볼 것.**
+
+> **이 문서와 코드가 다르면 코드가 맞다.** 이 저장소는 코드와 정반대인 서술을 두 번
+> 배포했다(§3 의 events 종류, §4.6 의 중복 억제 방향). 둘 다 "그럴듯하게 읽혀서"
+> 오래 살아남았다. 고칠 때는 문장을 지금 말투에 맞게 다듬지 말고 **해당 파일을 열어
+> 대조한 뒤** 고칠 것.
 
 ## 1. 무엇을 만드는가
 
@@ -10,7 +16,7 @@
 
 핵심 기능 6가지:
 
-1. **위치 경로 이력** — 카카오맵 위에 하루 이동 경로를 선으로 그리고, 그 아래에
+1. **위치 경로 이력** — 지도 위에 하루 이동 경로를 선으로 그리고, 그 아래에
    "몇 시부터 몇 시까지 어디에 있었고, 언제 어디로 이동했는지"를 글로 요약해 보여준다.
 2. **소리/진동 즉시 변경** — 부모가 버튼을 누르면 자녀 폰의 벨소리/진동/무음이 바로 바뀐다.
 3. **시간대별 모드 예약** — "평일 09:00~15:00 진동", "매일 22:00~07:00 무음" 같은 규칙을
@@ -24,9 +30,24 @@
 
 - **몰래 감시(은닉) 기능**. 자녀 폰에 앱 아이콘이 보이고, 아이도 자기 위치가 공유 중임을
   확인할 수 있다. 접근성 서비스로 다른 앱을 훔쳐보는 방식(스토커웨어 기법)은 쓰지 않는다.
-- **기기관리자(Device Admin) 권한을 이용한 앱 삭제 방지**. 오작동 시 폰 초기화까지 얽히고
-  아이 폰에 걸어두기엔 위험이 크다. 대신 삭제되면 신호가 끊기고 15분 뒤 "연결 끊김"으로
-  부모에게 알린다. (안드로이드는 앱이 자기 삭제 순간을 감지할 수 없다.)
+- **기기관리자(Device Admin) 권한을 이용한 앱 삭제 방지**. **여전히 안 만든다.**
+  이유가 이제 둘이다.
+  1. 오작동 시 폰 초기화까지 얽히고 아이 폰에 걸어두기엔 위험이 이득보다 크다.
+  2. **2026-08-08 — 사용자가 아이 폰 초기화를 감수하지 않기로 했다.** 기기관리자보다
+     한 단계 위인 기기 소유자(Device Owner) 등록은 공장 초기화가 전제인데, 그걸 안
+     하기로 정했으므로 이 길 자체가 닫혔다.
+
+  대신 **부모가 명령을 보냈는데 30분 넘게 대답이 없으면** 보호자 화면 맨 위에 배너를
+  띄운다(`logic/DisconnectRule`, `docs/known-issues.md` 8번). 이전 판은 여기에
+  "삭제되면 신호가 끊기고 15분 뒤 알린다"고 적었는데 **둘 다 틀렸다** — 값은 30분이고,
+  판정 재료도 "신호가 없다"가 아니라 "물어봤는데 대답이 없다"다. 아이 폰은 이제
+  주기적으로 아무것도 올리지 않으므로(§4.1) 침묵 자체는 정상 상태다.
+  (안드로이드는 앱이 자기 삭제 순간을 감지할 수 없다는 사실은 그대로다.)
+- **WiFi 원격 제어**(부모가 아이 폰의 WiFi 를 켜고 끄기). **2026-08-08 확정, 다시 꺼내지
+  말 것.** 안드로이드 10부터 `WifiManager.setWifiEnabled` 는 서드파티 앱에 **항상 실패를
+  돌려준다.** 유일하게 남은 길인 기기 소유자 등록은 위와 같은 이유로 닫혔다.
+  `targetSdk` 를 28 로 내리면 옛 API 가 되살아나지만 그러면 백그라운드 위치 수집이
+  망가진다 — 앱의 본체를 부수고 곁가지를 얻는 거래다.
 - **통화·문자·앱 사용시간 감시**. 이번 범위 밖.
 
 ### 배포 방식
@@ -60,7 +81,7 @@
 | Firebase Cloud Messaging | (4단계 후보, 현재 미사용) 명령/알림 즉시 전달 | 2026-08-07 Spark 결정으로 보류 — 지금은 Firestore 스냅샷 리스너로 대체(§2 "Firebase 요금제", §9) |
 | Firebase Cloud Functions | (4단계 후보, 현재 미사용) 푸시 발송, 오래된 데이터 정리 | **Blaze 플랜 필요.** 명령 유실이 실사용에서 관측되면 승격 검토 |
 | `play-services-location` | FusedLocationProvider, Geofencing, ActivityRecognition | 위치 수집·장소 판정·이동/정지 감지를 모두 담당 |
-| Room | 자녀 폰 오프라인 위치 버퍼 | |
+| ~~Room~~ | ~~자녀 폰 오프라인 위치 버퍼~~ | **한 번도 추가하지 않았다.** `app/build.gradle.kts` 에 없다. 하루치 경로는 `filesDir` 의 줄 단위 CSV(`child/TrailStore`)에 쌓이고, Firestore 쓰기 큐는 SDK 가 기본으로 켜 둔다(§5, `docs/known-issues.md` 19번). DB 하나를 안 들이려고 그렇게 했다 |
 
 ### Firebase 요금제 — Spark(무료)로 간다
 
@@ -106,36 +127,59 @@ APK는 하나. 첫 실행 시 역할을 고른다.
 
 단일 `:app` 모듈 안에서 패키지로 나눈다. (모듈 분리는 빌드만 느려지고 이득이 없는 규모)
 
+아래는 **실제로 있는 파일 이름**이다(2026-08-08 대조). 초안이 적었던
+`LocationRepository`·`SegmentUploader`·`GeofenceMonitor`·`HealthReporter`·`OfflineBuffer`·
+`RemoteAlarmScheduler`·`EventsFragment`·`CommandTracker` 는 **그 이름으로 만들어진 적이
+없다.** 이름만 보고 파일을 찾다가 없는 것을 새로 만드는 일을 막으려고 실물로 바꾼다.
+
 ```
 com.kidcare.family
 ├─ core/           역할·페어링·Firebase 접근 (양쪽 공용)
-│   ├─ FamilyRepository      가족 문서 CRUD, 페어링
+│   ├─ AuthGateway           익명 로그인 (동시 호출 가드)
+│   ├─ FamilyRepository      가족 문서 CRUD, 페어링, 서버 시각 보정(serverNow)
 │   ├─ CommandRepository     명령 발행/수신/상태전이
-│   ├─ LocationRepository    포인트·구간 읽기/쓰기
+│   ├─ CommandTransport      전달 수단 인터페이스 (+ FirestoreCommandTransport 구현)
+│   ├─ TrailRepository       하루 문서(trails/{dayKey}) 읽기/쓰기 — 옛 LocationRepository 자리
 │   ├─ ScheduleRepository    시간대 규칙
-│   └─ model/                Firestore 문서와 1:1 대응하는 데이터 클래스
+│   ├─ PlaceRepository       장소 (+ 저장 뒤 자녀 폰에 sync_rules 통보)
+│   ├─ EventRepository       사건 쓰기/구독/읽음 표시
+│   ├─ ErrorText             예외 → 사람이 읽는 한국어 안내
+│   ├─ Role                  역할 값과 저장소(RoleStore)
+│   └─ model/Documents.kt    Firestore 문서와 1:1 대응하는 데이터 클래스 (전부 한 파일)
 ├─ child/          자녀 폰 전용
 │   ├─ TrackingService       상시 포그라운드 서비스 (전체 조율자)
 │   ├─ LocationCollector     FusedLocation + ActivityRecognition
-│   ├─ SegmentUploader       SegmentBuilder를 호출해 결과를 Firestore에 반영
-│   ├─ RingerController      소리/진동 모드 변경·감시·되돌리기
-│   ├─ FindPhoneController   폰찾기 벨/진동/화면
-│   ├─ ScheduleApplier       AlarmManager로 시간대 규칙 적용
-│   ├─ RemoteAlarmScheduler  원격 알람시계
-│   ├─ GeofenceMonitor       장소 도착/이탈
-│   ├─ HealthReporter        배터리·전원·권한 상태 보고
-│   └─ OfflineBuffer         Room 기반 미전송 위치 큐
+│   ├─ TrailStore/TrailUploader  하루치를 파일에 쌓고, 물어볼 때만 하루 문서로 올린다
+│   ├─ StatusReporter        상태 문서 덮어쓰기
+│   ├─ CommandHandler        명령 실행 분기
+│   ├─ RingerController      소리/진동 모드 변경·감시·되돌리기 (+ RingerModeReceiver)
+│   ├─ FindPhoneController   폰찾기 벨/진동/화면 (+ FindPhoneActivity)
+│   ├─ ScheduleApplier       AlarmManager로 시간대 규칙 적용 (+ ScheduleAlarmReceiver)
+│   ├─ RemoteAlarmController 원격 알람시계 (+ RemoteAlarmReceiver/Service/Store)
+│   ├─ MessageActivity       부모가 보낸 한마디
+│   ├─ PlaceWatcher          장소 도착/이탈 (+ PlaceGeofenceReceiver, PlaceStateStore)
+│   ├─ ConditionWatcher      배터리·권한 상태 경고 — 옛 HealthReporter 자리
+│   ├─ PlaceNamer            머무른 곳 이름(Nominatim 역지오코딩)
+│   └─ ChildHomeActivity/BootReceiver/ActivityTransitionReceiver
 ├─ guardian/       보호자 폰 전용
+│   ├─ GuardianMainActivity  탭 다섯 + 연결 끊김 배너
 │   ├─ MapTimelineFragment   지도 + 타임라인 (메인)
-│   ├─ ControlFragment       즉시 변경·폰찾기·메시지·알람
-│   ├─ ScheduleFragment      시간대 규칙 + 장소 등록
-│   ├─ EventsFragment        알림 이력
-│   └─ CommandTracker        명령 상태 표시(전달 중/완료/무응답)
+│   ├─ ControlFragment       즉시 변경·폰찾기·메시지·알람 + 명령 상태 표시
+│   ├─ ScheduleFragment      시간대 규칙
+│   ├─ PlaceFragment         장소 등록 (별도 탭)
+│   ├─ AlertFragment/AlertAdapter/AlertService  알림 이력 + 상시 수신 — 옛 EventsFragment 자리
+│   ├─ ListLoadState         못 불러옴 / 불러오는 중 / 정말 비었음 (목록 셋 공용)
+│   └─ RequestLog            "언제 물어봤고 언제 대답이 왔나" (연결 끊김 판정 재료)
 └─ logic/          양쪽에서 쓰는 순수 계산   ★전부 단위테스트 대상
     ├─ ScheduleResolver      규칙 겹침·자정 넘김·즉시변경 충돌 해석
     ├─ GeofenceEvaluator     반경 진입/이탈 판정 (히스테리시스 포함)
     ├─ SegmentBuilder        위치 점 목록 → 머무름/이동 구간
-    └─ SegmentSummarizer     구간을 사람이 읽는 문장으로
+    ├─ SegmentSummarizer     구간을 사람이 읽는 문장으로
+    ├─ LocationFilter        올릴 위치인지 판정 (정확도·이동거리·속도)
+    ├─ TrailCodec            하루 문서 인코딩과 점 개수 상한
+    ├─ DayPicker             날짜 이동과 헤더 문구
+    ├─ DisconnectRule        "물어봤는데 대답이 없다" 판정
+    └─ InviteCode            6자리 코드 생성·정규화·검증
 ```
 
 각 클래스는 "무엇을 하는가 / 어떻게 쓰는가 / 무엇에 의존하는가"가 한 줄로 설명되어야 한다.
@@ -147,31 +191,37 @@ com.kidcare.family
 ```
 [자녀폰]                        [Firebase]                     [보호자폰]
 LocationCollector
-  → 50m 이상 이동?
-  → points/ 쓰기      ────────►  points/
-  → SegmentBuilder
-  → segments/ 갱신    ────────►  segments/  ───────────────►  타임라인 화면
-  → status 덮어쓰기   ────────►  status     ───────────────►  상단 상태줄
+  → LocationFilter 통과?
+  → 메모리 버퍼 + filesDir/trail_today.csv     (여기까지 통신 0)
 
-                                 commands/  ◄───────────────  버튼 누름
-                                    │
+                                 commands/  ◄───────────────  '지금 위치 확인' 등
+                                    │                          버튼 누름
                      Firestore 스냅샷 리스너 (TrackingService 안 —
                      위치 수집용으로 이미 상시 도는 그 포그라운드 서비스)
                                     ↓ 1~3초
 TrackingService ◄──────────────────┘
-  → 실행 → commands/{id}.state = done  ──►  ─────────────►  "완료" 표시
+  → locate_now 면
+    SegmentBuilder 로 하루치를 다시 묶어
+  → trails/{dayKey}   ────────►  trails/{dayKey} ─────────►  지도 경로선 + 타임라인
+  → children/{uid}    ────────►  children/{uid}  ─────────►  마커 + 상단 카드
+  → commands/{id}.state = done ─►               ─────────►  "완료" 표시
+                                                            (그때 한 번 읽는다)
 
-GeofenceMonitor / HealthReporter
+PlaceWatcher / ConditionWatcher
   → events/ 쓰기      ────────►  events/
                                     │
-                     Firestore 스냅샷 리스너 (보호자 화면)
+                     Firestore 스냅샷 리스너 (보호자 폰 AlertService)
                                     ↓
                                                             알림 표시
 ```
 
-(2026-08-07 변경: Cloud Function → FCM 경로를 Firestore 스냅샷 리스너로 바꿨다.
-근거는 §2 "Firebase 요금제"와 §9 결정 기록. 자녀 폰이 위치 수집 때문에 이미 상시
-켜져 있으므로 "잠든 앱을 깨우는" FCM의 이점이 여기서는 없다.)
+- **2026-08-07 변경:** Cloud Function → FCM 경로를 Firestore 스냅샷 리스너로 바꿨다.
+  근거는 §2 "Firebase 요금제"와 §9 결정 기록. 자녀 폰이 위치 수집 때문에 이미 상시
+  켜져 있으므로 "잠든 앱을 깨우는" FCM의 이점이 여기서는 없다.
+- **2026-08-08 변경:** 이전 판의 이 그림은 `points/` 를 fix 마다 쓰고 `segments/` 를
+  15분마다 갈아끼우며 상태 문서를 계속 덮어쓴다고 그려져 있었다. **그 세 화살표는
+  이제 전부 없다.** 자녀 폰은 부모가 물어봤을 때와 하루 1회 안전 업로드, 그 두 순간에만
+  Firestore 를 건드린다(§4.1). 보호자 쪽 상시 구독도 `events/` 하나만 남았다.
 
 ### Firestore 문서 구조
 
@@ -200,8 +250,18 @@ families/{familyId}
     lat, lng, accuracy, at
     battery, charging
     ringerMode: "normal" | "vibrate" | "silent"
-    lastSeenAt
-    permissions: { location, background, dnd, batteryOpt, notification, exactAlarm }
+    lastSeenAt          (**아이 폰 시계**. 아이 폰이 앞서 있으면 보호자 화면의 뺄셈이
+                         음수가 된다 — known-issues 7번)
+    lastSeenServerAt    (같은 순간을 **서버 시계**로. @ServerTimestamp 라 자녀 폰이
+                         값을 아예 안 넘긴다. 읽는 쪽은 반드시
+                         ChildStatusDoc.lastSignal() 한 곳만 지난다)
+
+    ~~permissions: { location, background, dnd, batteryOpt, notification, exactAlarm }~~
+                        **이 필드는 만들어진 적이 없다**(2026-08-08 대조).
+                        ChildStatusDoc 에 없고 쓰는 코드도 없다. 권한이 꺼진 사실은
+                        상태 문서가 아니라 events 의 permission_off 로 간다
+                        (child/ConditionWatcher). 보호자 화면 상단의 빨간 띠도 없다 —
+                        §5 의 그 줄도 함께 정정했다.
 
   children/{childUid}/trails/{dayKey}   (2026-08-08 신설. 옛 points/ 와 segments/ 를
                                          **둘 다** 대체한다 — 하루가 문서 하나다.
@@ -223,10 +283,17 @@ families/{familyId}
                                             move 는 빈 문자열. 옛 dayKey 필드는
                                             문서 ID 가 이미 말하므로 없앴다)
 
-  children/{childUid}/commands/{autoId}
+  children/{childUid}/commands/{autoId}   (값의 정답은 events 와 마찬가지로 코드의
+                                           core/model/Documents.kt `CommandType` 이다.
+                                           2026-08-08 대조 결과 아래 여덟 개가 코드와
+                                           정확히 일치한다 — 다만 message·set_alarm·
+                                           cancel_alarm 은 이 표에 오래 적혀 있었을 뿐
+                                           5단계에 가서야 실제로 만들어졌다. 계획서 둘이
+                                           "4단계에 이미 있다"고 적었다가 없어서 되짚었다)
     type: "set_ringer" | "find_phone" | "stop_find" | "locate_now"
         | "set_alarm" | "cancel_alarm" | "message" | "sync_rules"
-    payload: {...}
+    payload: {...}   (키는 CommandType 의 PAYLOAD_* 상수. 실패 코드도 같은 오브젝트에
+                      ERROR_* 로 있다 — 명령 종류가 아니므로 위 목록에는 안 넣는다)
     state: "pending" | "delivered" | "done" | "failed"
     createdAt, deliveredAt, doneAt, error
 
@@ -429,7 +496,12 @@ Spark 무료 요금제로 가기로 하면서(§2 "Firebase 요금제", §9) 아
   강제하지 않는다** — 오차가 작아 원이 안 보이면 그게 맞는 결과다. 좋은 fix 를 억지로
   큰 원으로 부풀리는 것은 그 자체가 또 다른 거짓말이다. `accuracy == 0`(옛 문서·기기가
   값을 안 줄 때)이면 아예 그리지 않는다 — 0 은 "오차 없음"이 아니라 "모른다"다.
-- 기본값은 위와 같고, 앱 설정에서 "촘촘히 / 잡으면 쓰기 / 배터리 아끼기" 3단으로 바꿀 수 있다.
+- ~~앱 설정에서 "촘촘히 / 잡으면 쓰기 / 배터리 아끼기" 3단으로 바꿀 수 있다.~~
+  **안 만들었다**(2026-08-08 대조 — 그런 화면도 설정값도 없다). 위 표의 값이 전부이고
+  사용자가 바꿀 수 있는 것은 하나도 없다. 이 3단 설정은 배터리 소모를 실기기에서
+  재본 뒤에 붙일 자리로 남겨 둔 것이다 — `docs/known-issues.md` 10번이 그 순서를
+  적어 뒀다(**먼저 재고 나서 붙일 것.** 숫자 없이 토글부터 만들면 기본값을 어디에
+  둘지 정할 근거가 없다).
 
 ### 4.2 구간 묶기 (SegmentBuilder)
 
@@ -539,18 +611,23 @@ Spark 무료 요금제로 가기로 하면서(§2 "Firebase 요금제", §9) 아
 
 ## 5. 오류 처리
 
+*(2026-08-08 대조. 이 표는 초안 이후 한 번도 안 고쳐서 절반이 틀려 있었다 — 아래
+"→ 실제" 가 붙은 줄이 그것이다.)*
+
 | 상황 | 처리 |
 |---|---|
-| 자녀 폰 인터넷 끊김 | Room에 위치를 쌓아두고 연결되면 일괄 업로드. 최대 24시간분(초과분은 오래된 것부터 버림) |
-| 명령이 전달 안 됨 | `commands.state`로 추적. 보호자 화면에 `전달 중…` → `완료`. **60초 무응답이면 "애기폰이 응답하지 않아요"** 로 정직하게 표시하고, 마지막 신호 시각을 함께 보여준다 |
+| 자녀 폰 인터넷 끊김 | ~~Room에 위치를 쌓아두고 연결되면 일괄 업로드. 최대 24시간분~~ → **실제**: Room 은 안 쓴다. 위치는 `filesDir` CSV 에 쌓이고(§4.1), 못 나간 Firestore 쓰기는 SDK 의 쓰기 큐에 남아 연결되면 올라간다. **다만 `events` 는 24시간을 넘기면 서버가 거부한다** — 알려진 데이터 유실, `docs/known-issues.md` 20번 |
+| 명령이 전달 안 됨 | `commands.state`로 추적. 보호자 화면에 `전달 중…` → `완료`. **60초 무응답이면 "애기폰이 응답하지 않아요"** 로 정직하게 표시하고, 마지막 신호 시각을 함께 보여준다. 오프라인이면 60초 시계가 시작조차 못 하므로 **15초 쓰기 제한시간**이 "아직 안 갔어요"를 대신 말한다(known-issues 19) |
 | 명령 중복 실행 | 명령 문서 ID를 자녀 폰이 기억(최근 100개). 이미 처리한 ID는 무시한다 |
-| 권한이 꺼짐 | 자녀 폰이 `status.permissions`에 실시간 반영. 보호자 화면 상단에 빨간 띠로 경고 + 어떤 권한인지 명시 |
-| 서비스가 강제 종료됨 | `START_STICKY` + `BOOT_COMPLETED` 재시작 + 15분 무신호 시 `signal_lost` 이벤트 |
-| GPS 튐 | 정확도 100m 초과 지점 제외. 직전 지점 대비 시속 200km 초과 이동은 버림 |
-| 카카오맵 앱키 오류 | 지도 대신 "지도 키 설정이 필요합니다" 안내 화면. 나머지 기능은 정상 동작 |
-| Firebase 사용량 초과 | 예산 알림 설정 안내. 앱은 쓰기 실패 시 로컬 버퍼에 보관 |
+| 권한이 꺼짐 | ~~`status.permissions`에 실시간 반영 + 보호자 화면 상단 빨간 띠~~ → **실제**: 그 필드도 그 띠도 없다(§3 참고). `child/ConditionWatcher` 가 켜져 있다가 꺼진 순간 **한 번** `permission_off` 이벤트를 쓰고, 부모는 알림 탭과 시스템 알림으로 본다. 켜졌다 꺼졌다를 실시간으로 비추지는 않는다 |
+| 서비스가 강제 종료됨 | ~~`START_STICKY` + `BOOT_COMPLETED` 재시작 + 15분 무신호 시 `signal_lost` 이벤트~~ → **실제**: 앞의 둘은 맞다. `signal_lost` 는 **구조적으로 쓸 수 없다** — 아이 폰은 자기 침묵을 스스로 보고할 수 없고, 규칙의 `childUid == request.auth.uid` 때문에 부모도 이벤트를 못 만든다. 그 자리는 연결 끊김 배너(`logic/DisconnectRule`, 30분)가 덮는다. 그리고 아이가 **직접** 강제 중지한 경우는 `BOOT_COMPLETED` 자체가 배달되지 않아 재부팅으로도 안 살아난다(known-issues 8) |
+| GPS 튐 | ~~정확도 100m 초과 지점 제외~~ → **실제**: 문턱이 두 단계다. 평소 **50m**, 마지막 업로드로부터 15분이 지나면 **100m** 까지 받는다(§4.1). 직전 지점 대비 시속 200km 초과 이동은 버리는 것은 그대로 |
+| ~~카카오맵 앱키 오류~~ | **해당 없음.** osmdroid 로 바꿔 앱키가 아예 없다(§9). 지도 실패는 이제 타일을 못 받아오는 것뿐이고 그건 통신 문제다 |
+| Firebase 사용량 초과 | ~~예산 알림 설정 안내~~ → **실제**: Spark(무료)라 예산 알림 자체가 없다. 한도를 넘으면 **그날 나머지 시간 동안 Firestore 가 그냥 멈춘다.** 가족 하나가 혼자 쓰는 동안에는 한참 아래지만 1,000가족 목표에서는 1.8~2.1배 초과다 — `docs/known-issues.md` 12·14번 |
 | 폰찾기 벨이 안 꺼짐 | 자녀 폰 화면 중지 버튼 + 5분 자동 정지 (이중 안전장치) |
-| 배터리 최적화가 다시 켜짐 | 주기적으로 확인해 꺼져 있으면 부모에게 알림 |
+| 배터리 최적화가 다시 켜짐 | ~~주기적으로 확인해 꺼져 있으면 부모에게 알림~~ → **일부러 뺐다.** 배터리 최적화가 켜지면 폰이 곧 대답을 안 하게 되고 그건 연결 끊김 배너가 이미 덮는다. OEM 이 스스로 켜기도 해서 알림이 잦아진다 — `ConditionWatcher` 가 보는 권한 넷에서 이것만 제외한 이유다 |
+| 앱을 켰는데 로그인이 안 됨 | (6단계에서 추가) 익명 로그인은 쓰기가 아니라 요청·응답이라 오프라인에서 예외로 끝난다. 화면에 `다시 시도` 를 두고 15초 제한시간을 걸었다 — 예전에는 실패 문구만 있고 **누를 것이 없었다** |
+| 구글 플레이 서비스가 없거나 옛 버전 | (6단계에서 추가) FusedLocation 과 지오펜스가 **콜백도 예외도 없이** 통째로 죽는다. 서비스는 떠 있고 알림줄도 그대로여서 부모 화면의 마커만 멈춘다. 자녀 홈이 그 사실을 말하고 `makeGooglePlayServicesAvailable()` 로 보낸다. 고칠 수 없는 기기면 버튼을 **감추고** 부모에게 화면을 보여주라고 적는다 |
 
 ## 6. 테스트 전략
 
@@ -591,29 +668,64 @@ Spark 무료 요금제로 가기로 하면서(§2 "Firebase 요금제", §9) 아
 계획하면 뒤 단계가 앞 단계의 실기기 결과를 반영하지 못한다. 1~2단계를 먼저 계획하고,
 실기기로 위치가 제대로 올라오는 것을 확인한 뒤 3단계 이후를 계획한다.
 
+### 번호가 두 벌이다 — **계획서 번호가 기준이다**
+
+이 표의 7단계와 `docs/superpowers/plans/` 의 계획서 번호가 **서로 다르다.** 4단계
+계획서가 이 표의 4·5(즉시 변경·폰찾기 + 시간대 예약)를 **한 번에** 다뤘고, 그 뒤로
+번호가 하나씩 밀렸다. 계획서는 5개(1-2, 3, 4, 5, 6)이고 이 표는 7줄이다.
+
+**커밋 메시지·README 개발일지·`docs/known-issues.md`·`versionCode`(6 = 계획서 6단계)가
+전부 계획서 번호를 쓴다. 그러니 사람이 말할 때는 계획서 번호가 기준이고,
+이 표의 번호는 "설계 항목 번호"로만 읽는다.**
+
+| 설계서 단계 | 계획서 | 상태 |
+|---|---|---|
+| 1, 2 | `2026-08-06-kidcare-phase1-2.md` | ✅ 완료 |
+| 3 | `2026-08-07-kidcare-phase3.md` | ✅ 완료 |
+| **4 + 5** | `2026-08-07-kidcare-phase4.md` | ✅ 완료 — **여기서 하나로 합쳐졌다** |
+| 6 | `2026-08-08-kidcare-phase5.md` | ✅ 완료 |
+| 7 | `2026-08-08-kidcare-phase6.md` | ✅ 완료 |
+
 | 단계 | 내용 | 완료 기준 |
 |---|---|---|
 | 1 | 프로젝트 뼈대, Firebase 연결, 역할 선택, 페어링 | 두 폰이 서로 연결됐다고 표시된다 |
 | 2 | 권한 온보딩, 위치 수집, 지도에 현재 위치 | 부모 폰 지도에 아이 현재 위치가 보인다 |
-| 3 | 구간 요약, 타임라인, 날짜 이동 | 하루 경로가 선 + 글로 보인다. **전제 조건 둘 다 필요**: 카카오 앱키(지도)와 `dayKey`+`startAt` 복합 색인(타임라인 쿼리) — 하나라도 빠지면 반쪽만 동작한다. `docs/setup.md` 참고 |
+| 3 | 구간 요약, 타임라인, 날짜 이동 | 하루 경로가 선 + 글로 보인다. ~~전제 조건 둘: 카카오 앱키와 `dayKey`+`startAt` 복합 색인~~ → **둘 다 이제 없다.** 지도는 앱키가 필요 없는 osmdroid 로 바뀌었고(§9), 타임라인은 `trails/{dayKey}` 문서 한 건을 ID 로 곧장 읽어 쿼리도 색인도 없다(§4.1). 지금 남은 색인은 `commands` 하나뿐이다 — `docs/setup.md` 참고 |
 | 4 | 소리/진동 즉시 변경, 되돌리기, 핸드폰 찾기 | 버튼 누르면 5초 안에 아이 폰이 반응한다 |
 | 5 | 시간대 예약 | 등록한 시각에 모드가 자동으로 바뀐다 |
 | 6 | 장소 반경, 도착/이탈 알림, 메시지, 원격 알람, 상황 경고 | 알림이 부모 폰에 뜬다 |
 | 7 | 오프라인 처리, 예외 화면, 릴리스 APK 서명 | 비행기 모드 후 복구 시 데이터가 안 빠진다 |
 
+**"완료"는 코드가 다 들어갔다는 뜻이지 실기기에서 확인했다는 뜻이 아니다.** 아이 폰
+역할을 하루 종일 실제로 돌려본 적이 아직 없다(폰이 한 대뿐이다). 무엇이 미검증인지는
+`docs/known-issues.md` 의 "실기기 검증" 절에 항목별로 적혀 있다.
+
+§7 의 7단계 완료 기준("비행기 모드 후 복구 시 데이터가 안 빠진다")은 **그대로
+만족하지 못한다** — 24시간을 넘는 단절에서는 `events` 가 서버에 거부돼 실제로 빠진다.
+고치지 않고 조건과 숫자를 known-issues 20번에 적어 뒀다.
+
 ## 8. 사용자가 직접 해야 하는 준비
 
-코드로 대신할 수 없는 것들. 각 단계에서 누를 버튼 순서까지 안내한다.
+코드로 대신할 수 없는 것들. 절차는 `docs/setup.md` 에 버튼 순서까지 적혀 있다.
 
-1. **카카오 개발자 앱키** — [developers.kakao.com](https://developers.kakao.com) 가입 →
-   애플리케이션 추가 → 플랫폼에 Android 등록(패키지명 `com.kidcare.family` + 키 해시) →
-   네이티브 앱 키 발급. 키는 `local.properties`에 넣고 git에 올리지 않는다.
+*(2026-08-08 대조. 1번이 통째로 없어졌고 2번의 절반이 틀려 있었다.)*
+
+1. ~~**카카오 개발자 앱키**~~ — **필요 없다.** 지도는 osmdroid, 주소 변환은 Nominatim 이라
+   **외부 키가 하나도 없다**(§9 결정 기록 두 줄). 실제로 이 프로젝트는 카카오 키를 한
+   번도 발급받지 않았고, 그게 지도가 1~3단계 내내 안 그려진 원인이었다.
 2. **Firebase 프로젝트** — 콘솔에서 프로젝트 생성 → Android 앱 추가(같은 패키지명) →
-   `google-services.json` 내려받아 `app/`에 넣기 → Blaze 플랜 업그레이드 →
-   예산 알림 1,000원 설정 → Firestore·Authentication(익명)·Cloud Messaging 활성화.
+   `google-services.json` 내려받아 `app/`에 넣기 → Authentication(익명)·Firestore 활성화 →
+   `firestore.rules` 게시 → `commands` 복합 색인 생성.
+   ~~Blaze 플랜 업그레이드 → 예산 알림 1,000원 → Cloud Messaging 활성화~~ 는 **하지
+   않는다**: 요금제는 Spark(무료) 그대로이고 카드도 필요 없다(§2 "Firebase 요금제"),
+   FCM 은 쓰지 않는다.
 3. **두 폰에 설치 후 권한 켜기** — 자녀 폰의 위치(항상 허용), 방해금지 접근,
    배터리 최적화 제외, 알림, 정확한 알람, 활동 인식.
    삼성 기기는 "설정 → 배터리 → 백그라운드 사용 제한"에서도 제외해야 한다.
+4. **릴리스 키스토어**(6단계에서 생겼다) — 배포용 키는 사람이 직접 만들고 비밀번호를
+   `local.properties` 에만 둔다. 지금 저장소에 붙어 있는 `kidcare-dev.jks` 는 R8 을
+   검증하려고 만든 **개발용**이고 비밀번호가 문서에 적혀 있다. `docs/setup.md`
+   "릴리스 서명" 절 참고 — **한 번 배포한 뒤에는 키를 못 바꾼다.**
 
 ## 9. 결정 기록
 
@@ -624,14 +736,18 @@ Spark 무료 요금제로 가기로 하면서(§2 "Firebase 요금제", §9) 아
 | 구간 계산을 자녀 폰에서 | 보호자 폰에서 / Cloud Function에서 | 보호자가 원시 점을 매번 읽으면 느리고 사용량이 크다. Function은 비용 발생 지점이 늘어난다 |
 | 지도+타임라인 병행 | 지도만 / 목록만 | "몇 시에 어디서 어디로"라는 요구가 글 요약이라야 한 눈에 읽힌다. 지도는 맥락용 |
 | 은닉 기능 없음 | 아이콘 숨김 | 스토커웨어 기법이고 정책 위반. 투명한 공유가 가족 관계에도 낫다 |
-| 기기관리자 권한 안 씀 | 삭제 방지 | 오작동 시 기기 초기화까지 얽히는 위험이 이득보다 크다 |
+| 기기관리자 권한 안 씀 | 삭제 방지 | 오작동 시 기기 초기화까지 얽히는 위험이 이득보다 크다. **2026-08-08 이유가 하나 더 늘었다** — 그 위의 기기 소유자 등록은 아이 폰 공장 초기화가 전제인데 사용자가 감수하지 않기로 했다(§1) |
+| **WiFi 원격 제어 안 만듦** (2026-08-08) | 기기 소유자로 등록해 `setWifiEnabled` 쓰기 / `targetSdk` 를 28로 내리기 | 안드로이드 10부터 서드파티 앱의 `setWifiEnabled` 는 **항상 실패**를 돌려준다. 기기 소유자는 초기화가 전제라 위 줄과 같은 이유로 막혔고, `targetSdk` 를 내리면 백그라운드 위치 수집이 망가진다 — 본체를 부수고 곁가지를 얻는 거래다. **확정이고 다시 꺼내지 않는다** |
+| **런처 아이콘: 새싹이 적응형 아이콘** (6단계) | 기본 아이콘 그대로 / `ic_mascot` 을 그대로 축소 | 선언 자체가 없어 안드로이드 기본 로봇이 떴다 — 아이 폰 홈에 로봇이 있으면 그게 뭔지 아무도 모른다. 그대로 축소하면 잎이 기기 모양 마스크에 잘려서, 얼굴과 잎을 안전 영역(가운데 66dp) 안으로 다시 앉혔다. 배경색은 `mascot_bg`(밝은 하늘색) — 처음 고른 `sky` 위에서는 48dp 로 그려 보니 **새싹이 사라졌다**(잎과 배경의 밝기가 거의 같다) |
 | Views + ViewBinding | Compose | 기존 프로젝트 관례 유지. 지도 SDK가 View 기반이라 상호운용 비용도 없다 |
 | ~~카카오맵~~ → **osmdroid(OpenStreetMap)** | 카카오맵 유지, 앱키 발급 대기 | 2026-08-07 뒤집음. 소유자가 카카오 네이티브 앱키를 한 번도 발급받지 않아 1~3단계 내내 지도가 그려진 적이 없었다. osmdroid는 등록·앱키가 전혀 필요 없어 즉시 동작한다. 카카오로 되돌릴 여지를 남기려고 `gradle/libs.versions.toml`의 `kakao-map` 별칭과 `settings.gradle.kts`의 카카오 Maven 저장소는 지우지 않고 주석 처리만 했다 — API 매핑·검증 근거는 `.superpowers/map-swap-report.md` |
 | ~~카카오 로컬 REST API~~ → **Nominatim(OpenStreetMap)** | 카카오 로컬 유지, REST 키 발급 대기 | 2026-08-07 뒤집음. 소유자가 카카오 REST 키를 발급받지 않아 머무른 곳 이름이 항상 "머무른 곳"으로만 나왔다. Nominatim은 키 등록이 전혀 필요 없다. 대신 호의성 공개 서버라 초당 1건 제한·식별 User-Agent·캐싱·전환 가능성을 요구하는 사용 정책이 있어 `PlaceNamer`가 이를 지키도록 구현했다(근거·응답 예시는 `.superpowers/geocoder-swap-report.md`). 카카오 쪽 REST 키 플러밍(`BuildConfig.KAKAO_REST_KEY`, `local.properties`)은 제거했다 |
 
 ## 10. 남은 미결정 사항
 
-- 앱 이름(한글 표시명). 현재 가안: "우리아이 지킴이". 사용자 확정 필요.
+- ~~앱 이름(한글 표시명). 현재 가안: "우리아이 지킴이". 사용자 확정 필요.~~
+  **정해졌다.** `strings.xml` 의 `app_name` = `우리아이 지킴이`. 아이콘도 6단계에서
+  붙었다(새싹이, `mipmap/ic_launcher`). 이 항목은 이제 미결정이 아니다.
 - 자녀가 여러 명인 경우. 이번 설계는 데이터 구조상 다자녀를 지원하지만
   (`children/{childUid}`), 보호자 화면 UI는 자녀 1명 기준으로 만든다.
   2명 이상이 필요해지면 상단에 자녀 선택 탭을 추가한다.
