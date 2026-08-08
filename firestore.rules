@@ -177,6 +177,13 @@ service cloud.firestore {
         allow write: if memberOf(familyId) && roleIn(familyId) == 'guardian';
       }
 
+      // 장소는 부모가 정한다. 아이는 읽기만 — 자기 폰에 지오펜스를 걸려면 좌표와
+      // 반경을 알아야 하기 때문이다. 쓰기를 열면 아이가 학교 반경을 0 으로 만들거나
+      // 장소 문서를 통째로 지워서 도착 알림 자체를 없앨 수 있다. write 한 줄이
+      // create·update·delete 세 갈래를 다 덮으므로 빠지는 길이 없다.
+      // 이 조건은 roleIn 이 정직하다는 것에 기대고 있다 — 아이가 자기 role 을
+      // 'guardian' 으로 고치는 길은 위 members update 의 role 불변 규칙이 막는다.
+      // 그 규칙이 무너지면 이 줄도 같이 무너진다(fix round 2 Critical 1 참고).
       match /places/{id} {
         allow read: if memberOf(familyId);
         allow write: if memberOf(familyId) && roleIn(familyId) == 'guardian';
@@ -187,10 +194,54 @@ service cloud.firestore {
         allow write: if memberOf(familyId) && roleIn(familyId) == 'guardian';
       }
 
+      // 이벤트는 방향이 반대다: 아이 폰이 만들고 부모가 읽는다.
+      //
+      // 5단계에서 조였다. 옛 규칙은 create 가 `memberOf` 하나뿐이라 아이가 남의
+      // 이름으로 사건을 지어내거나, 만들면서 read: true 로 적어 부모의 안 읽은
+      // 목록에 아예 안 뜨게 할 수 있었다. **조인 블록을 옆에 덧붙이지 않고 이
+      // 블록 자체를 고쳤다** — 규칙은 OR 로 평가되므로 헐거운 옛 블록을 남겨두면
+      // 새 블록을 아무리 조여도 옛 블록 하나로 전부 통과한다. 재귀 와일드카드를
+      // 지웠던 것(위 children 주석)과 같은 함정이고, 같은 이유로 여기도 컬렉션을
+      // 하나씩 적는다.
       match /events/{id} {
         allow read: if memberOf(familyId);
-        allow create: if memberOf(familyId);
-        allow update, delete: if memberOf(familyId) && roleIn(familyId) == 'guardian';
+        // 만드는 것은 그 아이 본인만. childUid 를 자기 uid 로 적게 강제해 남의
+        // 이름으로 사건을 지어내지 못하게 한다. read 는 항상 false 로 시작해야
+        // 한다 — 아이가 만들면서 미리 읽음 표시를 해 두면 부모 화면에서 사라진다.
+        //
+        // at 은 서버 시각(request.time) 기준으로 창을 둔다. 도착 기록의 at 을
+        // 한참 과거로 적으면 부모의 최신순 목록 아래로 가라앉아 사실상 안 알린
+        // 것이 된다. 폰 시계를 되돌려도 결과가 같으므로 폰 시계가 아니라 서버
+        // 시각으로 잰다. 창을 넉넉히 잡은 이유가 있다: 규칙이 거부하면 그 이벤트는
+        // 부모에게 영영 안 간다. 조이다가 정직한 늦은 쓰기까지 막으면 그것 자체가
+        // 우리가 막으려던 "조용한 실패"가 된다.
+        //   과거 24시간 — 폰이 오프라인이라 쓰기가 큐에 밀렸다 늦게 올라오는 경우
+        //   미래 1시간   — 폰 시계가 조금 빠른 경우
+        //
+        // type 은 일부러 안 묶는다. 값 목록으로 잠그면 이벤트 종류가 하나 늘 때마다
+        // 사람이 콘솔에 규칙을 다시 게시해야 하고, 잊으면 그 종류만 조용히
+        // PERMISSION_DENIED 로 죽는다(docs/setup.md 의 게시 순서 참고). 반면 막아서
+        // 얻는 것은 낯선 type 이 목록에 한 줄 이상하게 보이는 정도다 — 알림을
+        // 없애지는 못한다. 값이 비싸지 않아서 안 산다.
+        //
+        // 여기에 roleIn 을 걸지 않은 것도 일부러다. roleIn 은 get() 이라 읽기가 한
+        // 번 더 붙는데, 이벤트 생성은 이 컬렉션에서 제일 잦은 쓰기다. childUid 대조
+        // 만으로 "아무나 남의 이름으로" 는 이미 막힌다.
+        allow create: if memberOf(familyId)
+                      && request.resource.data.childUid == request.auth.uid
+                      && request.resource.data.read == false
+                      && request.resource.data.at > request.time.toMillis() - 24 * 60 * 60 * 1000
+                      && request.resource.data.at < request.time.toMillis() + 60 * 60 * 1000;
+        // 읽음 표시는 부모만, 그리고 read 필드 하나만. 막는 공격 둘: 아이가 자기
+        // 도착 기록의 placeName·at 을 사후에 고치는 것과, 아이가 자기 이벤트를
+        // 스스로 읽음 처리해 부모의 안 읽은 목록에서 지워버리는 것. 후자 때문에
+        // 여기서는 읽기 한 번(get)을 더 내고서라도 보호자를 확인한다.
+        allow update: if memberOf(familyId)
+                      && roleIn(familyId) == 'guardian'
+                      && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['read']);
+        // 지우는 것도 부모만. 아이가 자기 이탈 기록을 지우면 알림의 뜻이 없다.
+        allow delete: if memberOf(familyId) && roleIn(familyId) == 'guardian';
       }
     }
   }
