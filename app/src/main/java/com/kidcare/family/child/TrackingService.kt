@@ -28,6 +28,7 @@ import com.kidcare.family.R
 import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.CommandRepository
 import com.kidcare.family.core.RoleStore
+import com.kidcare.family.core.model.CommandType
 import com.kidcare.family.logic.Decision
 import com.kidcare.family.logic.Fix
 import com.kidcare.family.logic.LocationFilter
@@ -45,15 +46,31 @@ class TrackingService : LifecycleService() {
 
     private val collector by lazy { LocationCollector(this) }
     private val reporter = StatusReporter()
-    private var lastUploaded: Fix? = null
-    private val segmentUploader = SegmentUploader()
-    private var lastSegmentRebuildAt = 0L
-    private val pointsCleaner = PointsCleaner()
-    private var lastPointsCleanupAt = 0L
+
+    /**
+     * 마지막으로 **받아들인** fix. 옛 이름은 lastUploaded 였는데, 이제 이 값이
+     * 곧바로 Firestore 로 가지 않으므로(하루 문서 정책, docs/known-issues.md 12번)
+     * 이름이 거짓이 됐다. LocationFilter.decide 의 "직전 점" 역할은 그대로다.
+     */
+    private var lastFix: Fix? = null
+
+    private val trailUploader by lazy { TrailUploader(this) }
+
+    /**
+     * 마지막으로 Firestore 에 올린 시각. 안전 업로드(하루 한 번) 판정에만 쓴다.
+     *
+     * **일부러 저장하지 않는다(메모리에만).** 서비스가 다시 뜰 때마다 0 이 되어
+     * 안전 업로드가 한 번 더 나가는데, 그건 손해가 아니라 이득이다 — 아이 폰이
+     * 재부팅되거나 프로세스가 죽었다 살아난 직후에 부모가 최신 상태를 한 번 받게
+     * 된다. 대가는 재시작 1회당 쓰기 2번이고, 재시작이 하루 수십 번 일어나는 폰은
+     * 이미 다른 문제가 더 크다.
+     */
+    private var lastUploadAt = 0L
 
     // 받은 명령을 분배·실행하는 곳(Task 3). 리스너 자체는 subscribeToCommands 가
-    // 걸고 뗀다.
-    private val commandHandler by lazy { CommandHandler(this) }
+    // 걸고 뗀다. locate_now 는 이 서비스만 답할 수 있으므로(위치 버퍼가 여기 있다)
+    // 콜백으로 넘겨준다 — CommandHandler 가 서비스를 거꾸로 붙들지 않게 하려는 것이다.
+    private val commandHandler by lazy { CommandHandler(this, ::uploadNow) }
     private var commandListener: ListenerRegistration? = null
 
     // status 문서의 ringerMode 를 채우는 데 쓴다(Task 4) — 지금 실제로 무슨 소리
@@ -102,6 +119,12 @@ class TrackingService : LifecycleService() {
             return
         }
         promoteToForeground(NOTIFICATION_ID, buildNotification())
+
+        // 프로세스가 죽었다 살아났으면 오늘 걸어온 길이 아직 파일에 남아 있다.
+        // 이걸 안 되찾으면 부모가 오후에 '지금 위치 확인'을 눌렀을 때 오전 기록이
+        // 통째로 사라진 하루 문서가 올라간다 — 옛 구조에서는 점이 이미 한 개씩
+        // Firestore 에 들어가 있어 이런 위험 자체가 없었다.
+        trailUploader.restore()
 
         // ActivityTransitionReceiver(매니페스트 등록, 별도 인스턴스)가 지금 도는
         // 서비스의 collector 에 닿을 방법이 없어 정적 참조로 다리를 놓는다.
@@ -293,19 +316,19 @@ class TrackingService : LifecycleService() {
         }
 
         // 시계가 거꾸로 갔으면(아이가 설정에서 일부러 되돌리거나, NTP 재동기화로
-        // 우연히) lastUploaded.at 이 미래 시각인 채로 남는다. LocationFilter.decide 는
-        // elapsed(=fix.at - lastUploaded.at) <= 0 이면 무조건 REJECT_IMPOSSIBLE 이라,
+        // 우연히) lastFix.at 이 미래 시각인 채로 남는다. LocationFilter.decide 는
+        // elapsed(=fix.at - lastFix.at) <= 0 이면 무조건 REJECT_IMPOSSIBLE 이라,
         // 그 뒤로 오는 모든 정상 fix 가 영원히 막힌다 — 서비스는 멀쩡히 돌고 로그도
-        // 조용해서, 위치가 안 올라온다는 사실 자체를 알아챌 방법이 없다. lastUploaded
+        // 조용해서, 위치가 안 쌓인다는 사실 자체를 알아챌 방법이 없다. lastFix
         // 를 버려서 다음 fix 를 첫 fix 취급으로 되살린다(LocationFilter 는 그대로 두고
         // 여기서만 고친다 — 그 클래스는 순수하고 이미 단위테스트로 고정돼 있다).
-        val previous = lastUploaded
+        val previous = lastFix
         if (previous != null && fix.at < previous.at) {
-            Log.w(TAG, "시계가 거꾸로 감: lastUploaded.at=${previous.at} > fix.at=${fix.at} — lastUploaded 초기화")
-            lastUploaded = null
+            Log.w(TAG, "시계가 거꾸로 감: lastFix.at=${previous.at} > fix.at=${fix.at} — lastFix 초기화")
+            lastFix = null
         }
 
-        when (LocationFilter.decide(lastUploaded, fix)) {
+        when (LocationFilter.decide(lastFix, fix)) {
             Decision.UPLOAD -> Unit
             // 완화 문턱으로 간신히 통과한 점이다. 올리는 동작은 UPLOAD 와 똑같지만
             // 반드시 W 로 남긴다 — known-issues 의 '정확도 기아 상태'는 이 태그
@@ -327,85 +350,71 @@ class TrackingService : LifecycleService() {
                 return
             }
             Decision.REJECT_IMPOSSIBLE -> {
-                Log.w(TAG, "REJECT_IMPOSSIBLE: familyId=$familyId at=${fix.at} previous=${lastUploaded?.at}")
+                Log.w(TAG, "REJECT_IMPOSSIBLE: familyId=$familyId at=${fix.at} previous=${lastFix?.at}")
                 return
             }
         }
 
+        // 여기서 Firestore 로 나가는 것은 **아무것도 없다.** 점은 폰 안(메모리 버퍼 +
+        // 파일)에만 쌓인다. 옛 코드는 이 자리에서 status 문서 쓰기 한 번과 points
+        // 문서 생성 한 번을 했고, 그게 하루 약 1,040번이 되어 무료 한도를 55배
+        // 넘겼다(docs/known-issues.md 12번).
+        lastFix = fix
+        trailUploader.onCollected(fix)
+
+        // 하루 한 번 안전 업로드. 부모가 하루 종일 앱을 안 열어도 그날 기록이 서버에
+        // 한 번은 남아야 한다 — 아이 폰을 잃어버리거나 망가뜨리면 폰 안의 파일은
+        // 함께 사라지기 때문이다. 이것 말고 주기적으로 올리는 경로는 없다.
+        val now = System.currentTimeMillis()
+        if (now - lastUploadAt < SAFETY_UPLOAD_INTERVAL_MILLIS) return
+        // 실패해도 시각을 먼저 갱신한다 — 안 그러면 실패가 이어질 때 fix 마다 재시도해
+        // 같은 비용(과 쓰기)을 반복해서 문다.
+        lastUploadAt = now
         lifecycleScope.launch {
             try {
                 val childUid = AuthGateway.currentUid() ?: AuthGateway.signIn()
-                reporter.report(
-                    familyId, childUid, fix, batteryPercent(), isCharging(),
-                    ringerController.currentMode(),
-                )
-                // 성공했을 때만 갱신한다. 실패한 fix 를 '올린 걸로' 쳐 버리면 다음 판정이
-                // 그 위치를 기준으로 거리를 재서, 진짜 새 위치가 와도 SKIP_TOO_CLOSE 로
-                // 계속 버려질 수 있다.
-                lastUploaded = fix
-                // SegmentUploader 가 이 fix 를 메모리 버퍼에 쌓는다 — decide() 가
-                // UPLOAD 를 준 것 중에서도 실제 Firestore 쓰기(report)가 성공한
-                // 것만 여기 도달하므로, 버퍼는 pointsOfDay 가 나중에 읽을 값과
-                // 정확히 같은 집합이 된다.
-                segmentUploader.onUploaded(fix)
-
-                // 재계산 자체는(버퍼 덕분에) 대부분 Firestore 읽기가 없지만, 그래도
-                // 매 fix 마다 부르면 SegmentBuilder.build 를 하루치 점 전체에 대해
-                // 반복 실행하고 replaceSegmentsOfDay 배치 쓰기도 매번 나간다.
-                //
-                // 10분이 아니라 15분인 이유: LocationFilter.HEARTBEAT_MILLIS 도
-                // 10분이다. 값이 같으면, 완전히 멈춰 있는 아이는 "안 움직여도
-                // 10분마다 한 번 올린다"는 하트비트 업로드가 재계산 주기도 거의
-                // 매번 함께 넘겨 버려서, 정지한 날일수록 오히려 재계산이 더 자주
-                // 도는 역설이 생긴다. 15분으로 일부러 두 주기를 어긋나게 둔다.
-                val now = System.currentTimeMillis()
-                if (now - lastSegmentRebuildAt >= SEGMENT_REBUILD_INTERVAL_MILLIS) {
-                    // 재계산이 실패해도 시각은 먼저(또는 여기서 바로) 갱신해 둔다 — 안
-                    // 그러면 색인이 없어 매번 FAILED_PRECONDITION 으로 죽는 상황에서
-                    // fix 가 올라올 때마다 실패를 반복해 같은 비용을 다시 문다.
-                    lastSegmentRebuildAt = now
-                    runCatching { segmentUploader.rebuildToday(familyId, childUid) }
-                        .onFailure { e ->
-                            // runCatching 은 CancellationException 도 삼킨다 — 이 저장소가
-                            // 같은 실수를 네 번 고쳤다. 서비스가 죽으며 취소된 것뿐이면
-                            // 그대로 다시 던져 취소를 완성시켜야 한다.
-                            if (e is CancellationException) throw e
-                            // 색인 누락은 FAILED_PRECONDITION 예외 메시지에 색인 생성
-                            // URL 을 담아 오는데, 그 URL 은 logcat 에서만 보인다. e.message
-                            // 만 잘라 찍으면 URL 이 잘려 나갈 수 있으므로 예외 객체
-                            // 자체를 Log.w 에 넘긴다.
-                            Log.w(TAG, "구간 재계산 실패", e)
-                        }
-                }
-
-                // 30일 지난 위치 점 정리(known-issues 4) — 하루에 한 번이면 충분하다.
-                // 위 구간 재계산과 같은 방식(마지막 실행 시각 비교)으로 붙인다. 이 서비스는
-                // 자녀 폰에서만 돈다 — 규칙상으로도 children/{childUid} 아래는 그 아이
-                // 본인만 지울 수 있어 보호자 폰에서는 애초에 부를 수 없는 경로다.
-                if (now - lastPointsCleanupAt >= POINTS_CLEANUP_INTERVAL_MILLIS) {
-                    // 재계산과 같은 이유로 실패해도 시각을 먼저 갱신해 둔다 — 실패를
-                    // fix 마다 반복해서 같은 비용을 다시 물지 않게 한다.
-                    lastPointsCleanupAt = now
-                    runCatching { pointsCleaner.cleanOldPoints(familyId, childUid) }
-                        .onFailure { e ->
-                            // 여기도 CancellationException 을 먼저 다시 던진다 — 위
-                            // 구간 재계산과 같은 이유(runCatching 이 삼키는 문제).
-                            if (e is CancellationException) throw e
-                            Log.w(TAG, "오래된 위치 점 정리 실패", e)
-                        }
-                }
+                uploadNow(familyId, childUid)
             } catch (e: CancellationException) {
                 // 서비스가 죽으면서 lifecycleScope 가 취소된 것뿐인 정상 종료다.
                 // GuardianPairingActivity 에서 두 번 고친 것과 같은 실수(취소를 실패로
                 // 오인해 삼키는 것)를 반복하지 않도록 그대로 다시 던져 취소를 완성시킨다.
                 throw e
             } catch (e: Exception) {
-                // Firestore 쓰기 실패는 화면이 없는 이 서비스에서 사용자에게 보여줄
-                // 방법이 없다. adb logcat 으로라도 보이게 남겨두지 않으면 보호자
-                // 지도가 그냥 비어 있는데 원인을 알아낼 방법이 없다.
-                Log.w(TAG, "위치 업로드 실패: familyId=$familyId", e)
+                // 화면이 없는 이 서비스에서 사용자에게 보여줄 방법이 없다. adb logcat
+                // 으로라도 보이게 남겨두지 않으면 보호자 지도가 그냥 비어 있는데
+                // 원인을 알아낼 방법이 없다. 다음 안전 업로드 창(24시간 뒤)이나
+                // 부모의 '지금 위치 확인'이 다시 시도한다.
+                Log.w(TAG, "안전 업로드 실패: familyId=$familyId", e)
             }
         }
+    }
+
+    /**
+     * 지금 상태와 오늘 경로를 Firestore 에 올린다. **쓰기 두 번**(상태 문서 1,
+     * 하루 문서 1)이고, 이 앱에서 위치 데이터가 서버로 가는 유일한 경로다.
+     *
+     * 부르는 곳은 둘뿐이다 — [CommandHandler] 가 `locate_now` 명령을 받았을 때,
+     * 그리고 위 [handle] 의 하루 한 번 안전 업로드.
+     *
+     * 이 프로세스가 아직 위치를 한 번도 못 잡았으면 예외를 던진다. 그러면
+     * [CommandHandler] 가 그 메시지를 명령 문서의 error 로 적고 부모 화면이
+     * "아직 위치를 못 잡았다"고 말한다 — 여기서 조용히 돌아가면 명령이 "완료"로
+     * 끝나고, 부모는 지도에 떠 있는 옛 위치를 방금 확인한 것으로 읽는다.
+     *
+     * 파일에서 복구한 옛 점([TrailUploader.restore])으로 대신 채우지 않는 것도 같은
+     * 이유다. 그 점은 프로세스가 죽기 전의 것이라 몇 시간 전일 수 있는데, 상태 문서에
+     * 넣는 순간 서버 시각이 "방금"으로 찍혀 부모 화면에는 "방금 확인한 위치"로 뜬다.
+     * 이 프로세스가 실제로 받은 fix 만 쓰면 그 점은 아무리 늦어도 한 수집 주기(정지
+     * 5분) 안쪽이다.
+     */
+    private suspend fun uploadNow(familyId: String, childUid: String) {
+        val fix = lastFix ?: error(CommandType.ERROR_NO_FIX)
+        reporter.report(
+            familyId, childUid, fix, batteryPercent(), isCharging(),
+            ringerController.currentMode(),
+        )
+        trailUploader.upload(familyId, childUid)
+        lastUploadAt = System.currentTimeMillis()
     }
 
     private fun batteryPercent(): Int {
@@ -469,11 +478,17 @@ class TrackingService : LifecycleService() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "tracking"
         private const val ACTIVITY_TRANSITION_REQUEST_CODE = 2001
-        // LocationFilter.HEARTBEAT_MILLIS(10분)와 일부러 다른 값을 쓴다. 위
-        // handle() 안의 주석 참고.
-        private const val SEGMENT_REBUILD_INTERVAL_MILLIS = 15 * 60 * 1000L
-        // 오래된 위치 점 정리는 하루 한 번이면 충분하다(PointsCleaner 참고).
-        private const val POINTS_CLEANUP_INTERVAL_MILLIS = 24 * 60 * 60 * 1000L
+
+        /**
+         * 안전 업로드 간격. 부모가 아무것도 안 물어봐도 이만큼에 한 번은 그날
+         * 기록이 서버에 남는다 — 아이 폰을 잃어버렸을 때 남는 유일한 사본이다.
+         *
+         * 24시간인 이유: 가족당 하루 20쓰기라는 예산에서 안전 업로드가 차지하는
+         * 몫은 2쓰기다(상태 1 + 하루 문서 1). 이 값을 6시간으로 줄이면 8쓰기가
+         * 되어 부모가 위치를 확인할 수 있는 횟수가 그만큼 줄어든다 — 부모가
+         * 실제로 쓰는 기능 쪽에 예산을 남긴다.
+         */
+        private const val SAFETY_UPLOAD_INTERVAL_MILLIS = 24 * 60 * 60 * 1000L
 
         // ActivityTransitionReceiver(매니페스트 등록, 이 서비스와 다른 컴포넌트)가
         // 지금 살아있는 서비스의 LocationCollector 를 부를 통로. 서비스가 없을 때

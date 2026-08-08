@@ -10,12 +10,9 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kidcare.family.R
-import com.kidcare.family.core.AuthGateway
-import com.kidcare.family.core.FamilyRepository
-import com.kidcare.family.core.RoleStore
 import com.kidcare.family.core.model.ChildStatusDoc
 import com.kidcare.family.databinding.ActivityGuardianMainBinding
-import kotlinx.coroutines.CancellationException
+import com.kidcare.family.logic.DisconnectRule
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -48,6 +45,14 @@ import java.util.Locale
  * 관리 탭을 한 번도 안 여는 부모도 봐야 하고(지도만 보는 부모가 많다), 탭마다 두면
  * 같은 사실을 두 곳에서 판정하게 되어 한쪽만 뜨는 어긋남이 생긴다. 여기 하나면
  * 어느 탭을 보고 있든 같은 문장이 같은 자리에 뜬다.
+ *
+ * ## 판정 재료를 바꾼 이유 (무료 한도 개편)
+ *
+ * 옛 판정은 "마지막 상태 신호가 30분 넘게 안 바뀌면"이었다. 그 신호를 만들던
+ * 주기적 상태 쓰기가 사라졌으므로(docs/known-issues.md 12번) 그대로 두면 **멀쩡한
+ * 폰이 30분마다 무조건 끊긴 것으로 보인다.** 그래서 재료를 "물어봤는데 대답이
+ * 없는가"로 바꿨다 — 판정 규칙과 그 근거는 [com.kidcare.family.logic.DisconnectRule],
+ * 재료 저장은 [RequestLog] 참고.
  */
 class GuardianMainActivity : AppCompatActivity() {
 
@@ -72,14 +77,8 @@ class GuardianMainActivity : AppCompatActivity() {
     /** 지금 보이는 탭. 같은 탭으로 두 번 부르는 호출을 걸러내는 데 쓴다. */
     private var currentTabId: Int = 0
 
-    /**
-     * 아이 폰이 마지막으로 남긴 신호. null 이면 **아직 한 번도 받은 적이 없다**는
-     * 뜻이고, 그때는 배너를 절대 띄우지 않는다 — 페어링을 아직 안 끝낸 부모에게
-     * "연결이 끊겼어요"라고 말하는 것은 거짓말이다. 상태 문서가 한 번도 안 쓰인
-     * 경우도 여기서 함께 걸러진다(`observeChildStatus` 는 문서가 없으면 콜백을
-     * 부르지 않는다).
-     */
-    private var lastSignal: ChildSignal? = null
+    /** 배너 판정 재료(마지막 물음·마지막 대답 시각). 화면이 뜬 뒤에만 만진다. */
+    private val requestLog by lazy { RequestLog(this) }
 
     /**
      * 배너를 주기적으로 다시 판정하는 코루틴.
@@ -204,21 +203,17 @@ class GuardianMainActivity : AppCompatActivity() {
     // ------------------------------------------------------------ 연결 끊김 배너
 
     /**
-     * 프래그먼트가 자기 `observeChildStatus` 스냅샷을 받을 때마다 여기로 넘겨준다.
+     * 프래그먼트가 [RequestLog] 를 갱신한 직후에 부른다(물음을 보냈거나 대답을 받았을 때).
      *
-     * **리스너를 여기서 새로 붙이지 않는 것이 핵심이다.** 지도 탭과 관리 탭이 이미
-     * 각자 같은 문서를 구독하고 있어서, 액티비티가 하나 더 붙이면 같은 문서를 세 번
-     * 읽게 된다(무료 한도 이야기는 docs/known-issues.md). 그래서 배너는 **이미 도는
-     * 리스너가 밀어주는 값**으로만 산다 — 아이가 다시 신호를 보내면 그 스냅샷이
-     * 여기로 들어와 배너가 저절로 사라진다.
+     * **리스너를 여기서 새로 붙이지 않는 것이 핵심이다.** 액티비티가 자기 리스너를
+     * 하나 더 붙이면 같은 문서를 한 번 더 읽게 되고, 그건 이 개편이 없애려던 비용이다.
+     * 배너는 부모 폰 안의 값([RequestLog])만 보고 판정하므로 서버를 아예 안 건드린다.
      *
-     * 지도 탭은 앱을 켜면 항상 만들어지는 첫 탭이고 show/hide 방식이라 탭을 옮겨도
-     * 죽지 않는다. 그래서 부모가 관리 탭을 한 번도 안 열어도 이 값은 계속 들어온다.
+     * 1분마다 도는 [bannerJob] 도 어차피 같은 값을 다시 보지만, 대답이 도착한 순간
+     * 배너가 최대 1분 늦게 사라지면 부모 눈에는 고장이다 — 그래서 즉시 한 번 더 판정한다.
      */
-    fun reportChildStatus(status: ChildStatusDoc) {
-        val signal = status.lastSignal() ?: return
-        lastSignal = signal
-        lifecycleScope.launch { renderBanner() }
+    fun refreshBanner() {
+        renderBanner()
     }
 
     override fun onStart() {
@@ -243,39 +238,28 @@ class GuardianMainActivity : AppCompatActivity() {
     /**
      * 배너를 띄울지 말지 판정하고 문구를 만든다.
      *
-     * 판정 재료는 [ChildStatusDoc.lastSeenServerAt] **서버 시각뿐이다.** 아이 폰 시계로
-     * 적힌 옛 필드로 판정하면 아이 폰 시계가 30분만 뒤처져 있어도 멀쩡히 살아 있는 폰을
-     * "끊겼다"고 신고한다 — 이 배너가 저지르면 안 되는 유일한 실수가 그거다(부모가
-     * 한 번 헛걸음하면 다음부터 이 문구를 안 믿는다). 옛 버전을 깔고 있는 아이 폰은
-     * 그동안 배너 대상이 아니고, 새 버전으로 한 번만 신호를 올리면 그때부터 대상이 된다.
+     * 재료는 부모 폰 안의 [RequestLog] 뿐이라 서버를 한 번도 안 건드린다. 세 조건
+     * (물어본 적 있음 / 그 뒤로 대답 없음 / 문턱 초과)과 그 근거는
+     * [com.kidcare.family.logic.DisconnectRule] 에 적어뒀다.
+     *
+     * 기준 시각으로 [FamilyRepository.serverNow] 대신 기기 시계를 쓴다 — 비교 대상
+     * 두 값도 이 폰이 자기 시계로 적은 것이라, 같은 시계끼리 빼는 쪽이 오히려
+     * 정확하다([RequestLog] 주석).
      */
-    private suspend fun renderBanner() {
-        val signal = lastSignal
-        if (signal == null || !signal.fromServerClock) {
-            binding.disconnectBanner.visibility = View.GONE
+    private fun renderBanner() {
+        val lastRequestAt = requestLog.lastRequestAt
+        val now = System.currentTimeMillis()
+        val disconnected = DisconnectRule.isDisconnected(
+            lastRequestAt = lastRequestAt,
+            lastAnswerAt = requestLog.lastAnswerAt,
+            nowMillis = now,
+        )
+        binding.disconnectBanner.visibility = if (disconnected) View.VISIBLE else View.GONE
         applyTopInset()
-            return
-        }
-        // 부모 폰 시계도 어긋날 수 있으므로 기준 시각은 서버 보정본을 쓴다
-        // (FamilyRepository.serverNow — 프로세스당 한 번만 서버를 다녀온다).
-        val now = try {
-            FamilyRepository.serverNow(RoleStore(this).familyId, AuthGateway.currentUid())
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            System.currentTimeMillis()
-        }
-        val elapsed = now - signal.atMillis
-        if (elapsed < DISCONNECT_THRESHOLD_MILLIS) {
-            binding.disconnectBanner.visibility = View.GONE
-        applyTopInset()
-            return
-        }
-        binding.disconnectBanner.visibility = View.VISIBLE
-        applyTopInset()
+        if (!disconnected) return
         binding.disconnectBanner.text = getString(
             R.string.guardian_disconnect_banner,
-            LastSignalText.elapsedText(this, elapsed),
+            LastSignalText.elapsedText(this, now - lastRequestAt),
         )
     }
 
@@ -290,21 +274,9 @@ class GuardianMainActivity : AppCompatActivity() {
         const val TAG_SCHEDULE = "tab_schedule"
         const val KEY_SELECTED_TAB = "selected_tab"
 
-        /**
-         * 이만큼 신호가 없으면 "끊겼다"고 본다.
-         *
-         * 30분인 이유: 아이 폰의 위치 보고 주기는 1분(이동 중)~5분(정지 중)이다
-         * (child/TrackingService). 그러니 정상 동작 중이라면 30분은 여섯 주기가
-         * 통째로 비어야 채워지는 시간이다. 반대로 이 값을 5~10분으로 잡으면
-         * **지하철 터널, 절전 낮잠, Doze 창** 하나에도 배너가 뜬다 — 아무 문제 없는
-         * 폰을 두고 "아이 폰을 열어보라"고 여러 번 시키면 부모는 이 문구를 곧
-         * 무시하게 되고, 그러면 진짜로 강제 종료된 날에도 안 읽는다. 늦게 알리는
-         * 쪽이 헛되이 알리는 쪽보다 낫다.
-         */
-        const val DISCONNECT_THRESHOLD_MILLIS = 30 * 60 * 1000L
-
         /** 시간이 흐른 것만으로 다시 판정하는 간격([bannerJob] 주석 참고). 30분
-         *  기준에 대해 1분 오차면 충분하고, 1분에 한 번 도는 비용은 무시할 만하다. */
+         *  기준에 대해 1분 오차면 충분하고, 1분에 한 번 도는 비용은 무시할 만하다.
+         *  판정 자체는 서버를 안 건드리므로 이 반복에 통신 비용이 전혀 없다. */
         const val BANNER_RECHECK_MILLIS = 60 * 1000L
     }
 }
@@ -347,6 +319,30 @@ object LastSignalText {
     private const val DAY_MILLIS = 24 * HOUR_MILLIS
 
     private val clockFormat = SimpleDateFormat("M월 d일 HH:mm", Locale.KOREA)
+
+    /**
+     * "12분 전" / "8월 7일 14:32 (애기폰 시계 기준…)" 중 정직한 쪽을 고른다.
+     *
+     * 경과가 음수인 경우가 둘인데 뜻이 전혀 다르다.
+     *
+     * - **서버 시각으로 잰 값**이 음수라면 그 크기는
+     *   [com.kidcare.family.core.FamilyRepository.serverNow] 의 왕복 보정 오차(수백
+     *   밀리초)뿐이다. 실제로 방금 신호가 온 것이므로 "방금 전"이 정직하다.
+     * - **아이 폰 시계로 잰 값**(옛 버전 자녀 폰)이 음수면 아이 폰 시계가 부모 폰보다
+     *   앞서 있다는 뜻이고, 그 순간 우리는 그 신호가 얼마나 오래됐는지 **모른다.**
+     *   이때 상대 표현을 쓰면 안 된다: 같은 화면의 다른 줄("응답하지 않아요",
+     *   "12분 전 확인한 위치")과 서로를 부정해서 부모는 아무것도 알 수 없고 화면을
+     *   덜 믿게 된다. 그래서 경과 대신 아이 폰이 적어 보낸 절대 시각을 그대로
+     *   보여주고, 그 값이 정확하지 않다는 것도 함께 말한다.
+     *
+     * 관리 탭과 지도 탭이 같은 사실을 말하므로 이 판단은 여기 한 곳에만 있어야 한다.
+     */
+    fun relativeText(ctx: Context, signal: ChildSignal, elapsedMillis: Long): String =
+        if (elapsedMillis < 0L && !signal.fromServerClock) {
+            ctx.getString(R.string.control_last_seen_skewed_value, clockText(signal.atMillis))
+        } else {
+            elapsedText(ctx, elapsedMillis.coerceAtLeast(0L))
+        }
 
     /** [elapsedMillis] 는 0 이상이어야 한다 — 음수의 뜻과 처리는 호출부가 정한다. */
     fun elapsedText(ctx: Context, elapsedMillis: Long): String = when {

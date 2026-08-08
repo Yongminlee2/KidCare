@@ -64,7 +64,15 @@
     <string name="map_no_child">아직 아이 폰이 연결되지 않았어요.</string>
     <string name="map_error">지도를 불러오지 못했어요\n%1$s</string>
     <string name="timeline_error">기록을 불러오지 못했어요\n%1$s</string>
-    <string name="map_status_format">🔋 %1$d%%   ·   %2$s 기준</string>
+    <!-- 지도 상단 카드. 애기폰은 이제 주기적으로 위치를 올리지 않으므로(무료 한도,
+         docs/known-issues.md 12번) 화면의 점은 항상 "마지막으로 확인한 위치"다.
+         그래서 배터리 옆에 그게 언제였는지를 반드시 함께 적는다 — "지금 위치"라고
+         읽히면 안 된다. -->
+    <string name="map_status_format">🔋 %1$d%%   ·   %2$s 확인한 위치예요</string>
+    <string name="map_status_never">아직 위치를 확인한 적이 없어요. \'지금 위치 확인\'을 눌러주세요.</string>
+    <string name="map_locate_now">지금 위치 확인</string>
+    <string name="map_locating">애기폰에 물어보는 중…</string>
+    <string name="map_locate_no_fix">애기폰이 아직 위치를 못 잡았어요. 잠시 뒤에 다시 눌러주세요.</string>
 
     <string name="tab_map">지도</string>
     <string name="tab_control">관리</string>
@@ -72,9 +80,10 @@
 
     <!-- 연결 끊김 배너(GuardianMainActivity). 아이가 앱을 '강제 종료'하면 안드로이드가
          모든 알람과 부팅 신호를 끊어버리는데, 사이드로드 앱은 그걸 막을 수 없다.
-         막을 수 없으니 부모에게 무엇을 하면 되는지를 말한다 — 지금 상태(마지막 신호가
-         언제였는지)와 할 일(아이 폰에서 앱을 한 번 열기)을 한 문장씩. -->
-    <string name="guardian_disconnect_banner">⚠️ 애기폰에서 소식이 끊겼어요 (마지막 신호 %1$s)\n아이 폰에서 \'우리아이 지킴이\' 앱을 한 번 열어주세요. 그러면 다시 이어져요.</string>
+         막을 수 없으니 부모에게 무엇을 하면 되는지를 말한다 — 지금 상태(언제 물어본
+         것에 대답이 없는지)와 할 일(아이 폰에서 앱을 한 번 열기)을 한 문장씩.
+         "마지막 신호"가 아니라 "마지막 물음"인 이유는 DisconnectRule 주석 참고. -->
+    <string name="guardian_disconnect_banner">⚠️ %1$s 보낸 요청에 애기폰이 아직 대답하지 않았어요\n아이 폰에서 \'우리아이 지킴이\' 앱을 한 번 열어주세요. 그러면 다시 이어져요.</string>
 
     <string name="control_section_ringer">지금 바로 바꾸기</string>
     <string name="control_mode_normal">🔔\n벨소리</string>
@@ -96,9 +105,11 @@
     <string name="control_last_seen_minutes">%1$d분 전</string>
     <string name="control_last_seen_hours">%1$d시간 전</string>
     <string name="control_last_seen_days">%1$d일 전</string>
-    <!-- 아이 폰 시계가 앞서 있어 "몇 분 전"을 계산할 수 없을 때. 상대 표현("방금 전")을
-         쓰면 바로 윗줄의 "애기폰이 응답하지 않아요"와 부딪히므로 절대 시각만 보여준다. -->
-    <string name="control_last_seen_skewed">마지막 신호 %1$s (애기폰 시계 기준이라 정확하지 않아요)</string>
+    <!-- 아이 폰 시계가 앞서 있어 "몇 분 전"을 계산할 수 없을 때 상대 표현 자리에
+         대신 들어가는 값. 상대 표현("방금 전")을 쓰면 같은 화면의 "애기폰이 응답하지
+         않아요"와 부딪히므로 절대 시각만 보여준다. 관리 탭과 지도 탭이 같은 값을
+         쓰므로 문장 전체가 아니라 "값"만 담는다(LastSignalText.relativeText). -->
+    <string name="control_last_seen_skewed_value">%1$s (애기폰 시계 기준이라 정확하지 않아요)</string>
     <string name="control_error_ringer_denied">아이 폰에서 소리 설정 권한이 꺼져 있어요. 아이 폰 설정에서 켜야 바꿀 수 있어요.</string>
     <string name="control_error_child_failed">아이 폰이 이 명령을 처리하지 못했어요.</string>
 

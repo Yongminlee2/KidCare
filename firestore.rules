@@ -113,12 +113,20 @@ service cloud.firestore {
         allow read: if memberOf(familyId);
         allow write: if memberOf(familyId) && request.auth.uid == childUid;
 
-        match /points/{pointId} {
-          allow read: if memberOf(familyId);
-          allow write: if memberOf(familyId) && request.auth.uid == childUid;
-        }
-
-        match /segments/{segmentId} {
+        // 하루가 문서 하나다(문서 ID 가 dayKey, 예: "2026-08-07"). 그 안에 그 날의
+        // 원시 점 배열과 구간 요약 배열이 함께 들어 있다.
+        //
+        // 옛 points/{pointId} 와 segments/{segmentId} 를 **둘 다** 이걸로 대체했다.
+        // 방향과 조건은 그대로다(아이만 쓰고 가족 멤버는 읽는다) — 바뀐 것은 문서
+        // 개수뿐이다. 옛 구조는 점 하나마다 문서 하나(하루 약 520개)에 구간 하루치
+        // 교체(20~30 삭제 + 20~30 쓰기)라 가족 하나가 하루 1,100번을 썼고, Spark
+        // 무료 한도(프로젝트 전체 하루 2만 쓰기)에서 1,000가족을 담을 수 없었다.
+        //
+        // 두 옛 컬렉션 규칙은 지웠다. 앱 어디에서도 더 이상 읽지도 쓰지도 않으므로
+        // 남겨두면 "아무도 안 쓰는데 아이가 쓸 수는 있는" 경로만 남는다. 이미 올라가
+        // 있는 옛 문서는 그대로 남지만 아무도 못 읽는다 — 테스트 단계 데이터라
+        // 버리기로 했다(docs/known-issues.md 12번).
+        match /trails/{dayKey} {
           allow read: if memberOf(familyId);
           allow write: if memberOf(familyId) && request.auth.uid == childUid;
         }

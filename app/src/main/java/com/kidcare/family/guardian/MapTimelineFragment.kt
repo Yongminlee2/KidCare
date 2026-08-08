@@ -10,31 +10,53 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.kidcare.family.R
+import com.kidcare.family.core.AuthGateway
+import com.kidcare.family.core.CommandRepository
 import com.kidcare.family.core.FamilyRepository
 import com.kidcare.family.core.RoleStore
-import com.kidcare.family.core.SegmentRepository
+import com.kidcare.family.core.TrailRepository
 import com.kidcare.family.core.errorMessage
 import com.kidcare.family.core.model.ChildStatusDoc
+import com.kidcare.family.core.model.CommandState
+import com.kidcare.family.core.model.CommandType
 import com.kidcare.family.core.model.SegmentDoc
 import com.kidcare.family.databinding.FragmentMapTimelineBinding
 import com.kidcare.family.logic.DayPicker
-import java.text.SimpleDateFormat
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.ZoneId
-import java.util.Locale
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
 
 /**
- * 보호자 메인. osmdroid 지도 위에 아이의 현재 위치를 찍는다.
+ * 보호자 메인. osmdroid 지도 위에 아이의 위치를 찍고 그 아래에 하루 요약을 보여준다.
  *
- * children/{childUid} 문서(= status. 설계서는 별도 하위 문서로 그렸지만
- * StatusReporter 가 문서 자체를 status 로 쓰기로 했다)를 실시간 구독해
- * 상단 카드 문구와 지도 마커를 함께 갱신한다.
+ * ## "지금 위치"가 아니라 "마지막으로 확인한 위치"다
+ *
+ * 무료 한도 개편(docs/known-issues.md 12번) 전에는 아이 폰이 1~5분마다 상태 문서를
+ * 덮어썼고 이 화면은 그걸 실시간 구독했다. 지금 아이 폰은 **부모가 물어볼 때와 하루
+ * 한 번**만 올린다. 그래서 이 화면은 두 가지를 반드시 지킨다.
+ *
+ * 1. **묵은 위치를 지금 위치인 척 보여주지 않는다.** 상단 카드가 항상 "언제 확인한
+ *    것인지"를 함께 말한다([renderStatus]).
+ * 2. **물어보는 방법이 화면에 보인다.** '지금 위치 확인' 버튼이 `locate_now` 명령을
+ *    보내고, 아이 폰이 대답하면 그때 다시 읽어 그린다([locateNow]).
+ *
+ * 상시 구독은 셋 다 없앴다(상태·구간·경로). 대신 화면을 열 때·날짜를 넘길 때·
+ * 대답이 왔을 때 [FamilyRepository.fetchChildStatus] 와 [TrailRepository.fetch] 로
+ * 한 번씩만 읽는다 — 읽기가 언제 몇 번 일어나는지가 코드에 그대로 보인다.
+ *
+ * 명령을 기다리는 동안에만 명령 문서 하나에 짧게 리스너를 붙인다. 세대 번호로
+ * 밀린 명령의 콜백을 막는 규율은 [ControlFragment.commandGeneration] 과 같다 —
+ * 그 이유는 저쪽 주석에 자세히 적혀 있다.
  *
  * 3단계 Task 5 가 지도 아래에 하루 요약 타임라인과 날짜 이동을 붙였다.
  * 3단계 Task 6 이 [drawRoute] 로 지도 위에 하루 경로 폴리라인을 붙였다.
@@ -48,33 +70,40 @@ class MapTimelineFragment : Fragment() {
     private val binding get() = _binding!!
 
     // 아이 위치 마커. 처음 생길 때만 카메라를 이동시키기 위해 null 여부로
-    // "이미 그린 적 있는가"를 판정한다 — 아래 render() 참고.
+    // "이미 그린 적 있는가"를 판정한다 — 아래 renderStatus() 참고.
     private var childMarker: Marker? = null
 
     // 마커 주변에 그리는 오차 원. 마커와 따로 들고 있어야 갱신할 때 이전 원만
     // 골라 지울 수 있다(routeLine 과 같은 규율).
     private var accuracyCircle: Polygon? = null
     private var routeLine: Polyline? = null
-    private var statusListener: ListenerRegistration? = null
 
-    // 자녀가 members 에 들어오는 순간을 계속 지켜본다(Task 8 이전엔 findChildUid 를
-    // onViewCreated 에서 한 번만 불러 화면을 켜 둔 채로 페어링이 끝나면 다시 만들기
-    // 전까지 "연결 안 됨"이 안 풀리는 문제가 있었다). 이 리스너 하나가 statusListener·
-    // segmentListener 두 개를 필요할 때마다 다시 걸어 준다.
+    // 자녀가 members 에 들어오는 순간을 계속 지켜본다(known-issues 3): 부모가 이 화면을
+    // 켜 둔 채로 아이가 페어링을 끝내면, 한 번 조회 방식에서는 화면을 다시 만들기
+    // 전까지 "연결 안 됨"이 안 풀린다. 이건 상태·경로 구독과 성격이 다르다 — members
+    // 는 페어링 때 한 번 바뀌고 그 뒤로 조용해서 읽기가 늘지 않는다.
     private var joinedListener: ListenerRegistration? = null
 
-    private val timeFormat = SimpleDateFormat("HH:mm", Locale.KOREA)
+    /** 화면을 열 때·날짜를 넘길 때·대답이 왔을 때 도는 한 번 읽기. */
+    private var loadJob: Job? = null
+
+    /** 명령을 보낸 뒤 대답이 올 때까지만 붙어 있는 리스너와 그 60초 타이머. */
+    private var commandListener: ListenerRegistration? = null
+    private var timeoutJob: Job? = null
+    private var commandGeneration = 0
 
     // 기기 시간대를 한 번만 읽어 고정한다 — 화면이 떠 있는 동안 시간대가 바뀌는 일은
     // 실질적으로 없고, DayPicker 를 부를 때마다 매번 물어보면 호출부만 늘어난다.
     private val zone: ZoneId = ZoneId.systemDefault()
     private var dayKey: String = DayPicker.todayKey(zone, System.currentTimeMillis())
-    private var segmentListener: ListenerRegistration? = null
 
     // joinedListener 의 onJoined 가 채운다. 날짜를 넘길 때(changeDay)는 이 값을
     // 그대로 재사용하고 다시 조회하지 않는다.
     private var childUid: String? = null
     private lateinit var timelineAdapter: TimelineAdapter
+
+    /** 연결 끊김 배너의 판정 재료를 적는 곳([RequestLog], DisconnectRule 주석 참고). */
+    private val requestLog by lazy { RequestLog(requireContext().applicationContext) }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -98,91 +127,262 @@ class MapTimelineFragment : Fragment() {
             insets
         }
 
-        // 타임라인은 지도와 무관하다. subscribeSegments 가 childUid 를 못 구해 구독이
-        // 아예 안 걸리는 경우(아직 아이 폰이 첫 보고를 안 올린 첫 실행 구간) renderTimeline
-        // 이 한 번도 안 불릴 수 있는데, 그때 화면이 "아무 설명 없이 텅 빈 채로" 남으면
-        // 고장으로 읽힌다. 그래서 구독 결과를 기다리지 않고 여기서 빈 목록으로 한 번 먼저
-        // 그려 empty 안내부터 보여준다 — 실제 데이터가 오면 renderTimeline 이 다시 불려
-        // 덮어쓴다.
+        // 타임라인은 지도와 무관하다. 아직 childUid 를 못 구한 첫 실행 구간에서 화면이
+        // "아무 설명 없이 텅 빈 채로" 남으면 고장으로 읽히므로, 읽기 결과를 기다리지
+        // 않고 여기서 빈 목록으로 한 번 먼저 그려 empty 안내부터 보여준다.
         timelineAdapter = TimelineAdapter(zone) { doc -> focusOn(doc.lat, doc.lng) }
         binding.timelineList.layoutManager = LinearLayoutManager(requireContext())
         binding.timelineList.adapter = timelineAdapter
         renderTimeline(emptyList())
         binding.prevDayButton.setOnClickListener { changeDay(-1) }
         binding.nextDayButton.setOnClickListener { changeDay(1) }
+        binding.locateButton.setOnClickListener { locateNow() }
+        binding.locateButton.isEnabled = false
+        binding.statusBar.text = getString(R.string.map_no_child)
         renderDayHeader()
 
-        // subscribe() 는 지도 초기화보다 먼저 부른다. 카카오 시절엔 앱키가 없는 기기에서
-        // subscribe() 호출부 자체가 앱키 가드 뒤에 있어 건너뛰어지는 사고가 있었다(관련
-        // 기록: docs/known-issues.md). osmdroid로 바뀌며 앱키 가드 자체가 없어져 같은
-        // 사고는 구조적으로 재발할 수 없지만, "데이터 구독은 지도 설정과 무관하며 항상
-        // 먼저 돈다"는 순서는 그대로 지킨다.
         subscribe()
 
         // osmdroid는 mapView.start(...) 같은 비동기 준비 콜백이 없다 — MapView 는
         // 위 FragmentMapTimelineBinding.inflate() 시점에 XML 인플레이트로 이미 완전히
-        // 생성되어 있고, 마커/폴리라인을 바로 추가해도 된다. 그래서 카카오 시절의
-        // pendingStatus(맵 준비 전에 도착한 Firestore 스냅샷을 잠깐 담아뒀다가 onMapReady
-        // 에서 다시 그리던 값)는 필요 없어져 지웠다 — render()/drawRoute() 는 이제
-        // _binding 널 체크만으로 충분하다.
+        // 생성되어 있고, 마커/폴리라인을 바로 추가해도 된다.
         binding.mapView.setMultiTouchControls(true)
     }
 
     /**
-     * findChildUid 를 한 번만 부르던 옛 방식은 부모가 지도를 켜 둔 채로 아이가
-     * 페어링을 끝내면 화면을 다시 만들기 전까지 "연결 안 됨"이 풀리지 않았다
-     * (known-issues 3). observeChildJoined 는 addSnapshotListener 라서(suspend
-     * 가 아니다) 코루틴이 필요 없다 — subscribeSegments 와 같은 방식이다.
+     * 자녀 uid 를 계속 지켜본다. `findChildUid` 를 한 번만 부르던 옛 방식은 부모가
+     * 지도를 켜 둔 채로 아이가 페어링을 끝내면 화면을 다시 만들기 전까지
+     * "연결 안 됨"이 풀리지 않았다(known-issues 3).
      */
     private fun subscribe() {
-        val store = RoleStore(requireContext())
-        val familyId = store.familyId ?: return
-        _binding?.statusBar?.text = getString(R.string.map_no_child)
+        val familyId = RoleStore(requireContext()).familyId ?: return
         joinedListener = FamilyRepository.observeChildJoined(
             familyId,
             onJoined = { uid ->
-                // 자기 멤버 문서가 바뀔 때마다(예: 다음 단계의 fcmToken/appVersion 갱신)
-                // 이 콜백이 같은 uid 로 다시 불릴 수 있다. uid 가 그대로면 리스너를
-                // 갈아 끼울 이유가 없다 — 매번 다시 걸면 화면이 불필요하게 다시 그려진다.
+                // 자기 멤버 문서가 바뀔 때마다 이 콜백이 같은 uid 로 다시 불릴 수 있다.
+                // uid 가 그대로면 다시 읽을 이유가 없다 — 매번 다시 읽으면 그게 곧
+                // 무료 한도를 갉아먹는 읽기다.
                 if (uid == childUid) return@observeChildJoined
                 childUid = uid
-                attachChildListeners(familyId, uid)
+                _binding ?: return@observeChildJoined
+                binding.locateButton.isEnabled = true
+                load(familyId, uid)
             },
-            onError = { e -> _binding?.statusBar?.text = getString(R.string.map_error, errorMessage(requireContext(), e)) },
+            onError = { e ->
+                // Firestore 콜백은 화면이 사라진 뒤에도 한 번 더 올 수 있다. requireContext()
+                // 도 getString() 도 그때 부르면 그대로 예외라 둘 다 먼저 확인한다.
+                _binding ?: return@observeChildJoined
+                val ctx = context ?: return@observeChildJoined
+                showError(ctx.getString(R.string.map_error, errorMessage(ctx, e)))
+            },
         )
+    }
+
+    // ------------------------------------------------------------------ 한 번 읽기
+
+    /**
+     * 마지막으로 확인된 상태와 그 날의 경로를 **각각 한 번씩** 읽어 그린다.
+     * 읽기 2회가 전부다.
+     */
+    private fun load(familyId: String, uid: String) {
+        // Firestore 콜백에서도 불린다 — 화면이 사라진 뒤에 viewLifecycleOwner 를
+        // 만지면 그 자리에서 IllegalStateException 이다.
+        _binding ?: return
+        loadJob?.cancel()
+        loadJob = viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val status = FamilyRepository.fetchChildStatus(familyId, uid)
+                val trail = TrailRepository.fetch(familyId, uid, dayKey)
+                _binding ?: return@launch
+                renderStatus(status)
+                renderTimeline(trail?.segments ?: emptyList())
+            } catch (e: CancellationException) {
+                // 화면을 떠났거나 다음 읽기가 이 읽기를 밀어낸 것이다. 실패가 아니다.
+                throw e
+            } catch (e: Exception) {
+                val ctx = context ?: return@launch
+                showError(getString(R.string.timeline_error, errorMessage(ctx, e)))
+            }
+        }
+    }
+
+    private fun reload() {
+        val ctx = context ?: return
+        val familyId = RoleStore(ctx).familyId ?: return
+        val uid = childUid ?: return
+        load(familyId, uid)
+    }
+
+    // ------------------------------------------------------------------ 지금 위치 확인
+
+    /**
+     * '지금 위치 확인'. 아이 폰에 `locate_now` 명령을 보내고, 대답이 올 때까지만
+     * 그 명령 문서 하나에 리스너를 붙인다.
+     *
+     * 리스너를 `done`/`failed` 에서 곧바로 뗀다. 이 리스너는 "지금 이 물음의 답"만
+     * 기다리는 것이고, 답이 온 뒤에도 남겨두면 상시 구독을 없앤 의미가 사라진다
+     * (관리 탭은 늦게 오는 done 을 기다리느라 일부러 안 떼는데, 여기는 답이 온
+     * 즉시 [reload] 로 문서를 다시 읽으므로 남겨둘 이유가 없다).
+     *
+     * 60초 무응답 표시는 관리 탭과 같은 규칙이다(설계서 §5). 그때 리스너와 타이머를
+     * 정리하되 [RequestLog] 에는 대답을 적지 않는다 — 그래야 30분 뒤 연결 끊김
+     * 배너가 이 무응답을 근거로 뜰 수 있다.
+     */
+    private fun locateNow() {
+        val familyId = RoleStore(requireContext()).familyId
+        val uid = childUid
+        if (familyId == null || uid == null) {
+            showError(getString(R.string.map_no_child))
+            return
+        }
+        stopTracking()
+        // 발행 결과를 기다리는 동안 부모가 버튼을 또 누를 수 있다. 지금 이 순간의
+        // 세대를 붙잡아 두고, 왕복이 끝난 뒤 그 값이 아직 최신인지로 판단한다
+        // ([ControlFragment.commandGeneration] 주석에 이 규율의 근거가 있다).
+        val generation = ++commandGeneration
+        requestLog.recordRequest()
+        renderLocating(true)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val commandId = CommandRepository.send(familyId, uid, CommandType.LOCATE_NOW)
+                _binding ?: return@launch
+                if (generation != commandGeneration) return@launch
+                track(familyId, uid, commandId, generation)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (generation != commandGeneration) return@launch
+                val ctx = context ?: return@launch
+                renderLocating(false)
+                showError(errorMessage(ctx, e))
+            }
+        }
+    }
+
+    private fun track(familyId: String, uid: String, commandId: String, generation: Int) {
+        stopTracking()
+        commandListener = CommandRepository.observeOne(
+            familyId, uid, commandId,
+            onChange = { doc ->
+                if (generation != commandGeneration) return@observeOne
+                // remove() 는 "앞으로 오지 마라"는 뜻이지 이미 큐에 올라간 콜백까지
+                // 되돌리지는 않는다. 화면이 사라진 뒤라면 여기서 멈춘다.
+                _binding ?: return@observeOne
+                when (doc.state) {
+                    CommandState.DONE -> {
+                        stopTracking()
+                        recordAnswer()
+                        renderLocating(false)
+                        reload()
+                    }
+                    CommandState.FAILED -> {
+                        stopTracking()
+                        // 실패도 대답이다 — 아이 폰이 살아 있으니 error 를 적을 수 있었다.
+                        recordAnswer()
+                        renderLocating(false)
+                        showError(childErrorText(doc.error))
+                    }
+                    else -> Unit
+                }
+            },
+            onError = { e ->
+                if (generation != commandGeneration) return@observeOne
+                _binding ?: return@observeOne
+                val ctx = context ?: return@observeOne
+                stopTracking()
+                renderLocating(false)
+                showError(errorMessage(ctx, e))
+            },
+        )
+        timeoutJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(COMMAND_TIMEOUT_MILLIS)
+            if (generation != commandGeneration) return@launch
+            _binding ?: return@launch
+            stopTracking()
+            renderLocating(false)
+            showError(getString(R.string.control_command_timeout))
+        }
+    }
+
+    private fun stopTracking() {
+        commandListener?.remove()
+        commandListener = null
+        timeoutJob?.cancel()
+        timeoutJob = null
+    }
+
+    /** 아이 폰이 대답했다는 사실을 남기고 배너를 즉시 다시 판정하게 한다. */
+    private fun recordAnswer() {
+        requestLog.recordAnswer()
+        (activity as? GuardianMainActivity)?.refreshBanner()
     }
 
     /**
-     * childUid 가 (처음이든, 재페어링이든) 확정될 때마다 상태·구간 리스너를 다시 건다.
-     * 리스너를 세 개(joinedListener·statusListener·segmentListener) 들고 있게 되므로
-     * 옛 statusListener 를 먼저 지운다 — subscribeSegments 가 옛 segmentListener 를
-     * 먼저 지우는 것과 같은 규율이다.
+     * 자녀 폰이 `error` 필드에 남긴 값은 사람이 읽는 문장이 아니라 코드다
+     * (child/CommandHandler 가 적는다). 그대로 보여주지 않고 한국어로 바꾼다.
      */
-    private fun attachChildListeners(familyId: String, uid: String) {
-        statusListener?.remove()
-        statusListener = FamilyRepository.observeChildStatus(
-            familyId,
-            uid,
-            onChange = { status ->
-                render(status)
-                // 연결 끊김 배너는 액티비티 레이아웃에 있고 리스너를 따로 붙이지 않는다.
-                // 지도 탭은 앱을 켜면 항상 만들어지고 show/hide 라 탭을 옮겨도 살아
-                // 있으므로, 관리 탭을 한 번도 안 여는 부모에게도 이 경로로 값이 계속
-                // 들어간다([GuardianMainActivity.reportChildStatus] 주석).
-                (activity as? GuardianMainActivity)?.reportChildStatus(status)
-            },
-            onError = { e -> _binding?.statusBar?.text = getString(R.string.map_error, errorMessage(requireContext(), e)) },
-        )
-        subscribeSegments()
+    private fun childErrorText(raw: String): String = when (raw) {
+        CommandType.ERROR_NO_FIX -> getString(R.string.map_locate_no_fix)
+        else -> getString(R.string.control_error_child_failed)
     }
 
-    /** Firestore 콜백에서도 불릴 수 있어서, onDestroyView 이후엔 아무 뷰도 건드리지 않는다. */
-    private fun render(status: ChildStatusDoc) {
+    // ------------------------------------------------------------------ 그리기
+
+    private fun renderLocating(busy: Boolean) {
         val b = _binding ?: return
-        b.statusBar.text = getString(
+        b.locateProgress.visibility = if (busy) View.VISIBLE else View.GONE
+        // 물어보는 중에 또 물어보면 명령 문서만 하나 더 만들어져 쓰기 예산을 깎는다.
+        b.locateButton.isEnabled = !busy && childUid != null
+        if (busy) b.statusBar.text = getString(R.string.map_locating)
+    }
+
+    private fun showError(message: String) {
+        _binding?.statusBar?.text = message
+    }
+
+    /**
+     * 상단 카드와 지도 마커. **언제 확인한 위치인지를 반드시 함께 말한다.**
+     *
+     * 이 화면이 저지르면 안 되는 유일한 실수가 "묵은 위치를 지금 위치처럼 보여주는
+     * 것"이다. 예전에는 아이 폰이 1~5분마다 올려서 화면의 점이 사실상 현재였지만,
+     * 지금은 부모가 마지막으로 물어본 그 순간의 점이다 — 아침에 확인한 위치가 저녁에
+     * 그대로 떠 있을 수 있다.
+     *
+     * 경과 계산의 기준 시각은 [FamilyRepository.serverNow] 다. 부모 폰 시계가
+     * 뒤처져 있으면 [System.currentTimeMillis] 로 뺀 값이 음수가 돼 "-3분 전"이
+     * 찍힌다. 음수가 나올 수 있는 나머지 경우의 처리는
+     * [LastSignalText.relativeText] 가 맡는다.
+     */
+    private suspend fun renderStatus(status: ChildStatusDoc?) {
+        val b = _binding ?: return
+        val signal = status?.lastSignal()
+        if (status == null || signal == null) {
+            b.statusBar.text = getString(R.string.map_status_never)
+            return
+        }
+        val now = FamilyRepository.serverNow(
+            RoleStore(requireContext()).familyId, AuthGateway.currentUid(),
+        )
+        // 여기서부터는 붙잡아 둔 Context 로만 문자열을 만든다 — 위 한 줄에서 화면을
+        // 떠났을 수 있고, Fragment.getString 은 화면이 떨어져 나간 뒤에 부르면 그대로
+        // 예외다. serverNow 는 오프셋이 캐시돼 있으면 정지점 없이 곧장 돌아오므로
+        // 코루틴 취소만 믿을 수 없다(ControlFragment.onTimedOut 과 같은 함정).
+        _binding ?: return
+        val ctx = context ?: return
+        val elapsed = now - signal.atMillis
+
+        // 부모가 마지막으로 물어본 **뒤에** 쓰인 상태 문서라면 그 자체가 "애기폰이
+        // 살아 있다"는 대답이다(늦게 살아난 폰의 안전 업로드일 수도 있다). 이걸 안
+        // 보면, 서버에 이미 새 기록이 올라와 있는데도 연결 끊김 배너가 옛 물음을
+        // 근거로 계속 뜬다. 서버 시각과 기기 시각을 직접 비교하지 않고 경과 시간을
+        // 기기 시각으로 되돌려 비교한다 — 두 시계의 어긋남이 안 섞이게.
+        if (System.currentTimeMillis() - elapsed > requestLog.lastRequestAt) recordAnswer()
+
+        b.statusBar.text = ctx.getString(
             R.string.map_status_format,
             status.battery,
-            timeFormat.format(status.at),
+            LastSignalText.relativeText(ctx, signal, elapsed),
         )
 
         val point = GeoPoint(status.lat, status.lng)
@@ -212,8 +412,8 @@ class MapTimelineFragment : Fragment() {
      *
      * 지도에 점 하나만 찍으면 그 점이 얼마나 믿을 만한지가 화면에서 완전히 사라진다 —
      * 오차 12m 짜리 fix 와 90m 짜리 fix 가 **똑같이 확신에 찬 핀 하나**로 보인다.
-     * `PointDoc`/`ChildStatusDoc` 은 이미 accuracy 를 싣고 올라오므로 저장 형식도,
-     * 보안 규칙도 건드릴 필요가 없다 — 있는 값을 안 보여주고 있었을 뿐이다.
+     * `ChildStatusDoc` 은 이미 accuracy 를 싣고 올라오므로 저장 형식도, 보안 규칙도
+     * 건드릴 필요가 없다 — 있는 값을 안 보여주고 있었을 뿐이다.
      *
      * 그리는 규칙:
      *  - **불확실성으로 읽혀야지 지오펜스나 강조로 읽히면 안 된다.** 옅은 채움에
@@ -259,7 +459,11 @@ class MapTimelineFragment : Fragment() {
         if (DayPicker.isFuture(candidate, zone, System.currentTimeMillis())) return
         dayKey = candidate
         renderDayHeader()
-        subscribeSegments()
+        // Fix 6(옛 코드의 이유 그대로): 새로 읽기 전에 화면을 먼저 빈 상태로 되돌린다.
+        // 안 그러면 읽기가 실패했을 때 어제 목록과 어제 경로선이 오늘 헤더 아래 그대로
+        // 남는다 — 부모가 아이 위치를 잘못 읽는 상태다.
+        renderTimeline(emptyList())
+        reload()
     }
 
     private fun renderDayHeader() {
@@ -269,37 +473,6 @@ class MapTimelineFragment : Fragment() {
         // 아예 비활성으로 보여준다.
         binding.nextDayButton.isEnabled =
             !DayPicker.isFuture(DayPicker.shift(dayKey, 1), zone, System.currentTimeMillis())
-    }
-
-    /**
-     * 그 날의 구간 목록을 구독한다. 날짜가 바뀔 때마다 다시 불리므로, 옛 리스너를
-     * 먼저 지우지 않으면 날짜를 넘길수록 리스너가 쌓여 여러 날의 데이터가 한꺼번에
-     * 섞여 보이게 된다.
-     */
-    private fun subscribeSegments() {
-        segmentListener?.remove()
-        segmentListener = null
-        // Fix 6: 새 리스너를 걸기 전에 화면을 먼저 빈 상태로 되돌린다. 안 그러면
-        // 새 리스너가 에러로 죽었을 때(색인 없음 등) renderTimeline 이 한 번도 안
-        // 불려서, 어제 목록과 어제 경로선이 오늘 헤더 아래 그대로 남는다 — 부모가
-        // 아이 위치를 잘못 읽는 상태다. 여기서 지우면 drawRoute(emptyList()) 도
-        // 같이 불려 경로선까지 함께 지워진다.
-        renderTimeline(emptyList())
-        val familyId = RoleStore(requireContext()).familyId ?: return
-        val uid = childUid ?: return
-        segmentListener = SegmentRepository.observeSegmentsOfDay(
-            familyId = familyId,
-            childUid = uid,
-            dayKey = dayKey,
-            onChange = { docs -> renderTimeline(docs) },
-            onError = { e ->
-                // Fix 7: map_error 를 그대로 쓰면 타임라인(색인 누락 등) 실패가
-                // "지도를 불러오지 못했어요"로 보인다 — 실제로는 지도가 멀쩡한데도.
-                // 다음 status 스냅샷이 10분 안에 이 문구를 덮어쓰긴 하지만, 그 전에
-                // 뜨는 짧은 순간에도 원인이 맞는 문구여야 한다.
-                _binding?.statusBar?.text = getString(R.string.timeline_error, errorMessage(requireContext(), e))
-            },
-        )
     }
 
     private fun renderTimeline(docs: List<SegmentDoc>) {
@@ -319,14 +492,15 @@ class MapTimelineFragment : Fragment() {
     /**
      * 하루 경로를 선으로 그린다.
      *
-     * 구간 요약의 좌표만 잇는다 — 원시 점을 전부 내려받으면 하루 수백 개라 느리고,
-     * 요약 좌표(머무름 중심 + 이동 끝점)만으로도 "어디서 어디로"는 충분히 보인다.
+     * 구간 요약의 좌표만 잇는다 — 원시 점을 전부 쓰면 하루 수백 개라 느리고, 요약
+     * 좌표(머무름 중심 + 이동 끝점)만으로도 "어디서 어디로"는 충분히 보인다. 원시
+     * 점은 같은 문서 안에 함께 올라와 있지만(`TrailDoc.points`) 이 선에는 안 쓴다.
      * SegmentBuilder 가 이동 구간의 끝을 앞뒤 머무름과 이어붙이도록 만들어 놨기
      * 때문에 이 선은 끊기지 않는다.
      *
-     * renderTimeline 은 스냅샷마다, 그리고 날짜를 넘길 때마다 불린다. 매번 새로
-     * 선을 그리기 전에 지난 선을 지우지 않으면 날이 바뀔 때마다 선이 겹겹이
-     * 쌓여 지도가 낙서가 된다.
+     * renderTimeline 은 읽기마다, 그리고 날짜를 넘길 때마다 불린다. 매번 새로 선을
+     * 그리기 전에 지난 선을 지우지 않으면 날이 바뀔 때마다 선이 겹겹이 쌓여 지도가
+     * 낙서가 된다.
      */
     private fun drawRoute(docs: List<SegmentDoc>) {
         val b = _binding ?: return
@@ -351,7 +525,7 @@ class MapTimelineFragment : Fragment() {
         b.mapView.overlays.add(polyline)
         routeLine = polyline
         // 카메라는 여기서 움직이지 않는다 — 부모가 이미 지도를 옮겨봤을 수 있으니
-        // 마커가 처음 생길 때(render())만 이동하고, 경로 갱신으로는 시점을 뺏지 않는다.
+        // 마커가 처음 생길 때(renderStatus())만 이동하고, 경로 갱신으로는 시점을 뺏지 않는다.
         b.mapView.invalidate()
     }
 
@@ -368,10 +542,9 @@ class MapTimelineFragment : Fragment() {
     override fun onDestroyView() {
         joinedListener?.remove()
         joinedListener = null
-        statusListener?.remove()
-        statusListener = null
-        segmentListener?.remove()
-        segmentListener = null
+        loadJob?.cancel()
+        loadJob = null
+        stopTracking()
         // onDetach()는 osmdroid가 내부적으로 띄운 타일 다운로드 스레드·리시버를
         // 정리한다 — 안 부르면 화면을 나갔다 들어올 때마다 조금씩 샌다.
         _binding?.mapView?.onDetach()
@@ -383,6 +556,9 @@ class MapTimelineFragment : Fragment() {
     }
 
     private companion object {
+        /** 관리 탭의 무응답 표시와 같은 값이어야 한다(설계서 §5). */
+        private const val COMMAND_TIMEOUT_MILLIS = 60_000L
+
         private const val ROUTE_LINE_WIDTH = 14f
         private const val ROUTE_COLOR = 0xFF3D6DF5.toInt()
 

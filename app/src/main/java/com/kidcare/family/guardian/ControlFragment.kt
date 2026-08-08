@@ -2,6 +2,7 @@ package com.kidcare.family.guardian
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -48,9 +49,14 @@ class ControlFragment : Fragment() {
     private var _binding: FragmentControlBinding? = null
 
     private var joinedListener: ListenerRegistration? = null
-    private var statusListener: ListenerRegistration? = null
     private var settingsListener: ListenerRegistration? = null
     private var commandListener: ListenerRegistration? = null
+
+    /** 마지막 신호 시각 한 번 읽기. 옛 statusListener 를 대신한다. */
+    private var statusJob: Job? = null
+
+    /** 연결 끊김 배너의 판정 재료를 적는 곳([RequestLog], DisconnectRule 주석 참고). */
+    private val requestLog by lazy { RequestLog(requireContext().applicationContext) }
 
     private var familyId: String? = null
     private var childUid: String? = null
@@ -186,7 +192,7 @@ class ControlFragment : Fragment() {
                 childUid = uid
                 setChildDependentButtonsEnabled(true)
                 showChildState(null)
-                attachStatusListener(fid, uid)
+                loadStatus(fid, uid)
             },
             onError = { e -> showChildState(errorMessageOrNull(e)) },
         )
@@ -195,21 +201,25 @@ class ControlFragment : Fragment() {
     /**
      * 마지막 신호 시각만 쓴다 — 60초 무응답 문구에 붙일 값이다(설계서 §5).
      *
-     * 같은 스냅샷을 액티비티에도 넘긴다. 연결 끊김 배너가 리스너를 따로 붙이지 않고
-     * 이미 도는 리스너에 얹혀 사는 구조라서다
-     * ([GuardianMainActivity.reportChildStatus] 주석).
+     * 옛 코드는 이 문서를 화면이 떠 있는 내내 구독했다. 자녀 폰이 위치를 올릴 때마다
+     * 이 문서를 덮어쓰던 시절에는 그게 "실시간"이었지만, 이제 이 문서는 부모가
+     * 물어볼 때와 하루 한 번만 바뀐다(docs/known-issues.md 12번) — 구독을 유지해도
+     * 얻는 것 없이 읽기만 는다. 화면을 열 때 한 번 읽고 끝낸다.
      */
-    private fun attachStatusListener(fid: String, uid: String) {
-        statusListener?.remove()
-        statusListener = FamilyRepository.observeChildStatus(
-            fid,
-            uid,
-            onChange = { status ->
-                lastSignal = status.lastSignal()
-                (activity as? GuardianMainActivity)?.reportChildStatus(status)
-            },
-            onError = { e -> showChildState(errorMessageOrNull(e)) },
-        )
+    private fun loadStatus(fid: String, uid: String) {
+        statusJob?.cancel()
+        statusJob = viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                lastSignal = FamilyRepository.fetchChildStatus(fid, uid)?.lastSignal()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // 이 값은 60초 무응답 문구에 붙는 보조 정보다. 못 읽어도 화면 전체를
+                // 오류로 덮지 않는다 — lastSeenPhrase 가 "아직 한 번도 신호가
+                // 없었어요"로 정직하게 물러난다.
+                Log.w(TAG, "마지막 신호 시각을 못 읽었다", e)
+            }
+        }
     }
 
     // ---------------------------------------------------------------- 명령 보내기
@@ -269,6 +279,10 @@ class ControlFragment : Fragment() {
         // 세대를 붙잡아 두고, 왕복이 끝난 뒤 그 값이 아직 최신인지로 판단한다
         // ([commandGeneration] 주석 참고).
         val generation = ++commandGeneration
+        // 명령 종류와 상관없이 "물어봤다"로 친다. 아이 폰이 강제 종료돼 있으면 소리
+        // 모드 변경이든 폰찾기든 똑같이 대답이 없고, 연결 끊김 배너가 알리려는 것이
+        // 바로 그 상태다(DisconnectRule).
+        requestLog.recordRequest()
         renderCommand(CommandUi.Sending)
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -339,11 +353,16 @@ class ControlFragment : Fragment() {
             CommandState.DONE -> {
                 timeoutJob?.cancel()
                 timeoutJob = null
+                recordAnswer()
                 renderCommand(CommandUi.Done)
             }
             CommandState.FAILED -> {
                 timeoutJob?.cancel()
                 timeoutJob = null
+                // 실패도 대답이다 — 아이 폰이 살아 있으니 error 를 적을 수 있었다.
+                // 연결 끊김 배너가 알리려는 것은 "죽어서 아무 말이 없다"이지
+                // "할 수 없다고 답했다"가 아니다.
+                recordAnswer()
                 renderCommand(CommandUi.Failed(childErrorText(doc.error)))
             }
             // 아직 진행 중이다. 이미 "응답 없음"을 띄운 뒤라면 되돌리지 않는다 —
@@ -410,31 +429,21 @@ class ControlFragment : Fragment() {
     /**
      * "마지막 신호 12분 전". 계산은 위에서 끝났고 여기서는 문장만 고른다.
      *
-     * 경과가 음수인 경우가 둘인데 뜻이 전혀 다르다.
-     *
-     * - **서버 시각으로 잰 값**이 음수라면 그 크기는 [FamilyRepository.serverNow] 의
-     *   왕복 보정 오차(수백 밀리초)뿐이다. 실제로 방금 신호가 온 것이므로 "방금 전"이
-     *   정직하다.
-     * - **아이 폰 시계로 잰 값**(옛 버전 자녀 폰)이 음수면 아이 폰 시계가 부모 폰보다
-     *   앞서 있다는 뜻이고, 그 순간 우리는 마지막 신호가 얼마나 오래됐는지 **모른다.**
-     *   이때 상대 표현을 쓰면 안 된다: 바로 윗줄이 "애기폰이 응답하지 않아요"인데 그
-     *   아래에 "마지막 신호 방금 전"이 붙으면 두 줄이 서로를 부정해서 부모는 아무것도
-     *   알 수 없고 화면을 덜 믿게 된다. 그래서 경과 시간 대신 아이 폰이 적어 보낸
-     *   절대 시각을 그대로 보여주고, 그 값이 아이 폰 시계 기준이라 정확하지 않다는
-     *   것도 함께 말한다 — 모르는 것을 아는 척하지 않는 쪽이 항상 낫다.
+     * 경과가 음수일 때(아이 폰 시계가 앞선 옛 버전)의 처리는 지도 탭과 같아야 하므로
+     * [LastSignalText.relativeText] 한 곳에 모아 뒀다 — 근거도 거기 적혀 있다.
      */
     private fun lastSeenPhrase(ctx: Context, seen: SeenElapsed?): String {
         if (seen == null) return ctx.getString(R.string.control_last_seen_never)
-        if (seen.elapsedMillis < 0L && !seen.signal.fromServerClock) {
-            return ctx.getString(
-                R.string.control_last_seen_skewed,
-                LastSignalText.clockText(seen.signal.atMillis),
-            )
-        }
         return ctx.getString(
             R.string.control_last_seen_format,
-            LastSignalText.elapsedText(ctx, seen.elapsedMillis.coerceAtLeast(0L)),
+            LastSignalText.relativeText(ctx, seen.signal, seen.elapsedMillis),
         )
+    }
+
+    /** 아이 폰이 대답했다는 사실을 남기고 배너를 즉시 다시 판정하게 한다. */
+    private fun recordAnswer() {
+        requestLog.recordAnswer()
+        (activity as? GuardianMainActivity)?.refreshBanner()
     }
 
     /**
@@ -595,8 +604,8 @@ class ControlFragment : Fragment() {
         // null 이면 조용히 돌아간다).
         joinedListener?.remove()
         joinedListener = null
-        statusListener?.remove()
-        statusListener = null
+        statusJob?.cancel()
+        statusJob = null
         settingsListener?.remove()
         settingsListener = null
         commandListener?.remove()
@@ -622,6 +631,8 @@ class ControlFragment : Fragment() {
 
         /** child/CommandHandler 가 소리 모드 변경이 거부됐을 때 적는 코드. */
         const val ERROR_RINGER_DENIED = "ringer_denied"
+
+        const val TAG = "ControlFragment"
 
         const val COMMAND_TIMEOUT_MILLIS = 60_000L
 

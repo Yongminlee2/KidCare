@@ -91,25 +91,65 @@ data class ChildStatusDoc(
     @get:ServerTimestamp val lastSeenServerAt: Timestamp? = null,
 )
 
-data class PointDoc(
+/**
+ * children/{childUid}/trails/{dayKey} — **하루가 문서 하나다.**
+ *
+ * ## 왜 문서 하나인가
+ *
+ * 예전에는 위치 한 점마다 `points/{autoId}` 문서를 하나씩 만들고(하루 약 520개),
+ * 그때마다 상태 문서도 함께 덮어썼다. 거기에 15분마다 도는 구간 재계산이
+ * `segments/` 를 통째로 갈아끼웠다 — 가족 하나가 하루에 약 1,100번을 쓴다.
+ * Spark 무료 한도는 **프로젝트 전체**에서 하루 2만 쓰기라, 1,000가족이면 55배
+ * 초과다(docs/known-issues.md 12번). 문서를 하루 하나로 합치면 그 부분이
+ * 520+ 에서 1 이 된다.
+ *
+ * 문서 ID 는 dayKey("2026-08-07", 자녀 폰 시간대 기준)다. 보호자 화면이 날짜를
+ * 넘길 때마다 쿼리가 아니라 **문서 ID 로 곧장 한 건**을 읽으므로 복합 색인도
+ * 필요 없다(옛 segments 는 dayKey+startAt 색인이 없어 타임라인이 영영 비었던
+ * 사고가 있었다 — known-issues 실기기 검증 절).
+ *
+ * ## 왜 요약(segments)까지 같은 문서에 담나
+ *
+ * 구간 요약을 별도 컬렉션으로 두면 하루 20~30 문서를 지우고 다시 쓰게 되는데,
+ * 그것만으로 하루 50쓰기가 되어 가족당 20쓰기 예산을 혼자 넘긴다. 같은 문서 안의
+ * 배열이면 쓰기도 읽기도 1 이다.
+ *
+ * [points] 는 원시 점, [segments] 는 그것을 머무름·이동으로 묶은 요약이다. 둘 다
+ * 자녀 폰이 계산해 넣는다 — 머무른 곳 이름(역지오코딩)은 자녀 폰만 매길 수 있고,
+ * 보호자 폰이 하루치 점을 다시 묶으면 그 이름이 통째로 사라진다.
+ *
+ * [points] 개수 상한과 넘칠 때의 처리는 [com.kidcare.family.logic.TrailCodec] 참고.
+ */
+data class TrailDoc(
+    val dayKey: String = "",
+    val points: List<TrailPoint> = emptyList(),
+    val segments: List<SegmentDoc> = emptyList(),
+    /** 자녀 폰이 이 문서를 마지막으로 올린 시각(자녀 폰 시계). */
+    val updatedAt: Long = 0L,
+)
+
+/**
+ * [TrailDoc.points] 의 원소. 옛 `PointDoc` 을 대신한다.
+ *
+ * `battery` 를 뺐다: 옛 PointDoc 에 있었지만 읽는 곳이 한 군데도 없었고, 배열
+ * 원소마다 필드 이름이 같이 저장되므로 안 쓰는 필드 하나가 하루 문서 크기를
+ * 그대로 키운다. 배터리는 상태 문서([ChildStatusDoc.battery])에 있다.
+ */
+data class TrailPoint(
     val lat: Double = 0.0,
     val lng: Double = 0.0,
     val accuracy: Float = 0f,
     val speed: Float = 0f,
     val at: Long = 0L,
-    val battery: Int = -1,
 )
 
 /**
- * children/{childUid}/segments/{autoId} — 하루를 머무름·이동으로 요약한 한 토막.
+ * 하루를 머무름·이동으로 요약한 한 토막. [TrailDoc.segments] 의 원소다.
  *
- * 자녀 폰이 자기 points 를 읽어 계산해 올린다. 보호자 폰이 하루치 원시 점(하루 최대
- * 수백 개)을 매번 내려받으면 느리고 Firestore 읽기 사용량도 커지는데, 요약본은
- * 하루 20~30건이면 끝난다.
- *
- * [dayKey] 는 "2026-08-07" 꼴로, 그 구간이 **시작한 날**을 자녀 폰의 시간대 기준으로
- * 박아둔 값이다. startAt 범위로 쿼리하면 자정을 걸친 구간이 어느 날에 속하는지 매번
- * 계산해야 하고 시간대가 바뀌면 어긋난다.
+ * 예전에는 `children/{childUid}/segments/{autoId}` 문서였다. 하루치를 갈아끼울
+ * 때마다 20~30번 지우고 20~30번 쓰는 구조라 무료 한도에서 가장 비싼 조각이었고,
+ * 지금은 하루 문서([TrailDoc]) 안의 배열로 들어간다. 그래서 `dayKey` 필드도
+ * 없앴다 — 어느 날인지는 담고 있는 문서의 ID 가 이미 말한다.
  */
 data class SegmentDoc(
     val type: String = "",          // "STAY" | "MOVE"
@@ -121,7 +161,6 @@ data class SegmentDoc(
     val pointCount: Int = 0,
     /** 머무른 곳 이름. Task 4 가 채운다. 비어 있으면 화면이 "머무른 곳"으로 표시한다. */
     val placeName: String = "",
-    val dayKey: String = "",
 )
 
 /**
@@ -154,6 +193,22 @@ object CommandType {
     const val STOP_FIND = "stop_find"
     /** 예약 규칙이 바뀌었으니 다시 읽어 알람을 새로 걸라는 신호. */
     const val SYNC_RULES = "sync_rules"
+
+    /**
+     * "지금 위치와 오늘 경로를 올려라."
+     *
+     * 무료 한도 때문에 자녀 폰은 이제 주기적으로 아무것도 올리지 않는다
+     * (docs/known-issues.md 12번). 부모가 이 명령을 보낼 때와 하루 한 번 안전
+     * 업로드, 그 두 순간에만 상태 문서와 그날의 trails 문서가 쓰인다.
+     *
+     * 자녀 폰이 아직 위치를 한 번도 못 잡았으면 [ERROR_NO_FIX] 로 실패한다 —
+     * 올릴 위치가 없는데 "완료"라고 적으면 부모는 지도에 뜬 옛 위치를 방금 확인한
+     * 것으로 읽는다.
+     */
+    const val LOCATE_NOW = "locate_now"
+
+    /** [LOCATE_NOW] 가 위치를 못 잡았을 때 자녀 폰이 error 필드에 적는 코드. */
+    const val ERROR_NO_FIX = "locate_no_fix"
 }
 
 object CommandState {

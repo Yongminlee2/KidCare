@@ -282,26 +282,28 @@ object FamilyRepository {
             .documents.firstOrNull()?.id
 
     /**
-     * 자녀의 현재 상태(children/{childUid} 문서 자체 — StatusReporter 주석 참고,
-     * 설계서의 별도 status 하위 문서가 아니다)를 실시간 구독한다.
-     * 붙인 리스너는 화면이 사라질 때 반드시 remove 해야 한다.
+     * 자녀의 마지막 상태(children/{childUid} 문서 자체 — StatusReporter 주석 참고,
+     * 설계서의 별도 status 하위 문서가 아니다)를 **한 번** 읽는다. 문서가 아직
+     * 없으면(자녀 폰이 한 번도 안 올렸으면) null 이다.
+     *
+     * 옛 `observeChildStatus`(실시간 구독)를 이걸로 갈아치웠다. 구독을 없앤 이유는
+     * 두 가지다.
+     *
+     * 1. **구독할 대상이 더 이상 안 바뀐다.** 자녀 폰이 위치를 올릴 때마다 이 문서를
+     *    덮어쓰던 주기적 쓰기가 사라졌다(무료 한도, docs/known-issues.md 12번).
+     *    이제 이 문서는 부모가 '지금 위치 확인'을 눌렀을 때와 하루 한 번만 바뀌므로,
+     *    화면이 떠 있는 내내 리스너를 붙들고 있을 이유가 없다.
+     * 2. **읽기가 언제 얼마나 일어나는지 코드에 보여야 한다.** 구독은 문서가 바뀔
+     *    때마다 조용히 읽기를 만든다 — 한도를 지켜야 하는 앱에서 그건 계산할 수
+     *    없는 비용이다.
+     *
+     * 자녀가 대답하는 순간을 화면이 알아야 하는 곳은 명령 문서 하나뿐이고, 그건
+     * [CommandRepository.observeOne] 로 **명령이 끝날 때까지만** 짧게 붙인다.
      */
-    fun observeChildStatus(
-        familyId: String,
-        childUid: String,
-        onChange: (ChildStatusDoc) -> Unit,
-        onError: (Exception) -> Unit,
-    ): ListenerRegistration =
+    suspend fun fetchChildStatus(familyId: String, childUid: String): ChildStatusDoc? =
         db.collection("families").document(familyId)
             .collection("children").document(childUid)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Log.w(TAG, "observeChildStatus 리스너 실패: familyId=$familyId childUid=$childUid", error)
-                    onError(error)
-                    return@addSnapshotListener
-                }
-                snapshot?.toObject(ChildStatusDoc::class.java)?.let(onChange)
-            }
+            .get().await().toObject(ChildStatusDoc::class.java)
 }
 
 /** [FamilyRepository.inviteCodeOf] 의 결과. 코드와 함께 만료 시각도 줘야 화면에 남은 시간을 보여줄 수 있다. */

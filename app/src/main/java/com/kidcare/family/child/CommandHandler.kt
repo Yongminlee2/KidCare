@@ -20,8 +20,17 @@ import java.time.ZoneId
  *
  * [context] 는 [RingerController]·[RingerStateStore] 같은 안드로이드 API 를 쓰는
  * 컨트롤러를 만드는 데 쓴다(Task 4). Task 5~6 이 같은 이유로 컨트롤러를 더 붙일 수 있다.
+ *
+ * [onLocateNow] 는 "지금 위치와 오늘 경로를 올려라"를 실제로 수행하는 곳
+ * ([TrackingService.uploadNow])이다. 이 클래스가 직접 하지 않는 이유: 올릴 재료
+ * (오늘 점 버퍼, 마지막 fix)가 전부 그 서비스 안에 있다. 여기서 서비스를 붙들면
+ * 죽은 서비스 참조를 들고 있게 되고, 반대로 재료를 여기로 옮기면 위치 수집과
+ * 명령 실행이 한 클래스에 뒤섞인다.
  */
-class CommandHandler(private val context: Context) {
+class CommandHandler(
+    private val context: Context,
+    private val onLocateNow: suspend (familyId: String, childUid: String) -> Unit,
+) {
 
     private val handled = object : LinkedHashSet<String>() {
         override fun add(element: String): Boolean {
@@ -121,6 +130,12 @@ class CommandHandler(private val context: Context) {
                 // 이미 네트워크 실패를 잡아 재시도 알람으로 물러나므로, 여기서 실패해도
                 // (아래 catch 로 내려가) 예약이 완전히 멈추지는 않는다.
                 CommandType.SYNC_RULES -> scheduleApplier.refresh(familyId)
+                // "지금 위치와 오늘 경로를 올려라". 무료 한도 때문에 자녀 폰은 더 이상
+                // 주기적으로 아무것도 올리지 않으므로(docs/known-issues.md 12번), 부모의
+                // 이 물음이 상태·경로 문서가 쓰이는 주된 순간이다. 아직 위치를 못 잡았으면
+                // 아래 catch 가 그 사유(locate_no_fix)를 명령 문서에 적어 부모에게 알린다 —
+                // 조용히 done 으로 끝내면 부모는 지도의 옛 위치를 방금 확인한 것으로 읽는다.
+                CommandType.LOCATE_NOW -> onLocateNow(familyId, childUid)
                 else -> {
                     // 모르는 종류를 조용히 무시하면 보호자 화면에 "전달 중"으로
                     // 영원히 멈춰 보인다. delivered 는 이미 성공했으니

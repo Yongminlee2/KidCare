@@ -27,12 +27,39 @@
             android:layout_margin="12dp"
             app:cardCornerRadius="16dp">
 
-            <TextView
-                android:id="@+id/status_bar"
+            <!-- 왼쪽 글자가 "언제 확인한 위치인지"를 말하고, 오른쪽 버튼이 "다시
+                 물어보기"다. 두 개가 반드시 한 줄에 함께 있어야 한다 — 주기적 보고가
+                 없어진 뒤로 이 화면의 점은 항상 과거의 점이고, 그 사실과 고치는 방법이
+                 같은 자리에 없으면 부모는 묵은 위치를 지금 위치로 읽는다. -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:textAppearance="?attr/textAppearanceBodyLarge" />
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <TextView
+                    android:id="@+id/status_bar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+                <ProgressBar
+                    android:id="@+id/locate_progress"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="8dp"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/locate_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/map_locate_now" />
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </FrameLayout>
 
