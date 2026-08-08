@@ -16,6 +16,13 @@ import com.kidcare.family.core.RoleStore
  * SecurityException 이 날 수 있다. 그 확인과 안전한 종료는 TrackingService.onCreate
  * 한 곳에서만 하도록 몰아뒀다 — 두 군데서 따로 확인하면 나중에 하나만 고치고 잊는
  * 사고가 나기 쉽다.
+ *
+ * **장소 지오펜스 재등록도 여기서 따로 하지 않는다.** OS 는 재부팅 때 등록된 지오펜스를
+ * 전부 지우므로 다시 걸어야 하는 것은 맞는데(설계서 §4.6), 그 일은 아래에서 띄우는
+ * [TrackingService] 의 onStartCommand 가 이미 한다
+ * ([TrackingService.refreshPlaces]). 여기에 같은 등록을 한 번 더 적으면 두 곳이
+ * 갈라지고 — 위 권한 확인을 한 곳에 몰아둔 것과 정확히 같은 이유다 — 재부팅마다
+ * 지오펜스를 두 번 걸게 된다.
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {

@@ -83,6 +83,7 @@
     <string name="tab_map">지도</string>
     <string name="tab_control">관리</string>
     <string name="tab_schedule">예약</string>
+    <string name="tab_place">장소</string>
 
     <!-- 연결 끊김 배너(GuardianMainActivity). 아이가 앱을 '강제 종료'하면 안드로이드가
          모든 알람과 부팅 신호를 끊어버리는데, 사이드로드 앱은 그걸 막을 수 없다.
@@ -195,6 +196,69 @@
     <string name="schedule_delete_message">%1$s\n\n지우면 이 시간대에는 소리가 저절로 바뀌지 않아요.</string>
     <string name="schedule_delete_confirm">지우기</string>
     <string name="schedule_delete_cancel">그대로 두기</string>
+
+    <!-- ============================ 장소 탭 (지오펜스) ============================ -->
+    <string name="place_add">+ 장소 추가</string>
+    <string name="place_empty">아직 정해둔 장소가 없어요.\n아래 \'장소 추가\'를 눌러\n\'학교\', \'학원\' 같은 곳을 정해 보세요.\n아이가 도착하거나 나서면 알려드릴게요.</string>
+    <string name="place_error_format">장소를 불러오지 못했어요\n%1$s</string>
+    <string name="place_no_family">가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요.</string>
+    <string name="place_delete">삭제</string>
+
+    <!-- 목록 한 줄. '학교 · 반경 200m'. -->
+    <string name="place_row_title">%1$s · 반경 %2$dm</string>
+    <string name="place_row_detail">%1$s</string>
+    <!-- 대화상자에서 장소 하나를 가리킬 때 쓰는 한 줄 이름. -->
+    <string name="place_summary">%1$s (반경 %2$dm)</string>
+
+    <string name="place_notify_both">도착·이탈 알림</string>
+    <string name="place_notify_enter">도착 알림만</string>
+    <string name="place_notify_exit">이탈 알림만</string>
+    <!-- 둘 다 꺼둔 장소. 지우지 않고 잠깐 쉬게 해 둔 상태라 목록에서는 흐리게 보인다. -->
+    <string name="place_notify_none">알림 꺼둠</string>
+
+    <!-- 20개를 채웠을 때 목록 위에 뜬다. 상한이 있다는 사실과 이유, 그리고 부모가 할 수
+         있는 일(지우고 다시 만들기)까지 한 줄에 담는다 — 누를 수 없게 된 버튼만 두면
+         부모는 앱이 고장 났다고 읽는다. -->
+    <string name="place_limit_notice">장소는 %1$d개까지 정할 수 있어요. 새로 만들려면 안 쓰는 장소를 먼저 지워주세요.</string>
+
+    <string name="place_editor_title_new">새 장소</string>
+    <string name="place_editor_title_edit">장소 고치기</string>
+    <string name="place_editor_name_label">장소 이름</string>
+    <string name="place_editor_name_hint">학교, 학원, 할머니 댁…</string>
+    <string name="place_editor_name_required">이름을 적어주세요. 알림에 \'○○에 도착했어요\'로 뜨는 이름이에요.</string>
+    <string name="place_editor_map_label">어디인가요</string>
+    <!-- 지도 중앙 십자가 곧 좌표라는 것을 말해준다. 위경도 숫자를 직접 넣게 하면
+         부모가 쓸 수 없다. -->
+    <string name="place_editor_map_hint">지도를 움직여 가운데 십자를 이 장소에 맞춰주세요. 파란 원이 알림이 울리는 범위예요.</string>
+    <!-- 아이 폰 위치를 아직 한 번도 못 받았을 때. 지도를 아무 데나 찍어두고 그럴듯하게
+         보여주면 부모가 그 자리를 확인된 위치로 읽는다 — 모른다고 말하고 넓게 보여준다. -->
+    <string name="place_editor_no_child_location">아이 폰 위치를 아직 몰라서 지도가 넓게 열렸어요. 손으로 옮겨 찾아주세요.</string>
+    <string name="place_editor_radius_label">얼마나 가까이 오면</string>
+    <string name="place_editor_radius_value">반경 %1$dm</string>
+    <string name="place_editor_notify_label">언제 알려드릴까요</string>
+    <string name="place_editor_notify_enter">도착하면 알림</string>
+    <string name="place_editor_notify_exit">나서면 알림</string>
+    <!-- 둘 다 끄면 이 장소는 아무 일도 안 한다. 막지는 않는다 — 지우지 않고 잠깐
+         꺼두고 싶을 때가 있어서다. 대신 그 뜻을 분명히 적는다. -->
+    <string name="place_editor_notify_none_hint">둘 다 꺼두면 이 장소로는 알림이 오지 않아요. 장소는 그대로 남아 있어요.</string>
+    <string name="place_editor_save">저장</string>
+    <string name="place_editor_cancel">취소</string>
+
+    <string name="place_saving">저장 중…</string>
+    <string name="place_deleting">지우는 중…</string>
+    <string name="place_save_slow">저장 요청은 보냈지만 아직 서버 확인이 안 됐어요. 인터넷이 연결되면 저절로 저장돼요.</string>
+    <string name="place_sync_no_child">장소를 저장했어요. 아이 폰이 연결되면 저절로 적용돼요.</string>
+    <string name="place_sync_failed_format">장소는 저장했지만 아이 폰에 알리지 못했어요. 이 화면을 다시 열면 한 번 더 알릴게요.\n%1$s</string>
+    <string name="place_sync_slow">장소는 저장했어요. 아이 폰에 알리는 것은 인터넷이 연결되면 끝나요.</string>
+    <!-- 예약 탭의 같은 줄과 뜻이 같다. 여기서는 지운 장소가 특히 위험하다 — 아이 폰이
+         모르면 이미 지운 장소의 도착 알림이 계속 올라온다. -->
+    <string name="place_sync_pending">아직 애기폰에 전달되지 않았어요. 애기폰은 지금도 예전 장소대로 알려요.</string>
+    <string name="place_sync_retry">다시 알리기</string>
+
+    <string name="place_delete_title">이 장소를 지울까요?</string>
+    <string name="place_delete_message">%1$s\n\n지우면 이곳에 도착하거나 나서도 알림이 오지 않아요.</string>
+    <string name="place_delete_confirm">지우기</string>
+    <string name="place_delete_cancel">그대로 두기</string>
 
     <string name="timeline_icon_stay">📍</string>
     <string name="timeline_icon_move">🚶</string>

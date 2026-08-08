@@ -70,12 +70,16 @@ class TrackingService : LifecycleService() {
     // 받은 명령을 분배·실행하는 곳(Task 3). 리스너 자체는 subscribeToCommands 가
     // 걸고 뗀다. locate_now 는 이 서비스만 답할 수 있으므로(위치 버퍼가 여기 있다)
     // 콜백으로 넘겨준다 — CommandHandler 가 서비스를 거꾸로 붙들지 않게 하려는 것이다.
-    private val commandHandler by lazy { CommandHandler(this, ::uploadNow) }
+    private val commandHandler by lazy { CommandHandler(this, ::uploadNow, placeWatcher) }
     private var commandListener: ListenerRegistration? = null
 
     // status 문서의 ringerMode 를 채우는 데 쓴다(Task 4) — 지금 실제로 무슨 소리
     // 모드인지 매 업로드마다 다시 읽어야 하므로 캐시하지 않는다.
     private val ringerController by lazy { RingerController(this) }
+
+    // 장소 도착·이탈 판정(5단계 Task 3). 서비스와 수명을 같이한다 — 읽어 둔 장소
+    // 목록을 들고 있고, 그 목록이 위치 점마다 도는 판정의 재료다.
+    private val placeWatcher by lazy { PlaceWatcher(this) }
 
     // 잠금 스위치가 켜져 있을 때 아이가 모드를 바꾸면 되돌린다(Task 5). onCreate 에서
     // 코드로 등록하고 onDestroy 에서 반드시 해제한다 — 매니페스트 정적 등록은 서비스가
@@ -241,9 +245,59 @@ class TrackingService : LifecycleService() {
 
         subscribeToCommands(familyId)
         refreshSchedule(familyId)
+        refreshPlaces(familyId)
+
+        // 매니페스트에 등록된 PlaceGeofenceReceiver 가 지금 도는 이 서비스에 닿을
+        // 방법이 없어 정적 참조로 다리를 놓는다(activeCollector 와 같은 방식).
+        // onDestroy 에서 반드시 null 로 되돌린다.
+        activePlaceHook = { fix -> evaluatePlaces(familyId, fix) }
 
         collector.start { fix -> handle(familyId, fix) }
         return START_STICKY
+    }
+
+    /**
+     * 장소를 다시 읽어 OS 지오펜스를 다시 건다(5단계 Task 3).
+     *
+     * 서비스가 (재)시작될 때마다 부르는 이유가 [refreshSchedule] 과 같다: **재부팅 때
+     * OS 가 등록된 지오펜스를 전부 지운다**(설계서 §4.6). 부팅 뒤 이 서비스를 띄우는
+     * 것은 [BootReceiver] 이고, 그 경로가 여기를 지나므로 재등록이 저절로 따라온다 —
+     * 리시버에 같은 일을 한 번 더 적으면 두 곳이 갈라진다.
+     *
+     * 실패해도(오프라인 등) 서비스는 그대로 돈다. 잃는 것은 절전 상태에서의 반응
+     * 속도뿐이고, 다음 시작이나 `sync_rules` 명령이 다시 시도한다.
+     */
+    private fun refreshPlaces(familyId: String) {
+        lifecycleScope.launch {
+            try {
+                placeWatcher.refresh(familyId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "장소를 못 읽어 지오펜스를 다시 걸지 못했다", e)
+            }
+        }
+    }
+
+    /**
+     * 위치 한 점으로 장소 도착·이탈을 판정한다. 재료가 전부 여기 있으므로
+     * [PlaceGeofenceReceiver] 도 [notifyGeofenceCrossing] 을 거쳐 이 함수로 들어온다.
+     *
+     * 실패를 삼키지 않고 로그로 남기는 이유는 안전 업로드와 같다 — 화면이 없는
+     * 서비스라 부모에게 말할 방법이 없고, 조용히 실패하면 "왜 도착 알림이 안 오지"를
+     * 알아낼 단서가 하나도 안 남는다.
+     */
+    private fun evaluatePlaces(familyId: String, fix: Fix) {
+        lifecycleScope.launch {
+            try {
+                val childUid = AuthGateway.currentUid() ?: AuthGateway.signIn()
+                placeWatcher.onFix(familyId, childUid, fix)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "장소 판정 실패: familyId=$familyId at=${fix.at}", e)
+            }
+        }
     }
 
     /**
@@ -328,7 +382,19 @@ class TrackingService : LifecycleService() {
             lastFix = null
         }
 
-        when (LocationFilter.decide(lastFix, fix)) {
+        val decision = LocationFilter.decide(lastFix, fix)
+
+        // 장소 판정은 업로드 판정과 **독립이다.** 못 믿는 점(정확도·순간이동)만 빼고
+        // 전부 넘긴다 — 특히 SKIP_TOO_CLOSE 를 빼면 안 된다. 그건 "직전 점에서 25m 도
+        // 안 움직였다"는 뜻일 뿐인데, 경계에서 몇 걸음 옮겨 안으로 들어간 순간이 정확히
+        // 그 모양이다. 업로드에는 값이 없는 점이 도착 알림에는 결정적일 수 있다.
+        // GeofenceEvaluator 는 자기 정확도 문턱을 또 갖고 있으므로 여기서 한 번 더 걸러도
+        // 판단이 겹칠 뿐 어긋나지 않는다.
+        if (decision != Decision.REJECT_INACCURATE && decision != Decision.REJECT_IMPOSSIBLE) {
+            evaluatePlaces(familyId, fix)
+        }
+
+        when (decision) {
             Decision.UPLOAD -> Unit
             // 완화 문턱으로 간신히 통과한 점이다. 올리는 동작은 UPLOAD 와 똑같지만
             // 반드시 W 로 남긴다 — known-issues 의 '정확도 기아 상태'는 이 태그
@@ -458,6 +524,9 @@ class TrackingService : LifecycleService() {
         // 계속 도는 배터리 누수가 된다 — 이 작업이 막으려는 것과 정반대다.
         unregisterActivityTransitions()
         activeCollector = null
+        // 지오펜스 다리도 끊는다. 안 끊으면 죽은 서비스의 lifecycleScope 를 붙든 람다가
+        // 남아, 다음 전환에서 이미 취소된 스코프에 코루틴을 던진다.
+        activePlaceHook = null
         collector.stop()
         // 되돌리기 리시버도 같은 이유로 뗀다 — cancelPending 을 먼저 부르지 않으면
         // 서비스가 죽은 뒤 3초 지연 중이던 Runnable 이 죽은 컨트롤러를 붙든 채 터진다.
@@ -499,6 +568,21 @@ class TrackingService : LifecycleService() {
 
         fun notifyMovingChanged(nowMoving: Boolean) {
             activeCollector?.onMovingChanged(nowMoving)
+        }
+
+        /**
+         * [PlaceGeofenceReceiver] 가 지금 살아있는 서비스에 전환 위치를 넘기는 통로.
+         * 판정에 필요한 재료(장소 목록·가족 ID·uid)가 전부 서비스 쪽에 있어서다.
+         *
+         * 서비스가 없으면(hook == null) 조용히 버린다 — 그때는 위치 수집도 멈춰 있어
+         * 어차피 판정할 재료가 없고, 서비스가 다시 뜨면 첫 위치 점이 같은 판정을 한다
+         * ([PlaceGeofenceReceiver] 주석, [notifyMovingChanged] 와 같은 규율).
+         */
+        @Volatile
+        private var activePlaceHook: ((Fix) -> Unit)? = null
+
+        fun notifyGeofenceCrossing(fix: Fix) {
+            activePlaceHook?.invoke(fix)
         }
 
         fun start(context: Context) {

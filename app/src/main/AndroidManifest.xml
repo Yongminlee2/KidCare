@@ -98,5 +98,12 @@
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
             </intent-filter>
         </receiver>
+
+        <!-- 장소 지오펜스 전환(5단계 Task 3). ActivityTransitionReceiver 와 같은 이유로
+             exported=false — 우리가 만든 PendingIntent 로 플레이 서비스만 보낸다.
+             여기서 이벤트를 직접 쓰지 않고 판정기로 넘기는 이유는 그 클래스 주석 참고. -->
+        <receiver
+            android:name=".child.PlaceGeofenceReceiver"
+            android:exported="false" />
     </application>
 </manifest>

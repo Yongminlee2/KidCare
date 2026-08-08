@@ -26,10 +26,16 @@ import java.time.ZoneId
  * (오늘 점 버퍼, 마지막 fix)가 전부 그 서비스 안에 있다. 여기서 서비스를 붙들면
  * 죽은 서비스 참조를 들고 있게 되고, 반대로 재료를 여기로 옮기면 위치 수집과
  * 명령 실행이 한 클래스에 뒤섞인다.
+ *
+ * [placeWatcher] 를 새로 만들지 않고 **서비스가 쓰는 그 인스턴스를 받는** 이유도
+ * 같다(5단계 Task 3). 읽어 둔 장소 목록이 그 인스턴스 안에 있어서, 여기서 따로 하나
+ * 만들어 refresh 하면 OS 지오펜스만 새것이 되고 위치 점마다 도는 판정은 옛 목록을
+ * 계속 쓴다 — 부모가 지운 장소의 도착 알림이 그대로 올라온다.
  */
 class CommandHandler(
     private val context: Context,
     private val onLocateNow: suspend (familyId: String, childUid: String) -> Unit,
+    private val placeWatcher: PlaceWatcher,
 ) {
 
     private val handled = object : LinkedHashSet<String>() {
@@ -129,7 +135,16 @@ class CommandHandler(
                 // 규칙이 바뀌었으니 다시 읽어 알람을 새로 건다(Task 8). refresh() 안에서
                 // 이미 네트워크 실패를 잡아 재시도 알람으로 물러나므로, 여기서 실패해도
                 // (아래 catch 로 내려가) 예약이 완전히 멈추지는 않는다.
-                CommandType.SYNC_RULES -> scheduleApplier.refresh(familyId)
+                //
+                // 같은 명령이 장소도 다시 읽는다(5단계 Task 3). 부모 화면은 예약과 장소
+                // 양쪽에서 이 하나의 신호를 보내고, 자녀 폰은 둘 다 다시 읽는다 —
+                // 명령 종류를 나누면 부모 쪽에서 어느 쪽을 보낼지 고르는 갈래가 하나
+                // 늘고, 그 갈래를 잘못 고르면 조용히 옛 상태로 돈다. 장소 쪽 실패는
+                // 예약까지 같이 죽이지 않도록 순서를 예약 뒤로 둔다.
+                CommandType.SYNC_RULES -> {
+                    scheduleApplier.refresh(familyId)
+                    placeWatcher.refresh(familyId)
+                }
                 // "지금 위치와 오늘 경로를 올려라". 무료 한도 때문에 자녀 폰은 더 이상
                 // 주기적으로 아무것도 올리지 않으므로(docs/known-issues.md 12번), 부모의
                 // 이 물음이 상태·경로 문서가 쓰이는 주된 순간이다. 아직 위치를 못 잡았으면

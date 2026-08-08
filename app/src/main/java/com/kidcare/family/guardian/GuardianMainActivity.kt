@@ -23,9 +23,9 @@ import java.util.Locale
 /**
  * 보호자 메인 컨테이너. 하단 탭이 프래그먼트를 갈아 끼운다.
  *
- * 지금 탭은 셋이다 — 지도(3단계), 관리·예약(4단계). 알림 탭은 events/ 가 생기는
- * 6단계에서 붙인다. 화면이 없는 탭을 미리 넣으면 눌러도 아무것도 없는 빈 탭이 되는데,
- * 그건 부모 눈에 그냥 고장이다.
+ * 지금 탭은 넷이다 — 지도(3단계), 관리·예약(4단계), 장소(5단계). 알림 탭은 events/ 를
+ * 읽는 화면이 생기는 5단계 Task 4 에서 붙인다. 화면이 없는 탭을 미리 넣으면 눌러도
+ * 아무것도 없는 빈 탭이 되는데, 그건 부모 눈에 그냥 고장이다.
  *
  * **replace 를 쓰지 않는다.** 프래그먼트를 태그로 찾아 두고 show/hide 로만 오간다.
  * replace 는 탭을 옮길 때마다 지도 프래그먼트를 새로 만들고, 그러면 osmdroid 가
@@ -68,10 +68,24 @@ class GuardianMainActivity : AppCompatActivity() {
      */
     private data class Tab(val menuId: Int, val tag: String, val create: () -> Fragment)
 
+    /**
+     * '장소'를 관리 화면 안의 줄이 아니라 **탭**으로 둔 이유(5단계 Task 3 의 결정).
+     *
+     * 관리 탭 안에 넣으려면 그 화면 안에 화면 전환을 하나 새로 만들어야 한다(자식
+     * 프래그먼트든 별도 액티비티든). 그러면 뒤로 가기 스택이 하나 늘고, 편집 중
+     * 화면 회전·프로세스 사망 복원 경로도 그만큼 갈라진다 — 지금 예약 탭이 판 두
+     * 개를 겹쳐 쓰는 방식으로 겨우 피해 둔 문제다. 코드는 더 많아지는데 얻는 것은
+     * 하단 탭 한 칸뿐이다.
+     *
+     * 게다가 장소는 관리(지금 바로 아이 폰을 바꾸는 동작들)의 설정이 아니라 이 앱의
+     * 독립된 명사다 — 설계서 §3 이 `places/` 를 별도 컬렉션으로 두고 있고, 알림
+     * 문구에 그 이름이 그대로 나온다. 관리 화면 아래에 묻으면 부모가 못 찾는다.
+     */
     private val tabs = listOf(
         Tab(R.id.tab_map, TAG_MAP) { MapTimelineFragment() },
         Tab(R.id.tab_control, TAG_CONTROL) { ControlFragment() },
         Tab(R.id.tab_schedule, TAG_SCHEDULE) { ScheduleFragment() },
+        Tab(R.id.tab_place, TAG_PLACE) { PlaceFragment() },
     )
 
     /** 지금 보이는 탭. 같은 탭으로 두 번 부르는 호출을 걸러내는 데 쓴다. */
@@ -272,6 +286,7 @@ class GuardianMainActivity : AppCompatActivity() {
         const val TAG_MAP = "tab_map"
         const val TAG_CONTROL = "tab_control"
         const val TAG_SCHEDULE = "tab_schedule"
+        const val TAG_PLACE = "tab_place"
         const val KEY_SELECTED_TAB = "selected_tab"
 
         /** 시간이 흐른 것만으로 다시 판정하는 간격([bannerJob] 주석 참고). 30분

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    장소 편집 지도 한가운데 고정된 십자. **이 자리가 곧 저장되는 좌표다.**
+
+    색을 테마(@color)에서 안 가져오는 이유: 이 그림이 앉는 바닥은 앱 배경이 아니라
+    OSM 타일이다. 타일은 흰 도로, 회색 건물, 초록 공원, 파란 물이 다 섞여 있어서
+    어느 한 색으로 그리면 반드시 어딘가에서 사라진다. 그래서 굵은 흰 획을 먼저 깔고
+    그 위에 잉크 획을 얹는 이중선으로 그린다 — 어느 바닥에서도 한쪽은 보인다.
+    새싹이 고정색(mascot_*)과 같은 판단이다: 이건 테마의 일부가 아니라 그림이다.
+
+    가운데를 비워 둔 것은 찍으려는 지점 자체를 손가락과 십자가 함께 가리지 않게
+    하려는 것이다.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- 흰 밑획 -->
+    <path
+        android:pathData="M24,6 L24,18 M24,30 L24,42 M6,24 L18,24 M30,24 L42,24"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="6"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M24,15 a9,9 0 1,0 0,18 a9,9 0 1,0 0,-18 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="6" />
+
+    <!-- 잉크 윗획. 값은 @color/ink 와 같다. -->
+    <path
+        android:pathData="M24,6 L24,18 M24,30 L24,42 M6,24 L18,24 M30,24 L42,24"
+        android:strokeColor="#FF4A4038"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M24,15 a9,9 0 1,0 0,18 a9,9 0 1,0 0,-18 Z"
+        android:strokeColor="#FF4A4038"
+        android:strokeWidth="2.5" />
+</vector>

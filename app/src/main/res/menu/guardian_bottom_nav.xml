@@ -3,8 +3,14 @@
     보호자 하단 탭.
 
     설계서 §3 은 탭 넷(지도·관리·예약·알림)을 그렸지만 여기에는 지금 실제로 열 수 있는
-    것만 넣는다. '알림'(EventsFragment)은 6단계에 events/ 가 생길 때 항목 한 줄을
-    여기에 더한다 — 열면 아무것도 없는 탭은 부모 눈에 고장으로 보인다.
+    것만 넣는다. '알림'(AlertFragment)은 5단계 Task 4 가 events/ 를 읽는 화면을 만들 때
+    항목 한 줄을 여기에 더한다 — 열면 아무것도 없는 탭은 부모 눈에 고장으로 보인다.
+
+    '장소'를 관리 화면 안의 줄이 아니라 탭으로 둔 이유는 GuardianMainActivity 의
+    tabs 표 주석에 적었다. **알림 탭이 붙으면 다섯이 된다** — 그때 하단이 빽빽한지
+    실기기에서 보고, 접어야 한다면 접을 후보는 '장소'가 아니라 '예약'이다(둘 다 한 번
+    정해두고 잊는 화면인데, 장소는 알림 문구에 이름이 그대로 나와서 부모가 훨씬 자주
+    다시 열어본다).
 
     항목 ID 는 GuardianMainActivity 의 탭 표(tabs)와 짝이다. 여기에 항목을 더하면
     그 표에도 한 줄을 더해야 한다 — 안 그러면 눌러도 아무 일이 없다.
@@ -25,4 +31,9 @@
         android:id="@+id/tab_schedule"
         android:icon="@drawable/ic_tab_schedule"
         android:title="@string/tab_schedule" />
+
+    <item
+        android:id="@+id/tab_place"
+        android:icon="@drawable/ic_tab_place"
+        android:title="@string/tab_place" />
 </menu>

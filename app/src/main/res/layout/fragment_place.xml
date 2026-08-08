@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    장소 탭. 예약 탭(fragment_schedule.xml)과 같은 구조 — 판 둘을 겹쳐 두고 한 번에
+    하나만 보여준다. 다이얼로그를 안 쓰는 이유도 같다(회전·프로세스 사망 뒤 리스너를
+    잃어 "확인을 눌렀는데 아무 일도 안 일어나는" 화면이 되기 쉽다).
+
+    여기서는 이유가 하나 더 있다: 편집 판 안에 지도가 있다. 다이얼로그 안의 MapView 는
+    창 생명주기와 프래그먼트 생명주기가 어긋나서 onResume/onPause/onDetach 를 짝 맞춰
+    부르기가 훨씬 까다롭다.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- ================================ 목록 판 ================================ -->
+    <LinearLayout
+        android:id="@+id/list_pane"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- 오류·저장 결과 한 줄. 평소에는 GONE. -->
+        <TextView
+            android:id="@+id/place_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone" />
+
+        <!-- "장소는 저장됐는데 아이 폰에 아직 못 알렸다"는 줄. 예약 탭과 같은 장치이고
+             (ScheduleFragment.pendingSync 주석) 여기서는 삭제가 특히 위험하다 —
+             아이 폰이 모르면 이미 지운 장소의 지오펜스가 그대로 남아 계속 울린다. -->
+        <LinearLayout
+            android:id="@+id/sync_pending_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorErrorContainer"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/place_sync_pending"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnErrorContainer" />
+
+            <!-- 자두빛 면 위에 앉는 글자 버튼이라 기본 글자색(하늘)이면 안 읽힌다.
+                 fragment_schedule.xml 의 같은 버튼과 같은 처리. -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/sync_retry_button"
+                style="@style/Widget.KidCare.Button.Text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:minHeight="48dp"
+                android:text="@string/place_sync_retry"
+                android:textColor="?attr/colorOnErrorContainer" />
+        </LinearLayout>
+
+        <!-- 20개를 채웠을 때만 보인다. 추가 버튼을 잠그면서 이유를 안 적으면 부모는
+             앱이 고장 난 줄 안다. -->
+        <TextView
+            android:id="@+id/place_limit_notice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorSurfaceVariant"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/place_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingVertical="4dp" />
+
+            <TextView
+                android:id="@+id/place_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:padding="24dp"
+                android:text="@string/place_empty"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/add_button"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_margin="16dp"
+            android:text="@string/place_add"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+    </LinearLayout>
+
+    <!-- ================================ 편집 판 ================================ -->
+    <ScrollView
+        android:id="@+id/editor_pane"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/colorSurface"
+        android:fillViewport="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/editor_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/place_editor_name_label"
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+            <EditText
+                android:id="@+id/name_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:autofillHints="name"
+                android:hint="@string/place_editor_name_hint"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:maxLength="20"
+                android:minHeight="56dp"
+                android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+            <TextView
+                android:id="@+id/editor_name_error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/place_editor_name_required"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorError"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/place_editor_map_label"
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/place_editor_map_hint"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <!-- 아이 폰 위치를 아직 모를 때만 보인다. -->
+            <TextView
+                android:id="@+id/editor_map_notice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/place_editor_no_child_location"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorError"
+                android:visibility="gone" />
+
+            <!-- 지도와 십자를 겹친다. 십자는 화면(=지도) 정중앙에 고정되고, 지도를
+                 움직여 그 아래 좌표를 바꾸는 방식이다. 십자를 클릭 불가로 두는 것이
+                 중요하다 — 안 그러면 정확히 좌표를 정해야 하는 자리에서 터치가 먹힌다. -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="260dp"
+                android:layout_marginTop="8dp">
+
+                <org.osmdroid.views.MapView
+                    android:id="@+id/place_map"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:clickable="false"
+                    android:contentDescription="@string/place_editor_map_hint"
+                    android:focusable="false"
+                    android:src="@drawable/ic_map_crosshair" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/place_editor_radius_label"
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+            <!-- 지금 고른 값을 숫자로도 적는다. 슬라이더 손잡이 위의 말풍선은 손가락에
+                 가려서, 손을 떼고 나면 얼마로 정했는지 확인할 방법이 없다. -->
+            <TextView
+                android:id="@+id/radius_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/radius_slider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:stepSize="50"
+                android:valueFrom="100"
+                android:valueTo="1000" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/place_editor_notify_label"
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+            <!-- saveEnabled=false 인 이유는 fragment_schedule.xml 의 토글들과 같다:
+                 편집 중인 값의 정답은 프래그먼트 필드이고 뷰는 그걸 비추기만 한다.
+                 뷰가 스스로 상태를 복원하면 두 복원이 부딪힌다. -->
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/notify_enter_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:minHeight="52dp"
+                android:saveEnabled="false"
+                android:text="@string/place_editor_notify_enter"
+                android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/notify_exit_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="52dp"
+                android:saveEnabled="false"
+                android:text="@string/place_editor_notify_exit"
+                android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+            <!-- 둘 다 껐을 때만 보인다. -->
+            <TextView
+                android:id="@+id/notify_none_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/place_editor_notify_none_hint"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ProgressBar
+                    android:id="@+id/editor_progress"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="10dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/editor_status"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/editor_cancel_button"
+                    style="@style/Widget.KidCare.Button.Text"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="@string/place_editor_cancel" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/editor_save_button"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="@string/place_editor_save"
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

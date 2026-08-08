@@ -242,6 +242,77 @@ data class ScheduleDoc(
 )
 
 /**
+ * families/{familyId}/places/{id} — 부모가 정한 장소 하나(설계서 §4.6).
+ *
+ * 필드 이름·의미는 [com.kidcare.family.logic.Place] 와 같다. 두 클래스를 따로 두는
+ * 이유는 [ScheduleDoc]/[com.kidcare.family.logic.ScheduleRule] 과 똑같다 — 저쪽은
+ * 안드로이드·Firestore 를 몰라야 하는 순수 판정 모델이고 이쪽은 그 문서 표현이다.
+ * 변환은 `core/PlaceRepository.kt` 의 `PlaceDoc.toPlace()` 한 곳에만 있다.
+ *
+ * [radiusMeters] 의 기본값이 0 인 것은 "안 정해졌다"는 뜻이고, 그런 장소는 지오펜스로
+ * 걸지 않는다(`child/PlaceWatcher.registerGeofences`). 200 같은 그럴듯한 값을 기본으로
+ * 넣으면 필드가 빠진 문서가 **부모가 정하지 않은 반경으로 조용히 동작한다** — 이 앱에서
+ * 조용히 지어낸 값이 제일 나쁘다.
+ *
+ * 쓰기는 보호자만이다(firestore.rules 의 places 블록). 아이에게 쓰기를 열면 학교 반경을
+ * 0 으로 만들어 도착 알림을 없앨 수 있다. 읽기는 아이도 필요하다 — 자기 폰의 지오펜스를
+ * 걸려면 좌표와 반경을 알아야 한다.
+ */
+data class PlaceDoc(
+    val id: String = "",
+    val name: String = "",
+    val lat: Double = 0.0,
+    val lng: Double = 0.0,
+    val radiusMeters: Double = 0.0,
+    val notifyEnter: Boolean = true,
+    val notifyExit: Boolean = true,
+)
+
+/**
+ * families/{familyId}/events/{id} — 아이 폰이 만들고 부모가 읽는 사건 하나.
+ *
+ * ## [at] 은 반드시 Long 밀리초다. Firestore Timestamp 로 바꾸면 안 된다.
+ *
+ * firestore.rules 의 events create 규칙이 이 값을 `request.time.toMillis()` 와 직접
+ * 비교한다(과거 24시간 ~ 미래 1시간). 타입을 `Timestamp` 로 바꾸면 그 비교가 절대
+ * 성립하지 않아 **모든 이벤트 쓰기가 조용히 거부된다** — 부모 화면에는 그냥 사건이
+ * 하나도 안 일어난 것으로 보인다. 5단계 Task 1 이 이 지뢰를 명시적으로 남겼다.
+ *
+ * ## [read] 는 만들 때 반드시 false 다
+ *
+ * 같은 규칙이 `request.resource.data.read == false` 를 강제한다. 아이가 이벤트를
+ * 만들면서 미리 읽음 표시를 해 두면 부모의 '안 읽음' 목록에서 그대로 사라진다.
+ * 기본값이 false 이므로 [EventRepository][com.kidcare.family.core.EventRepository] 는
+ * 이 필드를 아예 건드리지 않는다.
+ *
+ * [childUid] 도 규칙이 `request.auth.uid` 와 대조한다 — 남의 이름으로 사건을 지어내지
+ * 못하게 하는 검사라, 쓰는 쪽은 반드시 지금 로그인된 uid 를 그대로 넣어야 한다.
+ *
+ * [id] 는 Firestore 문서 ID 라 본문에는 없다. 읽어올 때 채운다([CommandDoc.id] 와 같다).
+ */
+data class EventDoc(
+    val id: String = "",
+    val type: String = "",
+    val at: Long = 0L,
+    val childUid: String = "",
+    val placeName: String = "",
+    val detail: String = "",
+    val read: Boolean = false,
+)
+
+/**
+ * [EventDoc.type] 값들.
+ *
+ * firestore.rules 는 이 목록을 **일부러 강제하지 않는다**(events 블록 주석 참고) —
+ * 값 목록으로 잠그면 종류가 하나 늘 때마다 사람이 콘솔에 규칙을 다시 게시해야 하고,
+ * 잊으면 그 종류만 조용히 죽는다. 그러니 이 목록이 곧 약속이고, 지키는 쪽은 앱 코드다.
+ */
+object EventType {
+    const val PLACE_ENTER = "place_enter"
+    const val PLACE_EXIT = "place_exit"
+}
+
+/**
  * families/{familyId}/settings/ringer — "아이가 되돌리면 다시 바꾸기" 스위치(설계서 §4.4).
  *
  * settings 컬렉션 자체는 Task 1 이 규칙과 함께 추가했다(가족 단위 설정을 담는
