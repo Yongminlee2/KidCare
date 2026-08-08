@@ -340,11 +340,24 @@
     <string name="alert_place_enter">📍 %1$s에 도착했어요</string>
     <string name="alert_place_exit">👟 %1$s에서 나섰어요</string>
     <!-- 아래 넷은 5단계 Task 7 이 만드는 사건이다. 읽는 쪽을 먼저 붙여 둔 이유는
-         core/model/Documents.kt 의 EventType 주석 참고. -->
+         core/model/Documents.kt 의 EventType 주석 참고.
+         둘(low_battery·permission_off)은 Task 7 에서 실제로 쓰기 시작했고,
+         signal_lost·command_failed 는 **아무도 안 쓴다** — 아이 폰이 자기 침묵을 알릴
+         수는 없고(연결 끊김 배너가 부모 폰에서 그 자리를 덮는다), 명령 실패는 부모가
+         보고 있는 관리 화면의 상태 줄이 이미 말한다. 문구를 지우지 않고 두는 이유는
+         모르는 type 이 왔을 때 alert_unknown 으로 떨어지는 것보다 낫기 때문이다. -->
     <string name="alert_low_battery">🔋 애기폰 배터리가 얼마 안 남았어요</string>
     <string name="alert_permission_off">⚠️ 애기폰에서 권한이 꺼졌어요</string>
     <string name="alert_signal_lost">📵 애기폰이 한동안 대답하지 않았어요</string>
     <string name="alert_command_failed">❗ 애기폰에 보낸 요청이 실패했어요</string>
+
+    <!-- 사건 한 줄 아래에 붙는 설명(EventDoc.detail). 아이 폰이 만들어 넣는 값이라
+         부모 폰의 앱 버전과 무관하게 그대로 보인다. -->
+    <string name="event_detail_battery">%1$d%% 남았어요</string>
+    <!-- 권한 이름은 권한 온보딩 화면과 같은 말을 쓴다(PermissionStep.titleRes) —
+         부모가 아이에게 전화로 불러줘야 하는 말이라, 아이 폰 화면에 실제로 적혀 있는
+         것과 글자가 달라지면 아이가 못 찾는다. -->
+    <string name="event_detail_permission">%1$s — 애기폰에서 다시 켜주세요</string>
     <!-- 앱이 모르는 종류의 사건. 뜻은 몰라도 언제 무슨 일이 있었다는 사실은 남긴다. -->
     <string name="alert_unknown">🔔 새로운 소식이 있어요</string>
 

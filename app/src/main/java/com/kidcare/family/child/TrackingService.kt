@@ -81,6 +81,10 @@ class TrackingService : LifecycleService() {
     // 목록을 들고 있고, 그 목록이 위치 점마다 도는 판정의 재료다.
     private val placeWatcher by lazy { PlaceWatcher(this) }
 
+    // 배터리·권한 감시(5단계 Task 7). 상태를 SharedPreferences 에만 두므로 이 인스턴스가
+    // 죽었다 살아나도 "이미 알렸다"가 그대로 남는다.
+    private val conditionWatcher by lazy { ConditionWatcher(this) }
+
     // 잠금 스위치가 켜져 있을 때 아이가 모드를 바꾸면 되돌린다(Task 5). onCreate 에서
     // 코드로 등록하고 onDestroy 에서 반드시 해제한다 — 매니페스트 정적 등록은 서비스가
     // 안 떠 있을 때도 깨어나 배터리만 먹는다(RingerModeReceiver 주석 참고).
@@ -235,9 +239,6 @@ class TrackingService : LifecycleService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        // onCreate 에서 권한이 없어 이미 stopSelf() 를 예약해 뒀다면 여기서도 아무
-        // 일도 하지 않는다 — collector.start() 가 권한 없이 불리는 일을 막는다.
-        if (!hasLocationPermission) return START_NOT_STICKY
 
         // START_STICKY 로 시스템이 죽은 프로세스를 되살릴 때 intent 는 null 로 온다.
         // 여기서 필요한 정보(familyId)는 애초에 Intent extra 가 아니라 RoleStore
@@ -245,6 +246,20 @@ class TrackingService : LifecycleService() {
         // null 이어도 그대로 이어서 동작한다.
         val store = RoleStore(this)
         val familyId = store.familyId
+
+        // 상태 검사는 **위치 권한 분기보다 앞이다.** 여기가 위치 권한이 꺼진 사실을
+        // 부모에게 알릴 수 있는 유일한 순간이기 때문이다: 사용자가 설정에서 런타임
+        // 권한을 취소하면 안드로이드가 이 앱 프로세스를 죽이고, START_STICKY 가 서비스를
+        // 되살리고, onCreate 는 권한이 없는 것을 보고 곧장 stopSelf() 한다. 그 뒤로는
+        // 위치 점이 하나도 안 들어오므로 아래 handle() 의 검사가 영원히 안 돈다 —
+        // 이 한 줄을 아래로 내리면 이 앱에서 제일 중요한 경고가 정확히 제일 중요한
+        // 순간에만 침묵한다(ConditionWatcher 클래스 주석).
+        if (familyId != null) checkConditions(familyId)
+
+        // onCreate 에서 권한이 없어 이미 stopSelf() 를 예약해 뒀다면 여기서도 아무
+        // 일도 하지 않는다 — collector.start() 가 권한 없이 불리는 일을 막는다.
+        if (!hasLocationPermission) return START_NOT_STICKY
+
         if (familyId == null) {
             // 페어링이 풀린 상태(store.clear() 등)에서 재시작됐다는 뜻이다. 더 돌 이유가 없다.
             stopSelf()
@@ -309,6 +324,38 @@ class TrackingService : LifecycleService() {
     }
 
     /**
+     * 배터리와 권한을 훑어 달라진 것이 있으면 `events/` 에 적는다(5단계 Task 7).
+     *
+     * **부르는 곳이 둘이고, 둘이 서로의 사각을 덮는다.**
+     * - [onStartCommand]: 서비스가 (재)시작될 때마다. 권한 취소로 프로세스가 죽었다
+     *   살아난 직후가 여기다 — 위치 권한이 꺼진 경우 이것 말고는 기회가 없다.
+     * - [handle]: 위치 점이 들어올 때마다(이동 30초·정지 5분). 서비스가 계속 살아 있는
+     *   동안 꺼지는 권한(방해 금지 접근은 런타임 권한이 아니라 프로세스도 안 죽는다)과
+     *   서서히 닳는 배터리는 이쪽이 잡는다.
+     *
+     * 위치 점마다 도는데도 통신 비용이 늘지 않는다. 검사는 전부 폰 안에서 끝나고
+     * (배터리 한 번 + 권한 넷), Firestore 는 **상태가 실제로 바뀐 순간에만** 건드린다.
+     * 별도 주기 알람을 새로 걸지 않은 이유이기도 하다 — 이미 규칙적으로 도는 자리가
+     * 있는데 알람을 하나 더 걸면 재부팅·강제종료·정확한 알람 권한 같은 함정이 따라온다.
+     *
+     * 배터리 값을 여기서 읽어 넘기는 것은 [uploadNow] 가 쓰는 [batteryPercent] 를
+     * 그대로 재사용하려는 것이다(같은 값을 두 곳에서 다르게 읽지 않는다).
+     */
+    private fun checkConditions(familyId: String) {
+        val battery = batteryPercent()
+        lifecycleScope.launch {
+            try {
+                val childUid = AuthGateway.currentUid() ?: AuthGateway.signIn()
+                conditionWatcher.check(familyId, childUid, battery)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "상태 경고 기록 실패: familyId=$familyId", e)
+            }
+        }
+    }
+
+    /**
      * 예약 규칙을 다시 읽어 적용하고 다음 경계 알람을 건다(Task 8).
      *
      * 재부팅·시각변경·SYNC_RULES 는 [ScheduleAlarmReceiver] 가 각자 트리거를 받아
@@ -364,6 +411,12 @@ class TrackingService : LifecycleService() {
     }
 
     private fun handle(familyId: String, fix: Fix) {
+        // 이 fix 를 받아들일지와 무관하게 먼저 한다(5단계 Task 7). 아래 판정에서 걸러지는
+        // 점(너무 가깝다·오차가 크다)이라도 "이 폰이 아직 살아 있고 지금 배터리와 권한이
+        // 이렇다"는 사실은 똑같이 유효하다. 판정 안쪽으로 넣으면 신호가 나쁜 날에는 배터리
+        // 경고까지 같이 굶는다.
+        checkConditions(familyId)
+
         // 활동 인식 권한은 서비스가 도는 도중에도 설정에서 언제든 꺼질 수 있다.
         // 정지 상태(5분 주기)로 넘어가 있는 채로 권한이 사라지면, 그 뒤로는 '이동'
         // 전환이 다시 올 수 없어 아이가 실제로 움직이기 시작해도 5분 주기에 영원히
