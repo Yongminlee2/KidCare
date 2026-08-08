@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    적응형 런처 아이콘.
+
+    ## 왜 래스터(PNG) 대비판이 없는가
+
+    적응형 아이콘은 API 26 부터고 이 앱의 minSdk 도 26 이다. 즉 -v26 한정자가 안 맞는
+    기기에는 애초에 설치가 안 된다 — 물러설 자리를 위해 mipmap-hdpi..xxxhdpi 에
+    PNG 다섯 벌을 두는 흔한 구성은 여기서 순수한 죽은 무게다. 나중에 minSdk 를 25
+    이하로 내리는 일이 생기면 그때 같이 넣어야 한다.
+
+    ## ic_launcher_round 도 같은 내용인 이유
+
+    android:roundIcon 은 원형 아이콘을 따로 요구하던 API 25 시절의 자리다. 적응형
+    아이콘은 마스크가 원형 처리를 이미 하므로 다른 그림이 필요 없다. 그런데 삼성
+    One UI 를 비롯한 몇몇 런처가 여전히 roundIcon 을 먼저 본다 — 이 앱의 주 사용
+    기기가 갤럭시라 비워두면 그 폰들만 기본 로봇으로 남을 여지가 있다. 그래서
+    같은 내용으로 하나 더 뒀다.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/mascot_bg" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+    <!-- 안드로이드 13+ 테마 아이콘. API 26~32 런처는 모르는 태그로 보고 그냥 넘긴다. -->
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />
+</adaptive-icon>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    android:roundIcon 이 가리키는 판. ic_launcher.xml 과 내용이 같고, 왜 같은지는
+    그 파일 주석에 적었다 — 요약하면 적응형 마스크가 원형을 이미 처리하므로 그림이
+    다를 이유가 없고, 그럼에도 파일이 따로 있는 이유는 roundIcon 을 먼저 보는
+    런처(삼성 등)가 남아 있어서다.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/mascot_bg" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />
+</adaptive-icon>
