@@ -327,7 +327,7 @@ class ScheduleFragment : Fragment() {
 
         scheduleListener = ScheduleRepository.observeSchedules(
             fid,
-            onChange = { docs -> onRulesChanged(docs) },
+            onChange = { docs, fromCache -> onRulesChanged(docs, fromCache) },
             onError = { e ->
                 val ctx = context ?: return@observeSchedules
                 _binding ?: return@observeSchedules
@@ -355,14 +355,17 @@ class ScheduleFragment : Fragment() {
         )
     }
 
-    private fun onRulesChanged(docs: List<ScheduleDoc>) {
+    private fun onRulesChanged(docs: List<ScheduleDoc>, fromCache: Boolean) {
         // observeSchedules 는 정렬 없이 준다(문서 ID 순). 부모 눈에는 이른 시각이 위에
         // 오는 것이 자연스러우므로 여기서 정렬한다. priority 는 화면에 안 쓰므로
         // 정렬 기준으로도 쓰지 않는다.
         rules = docs.sortedWith(
             compareBy<ScheduleDoc> { it.startMinute }.thenBy { it.endMinute }.thenBy { it.id }
         )
-        listLoad = ListLoad.LOADED
+        // 캐시본으로는 LOADED 로 올리지 않는다 — 이유는 [ListLoad] 주석("오프라인은
+        // 네 번째 상태가 아니다"). 부모가 만들어 둔 규칙이 캐시에 있으면 그대로 보이고,
+        // 없을 때 "아직 정해둔 규칙이 없어요"라고 단언만 하지 않는다.
+        listLoad = if (fromCache) ListLoad.LOADING else ListLoad.LOADED
         renderList()
     }
 

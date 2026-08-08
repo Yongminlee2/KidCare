@@ -30,6 +30,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.ZoneId
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
@@ -86,6 +87,16 @@ class MapTimelineFragment : Fragment() {
 
     /** 화면을 열 때·날짜를 넘길 때·대답이 왔을 때 도는 한 번 읽기. */
     private var loadJob: Job? = null
+
+    /**
+     * 아래 타임라인을 불러왔는가. 목록 화면 셋과 같은 판정을 쓴다([ListLoad]).
+     *
+     * 예전에는 `docs.isEmpty()` 하나로 "이 날은 기록이 없어요"를 띄웠다. 그래서 못
+     * 읽은 날과 정말 안 걸어 다닌 날이 **같은 말을 했다** — 오프라인에서 어제로
+     * 넘기면(캐시에 없는 날) 아이가 하루 종일 걸어 다닌 날에 대고 "기록이 없어요"라고
+     * 말한다. 목록 화면 셋이 이미 고친 결함인데 이 화면만 남아 있었다.
+     */
+    private var timelineLoad = ListLoad.LOADING
 
     /** 명령을 보낸 뒤 대답이 올 때까지만 붙어 있는 리스너와 그 60초 타이머. */
     private var commandListener: ListenerRegistration? = null
@@ -189,18 +200,30 @@ class MapTimelineFragment : Fragment() {
         // 만지면 그 자리에서 IllegalStateException 이다.
         _binding ?: return
         loadJob?.cancel()
+        timelineLoad = ListLoad.LOADING
         loadJob = viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val status = FamilyRepository.fetchChildStatus(familyId, uid)
                 val trail = TrailRepository.fetch(familyId, uid, dayKey)
                 _binding ?: return@launch
-                renderStatus(status)
+                // 타임라인을 먼저 그린다. renderStatus 는 서버 시각 보정을 기다리는
+                // suspend 함수라(FamilyRepository.serverNow) 통신이 느리면 그 자리에서
+                // 몇 초를 쉰다 — 뒤에 두면 이미 손에 든 하루 기록이 그 시간만큼 화면에
+                // 안 나오고, 그동안 화면은 옛 날짜의 목록을 그대로 보여준다.
+                timelineLoad = ListLoad.LOADED
                 renderTimeline(trail?.segments ?: emptyList())
+                renderStatus(status)
             } catch (e: CancellationException) {
                 // 화면을 떠났거나 다음 읽기가 이 읽기를 밀어낸 것이다. 실패가 아니다.
                 throw e
             } catch (e: Exception) {
                 val ctx = context ?: return@launch
+                // 못 읽었으면 빈 자리에 "이 날은 기록이 없어요"를 띄우지 않는다 —
+                // 이유는 위 [timelineLoad] 주석. 목록 자체는 건드리지 않는다(직전에
+                // 성공한 날의 목록이 남아 있을 수 있고, 날짜를 넘긴 경우라면 changeDay
+                // 가 이미 비워 뒀다).
+                timelineLoad = ListLoad.FAILED
+                renderTimelineEmpty(timelineAdapter.itemCount == 0)
                 showError(getString(R.string.timeline_error, errorMessage(ctx, e)))
             }
         }
@@ -245,9 +268,20 @@ class MapTimelineFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val commandId = CommandRepository.send(familyId, uid, CommandType.LOCATE_NOW)
+                // 제한시간의 이유는 [ControlFragment.SEND_TIMEOUT_MILLIS] 와 같다:
+                // 오프라인이면 이 await 가 영영 안 돌아와 track() 도 60초 타이머도
+                // 시작되지 않고, 화면은 "위치를 확인하는 중이에요…"와 도는 스피너에
+                // 영원히 갇힌다. 끊어도 명령 문서는 큐에 남아 연결되면 그대로 나간다.
+                val commandId = withTimeoutOrNull(SEND_TIMEOUT_MILLIS) {
+                    CommandRepository.send(familyId, uid, CommandType.LOCATE_NOW)
+                }
                 _binding ?: return@launch
                 if (generation != commandGeneration) return@launch
+                if (commandId == null) {
+                    renderLocating(false)
+                    showError(getString(R.string.control_command_queued))
+                    return@launch
+                }
                 track(familyId, uid, commandId, generation)
             } catch (e: CancellationException) {
                 throw e
@@ -462,6 +496,10 @@ class MapTimelineFragment : Fragment() {
         // Fix 6(옛 코드의 이유 그대로): 새로 읽기 전에 화면을 먼저 빈 상태로 되돌린다.
         // 안 그러면 읽기가 실패했을 때 어제 목록과 어제 경로선이 오늘 헤더 아래 그대로
         // 남는다 — 부모가 아이 위치를 잘못 읽는 상태다.
+        //
+        // 비우기 **전에** 상태를 되돌린다. 안 그러면 지난 날의 LOADED 가 남아 있어
+        // 새 날짜를 아직 읽지도 않았는데 "이 날은 기록이 없어요"가 한 번 번쩍인다.
+        timelineLoad = ListLoad.LOADING
         renderTimeline(emptyList())
         reload()
     }
@@ -478,8 +516,17 @@ class MapTimelineFragment : Fragment() {
     private fun renderTimeline(docs: List<SegmentDoc>) {
         _binding ?: return
         timelineAdapter.submitList(docs)
-        binding.timelineEmpty.visibility = if (docs.isEmpty()) View.VISIBLE else View.GONE
+        renderTimelineEmpty(docs.isEmpty())
         drawRoute(docs)
+    }
+
+    /**
+     * [docs] 를 인자로 받는 이유: `submitList` 는 비동기(diff)라 바로 다음 줄의
+     * `itemCount` 는 아직 옛 값이다. 목록을 새로 그리는 자리에서는 방금 넘긴 목록으로
+     * 판단하고, 실패 경로처럼 목록을 안 건드리는 자리에서만 `itemCount` 를 본다.
+     */
+    private fun renderTimelineEmpty(isEmpty: Boolean) {
+        _binding?.timelineEmpty?.renderEmptyState(timelineLoad, isEmpty, R.string.timeline_empty)
     }
 
     private fun focusOn(lat: Double, lng: Double) {
@@ -558,6 +605,9 @@ class MapTimelineFragment : Fragment() {
     private companion object {
         /** 관리 탭의 무응답 표시와 같은 값이어야 한다(설계서 §5). */
         private const val COMMAND_TIMEOUT_MILLIS = 60_000L
+
+        /** 명령 발행(서버 확인)을 기다리는 시간. 근거는 [ControlFragment.SEND_TIMEOUT_MILLIS]. */
+        private const val SEND_TIMEOUT_MILLIS = 15_000L
 
         private const val ROUTE_LINE_WIDTH = 14f
         private const val ROUTE_COLOR = 0xFF3D6DF5.toInt()

@@ -129,7 +129,7 @@ class AlertFragment : Fragment() {
         familyId = fid
         listener = EventRepository.observeEvents(
             fid,
-            onChange = { docs -> onEventsChanged(docs) },
+            onChange = { docs, fromCache -> onEventsChanged(docs, fromCache) },
             onError = { e ->
                 val ctx = context ?: return@observeEvents
                 _binding ?: return@observeEvents
@@ -140,10 +140,13 @@ class AlertFragment : Fragment() {
         )
     }
 
-    private fun onEventsChanged(docs: List<EventDoc>) {
+    private fun onEventsChanged(docs: List<EventDoc>, fromCache: Boolean) {
         _binding ?: return
         events = docs
-        listLoad = ListLoad.LOADED
+        // 캐시본으로는 LOADED 로 올리지 않는다. 오프라인에서 빈 목록에 "아직 온 알림이
+        // 없어요"를 띄우면 부모는 그걸 "조용한 하루"로 읽는데, 진실은 "서버에 못
+        // 물어봤다"다 — 이 앱이 제일 두려워하는 실패가 정확히 그 모양이다([ListLoad]).
+        listLoad = if (fromCache) ListLoad.LOADING else ListLoad.LOADED
         // 화면이 보이는 동안 새로 온 것도 그 자리에서 읽음이 된다 — 부모가 보고 있는데
         // 안 읽음으로 남겨두면 알림줄에도 한 번 더 뜬다.
         if (visible) consumeUnread()

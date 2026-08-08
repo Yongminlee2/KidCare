@@ -333,7 +333,7 @@ class PlaceFragment : Fragment() {
 
         placeListener = PlaceRepository.observePlaces(
             fid,
-            onChange = { docs -> onPlacesChanged(docs) },
+            onChange = { docs, fromCache -> onPlacesChanged(docs, fromCache) },
             onError = { e ->
                 val ctx = context ?: return@observePlaces
                 _binding ?: return@observePlaces
@@ -393,12 +393,14 @@ class PlaceFragment : Fragment() {
         }
     }
 
-    private fun onPlacesChanged(docs: List<PlaceDoc>) {
+    private fun onPlacesChanged(docs: List<PlaceDoc>, fromCache: Boolean) {
         // observePlaces 는 정렬 없이 준다(문서 ID 순). 부모 눈에는 이름순이 자연스럽고,
         // 자녀 폰이 지오펜스 20개를 자를 때 쓰는 기준도 이름순이라 두 화면이 같은 순서를
         // 본다(PlaceWatcher.registerGeofences).
         places = docs.sortedWith(compareBy({ it.name }, { it.id }))
-        listLoad = ListLoad.LOADED
+        // 캐시본으로는 LOADED 로 올리지 않는다 — 이유는 [ListLoad] 주석("오프라인은
+        // 네 번째 상태가 아니다").
+        listLoad = if (fromCache) ListLoad.LOADING else ListLoad.LOADED
         renderList()
     }
 

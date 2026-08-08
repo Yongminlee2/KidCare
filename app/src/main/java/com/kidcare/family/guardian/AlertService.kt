@@ -133,7 +133,11 @@ class AlertService : LifecycleService() {
                     AuthGateway.signIn()
                     listener = EventRepository.observeEvents(
                         familyId = familyId,
-                        onChange = { docs -> onEvents(docs) },
+                        // fromCache 는 여기서 안 본다 — 알림은 "새 문서가 보이면 띄운다"
+                        // 이고, 캐시본에만 있는 문서는 이 폰이 어차피 서버에서 받아둔
+                        // 것이다(부모 폰은 events/ 에 쓰지 않는다). 재연결로 같은 문서가
+                        // 다시 흘러와도 [notifiedIds] 가 막는다(클래스 주석).
+                        onChange = { docs, _ -> onEvents(docs) },
                         // Firestore 는 끊긴 리스너를 스스로 다시 잇는다. 여기서 할 수
                         // 있는 일은 흔적을 남기는 것뿐이다 — 규칙 미게시로 인한 영구
                         // 거부와 잠깐 끊긴 것을 로그로만 가릴 수 있다.

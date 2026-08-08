@@ -66,10 +66,12 @@ object ScheduleRepository {
     }
 
     /** [onError] 를 삼키지 않는 이유는 다른 observe* 함수들과 같다(SegmentRepository 참고) —
-     * 색인 누락·권한 거부가 화면에 흔적 없이 사라지면 "그냥 빈 목록"과 구분이 안 된다. */
+     * 색인 누락·권한 거부가 화면에 흔적 없이 사라지면 "그냥 빈 목록"과 구분이 안 된다.
+     *
+     * `fromCache` 의 뜻과 쓰임은 [EventRepository.observeEvents] 와 같다. */
     fun observeSchedules(
         familyId: String,
-        onChange: (List<ScheduleDoc>) -> Unit,
+        onChange: (docs: List<ScheduleDoc>, fromCache: Boolean) -> Unit,
         onError: (Exception) -> Unit,
     ): ListenerRegistration =
         schedules(familyId).addSnapshotListener { snapshot, error ->
@@ -81,7 +83,7 @@ object ScheduleRepository {
             val docs = snapshot?.documents?.mapNotNull { doc ->
                 doc.toObject(ScheduleDoc::class.java)?.copy(id = doc.id)
             } ?: emptyList()
-            onChange(docs)
+            onChange(docs, snapshot?.metadata?.isFromCache ?: true)
         }
 
     fun observeRingerSettings(

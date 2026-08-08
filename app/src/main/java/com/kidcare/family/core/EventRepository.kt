@@ -75,10 +75,16 @@ object EventRepository {
      *
      * [onError] 를 삼키지 않는 이유는 다른 observe* 와 같다 — 규칙 미게시로 인한
      * 권한 거부가 흔적 없이 사라지면 "그냥 사건이 없음"과 구분이 안 된다.
+     *
+     * [onChange] 의 `fromCache` 는 이 스냅샷이 **서버가 확인해 준 것인지 캐시본인지**다
+     * (`QuerySnapshot.metadata.isFromCache`). 오프라인이면 계속 true 고, 온라인에서도
+     * 리스너를 막 걸었을 때 캐시본이 한 번 먼저 온 뒤 서버본이 따라온다. 빈 목록에
+     * "아직 온 알림이 없어요"라고 단언해도 되는 것은 **false 일 때뿐이다** —
+     * [com.kidcare.family.guardian.ListLoad] 주석에 그 판단을 모아 뒀다.
      */
     fun observeEvents(
         familyId: String,
-        onChange: (List<EventDoc>) -> Unit,
+        onChange: (docs: List<EventDoc>, fromCache: Boolean) -> Unit,
         onError: (Exception) -> Unit,
     ): ListenerRegistration =
         events(familyId)
@@ -93,7 +99,9 @@ object EventRepository {
                 val docs = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(EventDoc::class.java)?.copy(id = doc.id)
                 } ?: emptyList()
-                onChange(docs)
+                // snapshot 이 null 인 경우는 error 가 null 이 아닐 때뿐이라 위에서 이미
+                // 걸러졌다. 그래도 남는 널 분기는 "아직 서버 확인이 아니다"로 읽는다.
+                onChange(docs, snapshot?.metadata?.isFromCache ?: true)
             }
 
     /**

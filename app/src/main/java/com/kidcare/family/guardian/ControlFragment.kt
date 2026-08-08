@@ -29,6 +29,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * 관리 탭. 부모가 버튼을 누르면 아이 폰이 바뀐다.
@@ -454,8 +455,29 @@ class ControlFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val commandId = CommandRepository.send(fid, uid, type, payload)
+                // 제한시간이 필요한 이유: Firestore 쓰기 Task 는 **서버가 확인해 준
+                // 순간에만** 완료되고 제한시간이 없다([com.kidcare.family.KidCareApp]
+                // 주석). 오프라인이면 명령 문서는 로컬 큐에 잘 들어가지만 이 await 는
+                // 영영 안 돌아오고, 그러면 아래 track() 도 60초 타이머도 시작되지 않아
+                // **화면이 '전달 중…'과 도는 스피너에 영원히 갇힌다.** 부모는 지금
+                // 애기폰으로 가는 중이라고 읽는다.
+                //
+                // 끊어도 쓰기는 취소되지 않는다 — 연결되면 그대로 나간다
+                // (ScheduleFragment.WRITE_TIMEOUT_MILLIS 와 같은 장치·같은 값).
+                val commandId = withTimeoutOrNull(SEND_TIMEOUT_MILLIS) {
+                    CommandRepository.send(fid, uid, type, payload)
+                }
                 _binding ?: return@launch
+                if (commandId == null) {
+                    // **여기서 onSent() 를 부르면 안 된다.** 그 콜백들은 전부 "명령이
+                    // 실제로 나갔다"를 전제로 화면을 고친다 — 울리지도 않는 폰에
+                    // '소리 끄기' 버튼을 띄우고(sendFindPhone), 걸리지도 않은 알람을
+                    // "맞춰져 있어요"로 적는다(sendSetAlarm). 큐에 들어간 것은 나간
+                    // 것이 아니다.
+                    if (generation != commandGeneration) return@launch
+                    renderCommand(CommandUi.Queued)
+                    return@launch
+                }
                 // onSent 는 세대와 상관없이 부른다. 이건 "화면 한 줄에 무엇을 적을까"가
                 // 아니라 "명령이 실제로 발행됐다"는 사실이고(폰찾기 버튼의 상태가 여기에
                 // 달려 있다), 부모가 그 사이에 다른 버튼을 눌렀다고 해서 아이 폰이
@@ -705,7 +727,18 @@ class ControlFragment : Fragment() {
         lockSaveJob?.cancel()
         lockSaveJob = viewLifecycleOwner.lifecycleScope.launch {
             try {
-                ScheduleRepository.saveRingerSettings(fid, RingerSettingsDoc(lockEnabled = enabled))
+                // 스위치는 이미 부모가 민 자리에 가 있고, Firestore 가 로컬 쓰기를 즉시
+                // 되돌려주므로 renderLock 도 그 값을 굳힌다 — 즉 오프라인에서도 화면은
+                // "저장됐다"처럼 보인다. 서버 확인이 제한시간 안에 안 오면 그 사실을
+                // 한 줄로 말한다. 스위치를 되돌리지는 않는다: 쓰기는 큐에 살아 있고
+                // 연결되면 그대로 저장되므로, 되돌리면 그게 더 큰 거짓말이 된다.
+                val saved = withTimeoutOrNull(SEND_TIMEOUT_MILLIS) {
+                    ScheduleRepository.saveRingerSettings(fid, RingerSettingsDoc(lockEnabled = enabled))
+                }
+                if (saved == null) {
+                    _binding ?: return@launch
+                    renderCommand(CommandUi.Queued)
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -806,6 +839,19 @@ class ControlFragment : Fragment() {
         /** 아이가 '확인했어요'를 눌렀다. */
         object MessageRead : CommandUi
 
+        /**
+         * 명령이 이 폰의 큐에만 들어갔다. 아직 서버에도, 애기폰에도 안 갔다.
+         *
+         * [Failed] 로 뭉개지 않는 이유: 실패가 아니다. 연결이 돌아오면 그대로 나가고
+         * 애기폰이 그때 실행한다 — **그래서 오히려 말해줘야 한다.** 터널에서 누른
+         * 무음이 한 시간 뒤 아이가 학원에 앉아 있을 때 걸릴 수 있다.
+         *
+         * [Sending] 과 달리 스피너를 안 돌린다. 여기서 기다리는 것은 왕복이 아니라
+         * **통신 복구**라, 도는 스피너는 "곧 끝난다"는 거짓 신호가 된다
+         * ([MessageUnread] 와 같은 판단).
+         */
+        object Queued : CommandUi
+
         data class Failed(val message: String) : CommandUi
     }
 
@@ -820,6 +866,7 @@ class ControlFragment : Fragment() {
             CommandUi.Done -> getString(R.string.control_command_done)
             CommandUi.MessageUnread -> getString(R.string.control_message_unread)
             CommandUi.MessageRead -> getString(R.string.control_message_read)
+            CommandUi.Queued -> getString(R.string.control_command_queued)
             is CommandUi.Failed -> state.message
         }
     }
@@ -895,6 +942,15 @@ class ControlFragment : Fragment() {
         const val TAG = "ControlFragment"
 
         const val COMMAND_TIMEOUT_MILLIS = 60_000L
+
+        /**
+         * 명령 **발행**(서버 확인)을 기다리는 시간. 위 60초와 다른 것이다 — 저건
+         * "애기폰이 대답하기까지", 이건 "이 쓰기가 서버에 닿기까지"다.
+         *
+         * 값은 [ScheduleFragment] 의 쓰기 제한시간과 같다. 같은 사실("오프라인이면
+         * 서버 확인이 영영 안 온다")을 막는 같은 장치라 다른 숫자를 쓸 이유가 없다.
+         */
+        const val SEND_TIMEOUT_MILLIS = 15_000L
 
         /** child/FindPhoneController 의 5분 자동 정지와 같은 값(설계서 §4.5). */
         const val FIND_AUTO_STOP_MILLIS = 5 * 60 * 1000L

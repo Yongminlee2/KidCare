@@ -12,7 +12,9 @@ import com.kidcare.family.core.model.InviteCodeDoc
 import com.kidcare.family.core.model.MemberDoc
 import com.kidcare.family.logic.InviteCode
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 
 /**
  * 가족 문서 하나가 이 앱의 모든 데이터의 뿌리다.
@@ -38,6 +40,14 @@ object FamilyRepository {
     private const val TAG = "FamilyRepository"
 
     /**
+     * 서버 시각 보정을 포기하기까지. 값은 예약 화면의 쓰기 제한시간
+     * ([com.kidcare.family.guardian.ScheduleFragment] 의 `WRITE_TIMEOUT_MILLIS`)과 같다 —
+     * 둘 다 "오프라인이면 서버 확인이 영영 안 온다"는 같은 사실을 막는 장치라 서로 다른
+     * 숫자를 쓸 이유가 없다. 근거 없는 숫자라는 점도 그대로다(docs/known-issues.md).
+     */
+    private const val MEASURE_TIMEOUT_MILLIS = 15_000L
+
+    /**
      * 기기 시계와 서버 시계의 차이(밀리초). 서버가 앞서면 양수다.
      *
      * inviteExpiresAt 은 기기 시계로 쓰는데 보안 규칙은 request.time(서버 시각)으로
@@ -60,8 +70,29 @@ object FamilyRepository {
      */
     suspend fun serverNow(familyId: String?, uid: String?): Long {
         serverOffsetMillis?.let { return System.currentTimeMillis() + it }
-        val offset = runCatching { measureServerOffset(familyId, uid) }.getOrElse { e ->
-            if (e is CancellationException) throw e
+        val offset = try {
+            withTimeout(MEASURE_TIMEOUT_MILLIS) { measureServerOffset(familyId, uid) }
+        } catch (e: TimeoutCancellationException) {
+            // 오프라인이면 아래 measureServerOffset 의 update() 가 **영영 안 끝난다** —
+            // Firestore 쓰기 Task 는 로컬 큐에 들어간 순간이 아니라 서버가 확인해 준
+            // 순간에 완료되고 제한시간이 없다([com.kidcare.family.KidCareApp] 주석).
+            // 이 함수는 화면이 기다리는 자리라(지도 상단 카드의 "N분 전") 여기서 멈추면
+            // 그 화면이 통째로 얼어붙는다: 상태 카드도, 그 뒤에 그려야 할 타임라인도
+            // 영영 안 그려진다.
+            //
+            // **여기서 잰 값은 캐시하지 않는다.** 0(기기 시계 그대로)을 굳혀 버리면
+            // 그 뒤의 초대 코드 만료가 전부 기기 시계로 계산돼 known-issues 2번
+            // ("만들자마자 죽은 코드")이 그대로 되살아난다. 다음 호출이 다시 잰다 —
+            // 통신이 돌아온 뒤 한 번만 성공하면 그때부터 정확해진다.
+            Log.w(TAG, "서버 시각 보정이 ${MEASURE_TIMEOUT_MILLIS / 1000}초 안에 안 끝났다 — 이번만 기기 시계를 쓴다", e)
+            return System.currentTimeMillis()
+        } catch (e: CancellationException) {
+            // 부른 쪽(화면·서비스)이 취소된 정상 종료다. 위 시간 초과와 달리 여기서
+            // 값을 돌려주면 안 된다 — 반드시 취소를 완성시킨다.
+            throw e
+        } catch (e: Exception) {
+            // 실패는(예: 아직 멤버가 아니라 쓸 자기 문서가 없다) 캐시한다. 통신이
+            // 되는데도 못 재는 상태라 다시 물어봐야 답이 달라지지 않는다.
             Log.w(TAG, "서버 시각 보정 실패 — 기기 시계를 그대로 쓴다", e)
             0L
         }

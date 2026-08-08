@@ -127,6 +127,10 @@
     <string name="control_find_hint">무음이어도 큰 소리로 울려요. 5분이 지나면 저절로 멈춰요.</string>
     <string name="control_command_sending">전달 중…</string>
     <string name="control_command_done">완료</string>
+    <!-- 오프라인이라 명령이 이 폰의 큐에만 들어간 상태. "실패"가 아니라 "아직 안 갔다"이고,
+         나중에 저절로 나가서 그때 실행된다는 것까지 말해야 부모가 다시 누를지 판단할 수 있다.
+         지도 탭의 '지금 위치 확인'도 같은 문구를 쓴다. -->
+    <string name="control_command_queued">아직 안 갔어요. 인터넷이 연결되면 그때 애기폰으로 가서 실행돼요 — 그 사이 상황이 달라졌을 수 있어요.</string>
     <string name="control_command_timeout">애기폰이 응답하지 않아요</string>
     <string name="control_command_timeout_format">애기폰이 응답하지 않아요\n%1$s</string>
     <string name="control_last_seen_format">마지막 신호 %1$s</string>

@@ -59,10 +59,12 @@ object PlaceRepository {
     }
 
     /** [onError] 를 삼키지 않는 이유는 다른 observe* 와 같다 — 권한 거부가 흔적 없이
-     *  사라지면 "그냥 장소가 없음"과 구분이 안 된다. */
+     *  사라지면 "그냥 장소가 없음"과 구분이 안 된다.
+     *
+     *  `fromCache` 의 뜻과 쓰임은 [EventRepository.observeEvents] 와 같다. */
     fun observePlaces(
         familyId: String,
-        onChange: (List<PlaceDoc>) -> Unit,
+        onChange: (docs: List<PlaceDoc>, fromCache: Boolean) -> Unit,
         onError: (Exception) -> Unit,
     ): ListenerRegistration =
         places(familyId).addSnapshotListener { snapshot, error ->
@@ -74,7 +76,7 @@ object PlaceRepository {
             val docs = snapshot?.documents?.mapNotNull { doc ->
                 doc.toObject(PlaceDoc::class.java)?.copy(id = doc.id)
             } ?: emptyList()
-            onChange(docs)
+            onChange(docs, snapshot?.metadata?.isFromCache ?: true)
         }
 }
 
