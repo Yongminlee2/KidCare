@@ -77,6 +77,14 @@
     <!-- 아이가 답하는 유일한 통로. 이 버튼이 부모 화면의 '읽음'이 된다. -->
     <string name="message_ack">확인했어요</string>
 
+    <!-- 부모가 맞춰 준 알람(5단계 Task 6). 채널 이름이 '폰 찾기'·'부모님 메시지'와
+         확실히 달라야 아이가 알림 설정 목록에서 무엇을 끄는지 안다. -->
+    <string name="channel_remote_alarm">부모님이 맞춘 알람</string>
+    <!-- 부모가 알람 이름을 안 적었을 때 알림 제목으로 쓰는 기본 문구. -->
+    <string name="remote_alarm_title">엄마 아빠가 맞춘 알람이에요</string>
+    <string name="remote_alarm_notification_text">눌러서 끌 수 있어요</string>
+    <string name="remote_alarm_stop">알람 끄기</string>
+
     <string name="map_no_child">아직 아이 폰이 연결되지 않았어요.</string>
     <string name="map_error">지도를 불러오지 못했어요\n%1$s</string>
     <string name="timeline_error">기록을 불러오지 못했어요\n%1$s</string>
@@ -149,6 +157,26 @@
     <string name="control_message_unread">애기폰에 도착했어요 · 아직 안 읽음</string>
     <string name="control_message_read">읽음</string>
     <string name="control_error_message_notification_off">아이 폰에서 알림이 꺼져 있어 메시지를 띄우지 못했어요. 아이 폰 설정 → 앱 → \'우리아이 지킴이\' → 알림에서 켜주세요.</string>
+
+    <!-- ====================== 관리 탭: 알람 맞추기 ====================== -->
+    <string name="control_section_alarm">알람 맞추기</string>
+    <string name="control_alarm_time_format">⏰ %1$s</string>
+    <string name="control_alarm_picker_title">몇 시에 울릴까요?</string>
+    <string name="control_alarm_label_hint">알람 이름 (예: 학원 가야 해)</string>
+    <string name="control_alarm_set">⏰ 이 시각에 알람 맞추기</string>
+    <string name="control_alarm_cancel">맞춰둔 알람 끄기</string>
+    <!-- 부모가 한 번 읽고 알아야 하는 것 넷: 한 번만 운다는 것, 시각을 푸는 쪽이
+         애기폰이라는 것(그래서 여행 중이면 애기폰 시간대로 운다), 아이도 알람이
+         걸린 걸 본다는 것, 그리고 5분이면 저절로 멈춘다는 것. -->
+    <string name="control_alarm_hint_detail">고른 시각에 애기폰에서 한 번만 울려요. 이미 지난 시각이면 다음 날 그 시각에 울립니다 — 오늘인지 내일인지는 애기폰 시계로 정해져요. 알람이 걸리면 애기폰 상태바에 시계 모양이 떠서 아이도 알 수 있고, 5분이 지나면 저절로 멈춰요.</string>
+    <!-- 애기폰이 '완료'라고 답한 뒤. '울려요'라고 쓰지 않는 이유: 아이가 앱을 강제
+         종료하면 알람 예약이 지워지는데 그 사실은 부모 폰에 도착하지 않는다.
+         그때 부모에게 말해주는 것은 이 줄이 아니라 연결 끊김 배너다. -->
+    <string name="control_alarm_state_confirmed">⏰ 애기폰에 %1$s 알람이 맞춰져 있어요</string>
+    <string name="control_alarm_state_pending">⏰ %1$s 알람을 보냈어요 · 애기폰 대답을 기다리는 중이에요</string>
+    <!-- 위 두 줄의 %1$s 자리. 이름을 안 적었으면 시각만 들어간다. -->
+    <string name="control_alarm_state_labeled">%1$s \'%2$s\'</string>
+    <string name="control_error_alarm_exact_denied">애기폰에서 \'알람 및 리마인더\' 권한이 꺼져 있어 알람을 맞추지 못했어요. 아이 폰 설정 → 앱 → \'우리아이 지킴이\' → 알람 및 리마인더에서 켜주세요.</string>
 
     <!-- ========================= 예약 탭 (시간대 규칙) ========================= -->
     <string name="schedule_add">+ 규칙 추가</string>

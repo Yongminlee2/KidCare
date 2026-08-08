@@ -10,6 +10,8 @@ import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.chip.Chip
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 import com.google.firebase.firestore.ListenerRegistration
 import com.kidcare.family.R
 import com.kidcare.family.core.AuthGateway
@@ -46,9 +48,14 @@ import kotlinx.coroutines.launch
  * child 를 import 하지 않으므로(설계서 §3 모듈 경계) 값을 아래 companion 에 다시
  * 적는다. 바꿀 일이 생기면 반드시 두 곳을 함께 고쳐야 한다.
  *
- * 메시지의 페이로드 키만 예외적으로 [CommandType.PAYLOAD_TEXT] 를 직접 쓴다 —
- * 그 오브젝트는 guardian·child 가 이미 함께 import 하는 자리라 굳이 두 벌로 만들
- * 이유가 없다(그 상수 주석에 근거를 적었다).
+ * 메시지와 알람의 페이로드 키만 예외적으로 [CommandType] 의 상수를 직접 쓴다
+ * ([CommandType.PAYLOAD_TEXT]·[CommandType.PAYLOAD_AT_MINUTE_OF_DAY]·
+ * [CommandType.PAYLOAD_LABEL]) — 그 오브젝트는 guardian·child 가 이미 함께 import 하는
+ * 자리라 굳이 두 벌로 만들 이유가 없다(그 상수 주석에 근거를 적었다).
+ *
+ * 알람 시각은 **부모 폰에서 절대 시각으로 바꾸지 않는다.** 보내는 것은 하루 안의 분
+ * 하나이고, 오늘인지 내일인지는 아이 폰이 정한다([CommandType.SET_ALARM]). 이 화면이
+ * 그 대신 들고 있는 것은 "내가 무엇을 보냈나"라는 기억뿐이다([AlarmMemoStore]).
  */
 class ControlFragment : Fragment() {
 
@@ -107,7 +114,17 @@ class ControlFragment : Fragment() {
     private var commandGeneration = 0
 
     /**
-     * 지금 따라가고 있는 명령이 **메시지**인가. [send] 가 매번 다시 정한다.
+     * 지금 따라가고 있는 명령의 종류. [send] 가 매번 다시 정하고, null 이면 따라가는
+     * 명령이 없다.
+     *
+     * 종류를 들고 있어야 하는 이유가 둘이다. 하나는 아래 [trackingMessage] 이고, 다른
+     * 하나는 알람 기억([alarmMemo])이다 — `done` 하나를 두고 "알람이 맞춰졌다"와 "알람이
+     * 꺼졌다"와 "그 밖의 완료"가 서로 다른 일을 해야 한다.
+     */
+    private var trackingType: String? = null
+
+    /**
+     * 지금 따라가고 있는 명령이 **메시지**인가.
      *
      * 메시지만 상태 줄의 뜻이 다르기 때문에 필요하다. 다른 명령에서 `delivered` 는
      * 잠깐 지나가는 중간역이지만, 메시지에서는 **아이가 아직 안 읽었다**는 최종
@@ -119,8 +136,24 @@ class ControlFragment : Fragment() {
      *
      * 으로 갈라 적는다. 이 둘을 한 문장으로 뭉개면 부모는 잘 전해진 메시지를 보고
      * 아이 폰이 죽었다고 읽는다.
+     *
+     * 별도 필드가 아니라 [trackingType] 에서 파생시키는 이유: 같은 사실을 필드 둘이
+     * 따로 들고 있으면 [send] 가 한쪽만 갱신하는 순간이 생기고, 그 순간의 화면은
+     * 어느 쪽 해석도 아니게 된다.
      */
-    private var trackingMessage = false
+    private val trackingMessage: Boolean get() = trackingType == CommandType.MESSAGE
+
+    /**
+     * 부모가 고른 알람 시각(하루 안의 분). 기본값 7:00 은 이 통로가 실제로 쓰이는 자리
+     * ("아침에 깨워줘")에 가장 가깝다.
+     *
+     * **이 값을 그대로 명령에 담고, 절대 시각으로 바꾸지 않는다** — 오늘인지 내일인지는
+     * 아이 폰이 정한다([CommandType.SET_ALARM] 주석).
+     */
+    private var alarmMinute = DEFAULT_ALARM_MINUTE
+
+    /** "애기폰에 알람을 맞춰 뒀다"는 부모 폰의 기억. 이유는 [AlarmMemoStore] 클래스 주석. */
+    private val alarmMemo by lazy { AlarmMemoStore(requireContext().applicationContext) }
 
     /**
      * 부모가 방금 잠금 스위치로 만든 값. 아직 서버 스냅샷으로 되돌아오지 않았다.
@@ -154,6 +187,7 @@ class ControlFragment : Fragment() {
         // 회전 한 번에 버튼이 '핸드폰 찾기'로 되돌아가고, 그걸 누르면 이미 울리는
         // 폰에 시작 명령을 한 번 더 보내게 된다.
         findStartedAt = savedInstanceState?.getLong(KEY_FIND_STARTED_AT) ?: 0L
+        alarmMinute = savedInstanceState?.getInt(KEY_ALARM_MINUTE) ?: DEFAULT_ALARM_MINUTE
 
         b.modeNormalButton.setOnClickListener { sendRinger(MODE_NORMAL) }
         b.modeVibrateButton.setOnClickListener { sendRinger(MODE_VIBRATE) }
@@ -175,6 +209,15 @@ class ControlFragment : Fragment() {
         }
         b.messageSendButton.setOnClickListener { sendMessage() }
 
+        b.alarmTimeButton.setOnClickListener { showAlarmTimePicker() }
+        b.alarmSetButton.setOnClickListener { sendSetAlarm() }
+        b.alarmCancelButton.setOnClickListener { sendCancelAlarm() }
+        // 회전하면 MaterialTimePicker 자신은 FragmentManager 가 되살리지만 리스너는
+        // 되살아나지 않는다 — 그대로 두면 확인을 눌러도 시각이 안 바뀌고 창만 닫힌다.
+        // ScheduleFragment.rebindTimePickers 가 같은 이유로 있다.
+        (childFragmentManager.findFragmentByTag(TAG_PICK_ALARM) as? MaterialTimePicker)
+            ?.let { bindAlarmTimePicker(it) }
+
         // CompoundButton 의 클릭 리스너는 사람이 누를 때만 불린다 — 아래 renderLock()
         // 이 하는 프로그램적 isChecked 대입으로는 불리지 않는다. 그래서 "서버에서 온
         // 값"과 "부모가 누른 값"이 섞이지 않는다(setOnCheckedChangeListener 로는
@@ -183,6 +226,7 @@ class ControlFragment : Fragment() {
 
         setChildDependentButtonsEnabled(false)
         renderFindButton()
+        renderAlarm()
         renderCommand(CommandUi.Idle)
         subscribe()
 
@@ -195,6 +239,7 @@ class ControlFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putLong(KEY_FIND_STARTED_AT, findStartedAt)
+        outState.putInt(KEY_ALARM_MINUTE, alarmMinute)
     }
 
     // ---------------------------------------------------------------- 구독
@@ -304,6 +349,69 @@ class ControlFragment : Fragment() {
         }
     }
 
+    // ---------------------------------------------------------------- 알람 맞추기
+
+    /**
+     * 24시간 표기로 고정하는 이유는 [ScheduleFragment.showTimePicker] 와 같다 — 화면의
+     * 다른 시각 표시(`07:00`)와 고르는 창의 표기가 어긋나면 부모가 둘을 머릿속에서
+     * 맞춰봐야 하고, 새벽·밤 시각에서 특히 헷갈린다.
+     */
+    private fun showAlarmTimePicker() {
+        val picker = MaterialTimePicker.Builder()
+            .setTimeFormat(TimeFormat.CLOCK_24H)
+            .setHour(alarmMinute / 60)
+            .setMinute(alarmMinute % 60)
+            .setTitleText(R.string.control_alarm_picker_title)
+            .build()
+        bindAlarmTimePicker(picker)
+        picker.show(childFragmentManager, TAG_PICK_ALARM)
+    }
+
+    private fun bindAlarmTimePicker(picker: MaterialTimePicker) {
+        picker.addOnPositiveButtonClickListener {
+            alarmMinute = picker.hour * 60 + picker.minute
+            renderAlarm()
+        }
+    }
+
+    /**
+     * 알람을 맞춘다. **보내는 것은 하루 안의 분과 이름뿐이다** — 절대 시각을 여기서
+     * 계산하면 두 폰의 시간대·시계 차이가 그대로 어긋남이 된다([CommandType.SET_ALARM]).
+     *
+     * 기억을 `onSent`(발행 성공)에서 적고 `done` 에서 굳히는 이유: 여기서 미리 적으면
+     * 오프라인으로 발행이 실패했을 때 걸리지도 않은 알람이 화면에 남고, 반대로 done 에서만
+     * 적으면 부모가 대답을 기다리는 동안(최대 60초, 그 사이에 탭을 옮기면 영영) 화면이
+     * "아무 알람도 없음"이라고 말한다. 두 단계로 두면 화면이 어느 순간에도 거짓말을 안 한다.
+     */
+    private fun sendSetAlarm() {
+        val b = _binding ?: return
+        val label = b.alarmLabelInput.text?.toString()?.trim().orEmpty()
+        val minute = alarmMinute
+        send(
+            CommandType.SET_ALARM,
+            mapOf(
+                CommandType.PAYLOAD_AT_MINUTE_OF_DAY to minute.toString(),
+                CommandType.PAYLOAD_LABEL to label,
+            ),
+        ) {
+            alarmMemo.recordSent(minute, label)
+            renderAlarm()
+        }
+    }
+
+    /**
+     * 맞춰둔 알람을 끈다. 부모 폰의 기억은 **발행이 성공한 순간** 지운다 — 아이 폰이
+     * 대답하기 전에 지우는 셈이지만, 여기서 남겨두면 '알람 끄기'를 누른 부모 화면에
+     * "알람이 맞춰져 있어요"가 그대로 남아 부모가 한 번 더 누르게 된다. 명령 자체가
+     * 실패하면 아래 [onCommandChanged] 가 실패 문구를 띄운다.
+     */
+    private fun sendCancelAlarm() {
+        send(CommandType.CANCEL_ALARM) {
+            alarmMemo.clear()
+            renderAlarm()
+        }
+    }
+
     /**
      * 명령을 발행하고 그 문서 하나를 따라가기 시작한다.
      *
@@ -333,7 +441,7 @@ class ControlFragment : Fragment() {
         // 상태 줄이 무슨 뜻으로 읽혀야 하는지가 명령 종류에 달렸다([trackingMessage]).
         // 세대 번호와 같은 자리에서 정해 둬야 늦게 오는 앞 명령의 콜백이 새 명령의
         // 해석을 물려받지 않는다.
-        trackingMessage = type == CommandType.MESSAGE
+        trackingType = type
         // 발행 결과를 기다리는 동안 부모가 다른 버튼을 누를 수 있다. 지금 이 순간의
         // 세대를 붙잡아 두고, 왕복이 끝난 뒤 그 값이 아직 최신인지로 판단한다
         // ([commandGeneration] 주석 참고).
@@ -413,6 +521,13 @@ class ControlFragment : Fragment() {
                 timeoutJob?.cancel()
                 timeoutJob = null
                 recordAnswer()
+                // 알람 맞추기의 done 은 "아이 폰이 알람을 걸었다"는 뜻이다. 여기서
+                // 기억을 굳혀야 부모가 탭을 옮겼다 돌아와도 걸어둔 알람이 보인다
+                // (AlarmMemoStore 클래스 주석 — 이 기록이 뜻하는 것과 뜻하지 않는 것).
+                if (trackingType == CommandType.SET_ALARM) {
+                    alarmMemo.recordConfirmed()
+                    renderAlarm()
+                }
                 // 메시지의 done 은 "아이가 확인했어요를 눌렀다"는 뜻이다. '완료'라고
                 // 적으면 부모는 그걸 "보내기가 끝났다"로 읽는다 — 전혀 다른 말이다.
                 renderCommand(if (trackingMessage) CommandUi.MessageRead else CommandUi.Done)
@@ -420,6 +535,12 @@ class ControlFragment : Fragment() {
             CommandState.FAILED -> {
                 timeoutJob?.cancel()
                 timeoutJob = null
+                // 알람이 안 걸렸는데 화면에 "맞춰져 있어요"가 남으면 그게 이 기능에서
+                // 제일 나쁜 거짓말이다. 실패는 곧 기억을 지우는 것이다.
+                if (trackingType == CommandType.SET_ALARM) {
+                    alarmMemo.clear()
+                    renderAlarm()
+                }
                 // 실패도 대답이다 — 아이 폰이 살아 있으니 error 를 적을 수 있었다.
                 // 연결 끊김 배너가 알리려는 것은 "죽어서 아무 말이 없다"이지
                 // "할 수 없다고 답했다"가 아니다.
@@ -532,6 +653,10 @@ class ControlFragment : Fragment() {
         // 알림 켜기)이 분명하므로 그것까지 문장에 담는다.
         CommandType.ERROR_NOTIFICATION_OFF ->
             getString(R.string.control_error_message_notification_off)
+        // 아이 폰에서 정확한 알람을 못 건다. 이것도 부모가 할 수 있는 일(아이 폰에서
+        // '알람 및 리마인더' 켜기)이 분명하므로 그것까지 문장에 담는다.
+        CommandType.ERROR_ALARM_EXACT_DENIED ->
+            getString(R.string.control_error_alarm_exact_denied)
         else -> getString(R.string.control_error_child_failed)
     }
 
@@ -621,6 +746,38 @@ class ControlFragment : Fragment() {
     private fun believedRinging(): Boolean =
         findStartedAt != 0L && System.currentTimeMillis() - findStartedAt < FIND_AUTO_STOP_MILLIS
 
+    /**
+     * 알람 구역 두 줄: 고른 시각이 적힌 버튼과, 지금 걸려 있는 알람 한 줄.
+     *
+     * 걸린 알람이 없으면 그 줄을 통째로 감춘다 — 빈 줄로 자리를 잡고 있으면 "없음"이
+     * 하나의 상태처럼 읽히는데, 이 화면에서 알람은 있거나 없거나 둘 중 하나다.
+     *
+     * 문구를 '완료' 여부로 가르는 이유는 [AlarmMemoStore] 클래스 주석에 있다. 요약하면
+     * 여기서 말할 수 있는 것은 "애기폰이 걸었다고 답했다"까지이고, 그 뒤에 아이가 앱을
+     * 강제 종료하면 알람은 사라지지만 이 줄은 그 사실을 모른다. 그 자리를 덮는 것은
+     * 지도·관리 화면 위의 연결 끊김 배너다.
+     */
+    private fun renderAlarm() {
+        val b = _binding ?: return
+        val ctx = context ?: return
+        b.alarmTimeButton.text = ctx.getString(
+            R.string.control_alarm_time_format, ScheduleText.timeText(ctx, alarmMinute),
+        )
+
+        val memo = alarmMemo.memo
+        b.alarmState.visibility = if (memo == null) View.GONE else View.VISIBLE
+        if (memo == null) return
+        val time = ScheduleText.timeText(ctx, memo.minuteOfDay)
+        val what =
+            if (memo.label.isEmpty()) time
+            else ctx.getString(R.string.control_alarm_state_labeled, time, memo.label)
+        b.alarmState.text = ctx.getString(
+            if (memo.confirmed) R.string.control_alarm_state_confirmed
+            else R.string.control_alarm_state_pending,
+            what,
+        )
+    }
+
     private fun scheduleFindReset(afterMillis: Long) {
         findResetJob?.cancel()
         findResetJob = viewLifecycleOwner.lifecycleScope.launch {
@@ -692,6 +849,11 @@ class ControlFragment : Fragment() {
         // 칩과 입력칸은 그대로 둔다. 아이 폰이 아직 안 붙었어도 부모가 문장을 미리
         // 써 두는 것은 막을 이유가 없다 — 보낼 수 없는 것은 '보내기' 하나뿐이다.
         b.messageSendButton.isEnabled = enabled
+        // 시각 고르기와 이름 적기는 그대로 둔다(메시지 입력칸과 같은 판단) — 아이 폰이
+        // 아직 안 붙었어도 부모가 미리 정해 두는 것을 막을 이유가 없다. 보낼 수 없는
+        // 것은 맞추기·끄기 둘뿐이다.
+        b.alarmSetButton.isEnabled = enabled
+        b.alarmCancelButton.isEnabled = enabled
         if (!enabled) showChildState(getString(R.string.map_no_child))
     }
 
@@ -738,5 +900,11 @@ class ControlFragment : Fragment() {
         const val FIND_AUTO_STOP_MILLIS = 5 * 60 * 1000L
 
         const val KEY_FIND_STARTED_AT = "find_started_at"
+
+        /** 아침 7시. 이 통로가 실제로 쓰이는 자리("아침에 깨워줘")에 가장 가깝다. */
+        const val DEFAULT_ALARM_MINUTE = 7 * 60
+
+        const val KEY_ALARM_MINUTE = "alarm_minute"
+        const val TAG_PICK_ALARM = "pick_alarm_time"
     }
 }

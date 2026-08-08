@@ -244,6 +244,65 @@ object CommandType {
      * 벌어진 일(아무것도 안 떴다)을 그대로 부모에게 옮기려고 실패 코드를 따로 둔다.
      */
     const val ERROR_NOTIFICATION_OFF = "message_notification_off"
+
+    /**
+     * "이 시각에 아이 폰에서 알람을 울려라"(5단계 Task 6).
+     *
+     * 계획서는 이 상수가 4단계에 이미 있다고 적었지만 [MESSAGE] 와 똑같이 실제로는
+     * 없었다 — 여기가 처음이다. 값은 계획서가 부르던 이름 그대로다.
+     *
+     * ## 절대 시각(epoch)을 페이로드에 담지 않는다
+     *
+     * 담는 것은 [PAYLOAD_AT_MINUTE_OF_DAY](하루 안의 분)와 [PAYLOAD_LABEL] 둘뿐이고,
+     * "오늘 그 시각, 이미 지났으면 내일"은 **자녀 폰이 푼다**
+     * ([com.kidcare.family.child.RemoteAlarmController]). 두 폰은 시간대도 시계도 다를
+     * 수 있고, 그 시각을 실제로 지키는 쪽은 자녀 폰이다 — 4단계에서 즉시 변경의 해제
+     * 시각을 같은 이유로 자녀 폰으로 옮겼다([com.kidcare.family.child.CommandHandler]
+     * 의 SET_RINGER 분기 주석).
+     *
+     * 이 명령은 [MESSAGE] 와 달리 자녀 폰이 곧바로 done 을 적는다. 여기서 done 은
+     * "알람을 걸었다"는 뜻이지 "아이가 그 시각에 일어났다"가 아니다.
+     */
+    const val SET_ALARM = "set_alarm"
+
+    /**
+     * 걸어 둔 원격 알람을 지운다. 지금 울리고 있으면 함께 멈춘다.
+     *
+     * 걸린 알람이 없을 때 와도 조용히 지나가고 done 이 된다([STOP_FIND] 와 같은 규율) —
+     * "취소할 게 없다"를 실패로 적으면 부모 화면에 빨간 문구가 뜨는데, 부모가 원한 상태
+     * (알람 없음)는 이미 이뤄져 있다.
+     */
+    const val CANCEL_ALARM = "cancel_alarm"
+
+    /**
+     * [SET_ALARM] 이 울릴 시각. **하루 안의 분**(0~1439)을 열 자리 문자열로 담는다.
+     *
+     * 페이로드가 `Map<String,String>` 이라 숫자도 문자열로 간다([CommandDoc.payload]).
+     * 받는 쪽은 `toIntOrNull()` 로 풀고 0..1439 밖이면 실패로 끝낸다 — 부모 화면은
+     * `MaterialTimePicker` 로만 고르게 해서 그 범위를 벗어날 길이 없지만, 이 앱의 위협
+     * 모델에는 아이 본인이 들어 있어 Firestore 를 직접 두드릴 수 있다(firestore.rules 주석).
+     */
+    const val PAYLOAD_AT_MINUTE_OF_DAY = "atMinuteOfDay"
+
+    /**
+     * [SET_ALARM] 에 붙는 짧은 이름("학원 가야 해"). 울릴 때 아이 폰 알림의 제목이 된다.
+     *
+     * 비어 있어도 된다 — 그때는 아이 폰이 기본 문구를 쓴다. 이름이 없다고 알람을 거절하면
+     * 부모가 급할 때 한 손으로 못 건다.
+     */
+    const val PAYLOAD_LABEL = "label"
+
+    /**
+     * [SET_ALARM] 을 정확한 알람으로 걸 수 없을 때 자녀 폰이 적는 코드.
+     *
+     * 매니페스트에 `USE_EXACT_ALARM` 이 있어 정상적인 기기라면 나올 수 없다. 그래도
+     * 부정확한 알람으로 조용히 물러나지 않고 **실패로 끝내는** 이유: 알람시계에서 "몇십 분
+     * 늦게 울림"은 안 울린 것과 같고, 조용히 물러나면 부모는 아이가 깨워졌다고 믿는다.
+     */
+    const val ERROR_ALARM_EXACT_DENIED = "alarm_exact_denied"
+
+    /** [PAYLOAD_AT_MINUTE_OF_DAY] 가 없거나 0..1439 밖일 때. 화면으로는 만들 수 없는 값이다. */
+    const val ERROR_ALARM_BAD_TIME = "alarm_bad_time"
 }
 
 object CommandState {

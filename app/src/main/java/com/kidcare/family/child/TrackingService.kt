@@ -110,6 +110,14 @@ class TrackingService : LifecycleService() {
         // 최대 볼륨으로 남는다(FindPhoneController.recoverIfNeeded 주석 참고).
         FindPhoneController.recoverIfNeeded(this)
 
+        // 원격 알람도 같은 자리에서, 같은 이유로 되살린다(5단계 Task 6). 아이가 앱을
+        // 강제 종료하면 안드로이드가 이 앱의 AlarmManager 예약을 전부 지우는데, 그
+        // 사실을 아무도 부모에게 말해주지 않는다 — 이 앱이 다시 뜨는 순간이 잃어버린
+        // 알람을 되찾는 유일한 기회다. 아래 위치 권한 분기보다 앞에 두는 것도
+        // FindPhoneController 와 같은 판단이다: 위치 권한이 꺼진 폰에서도 부모가 맞춘
+        // 알람은 울려야 한다.
+        RemoteAlarmController.recoverIfNeeded(this)
+
         hasLocationPermission = ContextCompat.checkSelfPermission(
             this, Manifest.permission.ACCESS_FINE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED

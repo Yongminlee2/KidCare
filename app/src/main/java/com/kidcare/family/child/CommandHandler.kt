@@ -174,6 +174,42 @@ class CommandHandler(
                     }
                     return
                 }
+                // 부모가 맞춘 알람시계(5단계 Task 6). **부모 폰이 보낸 절대 시각을 쓰지
+                // 않는다** — 오는 것은 하루 안의 분 하나뿐이고, "오늘 그 시각, 이미 지났으면
+                // 내일"은 이 폰이 푼다(RemoteAlarmController.resolveTrigger). 두 폰의 시계·
+                // 시간대가 다를 수 있고 그 시각을 실제로 지키는 쪽은 이 폰이다.
+                //
+                // 여기서 done 까지 흘러가는 것이 맞다(MESSAGE 와 다른 점). 여기서 done 은
+                // "알람을 걸었다"는 뜻이지 "아이가 일어났다"가 아니고, 부모 화면도 그렇게
+                // 말한다(control_alarm_state_confirmed).
+                CommandType.SET_ALARM -> {
+                    val minuteOfDay = command.payload[CommandType.PAYLOAD_AT_MINUTE_OF_DAY]
+                        ?.trim()?.toIntOrNull()
+                    if (minuteOfDay == null ||
+                        minuteOfDay !in 0..RemoteAlarmController.MAX_MINUTE_OF_DAY
+                    ) {
+                        // 부모 화면(MaterialTimePicker)으로는 만들 수 없는 값이다. 그래도
+                        // 검사하는 이유는 이 앱의 위협 모델에 아이 본인이 들어 있어서다 —
+                        // 아이는 Firestore 를 직접 두드릴 수 있다(firestore.rules 주석).
+                        CommandRepository.markFailed(
+                            familyId, childUid, command.id, CommandType.ERROR_ALARM_BAD_TIME,
+                        )
+                        return
+                    }
+                    val label = command.payload[CommandType.PAYLOAD_LABEL].orEmpty().trim()
+                    if (!RemoteAlarmController.set(context, minuteOfDay, label)) {
+                        // 정확한 알람을 못 건다. 부정확한 알람으로 조용히 물러나면 부모는
+                        // 아이가 그 시각에 깨워진다고 믿는다 — 그 거짓말이 이 기능에서
+                        // 제일 나쁜 실패다(CommandType.ERROR_ALARM_EXACT_DENIED 주석).
+                        CommandRepository.markFailed(
+                            familyId, childUid, command.id, CommandType.ERROR_ALARM_EXACT_DENIED,
+                        )
+                        return
+                    }
+                }
+                // 걸린 알람이 없어도 실패로 적지 않는다 — 부모가 원한 상태(알람 없음)는
+                // 이미 이뤄져 있다(STOP_FIND 와 같은 규율).
+                CommandType.CANCEL_ALARM -> RemoteAlarmController.cancel(context)
                 else -> {
                     // 모르는 종류를 조용히 무시하면 보호자 화면에 "전달 중"으로
                     // 영원히 멈춰 보인다. delivered 는 이미 성공했으니

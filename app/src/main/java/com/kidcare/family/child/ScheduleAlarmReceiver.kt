@@ -40,8 +40,29 @@ class ScheduleAlarmReceiver : BroadcastReceiver() {
 
         Log.i(TAG, "예약 재계산 트리거 수신: action=${intent.action}")
 
-        val pendingResult = goAsync()
         val appContext = context.applicationContext
+
+        // 원격 알람(5단계 Task 6)도 이 셋에 똑같이 무너진다. 재부팅은 AlarmManager 예약을
+        // 통째로 지우고, 시각·시간대가 바뀌면 걸어 둔 절대 밀리초는 더 이상 부모가 고른
+        // 그 "07:00"이 아니다. 처방만 서로 다르다 — 재부팅은 같은 순간을 그대로 다시 걸고,
+        // 시계가 바뀐 것은 분 단위로 처음부터 다시 푼다(RemoteAlarmController 주석).
+        //
+        // 리시버를 새로 만들지 않고 여기 몇 줄을 더하는 이유는 BootReceiver 클래스 주석과
+        // 같다: BOOT_COMPLETED 는 매니페스트에 등록된 리시버마다 따로 깨어나므로, 나누면
+        // "부팅 뒤에 무엇을 다시 거는가"라는 하나의 판단이 파일 둘로 갈라진다 — 한쪽만
+        // 고치고 잊는 사고가 이 저장소에서 이미 여러 번 났다. 예약 경계 알람 자신
+        // (action 이 null 인 인텐트)은 이 when 의 어느 가지에도 안 걸린다.
+        //
+        // 아래 goAsync() 밖에서 동기로 하는 이유: SharedPreferences 읽기와 AlarmManager
+        // 등록뿐이라 즉시 끝나고, 코루틴 안에 넣으면 Firestore 읽기가 실패해 그 블록이
+        // 일찍 빠져나갈 때 알람 재등록까지 같이 못 하게 된다.
+        when (intent.action) {
+            Intent.ACTION_BOOT_COMPLETED -> RemoteAlarmController.recoverIfNeeded(appContext)
+            Intent.ACTION_TIME_CHANGED, Intent.ACTION_TIMEZONE_CHANGED ->
+                RemoteAlarmController.reresolve(appContext)
+        }
+
+        val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 ScheduleApplier(appContext).refresh(familyId)
