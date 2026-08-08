@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    부모가 보낸 한마디를 띄우는 전체화면.
+
+    바탕이 폰찾기(살구빛 = colorSecondaryContainer)와 다른 하늘빛(colorPrimaryContainer)인
+    이유: 두 화면은 아이에게 전혀 다른 일이다. 폰찾기는 "지금 이 폰이 크게 울리고 있다"고
+    말하는 화면이고, 이건 그냥 엄마가 한마디 한 것이다. 색이 같으면 아이는 메시지가 올
+    때마다 폰찾기가 울린 줄 알고 놀란다.
+
+    큰 글꼴 설정과 100자짜리 긴 문장에서도 아래 버튼이 잘리지 않도록 ScrollView 로 감쌌다
+    (fragment_control.xml 과 같은 이유).
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorPrimaryContainer"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp">
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginBottom="16dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_mascot" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/message_title"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnPrimaryContainer" />
+
+        <!-- 이 화면의 주인공. 부모의 문장이 여기 그대로 들어간다. -->
+        <TextView
+            android:id="@+id/message_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textColor="?attr/colorOnPrimaryContainer" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/message_ack_button"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="36dp"
+            android:text="@string/message_ack"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+    </LinearLayout>
+</ScrollView>

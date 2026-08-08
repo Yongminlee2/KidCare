@@ -6,8 +6,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.chip.Chip
 import com.google.firebase.firestore.ListenerRegistration
 import com.kidcare.family.R
 import com.kidcare.family.core.AuthGateway
@@ -43,6 +45,10 @@ import kotlinx.coroutines.launch
  * `child/CommandHandler`·`child/RingerMode` 와 맞춰야 하는 약속인데, guardian 은
  * child 를 import 하지 않으므로(설계서 §3 모듈 경계) 값을 아래 companion 에 다시
  * 적는다. 바꿀 일이 생기면 반드시 두 곳을 함께 고쳐야 한다.
+ *
+ * 메시지의 페이로드 키만 예외적으로 [CommandType.PAYLOAD_TEXT] 를 직접 쓴다 —
+ * 그 오브젝트는 guardian·child 가 이미 함께 import 하는 자리라 굳이 두 벌로 만들
+ * 이유가 없다(그 상수 주석에 근거를 적었다).
  */
 class ControlFragment : Fragment() {
 
@@ -101,6 +107,22 @@ class ControlFragment : Fragment() {
     private var commandGeneration = 0
 
     /**
+     * 지금 따라가고 있는 명령이 **메시지**인가. [send] 가 매번 다시 정한다.
+     *
+     * 메시지만 상태 줄의 뜻이 다르기 때문에 필요하다. 다른 명령에서 `delivered` 는
+     * 잠깐 지나가는 중간역이지만, 메시지에서는 **아이가 아직 안 읽었다**는 최종
+     * 상태일 수 있다 — 아이가 '확인했어요'를 눌러야 done 이 되니까(설계서 §3,
+     * [CommandType.MESSAGE]). 그래서 같은 `delivered` 를 두고
+     *
+     * - 다른 명령: "전달 중…", 60초 뒤 "애기폰이 응답하지 않아요"
+     * - 메시지: "애기폰에 도착했어요 · 아직 안 읽음", 타임아웃 없음
+     *
+     * 으로 갈라 적는다. 이 둘을 한 문장으로 뭉개면 부모는 잘 전해진 메시지를 보고
+     * 아이 폰이 죽었다고 읽는다.
+     */
+    private var trackingMessage = false
+
+    /**
      * 부모가 방금 잠금 스위치로 만든 값. 아직 서버 스냅샷으로 되돌아오지 않았다.
      *
      * 이게 없으면 화면을 연 직후의 첫 읽기(또는 그 사이 지나가던 옛 스냅샷)가 부모가
@@ -141,6 +163,17 @@ class ControlFragment : Fragment() {
             if (believedRinging()) sendStopFind() else sendFindPhone()
         }
         b.findStopButton.setOnClickListener { sendStopFind() }
+
+        // 칩은 입력칸을 채우기만 한다(레이아웃 주석 참고). 칩마다 id 를 두고 리스너를
+        // 네 번 다는 대신 자식들을 훑는다 — 문장을 하나 더 넣을 때 XML 만 고치면 된다.
+        b.messageChips.children.filterIsInstance<Chip>().forEach { chip ->
+            chip.setOnClickListener {
+                b.messageInput.setText(chip.text)
+                // 커서를 끝으로. 칩을 누른 뒤 바로 고쳐 쓰는 경우가 많다.
+                b.messageInput.setSelection(chip.text.length)
+            }
+        }
+        b.messageSendButton.setOnClickListener { sendMessage() }
 
         // CompoundButton 의 클릭 리스너는 사람이 누를 때만 불린다 — 아래 renderLock()
         // 이 하는 프로그램적 isChecked 대입으로는 불리지 않는다. 그래서 "서버에서 온
@@ -250,6 +283,28 @@ class ControlFragment : Fragment() {
     }
 
     /**
+     * 부모가 쓴 한마디를 보낸다.
+     *
+     * 길이 상한(100자)은 입력칸이 이미 막고 있다(`android:maxLength`, 레이아웃 주석).
+     * 여기서 다시 자르지 않는 이유가 그것이다 — 보내는 순간에 조용히 잘라내면 부모는
+     * 자기가 쓴 문장의 뒷부분이 사라진 줄 모른다.
+     *
+     * 입력칸을 비우는 것은 발행이 실제로 성공한 뒤([send] 의 `onSent`)다. 누르자마자
+     * 비우면 오프라인에서 발행이 실패했을 때 방금 쓴 문장이 어디에도 안 남는다.
+     */
+    private fun sendMessage() {
+        val b = _binding ?: return
+        val text = b.messageInput.text?.toString()?.trim().orEmpty()
+        if (text.isEmpty()) {
+            renderCommand(CommandUi.Failed(getString(R.string.control_message_empty)))
+            return
+        }
+        send(CommandType.MESSAGE, mapOf(CommandType.PAYLOAD_TEXT to text)) {
+            _binding?.messageInput?.setText("")
+        }
+    }
+
+    /**
      * 명령을 발행하고 그 문서 하나를 따라가기 시작한다.
      *
      * 앞선 명령의 추적은 여기서 끊는다 — 부모가 진동을 누른 직후 무음을 누르는 것은
@@ -275,6 +330,10 @@ class ControlFragment : Fragment() {
         }
         stopTracking()
         timedOut = false
+        // 상태 줄이 무슨 뜻으로 읽혀야 하는지가 명령 종류에 달렸다([trackingMessage]).
+        // 세대 번호와 같은 자리에서 정해 둬야 늦게 오는 앞 명령의 콜백이 새 명령의
+        // 해석을 물려받지 않는다.
+        trackingMessage = type == CommandType.MESSAGE
         // 발행 결과를 기다리는 동안 부모가 다른 버튼을 누를 수 있다. 지금 이 순간의
         // 세대를 붙잡아 두고, 왕복이 끝난 뒤 그 값이 아직 최신인지로 판단한다
         // ([commandGeneration] 주석 참고).
@@ -354,7 +413,9 @@ class ControlFragment : Fragment() {
                 timeoutJob?.cancel()
                 timeoutJob = null
                 recordAnswer()
-                renderCommand(CommandUi.Done)
+                // 메시지의 done 은 "아이가 확인했어요를 눌렀다"는 뜻이다. '완료'라고
+                // 적으면 부모는 그걸 "보내기가 끝났다"로 읽는다 — 전혀 다른 말이다.
+                renderCommand(if (trackingMessage) CommandUi.MessageRead else CommandUi.Done)
             }
             CommandState.FAILED -> {
                 timeoutJob?.cancel()
@@ -367,8 +428,23 @@ class ControlFragment : Fragment() {
             }
             // 아직 진행 중이다. 이미 "응답 없음"을 띄운 뒤라면 되돌리지 않는다 —
             // 실패 문구 아래에서 스피너가 다시 도는 화면을 만들지 않기 위해서다.
-            CommandState.PENDING, CommandState.DELIVERED ->
-                if (!timedOut) renderCommand(CommandUi.Sending)
+            CommandState.PENDING, CommandState.DELIVERED -> {
+                if (trackingMessage && doc.state == CommandState.DELIVERED) {
+                    // 메시지는 여기가 종착역일 수 있다 — 아이가 안 누르면 영영 done 이
+                    // 안 된다. 그래서 60초 타이머를 **여기서 끈다.** 안 끄면 잘 전해진
+                    // 메시지 위에 "애기폰이 응답하지 않아요"가 덮이는데, 그건 사실이
+                    // 아니다: 아이 폰은 delivered 를 적을 만큼 멀쩡히 살아 있었다.
+                    timeoutJob?.cancel()
+                    timeoutJob = null
+                    // delivered 를 적었다는 것 자체가 아이 폰의 대답이다. 이걸 안 남기면
+                    // 아이가 메시지를 안 읽는 동안 연결 끊김 배너가 "대답이 없다"고
+                    // 잘못 뜬다(RequestLog·DisconnectRule).
+                    recordAnswer()
+                    renderCommand(CommandUi.MessageUnread)
+                } else if (!timedOut) {
+                    renderCommand(CommandUi.Sending)
+                }
+            }
             else -> Unit
         }
     }
@@ -452,6 +528,10 @@ class ControlFragment : Fragment() {
      */
     private fun childErrorText(raw: String): String = when (raw) {
         ERROR_RINGER_DENIED -> getString(R.string.control_error_ringer_denied)
+        // 메시지가 아이 폰 화면에 아예 못 뜬 경우. 부모가 할 수 있는 일(아이 폰에서
+        // 알림 켜기)이 분명하므로 그것까지 문장에 담는다.
+        CommandType.ERROR_NOTIFICATION_OFF ->
+            getString(R.string.control_error_message_notification_off)
         else -> getString(R.string.control_error_child_failed)
     }
 
@@ -556,6 +636,19 @@ class ControlFragment : Fragment() {
         object Idle : CommandUi
         object Sending : CommandUi
         object Done : CommandUi
+
+        /**
+         * 메시지가 아이 폰에 닿았지만 아직 확인 버튼이 안 눌렸다.
+         *
+         * 스피너를 돌리지 않는 것이 [Sending] 과의 차이다 — 여기서 기다리는 것은
+         * 네트워크가 아니라 **사람**이고, 도는 스피너는 "지금 뭔가 진행 중"이라는
+         * 거짓말이 된다.
+         */
+        object MessageUnread : CommandUi
+
+        /** 아이가 '확인했어요'를 눌렀다. */
+        object MessageRead : CommandUi
+
         data class Failed(val message: String) : CommandUi
     }
 
@@ -568,6 +661,8 @@ class ControlFragment : Fragment() {
             CommandUi.Idle -> ""
             CommandUi.Sending -> getString(R.string.control_command_sending)
             CommandUi.Done -> getString(R.string.control_command_done)
+            CommandUi.MessageUnread -> getString(R.string.control_message_unread)
+            CommandUi.MessageRead -> getString(R.string.control_message_read)
             is CommandUi.Failed -> state.message
         }
     }
@@ -594,6 +689,9 @@ class ControlFragment : Fragment() {
         b.modeSilentButton.isEnabled = enabled
         b.findButton.isEnabled = enabled
         b.findStopButton.isEnabled = enabled
+        // 칩과 입력칸은 그대로 둔다. 아이 폰이 아직 안 붙었어도 부모가 문장을 미리
+        // 써 두는 것은 막을 이유가 없다 — 보낼 수 없는 것은 '보내기' 하나뿐이다.
+        b.messageSendButton.isEnabled = enabled
         if (!enabled) showChildState(getString(R.string.map_no_child))
     }
 

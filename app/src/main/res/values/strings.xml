@@ -67,6 +67,16 @@
     <string name="find_phone_notification_title">엄마가 폰을 찾고 있어요</string>
     <string name="find_phone_notification_text">눌러서 소리를 끌 수 있어요</string>
 
+    <!-- 부모가 보낸 한마디를 띄우는 아이 폰 화면(5단계 Task 5).
+         폰찾기와 달리 소리가 없고 잠금화면을 깨우지 않는다 — 채널 이름도 그래서
+         '폰 찾기'와 확실히 다른 말로 둔다. 아이가 알림 설정 목록에서 이 둘을 보고
+         무엇을 끄는지 알 수 있어야 한다. -->
+    <string name="channel_message">부모님 메시지</string>
+    <string name="message_title">엄마 아빠가 보낸 말이에요</string>
+    <string name="message_notification_title">엄마 아빠가 보낸 말이에요</string>
+    <!-- 아이가 답하는 유일한 통로. 이 버튼이 부모 화면의 '읽음'이 된다. -->
+    <string name="message_ack">확인했어요</string>
+
     <string name="map_no_child">아직 아이 폰이 연결되지 않았어요.</string>
     <string name="map_error">지도를 불러오지 못했어요\n%1$s</string>
     <string name="timeline_error">기록을 불러오지 못했어요\n%1$s</string>
@@ -120,6 +130,25 @@
     <string name="control_last_seen_skewed_value">%1$s (애기폰 시계 기준이라 정확하지 않아요)</string>
     <string name="control_error_ringer_denied">아이 폰에서 소리 설정 권한이 꺼져 있어요. 아이 폰 설정에서 켜야 바꿀 수 있어요.</string>
     <string name="control_error_child_failed">아이 폰이 이 명령을 처리하지 못했어요.</string>
+
+    <!-- ====================== 관리 탭: 한마디 보내기 ====================== -->
+    <string name="control_section_message">한마디 보내기</string>
+    <string name="control_message_chip_where">지금 어디야?</string>
+    <string name="control_message_chip_call">전화 좀 해줘</string>
+    <string name="control_message_chip_come_home">집으로 와</string>
+    <string name="control_message_chip_meal">밥 먹었어?</string>
+    <string name="control_message_hint">아이에게 할 말</string>
+    <string name="control_message_send">✉️ 보내기</string>
+    <!-- 아이 쪽에서 무슨 일이 벌어지는지 미리 말해준다. 소리가 안 난다는 것과
+         아이가 답하는 방법이 '확인했어요' 하나뿐이라는 것, 둘 다 부모가 알아야
+         기다림을 오해하지 않는다. -->
+    <string name="control_message_hint_detail">아이 폰 화면에 크게 떠요. 소리는 나지 않고 진동만 한 번 울려요. 아이가 \'확인했어요\'를 누르면 여기에 \'읽음\'으로 바뀝니다.</string>
+    <string name="control_message_empty">보낼 말을 적어주세요.</string>
+    <!-- '애기폰이 응답하지 않아요'와 반드시 다른 말이어야 한다. 이건 아이 폰이
+         멀쩡히 받아 화면에 띄운 상태이고, 안 눌린 것은 아이 손가락 하나뿐이다. -->
+    <string name="control_message_unread">애기폰에 도착했어요 · 아직 안 읽음</string>
+    <string name="control_message_read">읽음</string>
+    <string name="control_error_message_notification_off">아이 폰에서 알림이 꺼져 있어 메시지를 띄우지 못했어요. 아이 폰 설정 → 앱 → \'우리아이 지킴이\' → 알림에서 켜주세요.</string>
 
     <!-- ========================= 예약 탭 (시간대 규칙) ========================= -->
     <string name="schedule_add">+ 규칙 추가</string>

@@ -151,6 +151,29 @@ class CommandHandler(
                 // 아래 catch 가 그 사유(locate_no_fix)를 명령 문서에 적어 부모에게 알린다 —
                 // 조용히 done 으로 끝내면 부모는 지도의 옛 위치를 방금 확인한 것으로 읽는다.
                 CommandType.LOCATE_NOW -> onLocateNow(familyId, childUid)
+                // 부모의 한마디를 띄운다(5단계 Task 5). **여기서 done 을 적지 않고
+                // return 하는 것이 이 명령의 전부다** — done 은 아이가 '확인했어요'를
+                // 눌렀다는 뜻이고 그걸 적는 쪽은 MessageActivity 다. 아래 markDone 까지
+                // 흘러가면 아이가 화면을 보기도 전에 부모 화면이 '읽음'이 된다.
+                //
+                // 그래서 이 명령만 delivered 에서 오래 머무를 수 있다. 그건 고장이 아니라
+                // "전해졌지만 아직 안 읽음"이고, 부모 화면이 그렇게 말한다
+                // (CommandType.MESSAGE 주석 참고).
+                CommandType.MESSAGE -> {
+                    val text = command.payload[CommandType.PAYLOAD_TEXT].orEmpty().trim()
+                    if (text.isEmpty()) {
+                        // 보내는 쪽이 빈 문장을 막지만(ControlFragment), 빈 화면을 띄우고
+                        // 아이에게 확인을 누르라고 하느니 실패로 끝내는 편이 정직하다.
+                        CommandRepository.markFailed(familyId, childUid, command.id, "message_empty")
+                        return
+                    }
+                    if (!MessageActivity.show(context, familyId, childUid, command.id, text)) {
+                        CommandRepository.markFailed(
+                            familyId, childUid, command.id, CommandType.ERROR_NOTIFICATION_OFF,
+                        )
+                    }
+                    return
+                }
                 else -> {
                     // 모르는 종류를 조용히 무시하면 보호자 화면에 "전달 중"으로
                     // 영원히 멈춰 보인다. delivered 는 이미 성공했으니

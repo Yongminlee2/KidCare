@@ -68,6 +68,18 @@
             android:exported="false"
             android:launchMode="singleTask"
             android:excludeFromRecents="true" />
+        <!-- 부모가 보낸 한마디를 띄우는 화면(5단계 Task 5). exported·launchMode·
+             excludeFromRecents 는 위 FindPhoneActivity 와 같은 이유로 같은 값이다.
+             다른 점은 **없는 것**에 있다: 잠금화면 관련 속성
+             (showOnLockScreen / turnScreenOn)을 하나도 두지 않았고 코드에서도
+             setShowWhenLocked·setTurnScreenOn 을 부르지 않는다. 폰찾기는 잃어버린 폰을
+             깨워야 하지만 메시지는 아이가 폰을 집을 때까지 기다려도 되는 일이다 —
+             잠긴 폰에서는 알림줄에 남아 있다가 폰을 열 때 보인다. -->
+        <activity
+            android:name=".child.MessageActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true" />
 
         <service
             android:name=".child.TrackingService"

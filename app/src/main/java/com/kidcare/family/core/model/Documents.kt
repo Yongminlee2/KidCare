@@ -209,6 +209,41 @@ object CommandType {
 
     /** [LOCATE_NOW] 가 위치를 못 잡았을 때 자녀 폰이 error 필드에 적는 코드. */
     const val ERROR_NO_FIX = "locate_no_fix"
+
+    /**
+     * "이 한마디를 아이 폰 화면에 띄워라"(5단계 Task 5). 본문은 [PAYLOAD_TEXT] 에 담는다.
+     *
+     * 5단계 계획서는 이 상수가 4단계에 이미 있다고 적었지만 실제로는 없었다 — 여기가
+     * 처음이다. 값이 `"message"` 인 것은 계획서가 부르던 이름 그대로다.
+     *
+     * 다른 명령과 **결정적으로 다른 점**: 자녀 폰이 받자마자 done 으로 끝내지 않는다.
+     * 여기서 done 은 "아이가 '확인했어요'를 눌렀다"는 뜻이고, 그게 부모 화면의 '읽음'이
+     * 된다([com.kidcare.family.child.MessageActivity]). 그래서 이 명령은 delivered 에서
+     * 몇 시간이고 머무를 수 있는데, 그 상태는 고장이 아니라 "전해졌지만 아직 안 읽음"
+     * 이다. 부모 화면은 그것과 "애기폰이 응답하지 않아요"를 **다른 문장으로** 말해야
+     * 한다 — 둘을 한 문장으로 뭉개면 부모가 아이 폰이 죽은 줄 안다
+     * (guardian/ControlFragment.onCommandChanged).
+     */
+    const val MESSAGE = "message"
+
+    /**
+     * [MESSAGE] 본문이 담기는 페이로드 키.
+     *
+     * SET_RINGER 의 `"mode"` 는 보내는 쪽(guardian/ControlFragment)과 받는 쪽
+     * (child/CommandHandler)이 각자 자기 파일에 문자열을 다시 적어 두는데, 그건 guardian
+     * 이 child 를 import 할 수 없어서 생긴 모양이다(설계서 §3 모듈 경계). 반면 이
+     * 오브젝트는 양쪽이 이미 함께 import 하는 자리라 한 번만 적는다 — 키 하나가 어긋나면
+     * 아이 폰이 빈 문장을 받고, 그건 화면에 아무 표시도 없이 조용히 실패하는 모양이다.
+     */
+    const val PAYLOAD_TEXT = "text"
+
+    /**
+     * [MESSAGE] 를 아이 폰이 띄우지 **못했을** 때 error 에 적는 코드. 알림이 꺼져 있다는 뜻.
+     *
+     * 이 경우 조용히 done 으로 끝내면 부모는 아이가 읽었다고 읽는다. 아이 폰에서 실제로
+     * 벌어진 일(아무것도 안 떴다)을 그대로 부모에게 옮기려고 실패 코드를 따로 둔다.
+     */
+    const val ERROR_NOTIFICATION_OFF = "message_notification_off"
 }
 
 object CommandState {

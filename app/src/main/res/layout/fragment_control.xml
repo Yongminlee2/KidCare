@@ -131,6 +131,98 @@
             android:layout_marginTop="4dp"
             android:text="@string/control_find_stop_hint" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="20dp"
+            android:background="?attr/colorOutlineVariant" />
+
+        <!-- 한마디 보내기. 부모가 걸어가면서 한 손으로 쓰는 자리라 칩이 입력칸보다
+             먼저 눈에 들어와야 하지만, 칩을 누르는 즉시 보내지는 않는다 — 잘못 누른
+             한 줄은 되돌릴 수 없다(아이 폰 화면에 이미 떴다). 칩은 입력칸을 채우고,
+             보내는 것은 아래 큰 버튼 하나가 한다. -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/control_section_message"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/message_chips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp">
+
+            <!-- checkable=false: 칩은 고르는 것이 아니라 입력칸을 채우는 단추다.
+                 켜진 채로 남으면 "이 문장이 선택됨"으로 읽힌다. -->
+            <com.google.android.material.chip.Chip
+                style="@style/Widget.Material3.Chip.Suggestion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="false"
+                android:text="@string/control_message_chip_where" />
+
+            <com.google.android.material.chip.Chip
+                style="@style/Widget.Material3.Chip.Suggestion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="false"
+                android:text="@string/control_message_chip_call" />
+
+            <com.google.android.material.chip.Chip
+                style="@style/Widget.Material3.Chip.Suggestion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="false"
+                android:text="@string/control_message_chip_come_home" />
+
+            <com.google.android.material.chip.Chip
+                style="@style/Widget.Material3.Chip.Suggestion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="false"
+                android:text="@string/control_message_chip_meal" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- counterEnabled 로 몇 자를 썼는지 항상 보여준다. maxLength 로 100자에서
+             입력이 멈추는데, 그때 화면에 '100/100'이 떠 있으므로 부모는 왜 더 안
+             써지는지 알 수 있다 — 보낼 때 조용히 잘라내는 것과 다르다. -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/message_input_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="@string/control_message_hint"
+            app:counterEnabled="true"
+            app:counterMaxLength="100">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/message_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textShortMessage|textMultiLine|textCapSentences"
+                android:maxLength="100"
+                android:maxLines="3"
+                android:textAppearance="?attr/textAppearanceBodyLarge" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/message_send_button"
+            style="@style/Widget.KidCare.Button.Tonal"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/control_message_send"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/control_message_hint_detail"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
