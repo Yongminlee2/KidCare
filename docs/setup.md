@@ -75,6 +75,85 @@ sdk.dir=C\:\\Users\\\uC0AC\uC6A9\uC790\\AppData\\Local\\Android\\Sdk
 
 원인은 위에서 적은 대로 `core-ktx 1.19.0`이 `compileSdk 37`을 요구하기 때문이다.
 
+## 릴리스 서명 (6단계 Task 4)
+
+### 지금 저장소에 붙어 있는 키는 **개발용**이다
+
+`kidcare-dev.jks` 는 R8 을 실제로 검증하려고 이 기계에서 만든 키다. 비밀번호가
+`kidcare-dev` 이고 그 사실이 이 문서에 적혀 있다 — 즉 **비밀이 아니다.**
+
+- **다른 사람에게 APK 를 하나라도 주기 전에 진짜 키로 교체할 것.**
+- **한 번 배포한 뒤에는 키를 절대 못 바꾼다.** 안드로이드는 서명이 다른 APK 를
+  업데이트로 받지 않는다. 바꾸려면 받은 사람이 앱을 지우고 새로 깔아야 하는데,
+  이 앱에서 그건 **페어링과 그동안의 기록이 통째로 날아간다**는 뜻이다
+  (익명 로그인 uid 가 바뀐다 — `docs/known-issues.md` 1번).
+- 그래서 진짜 키를 만드는 순간이 곧 "이 키를 10년 동안 잃어버리지 않겠다"를
+  약속하는 순간이다. 키 파일과 비밀번호를 저장소 바깥에 따로 보관할 것.
+
+### 키스토어 만들기
+
+```bash
+cd /c/workAndroid/KidCare
+keytool -genkeypair -v -keystore kidcare-release.jks -keyalg RSA -keysize 2048 \
+  -validity 10000 -alias kidcare
+```
+
+`*.jks` 와 `*.keystore` 는 `.gitignore` 에 있어 커밋되지 않는다.
+
+### 비밀번호는 local.properties 에 적는다
+
+`local.properties` 도 `.gitignore` 에 있다. 네 줄이 필요하다.
+
+```properties
+releaseStoreFile=kidcare-release.jks
+releaseStorePassword=...
+releaseKeyAlias=kidcare
+releaseKeyPassword=...
+```
+
+경로는 저장소 루트 기준이다. **네 줄 중 하나라도 없거나 파일이 그 자리에 없으면
+`:app:packageRelease` 가 실패한다** — 디버그 키로 물러나지 않는다. 조용히 물러나면
+누가 서명했는지 알 수 없는 APK 가 `build/outputs` 에 놓이고 빌드는 성공으로 끝난다.
+
+### 빌드
+
+```bash
+export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
+cd /c/workAndroid/KidCare && ./gradlew.bat :app:assembleRelease
+```
+
+결과: `app/build/outputs/apk/release/app-release.apk`.
+
+### 릴리스 APK 는 디버그가 깔린 폰에 못 덮인다
+
+서명이 다르면 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` 이 난다. **지우고 깔면 페어링이
+날아가므로**(위 참고) 두 폰을 릴리스로 옮기는 것은 페어링을 다시 할 각오가 섰을 때
+한 번에 해야 하는 일이다. 그때까지 R8 빌드를 폰에서 확인하고 싶으면, 같은 APK 를
+디버그 키로 다시 서명해서 깔면 코드·리소스는 그대로 두고 확인할 수 있다.
+
+```bash
+BT=/c/workAndroid/sdk-ascii/build-tools/36.0.0
+cp app/build/outputs/apk/release/app-release.apk /tmp/r8-test.apk
+"$BT/apksigner.bat" sign --ks ~/.android/debug.keystore --ks-pass pass:android \
+  --key-pass pass:android --ks-key-alias androiddebugkey /tmp/r8-test.apk
+adb -s <시리얼> install -r /tmp/r8-test.apk
+```
+
+이건 **확인용 사본**이지 배포물이 아니다. 배포물은 언제나 위 `assembleRelease` 가
+낸 `app-release.apk` 다.
+
+### R8 을 건드릴 때 반드시 다시 하는 확인
+
+빌드가 통과하는 것은 아무 증거도 아니다. R8 이 이 앱에서 만드는 고장은 크래시가
+아니라 **빈 화면**이다. 절차와 실제로 관측한 값은
+`.superpowers/sdd/2026-08-08-kidcare-phase6/task-4-report.md` 에 있다. 요약하면 셋이다.
+
+1. `aapt2 dump resources` 로 디버그·릴리스 리소스 개수를 비교하고, 줄어든 것의
+   이름을 확인한다.
+2. `app/build/outputs/mapping/release/mapping.txt` 에서
+   `com.kidcare.family.core.model.*` 15개가 이름 그대로 남았는지 본다.
+3. 릴리스 APK 를 실제 폰에 깔고 화면을 **눈으로** 본다.
+
 ## Firebase 설정
 
 1. https://console.firebase.google.com 접속 → `프로젝트 만들기`
