@@ -8,6 +8,8 @@ import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.core.view.doOnNextLayout
+import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -147,6 +149,18 @@ class PlaceFragment : Fragment() {
     /** [renderEditor] 가 뷰에 값을 대입하는 동안 리스너가 도로 상태를 고치지 못하게 막는다. */
     private var suppressWidgetCallbacks = false
 
+    /**
+     * 지도를 **프로그램으로** 옮기는 동안 [onMapMoved] 가 좌표를 되받아쓰지 못하게 막는다.
+     *
+     * 없으면 이렇게 망가진다: 편집을 열며 좌표를 아이 위치로 정해두고 지도를 옮기는데,
+     * `setZoom` 이 그 자리에서 ZoomEvent 를 되쏜다 → [onMapMoved] 가 **아직 안 옮겨진**
+     * 지도의 중심(0,0)을 좌표로 적어버린다 → 바로 뒤따르는 setCenter 가 그 0,0 으로
+     * 지도를 옮긴다. 부모가 장소를 처음 추가할 때 지도가 대서양 한가운데(파란 사각형)로
+     * 열리던 것이 이것이었다. 지도가 명령을 무시한 게 아니라 우리가 0,0 으로 가라고
+     * 시킨 것이다 — 실기기 로그에 lat=0.0 이 찍혀서야 드러났다.
+     */
+    private var suppressMapCallbacks = false
+
     private var backCallback: OnBackPressedCallback? = null
     private var activeDialog: AlertDialog? = null
     private var syncRetryJob: Job? = null
@@ -258,6 +272,7 @@ class PlaceFragment : Fragment() {
 
     /** 지도가 움직였다 = 좌표가 바뀌었다. 화면 가운데가 곧 이 장소의 가운데다. */
     private fun onMapMoved() {
+        if (suppressMapCallbacks) return
         val b = _binding ?: return
         val center = b.placeMap.mapCenter
         editorLat = center.latitude
@@ -456,15 +471,39 @@ class PlaceFragment : Fragment() {
      */
     private fun centerEditorMap() {
         val b = _binding ?: return
+        // **크기를 받은 뒤에 옮겨야 한다.** osmdroid 는 뷰가 아직 0×0 일 때 들어온
+        // setCenter/setZoom 을 그냥 버린다. 편집 판을 막 펼친 그 순간이 정확히 0×0 이라,
+        // 부모가 장소를 **난생처음 추가할 때만** 지도가 기본 위치(0,0 — 대서양 한가운데)에
+        // 머물러 파란 사각형 하나로 보였다. 두 번째부터는 뷰에 이미 크기가 있어 멀쩡해서
+        // 코드만 읽어서는 안 보였고, 실기기에서 첫 화면을 열어보고서야 드러났다.
+        //
+        // doOnLayout 은 여기서 쓰면 안 된다 — 방금까지 GONE 이던 뷰도 isLaidOut 은 true 라
+        // 크기 0 인 채로 즉시 실행돼 같은 결함이 그대로 남는다. 크기를 직접 본다.
+        // 그리기 직전에 맞춘다. 이 지도는 편집 판이 펼쳐지기 전까지 한 번도 그려진 적이
+        // 없는데, osmdroid 는 첫 그리기 때 투영(projection)을 만들면서 그 전에 들어온
+        // setCenter 를 버린다 — 크기가 이미 있어도 그렇다. 실기기에서 줌은 16 으로
+        // 먹었는데 중심만 0,0(대서양)에 남는 것으로 드러났다.
+        b.placeMap.doOnPreDraw { applyEditorCamera() }
+        b.placeMap.doOnNextLayout { applyEditorCamera() }
+    }
+
+    /** 지도에 크기가 생긴 뒤에만 부른다([centerEditorMap]). */
+    private fun applyEditorCamera() {
+        // 그리기 직전은 화면이 사라진 뒤에도 올 수 있다.
+        val laid = _binding ?: return
+        suppressMapCallbacks = true
         if (coordinateChosen) {
-            b.placeMap.controller.setZoom(PLACE_ZOOM)
-            b.placeMap.controller.setCenter(GeoPoint(editorLat, editorLng))
+            laid.placeMap.controller.setZoom(PLACE_ZOOM)
+            laid.placeMap.controller.setCenter(GeoPoint(editorLat, editorLng))
         } else {
             // 아이 위치를 모른다. 그럴듯한 좌표를 기본값으로 찍어두지 않고 넓게 연다 —
             // 좌표는 부모가 지도에 손을 대는 순간에야 생긴다([coordinateChosen]).
-            b.placeMap.controller.setZoom(COUNTRY_ZOOM)
-            b.placeMap.controller.setCenter(GeoPoint(COUNTRY_LAT, COUNTRY_LNG))
+            laid.placeMap.controller.setZoom(COUNTRY_ZOOM)
+            laid.placeMap.controller.setCenter(GeoPoint(COUNTRY_LAT, COUNTRY_LNG))
         }
+        // 되쏘는 이벤트는 이 프레임 안에 오기도 하고 다음 그리기에 오기도 한다
+        // (osmdroid 내부 사정). 다음 메시지까지 미뤄 두 경우를 모두 덮는다.
+        laid.placeMap.post { suppressMapCallbacks = false }
         drawRadiusCircle()
         renderEditorMapNotice()
     }
