@@ -51,6 +51,17 @@
     <!-- 살구 — secondary. 아이 쪽 동작과 부드러운 강조. -->
     <color name="apricot">#FFA96B</color>
     <color name="apricot_soft">#FFE8D6</color>
+    <!--
+        살구 알약(모드 버튼·하단 탭 선택 표시) 위의 글자·아이콘.
+
+        낮에는 잉크와 같은 값이라 토큰을 따로 둘 이유가 없어 보이지만, 밤에 갈라진다.
+        밤의 살구 컨테이너는 어두운 갈색일 수밖에 없는데(주황을 어둡게 하면 갈색이다)
+        그 위에 흰 글자를 얹으면 버튼 셋이 나란히 흙덩이로 보인다 — 실기기 S20 에서
+        그렇게 나왔다. 밤에는 글자를 살구색으로 되돌려 "이건 살구 버튼"이라고
+        말하게 한다. 색 이름이 갈라지는 자리라 토큰이 필요하다.
+    -->
+    <color name="on_apricot_soft">#4A4038</color>
+
     <!-- 풀 — tertiary. "잘 있어요". 새싹이의 머리 색이기도 하다. -->
     <color name="grass">#7DCB88</color>
     <color name="grass_soft">#E2F5E5</color>

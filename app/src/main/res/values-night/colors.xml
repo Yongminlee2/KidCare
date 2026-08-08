@@ -32,7 +32,9 @@
     <color name="sky">#8FCDF0</color>
     <color name="sky_soft">#2A3B4C</color>
     <color name="apricot">#FFBC86</color>
-    <color name="apricot_soft">#46352A</color>
+    <color name="apricot_soft">#4A3226</color>
+    <!-- 살구 알약 위 글자. 낮의 잉크색 대신 살구로 되돌린다(values/colors.xml 주석). -->
+    <color name="on_apricot_soft">#FFD3AE</color>
     <color name="grass">#93D89D</color>
     <color name="grass_soft">#29392E</color>
     <color name="berry">#F98CA8</color>

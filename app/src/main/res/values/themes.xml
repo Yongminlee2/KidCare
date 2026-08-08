@@ -31,7 +31,7 @@
         <item name="colorSecondary">@color/apricot</item>
         <item name="colorOnSecondary">@color/on_accent</item>
         <item name="colorSecondaryContainer">@color/apricot_soft</item>
-        <item name="colorOnSecondaryContainer">@color/ink</item>
+        <item name="colorOnSecondaryContainer">@color/on_apricot_soft</item>
 
         <!-- ======================= 색: 풀(tertiary) ======================= -->
         <item name="colorTertiary">@color/grass</item>
