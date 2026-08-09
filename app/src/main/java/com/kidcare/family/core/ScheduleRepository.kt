@@ -29,40 +29,62 @@ object ScheduleRepository {
 
     private val db: FirebaseFirestore get() = FirebaseFirestore.getInstance()
 
-    private fun schedules(familyId: String) =
+    private fun schedules(familyId: String, childUid: String) =
+        db.collection("families").document(familyId)
+            .collection("children").document(childUid)
+            .collection("schedules")
+
+    private fun legacySchedules(familyId: String) =
         db.collection("families").document(familyId).collection("schedules")
 
-    private fun ringerSettingsRef(familyId: String) =
+    private fun ringerSettingsRef(familyId: String, childUid: String) =
+        db.collection("families").document(familyId)
+            .collection("children").document(childUid)
+            .collection("settings").document("ringer")
+
+    private fun legacyRingerSettingsRef(familyId: String) =
         db.collection("families").document(familyId)
             .collection("settings").document("ringer")
 
     /** 알람 처리·되돌리기 판정에 쓰는 한 번 읽기. enabled==false 인 규칙도 그대로 준다 —
      * 켜져 있는지 판단은 [com.kidcare.family.logic.ScheduleResolver] 의 몫이다. */
-    suspend fun fetchSchedules(familyId: String): List<ScheduleDoc> =
-        schedules(familyId).get().await().documents.mapNotNull { doc ->
+    suspend fun fetchSchedules(familyId: String, childUid: String): List<ScheduleDoc> {
+        var documents = schedules(familyId, childUid).get().await().documents
+        if (documents.isEmpty() && FamilyRepository.familySchemaVersion(familyId) < FamilyRepository.CURRENT_SCHEMA_VERSION) {
+            documents = legacySchedules(familyId).get().await().documents
+        }
+        return documents.mapNotNull { doc ->
             doc.toObject(ScheduleDoc::class.java)?.copy(id = doc.id)
         }
+    }
 
-    suspend fun fetchRingerSettings(familyId: String): RingerSettingsDoc =
-        ringerSettingsRef(familyId).get().await().toObject(RingerSettingsDoc::class.java)
-            ?: RingerSettingsDoc()
+    suspend fun fetchRingerSettings(familyId: String, childUid: String): RingerSettingsDoc {
+        val childDoc = ringerSettingsRef(familyId, childUid).get().await()
+        if (childDoc.exists()) return childDoc.toObject(RingerSettingsDoc::class.java) ?: RingerSettingsDoc()
+        if (FamilyRepository.familySchemaVersion(familyId) < FamilyRepository.CURRENT_SCHEMA_VERSION) {
+            return legacyRingerSettingsRef(familyId).get().await()
+                .toObject(RingerSettingsDoc::class.java) ?: RingerSettingsDoc()
+        }
+        return RingerSettingsDoc()
+    }
 
     /** 새 규칙이면(id 가 비어 있으면) 문서를 새로 만들고, 아니면 그 ID 에 덮어쓴다.
      * 어느 쪽이든 만들어진/쓰인 문서의 ID 를 돌려준다. */
-    suspend fun saveSchedule(familyId: String, doc: ScheduleDoc): String {
-        val ref = if (doc.id.isEmpty()) schedules(familyId).document() else schedules(familyId).document(doc.id)
+    suspend fun saveSchedule(familyId: String, childUid: String, doc: ScheduleDoc): String {
+        val ref = if (doc.id.isEmpty()) schedules(familyId, childUid).document()
+            else schedules(familyId, childUid).document(doc.id)
         // id 는 문서 ID 로만 쓰고 본문에는 담지 않는다 — 안 그러면 다음에 읽을 때
         // copy(id = doc.id) 가 덮어쓰기 전까지 문서 안에 중복된 값이 남는다.
         ref.set(doc.copy(id = "")).await()
         return ref.id
     }
 
-    suspend fun deleteSchedule(familyId: String, id: String) {
-        schedules(familyId).document(id).delete().await()
+    suspend fun deleteSchedule(familyId: String, childUid: String, id: String) {
+        schedules(familyId, childUid).document(id).delete().await()
     }
 
-    suspend fun saveRingerSettings(familyId: String, doc: RingerSettingsDoc) {
-        ringerSettingsRef(familyId).set(doc).await()
+    suspend fun saveRingerSettings(familyId: String, childUid: String, doc: RingerSettingsDoc) {
+        ringerSettingsRef(familyId, childUid).set(doc).await()
     }
 
     /** [onError] 를 삼키지 않는 이유는 다른 observe* 함수들과 같다(SegmentRepository 참고) —
@@ -71,10 +93,11 @@ object ScheduleRepository {
      * `fromCache` 의 뜻과 쓰임은 [EventRepository.observeEvents] 와 같다. */
     fun observeSchedules(
         familyId: String,
+        childUid: String,
         onChange: (docs: List<ScheduleDoc>, fromCache: Boolean) -> Unit,
         onError: (Exception) -> Unit,
     ): ListenerRegistration =
-        schedules(familyId).addSnapshotListener { snapshot, error ->
+        schedules(familyId, childUid).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.w(TAG, "observeSchedules 실패: familyId=$familyId", error)
                 onError(error)
@@ -88,10 +111,11 @@ object ScheduleRepository {
 
     fun observeRingerSettings(
         familyId: String,
+        childUid: String,
         onChange: (RingerSettingsDoc) -> Unit,
         onError: (Exception) -> Unit,
     ): ListenerRegistration =
-        ringerSettingsRef(familyId).addSnapshotListener { snapshot, error ->
+        ringerSettingsRef(familyId, childUid).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.w(TAG, "observeRingerSettings 실패: familyId=$familyId", error)
                 onError(error)

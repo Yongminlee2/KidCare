@@ -42,11 +42,11 @@ class ScheduleApplier(private val context: Context) {
      * 두면 알람이 다시 걸릴 때까지(재부팅·시각변경·SYNC_RULES) 예약이 멈춘 채로
      * 남는다. 그래서 짧은 간격으로 재시도 알람을 대신 건다.
      */
-    suspend fun refresh(familyId: String) {
+    suspend fun refresh(familyId: String, childUid: String) {
         val schedules: List<ScheduleDoc>
         try {
-            schedules = ScheduleRepository.fetchSchedules(familyId)
-            state.lockEnabled = ScheduleRepository.fetchRingerSettings(familyId).lockEnabled
+            schedules = ScheduleRepository.fetchSchedules(familyId, childUid)
+            state.lockEnabled = ScheduleRepository.fetchRingerSettings(familyId, childUid).lockEnabled
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

@@ -11,6 +11,8 @@ import com.kidcare.family.core.model.FamilyDoc
 import com.kidcare.family.core.model.InviteCodeDoc
 import com.kidcare.family.core.model.MemberDoc
 import com.kidcare.family.logic.InviteCode
+import com.kidcare.family.logic.ChildSelector
+import com.kidcare.family.logic.SelectableChild
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.tasks.await
@@ -38,6 +40,7 @@ object FamilyRepository {
 
     private const val INVITE_TTL_MILLIS = 10 * 60 * 1000L
     private const val TAG = "FamilyRepository"
+    const val CURRENT_SCHEMA_VERSION = 2
 
     /**
      * 서버 시각 보정을 포기하기까지. 값은 예약 화면의 쓰기 제한시간
@@ -144,23 +147,16 @@ object FamilyRepository {
                 inviteCode = "",
                 inviteExpiresAt = 0L,
                 ownerUid = guardianUid,
+                schemaVersion = CURRENT_SCHEMA_VERSION,
             )
         ).await()
         familyRef.collection("members").document(guardianUid).set(
-            MemberDoc(role = "guardian", displayName = "보호자", updatedAt = bootTime)
-        ).await()
-
-        // 이제 이 uid 는 이 가족의 정식 멤버라 서버 시각을 잴 수 있다. 이 값으로
-        // 코드와 만료 시각을 확정해 채워 넣는다 — 규칙은 guardian 이 이 두 필드를
-        // update 하는 것을 허용한다(가족 문서 update 규칙 참고).
-        val now = serverNow(familyRef.id, guardianUid)
-        val code = InviteCode.generate()
-        val expiresAt = now + INVITE_TTL_MILLIS
-        familyRef.update(
-            mapOf("inviteCode" to code, "inviteExpiresAt" to expiresAt)
-        ).await()
-        db.collection("inviteCodes").document(code).set(
-            InviteCodeDoc(familyId = familyRef.id, expiresAt = expiresAt)
+            MemberDoc(
+                role = "guardian",
+                displayName = "보호자",
+                updatedAt = bootTime,
+                joinedAt = bootTime,
+            )
         ).await()
         return familyRef.id
     }
@@ -171,42 +167,46 @@ object FamilyRepository {
      * [forceNew] 를 true 로 주면 만료 전이어도 무조건 새로 발급한다("새 번호 받기"
      * 버튼용). 기본값 false 는 옛 동작 그대로라 기존 호출부에 영향이 없다.
      */
-    suspend fun inviteCodeOf(familyId: String, forceNew: Boolean = false): InviteCodeInfo {
-        val ref = db.collection("families").document(familyId)
-        val doc = ref.get().await().toObject(FamilyDoc::class.java)
-            ?: error("가족 문서가 없다: $familyId")
-        // 이 함수를 부르는 시점엔 호출자가 이미 이 가족의 보호자다(createFamily 직후거나,
-        // 기존 가족의 코드를 다시 띄우는 화면이거나) — measureServerOffset 이 쓸 자기
-        // 멤버 문서가 있다. createFamily 가 기기 시계로 임시로 써 둔 값이 실제로
-        // 서버 기준 이미 만료돼 있었다면, 아래 비교가 그걸 잡아내 바로 재발급한다
-        // (=known-issues 2 의 "만들자마자 죽은 코드"가 여기서 자연스럽게 복구된다).
-        val now = serverNow(familyId, AuthGateway.currentUid())
-        if (!forceNew && doc.inviteExpiresAt > now && doc.inviteCode.isNotEmpty()) {
-            return InviteCodeInfo(doc.inviteCode, doc.inviteExpiresAt)
-        }
+    suspend fun createInvite(
+        familyId: String,
+        role: String,
+        previousCode: String? = null,
+    ): InviteCodeInfo {
+        require(role == "guardian" || role == "child") { "지원하지 않는 초대 역할: $role" }
+        val creatorUid = AuthGateway.currentUid() ?: AuthGateway.signIn()
+        val now = serverNow(familyId, creatorUid)
+        val expiresAt = now + INVITE_TTL_MILLIS
 
-        // 코드가 만료됐거나 forceNew 다 → 새로 발급한다. 한 가족에 살아있는 코드가
-        // 둘 이상 존재하면 안 되므로, 새 inviteCodes 문서를 먼저 만들어 새 코드가
-        // 즉시 조회 가능하게 한 뒤 옛 문서를 지운다 — 중간에 실패해도 "조회 가능한
-        // 코드가 하나도 없는" 순간은 생기지 않는다(최악의 경우 옛 문서가 고아로
-        // 남을 뿐이고, 그 문서로 조회해도 실제 검증은 families.inviteCode 대조에서
-        // 다시 걸러진다).
-        val fresh = InviteCode.generate()
-        val freshExpiresAt = now + INVITE_TTL_MILLIS
-        ref.update(
-            mapOf(
-                "inviteCode" to fresh,
-                "inviteExpiresAt" to freshExpiresAt,
+        // 6자리 충돌은 드물지만 다른 가족의 살아있는 코드를 덮어쓰면 안 된다. 정확한
+        // 문서 ID 한 건만 확인하므로 목록 조회 권한도, 복합 색인도 필요 없다.
+        var code = ""
+        for (attempt in 0 until 8) {
+            val candidate = InviteCode.generate()
+            if (!db.collection("inviteCodes").document(candidate).get().await().exists()) {
+                code = candidate
+                break
+            }
+        }
+        check(code.isNotEmpty()) { "겹치지 않는 초대 코드를 만들지 못했다" }
+
+        db.collection("inviteCodes").document(code).set(
+            InviteCodeDoc(
+                familyId = familyId,
+                expiresAt = expiresAt,
+                role = role,
+                createdByUid = creatorUid,
             )
         ).await()
-        db.collection("inviteCodes").document(fresh).set(
-            InviteCodeDoc(familyId = familyId, expiresAt = freshExpiresAt)
-        ).await()
-        if (doc.inviteCode.isNotEmpty()) {
-            db.collection("inviteCodes").document(doc.inviteCode).delete().await()
+        if (!previousCode.isNullOrBlank() && previousCode != code) {
+            runCatching { db.collection("inviteCodes").document(previousCode).delete().await() }
+                .onFailure { Log.w(TAG, "이전 초대 코드 정리 실패: $previousCode", it) }
         }
-        return InviteCodeInfo(fresh, freshExpiresAt)
+        return InviteCodeInfo(code, expiresAt, role)
     }
+
+    /** 1:1 호출부 호환용. 새 코드는 역할을 명시하는 [createInvite]를 쓴다. */
+    suspend fun inviteCodeOf(familyId: String, forceNew: Boolean = false): InviteCodeInfo =
+        createInvite(familyId, "child")
 
     /**
      * 자녀가 members 에 들어오는 순간을 감시한다. 붙인 리스너는 화면이 사라질 때 remove 해야 한다.
@@ -218,6 +218,7 @@ object FamilyRepository {
      */
     fun observeChildJoined(
         familyId: String,
+        preferredChildUid: String? = null,
         onJoined: (childUid: String) -> Unit,
         onError: (Exception) -> Unit,
     ): ListenerRegistration =
@@ -229,8 +230,51 @@ object FamilyRepository {
                     onError(error)
                     return@addSnapshotListener
                 }
-                val childUid = snapshot?.documents?.firstOrNull()?.id ?: return@addSnapshotListener
+                val children = snapshot?.documents?.map { doc ->
+                    SelectableChild(
+                        uid = doc.id,
+                        displayName = doc.getString("displayName").orEmpty(),
+                        joinedAt = doc.getLong("joinedAt") ?: 0L,
+                    )
+                }.orEmpty()
+                val childUid = ChildSelector.select(children, preferredChildUid)?.uid
+                    ?: return@addSnapshotListener
                 onJoined(childUid)
+            }
+
+    /** 보호자·자녀 전체 멤버를 감시한다. N:N 선택기와 새 멤버 초대 완료 판정이 쓴다. */
+    fun observeMembers(
+        familyId: String,
+        onChange: (List<FamilyMember>) -> Unit,
+        onError: (Exception) -> Unit,
+    ): ListenerRegistration =
+        db.collection("families").document(familyId).collection("members")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.w(TAG, "observeMembers 실패: familyId=$familyId", error)
+                    onError(error)
+                    return@addSnapshotListener
+                }
+                val members = snapshot?.documents?.map { doc ->
+                    FamilyMember(
+                        uid = doc.id,
+                        role = doc.getString("role").orEmpty(),
+                        displayName = doc.getString("displayName").orEmpty(),
+                        joinedAt = doc.getLong("joinedAt") ?: 0L,
+                    )
+                }.orEmpty()
+                onChange(members)
+            }
+
+    suspend fun fetchMembers(familyId: String): List<FamilyMember> =
+        db.collection("families").document(familyId).collection("members")
+            .get().await().documents.map { doc ->
+                FamilyMember(
+                    uid = doc.id,
+                    role = doc.getString("role").orEmpty(),
+                    displayName = doc.getString("displayName").orEmpty(),
+                    joinedAt = doc.getLong("joinedAt") ?: 0L,
+                )
             }
 
     /**
@@ -258,7 +302,12 @@ object FamilyRepository {
      * 문서 삭제는 조회 편의를 위한 뒷정리일 뿐이라 실패해도 고아 문서 하나가
      * 남는 것 외에는 아무 영향이 없다.
      */
-    suspend fun joinFamily(code: String, childUid: String): String {
+    suspend fun joinFamily(
+        code: String,
+        uid: String,
+        expectedRole: String,
+        displayName: String,
+    ): JoinResult {
         val normalized = InviteCode.normalize(code)
 
         val codeDoc = db.collection("inviteCodes").document(normalized).get().await()
@@ -275,20 +324,32 @@ object FamilyRepository {
         val familyId = codeDoc.getString("familyId")
             ?: throw PairingException(PairingException.Reason.NOT_FOUND)
         val expiresAt = codeDoc.getLong("expiresAt") ?: 0L
+        val inviteRole = codeDoc.getString("role") ?: "child"
+        if (inviteRole != expectedRole) {
+            throw PairingException(PairingException.Reason.WRONG_ROLE)
+        }
         // 이 아이는 아직 이 가족의 멤버가 아니라 measureServerOffset 이 쓸 자기 멤버
         // 문서가 없다 — serverNow() 는 그 실패를 잡아 오프셋 0(기기 시계 그대로)으로
         // 물러난다. expiresAt 자체는(위 Step 이 고쳐진 뒤로는) 이미 서버 시각 기준으로
         // 정확히 쓰인 값이므로, 이 비교가 다소 부정확해도 진짜 보안 경계는 members
         // create 규칙의 request.time 대조다 — 여기는 헛걸음(오프라인 왕복)을 줄이는
         // 사전 안내일 뿐이다.
-        val now = serverNow(familyId, childUid)
+        val now = serverNow(familyId, uid)
         if (expiresAt <= now) throw PairingException(PairingException.Reason.EXPIRED)
 
         val familyRef = db.collection("families").document(familyId)
 
         try {
-            familyRef.collection("members").document(childUid).set(
-                MemberDoc(role = "child", displayName = "아이", updatedAt = now, joinCode = normalized)
+            familyRef.collection("members").document(uid).set(
+                MemberDoc(
+                    role = inviteRole,
+                    displayName = displayName.trim().take(20).ifEmpty {
+                        if (inviteRole == "guardian") "보호자" else "아이"
+                    },
+                    updatedAt = now,
+                    joinCode = normalized,
+                    joinedAt = now,
+                )
             ).await()
         } catch (e: FirebaseFirestoreException) {
             if (e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
@@ -300,11 +361,19 @@ object FamilyRepository {
             throw e
         }
 
-        familyRef.update("inviteExpiresAt", 0L).await()
+        // role 필드가 없던 옛 1:1 코드는 family 문서의 만료값도 보안 경계였다.
+        // 새 코드는 inviteCodes 문서 하나가 경계라 가족 문서를 건드리지 않는다.
+        if (codeDoc.getString("role") == null) {
+            familyRef.update("inviteExpiresAt", 0L).await()
+        }
         db.collection("inviteCodes").document(normalized).delete().await()
 
-        return familyId
+        return JoinResult(familyId, inviteRole)
     }
+
+    /** 옛 1:1 호출부 호환용. 자녀 초대로 간주한다. */
+    suspend fun joinFamily(code: String, childUid: String): String =
+        joinFamily(code, childUid, "child", "아이").familyId
 
     /**
      * 이 기기가 **아직 이 가족의 멤버인가.** 서버가 확답을 안 준 동안은 null 이다.
@@ -343,10 +412,50 @@ object FamilyRepository {
     }
 
     /** 가족의 자녀 uid 를 찾는다. 아직 자녀가 안 붙었으면 null. */
-    suspend fun findChildUid(familyId: String): String? =
-        db.collection("families").document(familyId).collection("members")
-            .whereEqualTo("role", "child").get().await()
-            .documents.firstOrNull()?.id
+    suspend fun findChildUid(familyId: String, preferredChildUid: String? = null): String? {
+        val children = fetchMembers(familyId)
+            .filter { it.role == "child" }
+            .map { SelectableChild(it.uid, it.displayName, it.joinedAt) }
+        return ChildSelector.select(children, preferredChildUid)?.uid
+    }
+
+    suspend fun familySchemaVersion(familyId: String): Int =
+        db.collection("families").document(familyId).get().await()
+            .getLong("schemaVersion")?.toInt() ?: 0
+
+    /**
+     * 기존 1:1 가족의 공용 schedules/places/settings를 당시 자녀 한 명 아래로 옮긴다.
+     * 새 경로는 자체 서버에서도 `/families/{family}/children/{child}/...`로 그대로
+     * 표현할 수 있다. 배치는 20개 장소 제한과 소수의 예약만 다뤄 500개 한도보다 작다.
+     */
+    suspend fun migrateLegacyFamilyData(familyId: String, primaryChildUid: String) {
+        val familyRef = db.collection("families").document(familyId)
+        val family = familyRef.get().await()
+        if ((family.getLong("schemaVersion") ?: 0L) >= CURRENT_SCHEMA_VERSION) return
+
+        val legacySchedules = familyRef.collection("schedules").get().await().documents
+        val legacyPlaces = familyRef.collection("places").get().await().documents
+        val legacyRinger = familyRef.collection("settings").document("ringer").get().await()
+        val childRef = familyRef.collection("children").document(primaryChildUid)
+        val batch = db.batch()
+        legacySchedules.forEach { doc ->
+            batch.set(childRef.collection("schedules").document(doc.id), doc.data.orEmpty())
+        }
+        legacyPlaces.forEach { doc ->
+            batch.set(childRef.collection("places").document(doc.id), doc.data.orEmpty())
+        }
+        if (legacyRinger.exists()) {
+            batch.set(childRef.collection("settings").document("ringer"), legacyRinger.data.orEmpty())
+        }
+        batch.update(
+            familyRef,
+            mapOf(
+                "schemaVersion" to CURRENT_SCHEMA_VERSION,
+                "primaryChildUid" to primaryChildUid,
+            )
+        )
+        batch.commit().await()
+    }
 
     /**
      * 자녀의 마지막 상태(children/{childUid} 문서 자체 — StatusReporter 주석 참고,
@@ -373,11 +482,21 @@ object FamilyRepository {
             .get().await().toObject(ChildStatusDoc::class.java)
 }
 
-/** [FamilyRepository.inviteCodeOf] 의 결과. 코드와 함께 만료 시각도 줘야 화면에 남은 시간을 보여줄 수 있다. */
-data class InviteCodeInfo(val code: String, val expiresAt: Long)
+/** 초대 코드와 대상 역할. 한 가족이 자녀용·보호자용 코드를 동시에 가질 수 있다. */
+data class InviteCodeInfo(val code: String, val expiresAt: Long, val role: String = "child")
+
+data class JoinResult(val familyId: String, val role: String)
+
+/** Firestore 멤버 문서의 화면용 최소 표현. 자체 서버 구현도 이 계약만 맞추면 된다. */
+data class FamilyMember(
+    val uid: String,
+    val role: String,
+    val displayName: String,
+    val joinedAt: Long,
+)
 
 class PairingException(val reason: Reason) : Exception(reason.name) {
     // ALREADY_FULL 은 지금은 joinFamily 가 던지지 않지만, Task 4/6 UI 문구가 이미
     // 이 값을 참조하고 나중에 다자녀 지원이 들어오면 다시 쓸 것이므로 남겨둔다.
-    enum class Reason { NOT_FOUND, EXPIRED, ALREADY_FULL, OFFLINE }
+    enum class Reason { NOT_FOUND, EXPIRED, ALREADY_FULL, OFFLINE, WRONG_ROLE }
 }

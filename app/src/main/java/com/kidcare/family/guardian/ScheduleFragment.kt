@@ -127,9 +127,9 @@ class ScheduleFragment : Fragment() {
      * 부모는 그 차이를 알 방법이 없다.
      */
     private var pendingSync: Boolean
-        get() = syncStore.pendingSync
+        get() = childUid?.let { syncStore.pendingSync(it) } ?: false
         set(value) {
-            syncStore.pendingSync = value
+            childUid?.let { syncStore.setPendingSync(it, value) }
             renderPendingSync()
         }
 
@@ -315,7 +315,8 @@ class ScheduleFragment : Fragment() {
      * (known-issues 3: 화면을 켜 둔 채 페어링이 끝나면 영영 못 알아챈다).
      */
     private fun subscribe() {
-        val fid = RoleStore(requireContext()).familyId
+        val roleStore = RoleStore(requireContext())
+        val fid = roleStore.familyId
         if (fid == null) {
             // 구독을 시작조차 못 한다 = 목록을 못 불러온 것이다([AlertFragment.subscribe] 와 같다).
             listLoad = ListLoad.FAILED
@@ -324,9 +325,18 @@ class ScheduleFragment : Fragment() {
             return
         }
         familyId = fid
+        val selectedUid = roleStore.selectedChildUid
+        if (selectedUid == null) {
+            listLoad = ListLoad.LOADED
+            showState(getString(R.string.map_no_child))
+            renderList()
+            return
+        }
+        childUid = selectedUid
 
         scheduleListener = ScheduleRepository.observeSchedules(
             fid,
+            selectedUid,
             onChange = { docs, fromCache -> onRulesChanged(docs, fromCache) },
             onError = { e ->
                 val ctx = context ?: return@observeSchedules
@@ -339,6 +349,7 @@ class ScheduleFragment : Fragment() {
 
         joinedListener = FamilyRepository.observeChildJoined(
             fid,
+            preferredChildUid = selectedUid,
             onJoined = { uid ->
                 if (uid == childUid) return@observeChildJoined
                 childUid = uid
@@ -522,7 +533,8 @@ class ScheduleFragment : Fragment() {
      */
     private fun saveRule() {
         val fid = familyId
-        if (fid == null) {
+        val uid = childUid
+        if (fid == null || uid == null) {
             showEditorStatus(getString(R.string.schedule_no_family))
             return
         }
@@ -555,7 +567,7 @@ class ScheduleFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val savedId = withTimeoutOrNull(WRITE_TIMEOUT_MILLIS) {
-                    ScheduleRepository.saveSchedule(fid, doc)
+                    ScheduleRepository.saveSchedule(fid, uid, doc)
                 }
                 if (generation == writeGeneration && _binding != null) {
                     closeEditor()
@@ -583,7 +595,8 @@ class ScheduleFragment : Fragment() {
      */
     private fun toggleRule(doc: ScheduleDoc, enabled: Boolean) {
         val fid = familyId
-        if (fid == null) {
+        val uid = childUid
+        if (fid == null || uid == null) {
             showState(getString(R.string.schedule_no_family))
             return
         }
@@ -594,7 +607,7 @@ class ScheduleFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val savedId = withTimeoutOrNull(WRITE_TIMEOUT_MILLIS) {
-                    ScheduleRepository.saveSchedule(fid, doc.copy(enabled = enabled))
+                    ScheduleRepository.saveSchedule(fid, uid, doc.copy(enabled = enabled))
                 }
                 if (savedId == null && generation == writeGeneration) {
                     showStateRes(R.string.schedule_save_slow)
@@ -624,7 +637,8 @@ class ScheduleFragment : Fragment() {
 
     private fun deleteRule(doc: ScheduleDoc) {
         val fid = familyId
-        if (fid == null) {
+        val uid = childUid
+        if (fid == null || uid == null) {
             showState(getString(R.string.schedule_no_family))
             return
         }
@@ -635,7 +649,7 @@ class ScheduleFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val done = withTimeoutOrNull(WRITE_TIMEOUT_MILLIS) {
-                    ScheduleRepository.deleteSchedule(fid, doc.id)
+                    ScheduleRepository.deleteSchedule(fid, uid, doc.id)
                 }
                 if (generation == writeGeneration) {
                     if (done == null) showStateRes(R.string.schedule_save_slow) else showState(null)

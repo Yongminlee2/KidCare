@@ -6,6 +6,7 @@ import android.content.Intent
 import android.util.Log
 import com.kidcare.family.core.Role
 import com.kidcare.family.core.RoleStore
+import com.kidcare.family.core.AuthGateway
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -65,7 +66,8 @@ class ScheduleAlarmReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                ScheduleApplier(appContext).refresh(familyId)
+                val childUid = AuthGateway.currentUid() ?: AuthGateway.signIn()
+                ScheduleApplier(appContext).refresh(familyId, childUid)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

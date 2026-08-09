@@ -104,8 +104,10 @@ class RouterActivity : AppCompatActivity() {
             // 수 있다. childUid 까지 있어야 진짜로 아이가 연결된 것이다 — 아니면
             // GuardianPairingActivity 로 돌려보내 코드를 다시 보여준다(코드는
             // 그 화면이 재진입 시 기존 familyId 로 이어서 처리한다).
-            Role.GUARDIAN -> if (store.familyId != null && store.childUid != null)
-                                 GuardianMainActivity::class.java
+            // N:N에서는 보호자가 가족을 만든 뒤 자녀가 아직 없어도 메인으로 들어가
+            // '아이 추가' 또는 '보호자 초대'를 할 수 있어야 한다. familyId가 곧
+            // 보호자 가입 완료이며, 선택된 자녀는 메인 화면이 멤버 목록에서 복구한다.
+            Role.GUARDIAN -> if (store.familyId != null) GuardianMainActivity::class.java
                              else GuardianPairingActivity::class.java
             // 자녀 쪽은 Task 7 의 권한 복구 흐름이 이 분기에 그대로 의존하므로
             // 손대지 않는다 — isPaired 그대로 쓴다.

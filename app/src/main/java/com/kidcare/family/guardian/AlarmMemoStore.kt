@@ -36,41 +36,47 @@ class AlarmMemoStore(context: Context) {
     private val prefs = context.getSharedPreferences("kidcare_alarm_memo", Context.MODE_PRIVATE)
 
     /** 걸어 둔 알람. 없거나 24시간이 지났으면 null. */
-    val memo: Memo?
-        get() {
-            val minuteOfDay = prefs.getInt(KEY_MINUTE_OF_DAY, -1)
-            if (minuteOfDay !in 0..MAX_MINUTE_OF_DAY) return null
-            val sentAt = prefs.getLong(KEY_SENT_AT, 0L)
-            if (System.currentTimeMillis() - sentAt >= EXPIRY_MILLIS) return null
-            return Memo(
-                minuteOfDay = minuteOfDay,
-                label = prefs.getString(KEY_LABEL, "").orEmpty(),
-                confirmed = prefs.getBoolean(KEY_CONFIRMED, false),
-            )
-        }
+    fun memo(childUid: String): Memo? {
+        val minuteOfDay = prefs.getInt(key(KEY_MINUTE_OF_DAY, childUid), -1)
+        if (minuteOfDay !in 0..MAX_MINUTE_OF_DAY) return null
+        val sentAt = prefs.getLong(key(KEY_SENT_AT, childUid), 0L)
+        if (System.currentTimeMillis() - sentAt >= EXPIRY_MILLIS) return null
+        return Memo(
+            minuteOfDay = minuteOfDay,
+            label = prefs.getString(key(KEY_LABEL, childUid), "").orEmpty(),
+            confirmed = prefs.getBoolean(key(KEY_CONFIRMED, childUid), false),
+        )
+    }
 
     /** 명령이 실제로 발행됐다. 아직 아이 폰의 대답은 못 들었다. */
-    fun recordSent(minuteOfDay: Int, label: String) {
+    fun recordSent(childUid: String, minuteOfDay: Int, label: String) {
         prefs.edit()
-            .putInt(KEY_MINUTE_OF_DAY, minuteOfDay)
-            .putString(KEY_LABEL, label)
-            .putLong(KEY_SENT_AT, System.currentTimeMillis())
-            .putBoolean(KEY_CONFIRMED, false)
+            .putInt(key(KEY_MINUTE_OF_DAY, childUid), minuteOfDay)
+            .putString(key(KEY_LABEL, childUid), label)
+            .putLong(key(KEY_SENT_AT, childUid), System.currentTimeMillis())
+            .putBoolean(key(KEY_CONFIRMED, childUid), false)
             .apply()
     }
 
     /** 아이 폰이 done 을 적었다. */
-    fun recordConfirmed() {
+    fun recordConfirmed(childUid: String) {
         // 기록 자체가 없으면(24시간이 지나 만료됐거나 취소된 뒤 늦게 온 콜백) 되살리지
         // 않는다 — 없는 알람을 "맞춰져 있어요"로 만들어 버릴 자리다.
-        if (prefs.getInt(KEY_MINUTE_OF_DAY, -1) !in 0..MAX_MINUTE_OF_DAY) return
-        prefs.edit().putBoolean(KEY_CONFIRMED, true).apply()
+        if (prefs.getInt(key(KEY_MINUTE_OF_DAY, childUid), -1) !in 0..MAX_MINUTE_OF_DAY) return
+        prefs.edit().putBoolean(key(KEY_CONFIRMED, childUid), true).apply()
     }
 
     /** 알람을 껐거나, 맞추기가 실패했다. */
-    fun clear() {
-        prefs.edit().clear().apply()
+    fun clear(childUid: String) {
+        prefs.edit()
+            .remove(key(KEY_MINUTE_OF_DAY, childUid))
+            .remove(key(KEY_LABEL, childUid))
+            .remove(key(KEY_SENT_AT, childUid))
+            .remove(key(KEY_CONFIRMED, childUid))
+            .apply()
     }
+
+    private fun key(base: String, childUid: String) = "${base}_$childUid"
 
     data class Memo(val minuteOfDay: Int, val label: String, val confirmed: Boolean)
 

@@ -19,6 +19,14 @@ service cloud.firestore {
       ).data.role;
     }
 
+    function isChildMember(familyId, childUid) {
+      return exists(
+        /databases/$(database)/documents/families/$(familyId)/members/$(childUid)
+      ) && get(
+        /databases/$(database)/documents/families/$(familyId)/members/$(childUid)
+      ).data.role == 'child';
+    }
+
     // 코드를 아는 것 자체가 열쇠다. families 를 inviteCode 필드로 query(whereEqualTo)
     // 하게 열어두면, Firestore 규칙에서 read 는 get 과 list 를 구분하지 않으므로
     // read 를 여는 순간 회원이 아닌 사람도 families 컬렉션 전체를 list 해서 모든
@@ -30,14 +38,30 @@ service cloud.firestore {
       allow list: if false;                // 목록 조회 금지 — 코드 수집 차단
       allow create: if signedIn()
                     && memberOf(request.resource.data.familyId)
-                    && roleIn(request.resource.data.familyId) == 'guardian';
+                    && roleIn(request.resource.data.familyId) == 'guardian'
+                    && (
+                      (request.resource.data.createdByUid == request.auth.uid
+                       && request.resource.data.role in ['guardian', 'child']
+                       && request.resource.data.expiresAt > request.time.toMillis())
+                      ||
+                      // 0.6 보호자 앱이 만드는 자녀 코드. 새 필드를 모르는 구버전도
+                      // 업데이트 기간에는 계속 자녀를 연결할 수 있게 둔다.
+                      (request.resource.data.keys().hasOnly(['familyId', 'expiresAt'])
+                       && get(/databases/$(database)/documents/families/$(request.resource.data.familyId)).data.inviteCode
+                            == code
+                       && get(/databases/$(database)/documents/families/$(request.resource.data.familyId)).data.inviteExpiresAt
+                            == request.resource.data.expiresAt
+                       && request.resource.data.expiresAt > request.time.toMillis())
+                    );
       // update 는 보호자만 — familyId 도 못 바꾼다. 막는 공격: 아무 멤버가 update
       // 로 familyId 를 다른 가족으로 갈아치우거나(문서를 가로채 다른 가족의 초대
       // 창구로 재사용) expiresAt 을 조작해 코드를 되살리는 것 (fix round 2 Important 3).
       allow update: if signedIn()
                     && memberOf(resource.data.familyId)
                     && roleIn(resource.data.familyId) == 'guardian'
-                    && request.resource.data.familyId == resource.data.familyId;
+                    && request.resource.data.familyId == resource.data.familyId
+                    && request.resource.data.role == resource.data.role
+                    && request.resource.data.createdByUid == resource.data.createdByUid;
       // delete 는 그대로 아무 멤버나 — 아이가 join 직후 자기가 쓴 코드를 죽여야
       // 하기 때문이다(joinFamily). 대가: 멤버라면 자기 가족의 살아있는 코드
       // 문서를 실수로/악의로 미리 지워 페어링을 막을 수 있다(자기 가족限定 자해성
@@ -61,7 +85,7 @@ service cloud.firestore {
           // 보호자: 코드 재발급과 이름 변경.
           (roleIn(familyId) == 'guardian'
            && request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['inviteCode', 'inviteExpiresAt', 'name']))
+                .hasOnly(['inviteCode', 'inviteExpiresAt', 'name', 'schemaVersion', 'primaryChildUid']))
           ||
           // 아무 멤버나 할 수 있는 것은 "가입 직후 코드를 죽이는 것" 하나뿐이다.
           // 0 으로 내리는 것만 허용하고 미래로 늘리는 길은 막는다 — joinFamily 가
@@ -84,6 +108,16 @@ service cloud.firestore {
             (request.resource.data.role == 'guardian'
              && get(/databases/$(database)/documents/families/$(familyId)).data.ownerUid == request.auth.uid)
             ||
+            (request.resource.data.role in ['guardian', 'child']
+             && get(/databases/$(database)/documents/inviteCodes/$(request.resource.data.joinCode)).data.familyId
+                  == familyId
+             && get(/databases/$(database)/documents/inviteCodes/$(request.resource.data.joinCode)).data.role
+                  == request.resource.data.role
+             && get(/databases/$(database)/documents/inviteCodes/$(request.resource.data.joinCode)).data.expiresAt
+                  > request.time.toMillis())
+            ||
+            // role 필드가 없던 1:1 버전 코드. 기존 설치가 업데이트 도중에도 연결될 수
+            // 있도록 자녀 가입에 한해 옛 family 필드 검사를 남긴다.
             (request.resource.data.role == 'child'
              && request.resource.data.joinCode
                   == get(/databases/$(database)/documents/families/$(familyId)).data.inviteCode
@@ -166,6 +200,33 @@ service cloud.firestore {
                         );
           // 오래된 명령 정리는 보호자 몫.
           allow delete: if memberOf(familyId) && roleIn(familyId) == 'guardian';
+        }
+
+        // N:N부터 예약·장소·설정은 가족 공용이 아니라 특정 자녀 아래에 둔다.
+        // 보호자는 어떤 자녀를 보고 있는지 명시해 쓰고, 아이 폰은 자기 uid 경로만
+        // 읽는다. 아래 가족 공용 경로는 1:1 구버전 호환을 위해 읽기 규칙을 유지한다.
+        match /settings/{settingId} {
+          allow read: if memberOf(familyId)
+                      && (roleIn(familyId) == 'guardian' || request.auth.uid == childUid);
+          allow write: if memberOf(familyId)
+                       && roleIn(familyId) == 'guardian'
+                       && isChildMember(familyId, childUid);
+        }
+
+        match /places/{id} {
+          allow read: if memberOf(familyId)
+                      && (roleIn(familyId) == 'guardian' || request.auth.uid == childUid);
+          allow write: if memberOf(familyId)
+                       && roleIn(familyId) == 'guardian'
+                       && isChildMember(familyId, childUid);
+        }
+
+        match /schedules/{id} {
+          allow read: if memberOf(familyId)
+                      && (roleIn(familyId) == 'guardian' || request.auth.uid == childUid);
+          allow write: if memberOf(familyId)
+                       && roleIn(familyId) == 'guardian'
+                       && isChildMember(familyId, childUid);
         }
       }
 

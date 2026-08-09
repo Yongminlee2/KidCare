@@ -18,6 +18,7 @@ import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.EventRepository
 import com.kidcare.family.core.Role
 import com.kidcare.family.core.RoleStore
+import com.kidcare.family.core.FamilyRepository
 import com.kidcare.family.core.model.EventDoc
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -69,7 +70,9 @@ class AlertService : LifecycleService() {
     private var active = false
 
     private var listener: ListenerRegistration? = null
+    private var memberListener: ListenerRegistration? = null
     private var subscribeJob: Job? = null
+    @Volatile private var childNames: Map<String, String> = emptyMap()
 
     override fun onCreate() {
         super.onCreate()
@@ -131,6 +134,15 @@ class AlertService : LifecycleService() {
             while (isActive) {
                 try {
                     AuthGateway.signIn()
+                    memberListener?.remove()
+                    memberListener = FamilyRepository.observeMembers(
+                        familyId,
+                        onChange = { members ->
+                            childNames = members.filter { it.role == "child" }
+                                .associate { it.uid to it.displayName.ifBlank { getString(R.string.child_default_name) } }
+                        },
+                        onError = { e -> Log.w(TAG, "가족 이름 구독 실패 — 알림에는 기본 아이 이름을 쓴다", e) },
+                    )
                     listener = EventRepository.observeEvents(
                         familyId = familyId,
                         // fromCache 는 여기서 안 본다 — 알림은 "새 문서가 보이면 띄운다"
@@ -205,7 +217,13 @@ class AlertService : LifecycleService() {
      */
     private fun postAlert(unread: List<EventDoc>) {
         // 최신순으로 온다([EventRepository.observeEvents]). 맨 앞이 제목이 된다.
-        val lines = unread.map { AlertText.line(this, it) }
+        val lines = unread.map { event ->
+            getString(
+                R.string.alert_child_line,
+                childNames[event.childUid] ?: getString(R.string.child_default_name),
+                AlertText.line(this, event),
+            )
+        }
         val builder = NotificationCompat.Builder(this, CHANNEL_ALERT)
             .setSmallIcon(android.R.drawable.ic_popup_reminder)
             .setContentTitle(lines.first())
@@ -280,6 +298,8 @@ class AlertService : LifecycleService() {
         // 돈다(TrackingService.onDestroy 와 같은 이유).
         listener?.remove()
         listener = null
+        memberListener?.remove()
+        memberListener = null
         super.onDestroy()
     }
 

@@ -18,6 +18,10 @@ data class FamilyDoc(
     // 이 가족을 만든 보호자의 uid. Firestore 규칙이 "보호자 자리를 만든 사람만
     // 가져간다"를 검증할 때 대조하는 값이다 (Task 6 fix round 1, 보안 리뷰 반영).
     val ownerUid: String = "",
+    /** 2부터 보호자·자녀 N:N 및 자녀별 설정 경로를 쓴다. 0은 기존 1:1 문서다. */
+    val schemaVersion: Int = 0,
+    /** 1:1 시절 가족 공용 설정을 처음 어느 자녀에게 옮겼는지 남기는 마이그레이션 기록. */
+    val primaryChildUid: String = "",
 )
 
 data class MemberDoc(
@@ -30,6 +34,8 @@ data class MemberDoc(
     // families/{id}.inviteCode 와 대조해 "코드를 정말 아는 사람만 자녀가 된다"를
     // 서버에서 검증한다 (Task 6 fix round 1). 보호자 멤버 문서에는 빈 채로 둔다.
     val joinCode: String = "",
+    /** 가족 화면 정렬과 가입 전후 구분에 쓰는 가입 시각(UTC 밀리초). */
+    val joinedAt: Long = 0L,
 )
 
 /**
@@ -44,6 +50,10 @@ data class MemberDoc(
 data class InviteCodeDoc(
     val familyId: String = "",
     val expiresAt: Long = 0L,
+    /** 이 코드로 들어올 역할. "guardian" 또는 "child"다. 빈 값은 옛 자녀 코드다. */
+    val role: String = "child",
+    /** 코드를 만든 보호자 uid. 자체 서버로 옮겨도 감사 기록으로 유지할 필드다. */
+    val createdByUid: String = "",
 )
 
 /**

@@ -176,9 +176,11 @@ class MapTimelineFragment : Fragment() {
      * "연결 안 됨"이 풀리지 않았다(known-issues 3).
      */
     private fun subscribe() {
-        val familyId = RoleStore(requireContext()).familyId ?: return
+        val roleStore = RoleStore(requireContext())
+        val familyId = roleStore.familyId ?: return
         joinedListener = FamilyRepository.observeChildJoined(
             familyId,
+            preferredChildUid = roleStore.selectedChildUid,
             onJoined = { uid ->
                 // 자기 멤버 문서가 바뀔 때마다 이 콜백이 같은 uid 로 다시 불릴 수 있다.
                 // uid 가 그대로면 다시 읽을 이유가 없다 — 매번 다시 읽으면 그게 곧
@@ -276,7 +278,7 @@ class MapTimelineFragment : Fragment() {
         // 세대를 붙잡아 두고, 왕복이 끝난 뒤 그 값이 아직 최신인지로 판단한다
         // ([ControlFragment.commandGeneration] 주석에 이 규율의 근거가 있다).
         val generation = ++commandGeneration
-        requestLog.recordRequest()
+        requestLog.recordRequest(uid)
         renderLocating(true)
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -362,7 +364,7 @@ class MapTimelineFragment : Fragment() {
 
     /** 아이 폰이 대답했다는 사실을 남기고 배너를 즉시 다시 판정하게 한다. */
     private fun recordAnswer() {
-        requestLog.recordAnswer()
+        childUid?.let { requestLog.recordAnswer(it) }
         (activity as? GuardianMainActivity)?.refreshBanner()
     }
 
@@ -425,7 +427,7 @@ class MapTimelineFragment : Fragment() {
         // 보면, 서버에 이미 새 기록이 올라와 있는데도 연결 끊김 배너가 옛 물음을
         // 근거로 계속 뜬다. 서버 시각과 기기 시각을 직접 비교하지 않고 경과 시간을
         // 기기 시각으로 되돌려 비교한다 — 두 시계의 어긋남이 안 섞이게.
-        if (System.currentTimeMillis() - elapsed > requestLog.lastRequestAt) recordAnswer()
+        if (System.currentTimeMillis() - elapsed > requestLog.lastRequestAt(childUid)) recordAnswer()
 
         b.statusBar.text = ctx.getString(
             R.string.map_status_format,

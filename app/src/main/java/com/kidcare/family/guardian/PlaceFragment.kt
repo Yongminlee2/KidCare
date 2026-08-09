@@ -103,9 +103,9 @@ class PlaceFragment : Fragment() {
 
     /** 장소를 건드렸는데 아직 [CommandType.SYNC_RULES] 를 보내지 못했는가([PlaceSyncStore]). */
     private var pendingSync: Boolean
-        get() = syncStore.pendingSync
+        get() = childUid?.let { syncStore.pendingSync(it) } ?: false
         set(value) {
-            syncStore.pendingSync = value
+            childUid?.let { syncStore.setPendingSync(it, value) }
             renderPendingSync()
         }
 
@@ -336,7 +336,8 @@ class PlaceFragment : Fragment() {
     // ---------------------------------------------------------------- 구독
 
     private fun subscribe() {
-        val fid = RoleStore(requireContext()).familyId
+        val roleStore = RoleStore(requireContext())
+        val fid = roleStore.familyId
         if (fid == null) {
             // 구독을 시작조차 못 한다 = 목록을 못 불러온 것이다([AlertFragment.subscribe] 와 같다).
             listLoad = ListLoad.FAILED
@@ -345,9 +346,18 @@ class PlaceFragment : Fragment() {
             return
         }
         familyId = fid
+        val selectedUid = roleStore.selectedChildUid
+        if (selectedUid == null) {
+            listLoad = ListLoad.LOADED
+            showState(getString(R.string.map_no_child))
+            renderList()
+            return
+        }
+        childUid = selectedUid
 
         placeListener = PlaceRepository.observePlaces(
             fid,
+            selectedUid,
             onChange = { docs, fromCache -> onPlacesChanged(docs, fromCache) },
             onError = { e ->
                 val ctx = context ?: return@observePlaces
@@ -360,6 +370,7 @@ class PlaceFragment : Fragment() {
 
         joinedListener = FamilyRepository.observeChildJoined(
             fid,
+            preferredChildUid = selectedUid,
             onJoined = { uid ->
                 if (uid == childUid) return@observeChildJoined
                 childUid = uid
@@ -625,7 +636,8 @@ class PlaceFragment : Fragment() {
      */
     private fun savePlace() {
         val fid = familyId
-        if (fid == null) {
+        val uid = childUid
+        if (fid == null || uid == null) {
             showEditorStatus(getString(R.string.place_no_family))
             return
         }
@@ -641,7 +653,7 @@ class PlaceFragment : Fragment() {
         setEditorBusy(true)
         writeThenNotify(
             busyMessage = getString(R.string.place_saving),
-            write = { PlaceRepository.savePlace(fid, doc) },
+            write = { PlaceRepository.savePlace(fid, uid, doc) },
             onWritten = { slow ->
                 closeEditor()
                 if (slow) showStateRes(R.string.place_save_slow) else showState(null)
@@ -666,14 +678,15 @@ class PlaceFragment : Fragment() {
 
     private fun deletePlace(doc: PlaceDoc) {
         val fid = familyId
-        if (fid == null) {
+        val uid = childUid
+        if (fid == null || uid == null) {
             showState(getString(R.string.place_no_family))
             return
         }
         showState(getString(R.string.place_deleting))
         writeThenNotify(
             busyMessage = null,
-            write = { PlaceRepository.deletePlace(fid, doc.id) },
+            write = { PlaceRepository.deletePlace(fid, uid, doc.id) },
             onWritten = { slow -> if (slow) showStateRes(R.string.place_save_slow) else showState(null) },
             onFailed = { message -> showState(message) },
         )

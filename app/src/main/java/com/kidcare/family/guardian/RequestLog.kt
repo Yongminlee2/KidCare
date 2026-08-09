@@ -29,17 +29,21 @@ class RequestLog(context: Context) {
     private val prefs = context.getSharedPreferences("kidcare_requests", Context.MODE_PRIVATE)
 
     /** 마지막으로 '지금 위치 확인'을 보낸 시각. 0 이면 **한 번도 물어본 적이 없다.** */
-    val lastRequestAt: Long get() = prefs.getLong(KEY_REQUEST, 0L)
+    fun lastRequestAt(childUid: String?): Long = childUid?.let {
+        prefs.getLong("${KEY_REQUEST}_$it", prefs.getLong(KEY_REQUEST, 0L))
+    } ?: 0L
 
     /** 마지막으로 아이 폰의 대답을 확인한 시각. */
-    val lastAnswerAt: Long get() = prefs.getLong(KEY_ANSWER, 0L)
+    fun lastAnswerAt(childUid: String?): Long = childUid?.let {
+        prefs.getLong("${KEY_ANSWER}_$it", prefs.getLong(KEY_ANSWER, 0L))
+    } ?: 0L
 
-    fun recordRequest() {
-        prefs.edit().putLong(KEY_REQUEST, System.currentTimeMillis()).apply()
+    fun recordRequest(childUid: String) {
+        prefs.edit().putLong("${KEY_REQUEST}_$childUid", System.currentTimeMillis()).apply()
     }
 
-    fun recordAnswer() {
-        prefs.edit().putLong(KEY_ANSWER, System.currentTimeMillis()).apply()
+    fun recordAnswer(childUid: String) {
+        prefs.edit().putLong("${KEY_ANSWER}_$childUid", System.currentTimeMillis()).apply()
     }
 
     private companion object {

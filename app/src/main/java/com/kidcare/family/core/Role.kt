@@ -22,13 +22,28 @@ class RoleStore(context: Context) {
         get() = prefs.getString(KEY_FAMILY, null)
         set(value) = prefs.edit().putString(KEY_FAMILY, value).apply()
 
-    // 보호자 쪽에서만 쓴다. 아이가 실제로 members 에 들어온 뒤에야 채워진다
-    // (GuardianPairingActivity.goToMain). RouterActivity 가 이 값을 familyId 와
-    // 함께 봐야 "코드만 만들고 아무도 안 들어온" 보호자를 GuardianMainActivity 로
-    // 잘못 보내지 않는다 — isPaired 는 그 용도로 쓰지 않는다(아래 설명 참고).
+    /**
+     * 보호자 화면이 현재 보고 있는 자녀. 가족에 자녀가 여러 명이면 상단 선택기에서
+     * 이 값만 바꾸고 지도·관리·예약·장소 화면을 같은 자녀로 다시 연다.
+     *
+     * 예전 1:1 버전은 같은 값을 `child_uid` 에 저장했다. 업그레이드한 보호자 폰이
+     * 기존 자녀를 잃지 않도록 새 키가 없을 때 옛 키를 읽고, 처음 쓰는 순간 두 키를
+     * 함께 갱신한다.
+     */
+    var selectedChildUid: String?
+        get() = prefs.getString(KEY_SELECTED_CHILD_UID, null)
+            ?: prefs.getString(KEY_CHILD_UID, null)
+        set(value) {
+            prefs.edit()
+                .putString(KEY_SELECTED_CHILD_UID, value)
+                .putString(KEY_CHILD_UID, value)
+                .apply()
+        }
+
+    /** 옛 호출부와 저장 데이터 호환용 별칭. 새 코드는 [selectedChildUid]를 쓴다. */
     var childUid: String?
-        get() = prefs.getString(KEY_CHILD_UID, null)
-        set(value) = prefs.edit().putString(KEY_CHILD_UID, value).apply()
+        get() = selectedChildUid
+        set(value) { selectedChildUid = value }
 
     /**
      * 페어링이 완전히 끝났는가.
@@ -47,5 +62,6 @@ class RoleStore(context: Context) {
         const val KEY_ROLE = "role"
         const val KEY_FAMILY = "family_id"
         const val KEY_CHILD_UID = "child_uid"
+        const val KEY_SELECTED_CHILD_UID = "selected_child_uid"
     }
 }

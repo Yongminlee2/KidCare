@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -12,8 +13,15 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kidcare.family.R
 import com.kidcare.family.core.model.ChildStatusDoc
+import com.kidcare.family.core.FamilyMember
+import com.kidcare.family.core.FamilyRepository
+import com.kidcare.family.core.RoleStore
 import com.kidcare.family.databinding.ActivityGuardianMainBinding
 import com.kidcare.family.logic.DisconnectRule
+import com.kidcare.family.logic.ChildSelector
+import com.kidcare.family.logic.SelectableChild
+import com.kidcare.family.onboarding.GuardianPairingActivity
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -91,6 +99,12 @@ class GuardianMainActivity : AppCompatActivity() {
 
     /** 지금 보이는 탭. 같은 탭으로 두 번 부르는 호출을 걸러내는 데 쓴다. */
     private var currentTabId: Int = 0
+    private var memberListener: ListenerRegistration? = null
+    private var memberJob: Job? = null
+    private var children: List<FamilyMember> = emptyList()
+    private var guardians: List<FamilyMember> = emptyList()
+    /** 현재 탭 프래그먼트가 생성될 때 기준으로 삼은 자녀. */
+    private var renderedChildUid: String? = null
 
     /** 배너 판정 재료(마지막 물음·마지막 대답 시각). 화면이 뜬 뒤에만 만진다. */
     private val requestLog by lazy { RequestLog(this) }
@@ -124,10 +138,12 @@ class GuardianMainActivity : AppCompatActivity() {
         binding = ActivityGuardianMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         bannerBaseTopPadding = binding.disconnectBanner.paddingTop
+        binding.childSelector.setOnClickListener { showChildMenu() }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             topInset = bars.top
+            binding.childSelectorBar.updatePadding(top = bars.top)
             // 하단 탭은 늘 내비게이션바를 피한다. 지도와 달리 탭은 가려지면
             // 누를 수가 없어서, 뒤로 깔아둘 이유가 없다.
             binding.bottomNav.updatePadding(bottom = bars.bottom)
@@ -160,6 +176,113 @@ class GuardianMainActivity : AppCompatActivity() {
         // showTab 은 몇 번을 불러도 결과가 같으므로(태그로 찾고 없을 때만 add)
         // 여기서 한 번 더 직접 불러 "첫 화면이 비어 있는" 경우를 원천봉쇄한다.
         showTab(startTab)
+        renderedChildUid = RoleStore(this).selectedChildUid
+        subscribeMembers()
+    }
+
+    private fun subscribeMembers() {
+        val familyId = RoleStore(this).familyId ?: return
+        memberListener?.remove()
+        memberListener = FamilyRepository.observeMembers(
+            familyId,
+            onChange = { members -> applyMembers(familyId, members) },
+            onError = { binding.childSelector.setText(R.string.child_selector_load_failed) },
+        )
+    }
+
+    private fun applyMembers(familyId: String, members: List<FamilyMember>) {
+        val nextChildren = members.filter { it.role == "child" }
+        guardians = members.filter { it.role == "guardian" }
+        val store = RoleStore(this)
+        val selected = ChildSelector.select(
+            nextChildren.map { SelectableChild(it.uid, it.displayName, it.joinedAt) },
+            store.selectedChildUid,
+        )
+        val changed = selected?.uid != store.selectedChildUid
+        children = nextChildren
+        store.selectedChildUid = selected?.uid
+        renderChildSelector()
+
+        memberJob?.cancel()
+        memberJob = lifecycleScope.launch {
+            selected?.let {
+                runCatching { FamilyRepository.migrateLegacyFamilyData(familyId, it.uid) }
+            }
+            if (changed) recreateTabsForSelectedChild()
+            renderBanner()
+        }
+    }
+
+    private fun renderChildSelector() {
+        val selectedUid = RoleStore(this).selectedChildUid
+        val selected = children.firstOrNull { it.uid == selectedUid }
+        binding.childSelector.text = selected?.let { getString(R.string.child_selector_value, childLabel(it)) }
+            ?: getString(R.string.child_selector_empty)
+    }
+
+    private fun childLabel(child: FamilyMember): String {
+        val base = child.displayName.ifBlank { getString(R.string.child_default_name) }
+        return if (children.count { it.displayName.ifBlank { getString(R.string.child_default_name) } == base } > 1)
+            "$base · ${child.uid.takeLast(4)}" else base
+    }
+
+    private fun showChildMenu() {
+        val popup = PopupMenu(this, binding.childSelector)
+        children.forEachIndexed { index, child ->
+            popup.menu.add(MENU_GROUP_CHILDREN, MENU_CHILD_BASE + index, index, childLabel(child))
+                .isChecked = child.uid == RoleStore(this).selectedChildUid
+        }
+        popup.menu.setGroupCheckable(MENU_GROUP_CHILDREN, true, true)
+        popup.menu.add(MENU_GROUP_ACTIONS, MENU_ADD_CHILD, 100, getString(R.string.child_selector_add_child))
+        popup.menu.add(
+            MENU_GROUP_ACTIONS,
+            MENU_ADD_GUARDIAN,
+            101,
+            getString(R.string.child_selector_add_guardian_count, guardians.size),
+        )
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                MENU_ADD_CHILD -> { openInvite("child"); true }
+                MENU_ADD_GUARDIAN -> { openInvite("guardian"); true }
+                else -> {
+                    val child = children.getOrNull(item.itemId - MENU_CHILD_BASE) ?: return@setOnMenuItemClickListener false
+                    selectChild(child.uid)
+                    true
+                }
+            }
+        }
+        popup.show()
+    }
+
+    private fun selectChild(uid: String) {
+        val store = RoleStore(this)
+        if (store.selectedChildUid == uid) return
+        store.selectedChildUid = uid
+        renderChildSelector()
+        recreateTabsForSelectedChild()
+        renderBanner()
+    }
+
+    private fun openInvite(role: String) {
+        startActivity(
+            Intent(this, GuardianPairingActivity::class.java)
+                .putExtra(GuardianPairingActivity.EXTRA_INVITE_ROLE, role)
+                .putExtra(GuardianPairingActivity.EXTRA_RETURN_TO_MAIN, true)
+        )
+    }
+
+    private fun recreateTabsForSelectedChild() {
+        // 아이 초대 화면이 이 Activity 위에 떠 있는 동안에도 멤버 리스너는 새 가입을
+        // 받는다. 그 시점에는 FragmentManager 상태가 이미 저장됐을 수 있어 commitNow가
+        // 예외를 낸다. 선택값만 저장해 두면 onResume이 안전한 시점에 다시 만든다.
+        if (supportFragmentManager.isStateSaved) return
+        val selectedTabId = binding.bottomNav.selectedItemId.takeIf { it != 0 } ?: R.id.tab_map
+        val tx = supportFragmentManager.beginTransaction()
+        tabs.forEach { tab -> supportFragmentManager.findFragmentByTag(tab.tag)?.let { tx.remove(it) } }
+        tx.commitNow()
+        currentTabId = 0
+        tabs.firstOrNull { it.menuId == selectedTabId }?.let { showTab(it) }
+        renderedChildUid = RoleStore(this).selectedChildUid
     }
 
     /**
@@ -233,10 +356,9 @@ class GuardianMainActivity : AppCompatActivity() {
         binding.disconnectBanner.updatePadding(
             top = bannerBaseTopPadding + if (bannerShown) topInset else 0,
         )
-        val mapShown = currentTabId == R.id.tab_map
-        binding.fragmentContainer.updatePadding(
-            top = if (bannerShown || mapShown) 0 else topInset,
-        )
+        // 상태바 높이는 항상 위 자녀 선택기가 먹는다. 프래그먼트가 다시 먹으면
+        // 비지도 탭에서 같은 여백이 두 번 생긴다.
+        binding.fragmentContainer.updatePadding(top = 0)
     }
 
     // ------------------------------------------------------------ 연결 끊김 배너
@@ -266,12 +388,28 @@ class GuardianMainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        renderChildSelector()
+        if (RoleStore(this).selectedChildUid != renderedChildUid) {
+            recreateTabsForSelectedChild()
+        }
+        renderBanner()
+    }
+
     override fun onStop() {
         // 화면이 안 보이는 동안 1분마다 깨어날 이유가 없다. 다시 보일 때 onStart 가
         // 곧바로 한 번 판정하므로 배너가 늦게 뜨지도 않는다.
         bannerJob?.cancel()
         bannerJob = null
         super.onStop()
+    }
+
+    override fun onDestroy() {
+        memberListener?.remove()
+        memberListener = null
+        memberJob?.cancel()
+        super.onDestroy()
     }
 
     /**
@@ -286,11 +424,12 @@ class GuardianMainActivity : AppCompatActivity() {
      * 정확하다([RequestLog] 주석).
      */
     private fun renderBanner() {
-        val lastRequestAt = requestLog.lastRequestAt
+        val selectedChildUid = RoleStore(this).selectedChildUid
+        val lastRequestAt = requestLog.lastRequestAt(selectedChildUid)
         val now = System.currentTimeMillis()
         val disconnected = DisconnectRule.isDisconnected(
             lastRequestAt = lastRequestAt,
-            lastAnswerAt = requestLog.lastAnswerAt,
+            lastAnswerAt = requestLog.lastAnswerAt(selectedChildUid),
             nowMillis = now,
         )
         binding.disconnectBanner.visibility = if (disconnected) View.VISIBLE else View.GONE
@@ -317,6 +456,11 @@ class GuardianMainActivity : AppCompatActivity() {
         private const val TAG_SCHEDULE = "tab_schedule"
         private const val TAG_PLACE = "tab_place"
         private const val KEY_SELECTED_TAB = "selected_tab"
+        private const val MENU_GROUP_CHILDREN = 1
+        private const val MENU_GROUP_ACTIONS = 2
+        private const val MENU_CHILD_BASE = 10_000
+        private const val MENU_ADD_CHILD = 20_001
+        private const val MENU_ADD_GUARDIAN = 20_002
 
         /** 시간이 흐른 것만으로 다시 판정하는 간격([bannerJob] 주석 참고). 30분
          *  기준에 대해 1분 오차면 충분하고, 1분에 한 번 도는 비용은 무시할 만하다.

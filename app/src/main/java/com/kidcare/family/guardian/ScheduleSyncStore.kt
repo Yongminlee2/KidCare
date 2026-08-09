@@ -36,11 +36,11 @@ class ScheduleSyncStore(context: Context) {
      * 미루면 안 된다. 키 하나짜리 파일이라 동기 비용은 무시할 만하다
      * (`child/FindPhoneStateStore.markRinging` 과 같은 판단).
      */
-    var pendingSync: Boolean
-        get() = prefs.getBoolean(KEY_PENDING, false)
-        set(value) {
-            prefs.edit().putBoolean(KEY_PENDING, value).commit()
-        }
+    fun pendingSync(childUid: String): Boolean = prefs.getBoolean("${KEY_PENDING}_$childUid", false)
+
+    fun setPendingSync(childUid: String, value: Boolean) {
+        prefs.edit().putBoolean("${KEY_PENDING}_$childUid", value).commit()
+    }
 
     private companion object {
         const val KEY_PENDING = "pending_sync"

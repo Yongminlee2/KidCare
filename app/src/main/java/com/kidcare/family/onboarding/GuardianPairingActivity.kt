@@ -11,6 +11,7 @@ import com.kidcare.family.RouterActivity
 import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.FamilyRepository
 import com.kidcare.family.core.InviteCodeInfo
+import com.kidcare.family.core.FamilyMember
 import com.kidcare.family.core.RoleStore
 import com.kidcare.family.core.errorMessage
 import com.kidcare.family.databinding.ActivityGuardianPairingBinding
@@ -37,6 +38,10 @@ class GuardianPairingActivity : AppCompatActivity() {
     private lateinit var binding: ActivityGuardianPairingBinding
     private lateinit var store: RoleStore
     private var listener: ListenerRegistration? = null
+    private var inviteRole: String = "child"
+    private var returnToMain: Boolean = false
+    private var baselineMemberUids: Set<String> = emptySet()
+    private var currentCode: String? = null
 
     // observeChildJoined 는 스냅샷을 두 번(캐시→서버) 돌려줄 수 있다.
     // 두 번째 콜백이 첫 번째의 remove() 보다 먼저 큐에 올라와 있었다면
@@ -59,6 +64,10 @@ class GuardianPairingActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         store = RoleStore(this)
+        inviteRole = intent.getStringExtra(EXTRA_INVITE_ROLE)
+            ?.takeIf { it == "guardian" || it == "child" } ?: "child"
+        returnToMain = intent.getBooleanExtra(EXTRA_RETURN_TO_MAIN, false)
+        renderInviteRole()
 
         // 코드가 아직 없는 동안(가족 생성 중)에는 "새 번호 받기"가 할 일이
         // 없다 — inviteCodeOf 는 이미 있는 가족의 코드를 갈아 끼우는 것이지
@@ -97,10 +106,19 @@ class GuardianPairingActivity : AppCompatActivity() {
                     val familyId = store.familyId ?: FamilyRepository.createFamily(uid).also {
                         store.familyId = it
                     }
-                    showCode(FamilyRepository.inviteCodeOf(familyId))
-                    listener = FamilyRepository.observeChildJoined(
+                    store.selectedChildUid?.let { selected ->
+                        FamilyRepository.migrateLegacyFamilyData(familyId, selected)
+                    }
+                    baselineMemberUids = FamilyRepository.fetchMembers(familyId).map { it.uid }.toSet()
+                    showCode(FamilyRepository.createInvite(familyId, inviteRole))
+                    listener = FamilyRepository.observeMembers(
                         familyId,
-                        onJoined = { childUid -> goToMain(childUid) },
+                        onChange = { members ->
+                            val joined = members.firstOrNull {
+                                it.role == inviteRole && it.uid !in baselineMemberUids
+                            } ?: return@observeMembers
+                            goToMain(joined)
+                        },
                         onError = { e ->
                             binding.hintText.text = getString(R.string.pairing_failed, errorMessage(this@GuardianPairingActivity, e))
                         },
@@ -140,7 +158,7 @@ class GuardianPairingActivity : AppCompatActivity() {
         refreshJob = lifecycleScope.launch {
             try {
                 withTimeout(SETUP_TIMEOUT_MILLIS) {
-                    showCode(FamilyRepository.inviteCodeOf(familyId, forceNew = true))
+                    showCode(FamilyRepository.createInvite(familyId, inviteRole, currentCode))
                 }
             } catch (e: TimeoutCancellationException) {
                 // 위 startPairing() 과 같은 이유로 CancellationException 보다 먼저 잡는다.
@@ -159,11 +177,15 @@ class GuardianPairingActivity : AppCompatActivity() {
 
     /** 코드와 남은 유효시간을 화면에 반영한다. 실시간 카운트다운이 아니라 호출 시점의 스냅샷이다. */
     private fun showCode(info: InviteCodeInfo) {
+        currentCode = info.code
         binding.codeText.text = info.code
         val minutesLeft = ((info.expiresAt - System.currentTimeMillis() + 59_999L) / 60_000L)
             .coerceAtLeast(1L)
         binding.expiryText.text = getString(R.string.pairing_code_expiry_format, minutesLeft)
-        binding.hintText.setText(R.string.pairing_guardian_hint)
+        binding.hintText.setText(
+            if (inviteRole == "guardian") R.string.pairing_guardian_invite_guardian_hint
+            else R.string.pairing_guardian_hint
+        )
         binding.newCodeButton.isEnabled = true
         // 코드가 떴다 = 서버와 주고받던 작업이 끝나고 "아이가 번호를 넣기를 기다리는"
         // 상태로 넘어간 것이다. 스피너는 "곧 끝나는 작업 중"이라는 신호인데, 아이가
@@ -172,18 +194,29 @@ class GuardianPairingActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.GONE
     }
 
-    private fun goToMain(childUid: String) {
+    private fun goToMain(member: FamilyMember) {
         // 화면이 이미 사라지는 중이면 죽은 Activity 로 startActivity 하지 않는다.
         if (navigated || isFinishing || isDestroyed) return
         navigated = true
         // familyId 만으로는 "코드를 만들었다"만 알 수 있다. 아이가 실제로 들어왔다는
         // 사실 자체를 저장해둬야 RouterActivity 가 다음부터 곧장 GuardianMainActivity
         // 로 보낼 수 있다(Fix 1).
-        store.childUid = childUid
+        if (member.role == "child") store.selectedChildUid = member.uid
         listener?.remove()
         listener = null
-        startActivity(Intent(this, GuardianMainActivity::class.java))
+        if (!returnToMain) startActivity(Intent(this, GuardianMainActivity::class.java))
         finish()
+    }
+
+    private fun renderInviteRole() {
+        binding.pairingTitle.setText(
+            if (inviteRole == "guardian") R.string.pairing_guardian_invite_guardian_title
+            else R.string.pairing_guardian_title
+        )
+        binding.hintText.setText(
+            if (inviteRole == "guardian") R.string.pairing_guardian_invite_guardian_hint
+            else R.string.pairing_guardian_hint
+        )
     }
 
     override fun onDestroy() {
@@ -191,7 +224,9 @@ class GuardianPairingActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private companion object {
+    companion object {
+        const val EXTRA_INVITE_ROLE = "invite_role"
+        const val EXTRA_RETURN_TO_MAIN = "return_to_main"
         const val SETUP_TIMEOUT_MILLIS = 20_000L
     }
 }

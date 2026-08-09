@@ -11,10 +11,12 @@ import com.kidcare.family.RouterActivity
 import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.FamilyRepository
 import com.kidcare.family.core.PairingException
+import com.kidcare.family.core.Role
 import com.kidcare.family.core.RoleStore
 import com.kidcare.family.core.errorMessage
 import com.kidcare.family.databinding.ActivityChildPairingBinding
 import com.kidcare.family.logic.InviteCode
+import com.kidcare.family.guardian.GuardianMainActivity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -39,6 +41,13 @@ class ChildPairingActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val store = RoleStore(this)
+        val guardianJoining = store.role == Role.GUARDIAN
+        binding.pairingTitle.setText(
+            if (guardianJoining) R.string.pairing_guardian_join_title else R.string.pairing_child_title
+        )
+        binding.nameInput.hint = getString(
+            if (guardianJoining) R.string.pairing_guardian_name_hint else R.string.pairing_child_name_hint
+        )
 
         binding.codeInput.doAfterTextChanged { text ->
             binding.joinButton.isEnabled = InviteCode.isValid(text?.toString().orEmpty())
@@ -65,9 +74,22 @@ class ChildPairingActivity : AppCompatActivity() {
         joinJob = lifecycleScope.launch {
             try {
                 val uid = AuthGateway.signIn()
-                val familyId = FamilyRepository.joinFamily(code, uid)
-                RoleStore(this@ChildPairingActivity).familyId = familyId
-                startActivity(Intent(this@ChildPairingActivity, PermissionActivity::class.java))
+                val roleStore = RoleStore(this@ChildPairingActivity)
+                val expectedRole = if (roleStore.role == Role.GUARDIAN) "guardian" else "child"
+                val result = FamilyRepository.joinFamily(
+                    code = code,
+                    uid = uid,
+                    expectedRole = expectedRole,
+                    displayName = binding.nameInput.text?.toString().orEmpty(),
+                )
+                roleStore.familyId = result.familyId
+                val next = if (roleStore.role == Role.GUARDIAN) {
+                    roleStore.selectedChildUid = FamilyRepository.findChildUid(result.familyId)
+                    GuardianMainActivity::class.java
+                } else {
+                    PermissionActivity::class.java
+                }
+                startActivity(Intent(this@ChildPairingActivity, next))
                 finish()
             } catch (e: CancellationException) {
                 // 화면 이탈(되돌리기 버튼, onDestroy)로 인한 정상 취소다. 실패로 취급해
@@ -80,6 +102,7 @@ class ChildPairingActivity : AppCompatActivity() {
                         PairingException.Reason.EXPIRED -> getString(R.string.pairing_expired)
                         PairingException.Reason.ALREADY_FULL -> getString(R.string.pairing_full)
                         PairingException.Reason.OFFLINE -> getString(R.string.pairing_offline)
+                        PairingException.Reason.WRONG_ROLE -> getString(R.string.pairing_wrong_role)
                     }
                 )
             } catch (e: Exception) {

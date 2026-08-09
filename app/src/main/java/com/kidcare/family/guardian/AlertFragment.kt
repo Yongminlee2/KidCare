@@ -117,7 +117,8 @@ class AlertFragment : Fragment() {
     }
 
     private fun subscribe() {
-        val fid = RoleStore(requireContext()).familyId
+        val roleStore = RoleStore(requireContext())
+        val fid = roleStore.familyId
         if (fid == null) {
             // 구독을 시작조차 못 한다 = 목록을 못 불러온 것이다. 여기서 LOADING 으로
             // 두면 "불러오는 중이에요"가 영원히 떠 있는다.
@@ -127,8 +128,16 @@ class AlertFragment : Fragment() {
             return
         }
         familyId = fid
+        val selectedUid = roleStore.selectedChildUid
+        if (selectedUid == null) {
+            listLoad = ListLoad.LOADED
+            showState(getString(R.string.map_no_child))
+            renderList()
+            return
+        }
         listener = EventRepository.observeEvents(
             fid,
+            childUid = selectedUid,
             onChange = { docs, fromCache -> onEventsChanged(docs, fromCache) },
             onError = { e ->
                 val ctx = context ?: return@observeEvents

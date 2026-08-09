@@ -33,29 +33,40 @@ object PlaceRepository {
 
     private val db: FirebaseFirestore get() = FirebaseFirestore.getInstance()
 
-    private fun places(familyId: String) =
+    private fun places(familyId: String, childUid: String) =
+        db.collection("families").document(familyId)
+            .collection("children").document(childUid)
+            .collection("places")
+
+    private fun legacyPlaces(familyId: String) =
         db.collection("families").document(familyId).collection("places")
 
     /** 자녀 폰의 지오펜스 등록·판정이 쓰는 한 번 읽기. */
-    suspend fun fetchPlaces(familyId: String): List<PlaceDoc> =
-        places(familyId).get().await().documents.mapNotNull { doc ->
+    suspend fun fetchPlaces(familyId: String, childUid: String): List<PlaceDoc> {
+        var documents = places(familyId, childUid).get().await().documents
+        if (documents.isEmpty() && FamilyRepository.familySchemaVersion(familyId) < FamilyRepository.CURRENT_SCHEMA_VERSION) {
+            documents = legacyPlaces(familyId).get().await().documents
+        }
+        return documents.mapNotNull { doc ->
             doc.toObject(PlaceDoc::class.java)?.copy(id = doc.id)
         }
+    }
 
     /**
      * 새 장소면(id 가 비어 있으면) 문서를 새로 만들고, 아니면 그 ID 에 덮어쓴다.
      * [ScheduleRepository.saveSchedule] 과 같은 계약이다 — 만들기와 고치기가 한 경로다.
      */
-    suspend fun savePlace(familyId: String, doc: PlaceDoc): String {
-        val ref = if (doc.id.isEmpty()) places(familyId).document() else places(familyId).document(doc.id)
+    suspend fun savePlace(familyId: String, childUid: String, doc: PlaceDoc): String {
+        val ref = if (doc.id.isEmpty()) places(familyId, childUid).document()
+            else places(familyId, childUid).document(doc.id)
         // id 는 문서 ID 로만 쓰고 본문에는 담지 않는다 — 읽을 때 copy(id = doc.id) 가
         // 채우므로, 본문에 남겨두면 같은 값이 두 군데 있게 된다.
         ref.set(doc.copy(id = "")).await()
         return ref.id
     }
 
-    suspend fun deletePlace(familyId: String, id: String) {
-        places(familyId).document(id).delete().await()
+    suspend fun deletePlace(familyId: String, childUid: String, id: String) {
+        places(familyId, childUid).document(id).delete().await()
     }
 
     /** [onError] 를 삼키지 않는 이유는 다른 observe* 와 같다 — 권한 거부가 흔적 없이
@@ -64,10 +75,11 @@ object PlaceRepository {
      *  `fromCache` 의 뜻과 쓰임은 [EventRepository.observeEvents] 와 같다. */
     fun observePlaces(
         familyId: String,
+        childUid: String,
         onChange: (docs: List<PlaceDoc>, fromCache: Boolean) -> Unit,
         onError: (Exception) -> Unit,
     ): ListenerRegistration =
-        places(familyId).addSnapshotListener { snapshot, error ->
+        places(familyId, childUid).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.w(TAG, "observePlaces 실패: familyId=$familyId", error)
                 onError(error)

@@ -255,17 +255,27 @@ class ControlFragment : Fragment() {
      * 꺼져 있다.
      */
     private fun subscribe() {
-        val fid = RoleStore(requireContext()).familyId ?: return
+        val roleStore = RoleStore(requireContext())
+        val fid = roleStore.familyId ?: return
         familyId = fid
+        val selectedUid = roleStore.selectedChildUid
+        if (selectedUid == null) {
+            setChildDependentButtonsEnabled(false)
+            showChildState(getString(R.string.map_no_child))
+            return
+        }
+        childUid = selectedUid
 
         settingsListener = ScheduleRepository.observeRingerSettings(
             fid,
+            selectedUid,
             onChange = { doc -> renderLock(doc.lockEnabled) },
             onError = { e -> showChildState(errorMessageOrNull(e)) },
         )
 
         joinedListener = FamilyRepository.observeChildJoined(
             fid,
+            preferredChildUid = selectedUid,
             onJoined = { uid ->
                 if (uid == childUid) return@observeChildJoined
                 childUid = uid
@@ -386,6 +396,7 @@ class ControlFragment : Fragment() {
      */
     private fun sendSetAlarm() {
         val b = _binding ?: return
+        val uid = childUid ?: return
         val label = b.alarmLabelInput.text?.toString()?.trim().orEmpty()
         val minute = alarmMinute
         send(
@@ -395,7 +406,7 @@ class ControlFragment : Fragment() {
                 CommandType.PAYLOAD_LABEL to label,
             ),
         ) {
-            alarmMemo.recordSent(minute, label)
+            alarmMemo.recordSent(uid, minute, label)
             renderAlarm()
         }
     }
@@ -407,8 +418,9 @@ class ControlFragment : Fragment() {
      * 실패하면 아래 [onCommandChanged] 가 실패 문구를 띄운다.
      */
     private fun sendCancelAlarm() {
+        val uid = childUid ?: return
         send(CommandType.CANCEL_ALARM) {
-            alarmMemo.clear()
+            alarmMemo.clear(uid)
             renderAlarm()
         }
     }
@@ -450,7 +462,7 @@ class ControlFragment : Fragment() {
         // 명령 종류와 상관없이 "물어봤다"로 친다. 아이 폰이 강제 종료돼 있으면 소리
         // 모드 변경이든 폰찾기든 똑같이 대답이 없고, 연결 끊김 배너가 알리려는 것이
         // 바로 그 상태다(DisconnectRule).
-        requestLog.recordRequest()
+        requestLog.recordRequest(uid)
         renderCommand(CommandUi.Sending)
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -547,7 +559,7 @@ class ControlFragment : Fragment() {
                 // 기억을 굳혀야 부모가 탭을 옮겼다 돌아와도 걸어둔 알람이 보인다
                 // (AlarmMemoStore 클래스 주석 — 이 기록이 뜻하는 것과 뜻하지 않는 것).
                 if (trackingType == CommandType.SET_ALARM) {
-                    alarmMemo.recordConfirmed()
+                    childUid?.let { alarmMemo.recordConfirmed(it) }
                     renderAlarm()
                 }
                 // 메시지의 done 은 "아이가 확인했어요를 눌렀다"는 뜻이다. '완료'라고
@@ -560,7 +572,7 @@ class ControlFragment : Fragment() {
                 // 알람이 안 걸렸는데 화면에 "맞춰져 있어요"가 남으면 그게 이 기능에서
                 // 제일 나쁜 거짓말이다. 실패는 곧 기억을 지우는 것이다.
                 if (trackingType == CommandType.SET_ALARM) {
-                    alarmMemo.clear()
+                    childUid?.let { alarmMemo.clear(it) }
                     renderAlarm()
                 }
                 // 실패도 대답이다 — 아이 폰이 살아 있으니 error 를 적을 수 있었다.
@@ -661,7 +673,7 @@ class ControlFragment : Fragment() {
 
     /** 아이 폰이 대답했다는 사실을 남기고 배너를 즉시 다시 판정하게 한다. */
     private fun recordAnswer() {
-        requestLog.recordAnswer()
+        childUid?.let { requestLog.recordAnswer(it) }
         (activity as? GuardianMainActivity)?.refreshBanner()
     }
 
@@ -717,8 +729,9 @@ class ControlFragment : Fragment() {
      */
     private fun saveLock(enabled: Boolean) {
         val fid = familyId
+        val uid = childUid
         val b = _binding ?: return
-        if (fid == null) {
+        if (fid == null || uid == null) {
             b.lockSwitch.isChecked = !enabled
             renderCommand(CommandUi.Failed(getString(R.string.map_no_child)))
             return
@@ -733,7 +746,7 @@ class ControlFragment : Fragment() {
                 // 한 줄로 말한다. 스위치를 되돌리지는 않는다: 쓰기는 큐에 살아 있고
                 // 연결되면 그대로 저장되므로, 되돌리면 그게 더 큰 거짓말이 된다.
                 val saved = withTimeoutOrNull(SEND_TIMEOUT_MILLIS) {
-                    ScheduleRepository.saveRingerSettings(fid, RingerSettingsDoc(lockEnabled = enabled))
+                    ScheduleRepository.saveRingerSettings(fid, uid, RingerSettingsDoc(lockEnabled = enabled))
                 }
                 if (saved == null) {
                     _binding ?: return@launch
@@ -797,7 +810,7 @@ class ControlFragment : Fragment() {
             R.string.control_alarm_time_format, ScheduleText.timeText(ctx, alarmMinute),
         )
 
-        val memo = alarmMemo.memo
+        val memo = childUid?.let { alarmMemo.memo(it) }
         b.alarmState.visibility = if (memo == null) View.GONE else View.VISIBLE
         if (memo == null) return
         val time = ScheduleText.timeText(ctx, memo.minuteOfDay)

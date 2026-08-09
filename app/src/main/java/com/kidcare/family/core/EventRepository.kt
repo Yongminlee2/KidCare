@@ -84,10 +84,13 @@ object EventRepository {
      */
     fun observeEvents(
         familyId: String,
+        childUid: String? = null,
         onChange: (docs: List<EventDoc>, fromCache: Boolean) -> Unit,
         onError: (Exception) -> Unit,
-    ): ListenerRegistration =
-        events(familyId)
+    ): ListenerRegistration {
+        val base: Query = if (childUid == null) events(familyId)
+            else events(familyId).whereEqualTo("childUid", childUid)
+        return base
             .orderBy("at", Query.Direction.DESCENDING)
             .limit(RECENT_LIMIT)
             .addSnapshotListener { snapshot, error ->
@@ -103,6 +106,7 @@ object EventRepository {
                 // 걸러졌다. 그래도 남는 널 분기는 "아직 서버 확인이 아니다"로 읽는다.
                 onChange(docs, snapshot?.metadata?.isFromCache ?: true)
             }
+    }
 
     /**
      * 읽음 표시. 목록을 연 순간 안 읽은 것들을 한꺼번에 넘기는 용도라 하나짜리 함수는

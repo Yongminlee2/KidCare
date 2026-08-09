@@ -297,7 +297,8 @@ class TrackingService : LifecycleService() {
     private fun refreshPlaces(familyId: String) {
         lifecycleScope.launch {
             try {
-                placeWatcher.refresh(familyId)
+                val childUid = AuthGateway.currentUid() ?: AuthGateway.signIn()
+                placeWatcher.refresh(familyId, childUid)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -373,7 +374,8 @@ class TrackingService : LifecycleService() {
     private fun refreshSchedule(familyId: String) {
         lifecycleScope.launch {
             try {
-                ScheduleApplier(this@TrackingService).refresh(familyId)
+                val childUid = AuthGateway.currentUid() ?: AuthGateway.signIn()
+                ScheduleApplier(this@TrackingService).refresh(familyId, childUid)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

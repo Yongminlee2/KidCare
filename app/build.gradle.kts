@@ -32,8 +32,8 @@ android {
         // 버전으로 쓴다 — 이 앱은 "몇 단계까지 들어간 빌드인가"가 개발일지와
         // 계획서의 유일한 좌표라, 따로 만든 번호 체계를 하나 더 두면 둘이
         // 어긋나는 날이 온다.
-        versionCode = 6
-        versionName = "0.6"
+        versionCode = 7
+        versionName = "0.7"
     }
 
     buildFeatures {

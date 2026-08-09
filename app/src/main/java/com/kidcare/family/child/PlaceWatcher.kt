@@ -59,8 +59,8 @@ class PlaceWatcher(private val context: Context) {
      * 재부팅 때 다시 걸어야 하는 이유는 OS 가 재부팅 시 등록된 지오펜스를 전부 지우기
      * 때문이다(설계서 §4.6).
      */
-    suspend fun refresh(familyId: String) {
-        val loaded = PlaceRepository.fetchPlaces(familyId).map { it.toPlace() }
+    suspend fun refresh(familyId: String, childUid: String) {
+        val loaded = PlaceRepository.fetchPlaces(familyId, childUid).map { it.toPlace() }
         places = loaded
         registerGeofences(loaded)
     }

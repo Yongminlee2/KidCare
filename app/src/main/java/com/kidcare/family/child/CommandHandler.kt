@@ -119,7 +119,7 @@ class CommandHandler(
                     // 함께 보이게 된다(RingerStateStore.setOverride 주석). 두 값이 따로
                     // 보이는 순간 자체가 없어진 것이라, 그 사이에 경계 알람이 아무리
                     // 여러 번 깨어나도 옛 상태 아니면 새 상태 둘 중 하나만 본다.
-                    val until = nextRuleBoundaryMillis(familyId)
+                    val until = nextRuleBoundaryMillis(familyId, childUid)
                     if (!ringer.apply(mode)) {
                         // 권한이 없거나(무음·진동은 방해 금지 접근이 필요) 모드 값이
                         // 이상하면 조용히 무시하지 않고 실패로 남긴다 — 부모가 눌렀는데
@@ -142,8 +142,8 @@ class CommandHandler(
                 // 늘고, 그 갈래를 잘못 고르면 조용히 옛 상태로 돈다. 장소 쪽 실패는
                 // 예약까지 같이 죽이지 않도록 순서를 예약 뒤로 둔다.
                 CommandType.SYNC_RULES -> {
-                    scheduleApplier.refresh(familyId)
-                    placeWatcher.refresh(familyId)
+                    scheduleApplier.refresh(familyId, childUid)
+                    placeWatcher.refresh(familyId, childUid)
                 }
                 // "지금 위치와 오늘 경로를 올려라". 무료 한도 때문에 자녀 폰은 더 이상
                 // 주기적으로 아무것도 올리지 않으므로(docs/known-issues.md 12번), 부모의
@@ -253,8 +253,8 @@ class CommandHandler(
      * 명령 자체를 실패로 되돌리는 것보다, 즉시 변경만은 확실히 적용하고 경계 계산을
      * 나중으로 미루는 쪽이 부모의 의도("지금 당장 이 모드로")에 더 가깝다.
      */
-    private suspend fun nextRuleBoundaryMillis(familyId: String): Long = try {
-        val rules = ScheduleRepository.fetchSchedules(familyId).map { it.toRule() }
+    private suspend fun nextRuleBoundaryMillis(familyId: String, childUid: String): Long = try {
+        val rules = ScheduleRepository.fetchSchedules(familyId, childUid).map { it.toRule() }
         ScheduleResolver.resolveAt(rules, System.currentTimeMillis(), ZoneId.systemDefault())
             .nextBoundaryMillis ?: 0L
     } catch (e: CancellationException) {
