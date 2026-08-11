@@ -72,8 +72,8 @@
 
     <!-- 기본값은 보이는 상태다 — onCreate 가 곧바로 startPairing() 을 부르므로
          화면이 뜨는 첫 순간부터 실제로 로그인/가족 생성/초대코드 발급이 진행 중이다.
-         코드가 뜨면(showCode) 끄고, 실패하면(각 catch) 끄고, "새 번호 받기"를
-         누르면(refreshCode) 다시 켠다 — GuardianPairingActivity.kt 참고. -->
+         코드가 뜨면(showCode) 끄고, 실패하면(각 catch) 끈 뒤 "다시 시도" 버튼을
+         켠다. 번호가 있는 상태의 "새 번호 받기"도 다시 진행 표시를 켠다. -->
     <ProgressBar
         android:id="@+id/progress_bar"
         android:layout_width="wrap_content"

@@ -354,6 +354,9 @@ class PlaceFragment : Fragment() {
             return
         }
         childUid = selectedUid
+        // 리스너의 첫 스냅샷은 같은 uid라 아래 중복 방지 조건에서 반환된다.
+        // 선택된 아이의 최근 위치는 여기서 한 번 읽어 편집 지도의 시작점으로 쓴다.
+        loadChildHome(fid, selectedUid)
 
         placeListener = PlaceRepository.observePlaces(
             fid,

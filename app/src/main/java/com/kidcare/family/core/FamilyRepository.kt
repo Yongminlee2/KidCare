@@ -294,7 +294,9 @@ object FamilyRepository {
      * 를 read 해야 하는데, 그건 이 보안 수정으로 막혔다). 대신 첫 아이가 join 에
      * 성공하는 즉시 families.inviteExpiresAt 을 0 으로 만들어 코드를 죽이므로,
      * 뒤늦게 도착한 두 번째 아이는 members create 규칙의 만료 검사에서 그대로
-     * PERMISSION_DENIED 를 받는다 — 아래에서 이를 EXPIRED 로 안내한다.
+     * PERMISSION_DENIED 를 받는다. 다만 같은 오류가 운영 규칙을 게시하지 않았을
+     * 때도 나므로, 아래에서 코드를 서버로 다시 읽어 실제 만료와 서버 설정 오류를
+     * 구분한다.
      *
      * 무효화(두 번째 쓰기)가 절반만 성공해도 위험하지 않다: family.inviteExpiresAt
      * 을 0 으로 만드는 쓰기가 실제 보안 경계이고 그것부터 먼저 하므로, 그 쓰기가
@@ -310,7 +312,8 @@ object FamilyRepository {
     ): JoinResult {
         val normalized = InviteCode.normalize(code)
 
-        val codeDoc = db.collection("inviteCodes").document(normalized).get().await()
+        val codeRef = db.collection("inviteCodes").document(normalized)
+        val codeDoc = codeRef.get().await()
         if (!codeDoc.exists()) {
             // 존재하지 않는 게 아니라 서버에 물어볼 수가 없었던 경우일 수 있다:
             // 오프라인이면 이 get() 은 캐시로 대답하는데, 이 코드는 캐시에 있을 리
@@ -353,9 +356,20 @@ object FamilyRepository {
             ).await()
         } catch (e: FirebaseFirestoreException) {
             if (e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
-                // 규칙이 거부했다는 것은 코드가 이미 다른 아이에게 소비됐거나 그 사이
-                // 만료됐다는 뜻이 압도적으로 많다. 새 오류 문구를 만들지 않고 기존
-                // "만료됨" 안내로 합친다.
+                // PERMISSION_DENIED 하나만으로는 "다른 아이가 코드를 먼저 썼다"와
+                // "운영 Firestore 규칙이 아직 구버전이다"를 구분할 수 없다. 코드를
+                // 서버에서 다시 읽었는데 같은 가족·역할로 여전히 살아 있다면 만료가
+                // 아니라 서버 설정 오류다. 원래 예외를 다시 던져 errorMessage()가
+                // 정확한 안내를 보여주게 한다.
+                val latestCode = runCatching { codeRef.get(Source.SERVER).await() }.getOrNull()
+                val stillValid = latestCode?.exists() == true
+                    && latestCode.getString("familyId") == familyId
+                    && (latestCode.getString("role") ?: "child") == expectedRole
+                    && (latestCode.getLong("expiresAt") ?: 0L) > now
+                if (stillValid) {
+                    Log.w(TAG, "유효한 초대 코드의 멤버 등록이 거부됨 — 운영 규칙 게시 상태 확인 필요", e)
+                    throw e
+                }
                 throw PairingException(PairingException.Reason.EXPIRED)
             }
             throw e
@@ -366,7 +380,7 @@ object FamilyRepository {
         if (codeDoc.getString("role") == null) {
             familyRef.update("inviteExpiresAt", 0L).await()
         }
-        db.collection("inviteCodes").document(normalized).delete().await()
+        codeRef.delete().await()
 
         return JoinResult(familyId, inviteRole)
     }

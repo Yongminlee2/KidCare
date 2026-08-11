@@ -1,6 +1,8 @@
 package com.kidcare.family
 
 import android.app.Application
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.io.File
 import org.osmdroid.config.Configuration
 
@@ -49,6 +51,15 @@ class KidCareApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        // 운영 데이터와 완전히 분리한 실기기 통합 테스트 경로. 이 상수는 기본값이
+        // false이고 Gradle의 -PfirebaseEmulator=true를 명시한 디버그 APK에서만
+        // true가 된다. 127.0.0.1은 각 폰에서 adb reverse로 PC의 같은 에뮬레이터에
+        // 연결되므로 보호자·자녀 두 대가 실제 페어링을 검증할 수 있다.
+        if (BuildConfig.DEBUG && BuildConfig.USE_FIREBASE_EMULATOR) {
+            FirebaseAuth.getInstance().useEmulator("127.0.0.1", AUTH_EMULATOR_PORT)
+            FirebaseFirestore.getInstance().useEmulator("127.0.0.1", FIRESTORE_EMULATOR_PORT)
+        }
+
         // FirebaseFirestore.getInstance().firestoreSettings = ... 를 여기에 세우지
         // 않는다. 기본값이 이미 우리가 원하는 값이고(위 클래스 주석의 근거 참고),
         // 기본값과 같은 값을 다시 적어두면 다음 사람이 "이 줄이 켜는 기능"이라고
@@ -68,5 +79,10 @@ class KidCareApp : Application() {
         val tileCacheDir = File(cacheDir, "osmdroid")
         config.osmdroidBasePath = tileCacheDir
         config.osmdroidTileCache = File(tileCacheDir, "tiles")
+    }
+
+    private companion object {
+        const val AUTH_EMULATOR_PORT = 9099
+        const val FIRESTORE_EMULATOR_PORT = 8080
     }
 }

@@ -69,11 +69,13 @@ class GuardianPairingActivity : AppCompatActivity() {
         returnToMain = intent.getBooleanExtra(EXTRA_RETURN_TO_MAIN, false)
         renderInviteRole()
 
-        // 코드가 아직 없는 동안(가족 생성 중)에는 "새 번호 받기"가 할 일이
-        // 없다 — inviteCodeOf 는 이미 있는 가족의 코드를 갈아 끼우는 것이지
-        // 첫 코드를 만드는 게 아니다. showCode()가 처음 불릴 때 켠다.
+        // 첫 번호를 만드는 동안에는 중복 요청을 막는다. 다만 네트워크 문제로 최초
+        // 발급이 실패하면 이 버튼을 "다시 시도"로 바꿔 켠다. 예전에는 계속 꺼진
+        // 채로 남아서 연결이 복구돼도 역할부터 다시 골라야 했다.
         binding.newCodeButton.isEnabled = false
-        binding.newCodeButton.setOnClickListener { refreshCode() }
+        binding.newCodeButton.setOnClickListener {
+            if (currentCode == null) startPairing() else refreshCode()
+        }
 
         binding.resetRoleButton.setOnClickListener {
             // 페어링이 끝나기 전까지만 보이는 되돌리기 버튼.
@@ -97,6 +99,13 @@ class GuardianPairingActivity : AppCompatActivity() {
     }
 
     private fun startPairing() {
+        pairingJob?.cancel()
+        listener?.remove()
+        listener = null
+        binding.newCodeButton.isEnabled = false
+        binding.newCodeButton.setText(R.string.pairing_new_code_button)
+        binding.progressBar.visibility = View.VISIBLE
+
         pairingJob = lifecycleScope.launch {
             try {
                 // 보호자가 오프라인이면 familyRef.set()/get() 이 서버 확인 없이는
@@ -134,18 +143,29 @@ class GuardianPairingActivity : AppCompatActivity() {
                 // 실패했으니 스피너도 끈다 — 안 끄면 "연결 실패" 문구 바로 아래에서
                 // 스피너가 계속 돌아 아직 뭔가 진행 중인 것처럼 보인다(실기기에서
                 // 확인된 결함, known-issues.md 참고).
-                binding.progressBar.visibility = View.GONE
-                binding.hintText.text = getString(R.string.pairing_offline)
+                showSetupFailure(getString(R.string.pairing_offline))
             } catch (e: CancellationException) {
                 // 화면 이탈(되돌리기 버튼, onDestroy)로 인한 정상 취소다. 실패로 취급해
                 // hintText 를 덮어쓰면 안 되므로 그대로 다시 던져 코루틴 취소를 완성시킨다.
                 throw e
             } catch (e: Exception) {
                 // 위 TimeoutCancellationException 과 같은 이유로 스피너를 끈다.
-                binding.progressBar.visibility = View.GONE
-                binding.hintText.text = getString(R.string.pairing_failed, errorMessage(this@GuardianPairingActivity, e))
+                showSetupFailure(
+                    getString(
+                        R.string.pairing_failed,
+                        errorMessage(this@GuardianPairingActivity, e),
+                    )
+                )
             }
         }
+    }
+
+    /** 최초 번호 발급 실패 뒤 같은 화면에서 다시 시도할 수 있게 만든다. */
+    private fun showSetupFailure(message: String) {
+        binding.progressBar.visibility = View.GONE
+        binding.hintText.text = message
+        binding.newCodeButton.setText(R.string.router_retry)
+        binding.newCodeButton.isEnabled = true
     }
 
     /** "새 번호 받기" 버튼. 만료 전이어도 무조건 새로 발급해 이전 코드를 죽인다. */
@@ -178,6 +198,7 @@ class GuardianPairingActivity : AppCompatActivity() {
     /** 코드와 남은 유효시간을 화면에 반영한다. 실시간 카운트다운이 아니라 호출 시점의 스냅샷이다. */
     private fun showCode(info: InviteCodeInfo) {
         currentCode = info.code
+        binding.newCodeButton.setText(R.string.pairing_new_code_button)
         binding.codeText.text = info.code
         val minutesLeft = ((info.expiresAt - System.currentTimeMillis() + 59_999L) / 60_000L)
             .coerceAtLeast(1L)

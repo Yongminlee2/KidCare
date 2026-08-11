@@ -18,6 +18,8 @@ val hasReleaseSigning = releaseStoreFile != null &&
     localProps.getProperty("releaseStorePassword") != null &&
     localProps.getProperty("releaseKeyAlias") != null &&
     localProps.getProperty("releaseKeyPassword") != null
+val useFirebaseEmulator = providers.gradleProperty("firebaseEmulator")
+    .orNull?.toBooleanStrictOrNull() ?: false
 
 android {
     namespace = "com.kidcare.family"
@@ -34,6 +36,11 @@ android {
         // 어긋나는 날이 온다.
         versionCode = 7
         versionName = "0.7"
+        // 실기기 N:N 통합 테스트용. 기본값은 false라 일반 디버그·릴리스 APK는
+        // 운영 Firebase를 그대로 사용한다. -PfirebaseEmulator=true로 만든 빌드만
+        // USB adb reverse를 통해 PC의 로컬 에뮬레이터에 붙는다.
+        buildConfigField("boolean", "USE_FIREBASE_EMULATOR", useFirebaseEmulator.toString())
+        manifestPlaceholders["usesCleartextTraffic"] = "false"
     }
 
     buildFeatures {
@@ -55,7 +62,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            // 실제 기기 통합 테스트에서 adb reverse로 연결한 로컬 Firebase 에뮬레이터만 허용한다.
+            manifestPlaceholders["usesCleartextTraffic"] = useFirebaseEmulator.toString()
+        }
         release {
+            manifestPlaceholders["usesCleartextTraffic"] = "false"
             // R8 은 이 앱에서 크래시가 아니라 **빈 화면**을 만든다.
             // 무엇을 왜 지켜야 하는지는 proguard-rules.pro 에 규칙마다 적었다.
             isMinifyEnabled = true

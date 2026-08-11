@@ -265,6 +265,12 @@ class ControlFragment : Fragment() {
             return
         }
         childUid = selectedUid
+        // 선택된 아이는 이미 가족 멤버임이 GuardianMainActivity의 멤버 목록에서
+        // 확인된 상태다. 리스너 첫 콜백은 같은 uid를 주므로 그 콜백만 기다리면 아래
+        // 중복 방지 조건에 걸려 버튼이 영원히 비활성화된다.
+        setChildDependentButtonsEnabled(true)
+        showChildState(null)
+        loadStatus(fid, selectedUid)
 
         settingsListener = ScheduleRepository.observeRingerSettings(
             fid,
