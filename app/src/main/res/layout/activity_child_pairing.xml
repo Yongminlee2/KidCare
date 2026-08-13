@@ -33,34 +33,38 @@
         android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
     <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.KidCare.TextField"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:hint="@string/pairing_child_hint">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/code_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:hint="@string/pairing_child_hint"
             android:inputType="textCapCharacters"
             android:maxLength="8"
             android:letterSpacing="0.2"
-            android:paddingVertical="20dp"
-            android:textAppearance="?attr/textAppearanceHeadlineMedium" />
+            android:minHeight="72dp"
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.KidCare.TextField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp">
+        android:layout_marginTop="12dp"
+        android:hint="@string/pairing_child_name_hint">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/name_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/pairing_child_name_hint"
             android:inputType="textPersonName"
-            android:maxLength="20" />
+            android:maxLength="20"
+            android:minHeight="64dp"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView

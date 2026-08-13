@@ -3,6 +3,7 @@ package com.kidcare.family.core
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.Query
 import com.kidcare.family.core.model.EventDoc
 import kotlinx.coroutines.tasks.await
@@ -93,7 +94,9 @@ object EventRepository {
         return base
             .orderBy("at", Query.Direction.DESCENDING)
             .limit(RECENT_LIMIT)
-            .addSnapshotListener { snapshot, error ->
+            // 빈 캐시와 빈 서버 결과는 문서 내용이 같아서, 메타데이터 콜백을 빼면
+            // isFromCache=true 첫 결과 뒤에 서버 확인 결과를 영영 못 받을 수 있다.
+            .addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
                 if (error != null) {
                     Log.w(TAG, "observeEvents 실패: familyId=$familyId", error)
                     onError(error)

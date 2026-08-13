@@ -69,19 +69,23 @@ class TrailUploader(
      * 파일이 어제 것이면 아무것도 안 한다 — 다음 [onCollected] 가 날짜 불일치를 보고
      * 파일을 오늘 것으로 새로 만든다.
      */
-    fun restore() {
-        val saved = store.load() ?: return
-        if (saved.dayKey != DayPicker.todayKey(zone, System.currentTimeMillis())) return
+    fun restore(): Fix? {
+        val saved = store.load() ?: return null
+        if (saved.dayKey != DayPicker.todayKey(zone, System.currentTimeMillis())) return null
         buffer += saved.points
         bufferDayKey = saved.dayKey
         Log.i(TAG, "재시작 복구: ${saved.dayKey} 점 ${saved.points.size}개")
+        // 서비스가 다시 뜬 직후의 첫 좌표를 무조건 새 출발점으로 넣으면, 실제로는
+        // 가만히 있어도 이전 마지막 점과 GPS 오차만큼 비스듬한 선이 하나 생긴다.
+        // 호출자가 필터의 기준점으로 이어 쓸 수 있게 마지막 점을 돌려준다.
+        return saved.points.lastOrNull()
     }
 
     /**
      * 위치 한 점을 쌓는다. **Firestore 에는 아무것도 안 나간다.**
      *
-     * [TrackingService] 는 `MovementTrailFilter.shouldRecord()`가 이동으로 인정한 점만
-     * 여기로 넘긴다. 정지 상태와 GPS 오차 반경 안의 흔들림은 파일에 들어오지 않는다.
+     * [TrackingService] 는 실제 이동으로 확인한 5초 점과 머무름의 시작·5분 기준점만
+     * 여기로 넘긴다. GPS 오차 반경 안의 흔들림은 촘촘한 이동점으로 들어오지 않는다.
      *
      * 파일 덧붙이기를 코루틴으로 빼지 않고 부른 스레드에서 그대로 한다. 50바이트
      * 한 줄을 이동 중 5초에 한 번 붙이는 일이라 메인 스레드에서도 1ms 아래이고, 무엇보다

@@ -20,6 +20,12 @@ data class Fix(
      * 좌표와 시각으로만 한다.
      */
     val speed: Float = 0f,
+    /**
+     * 기기가 보고한 속도 오차(1-sigma, m/s). 현재 수집 중인 점의 이동 여부를
+     * 판정할 때만 쓰며, 예전 로컬 파일·서버 문서에는 이 값이 없으므로 기본값은
+     * '알 수 없음'이다.
+     */
+    val speedAccuracy: Float = Float.POSITIVE_INFINITY,
 )
 
 enum class Decision {

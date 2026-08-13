@@ -11,12 +11,14 @@ class MovementTrailFilterTest {
         metersEast: Double = 0.0,
         accuracy: Float = 5f,
         speed: Float = 0f,
+        speedAccuracy: Float = Float.POSITIVE_INFINITY,
     ) = Fix(
         lat = 37.5665,
         lng = 126.9780 + metersEast / 88_800.0,
         accuracy = accuracy,
         at = at,
         speed = speed,
+        speedAccuracy = speedAccuracy,
     )
 
     @Test
@@ -33,7 +35,7 @@ class MovementTrailFilterTest {
     fun `오차가 큰 점은 이동 중에도 버린다`() {
         assertFalse(
             MovementTrailFilter.shouldRecord(
-                null, fix(5_000L, accuracy = 51f), reportedMoving = true,
+                null, fix(5_000L, accuracy = 31f), reportedMoving = true,
             )
         )
     }
@@ -52,6 +54,54 @@ class MovementTrailFilterTest {
         assertTrue(
             MovementTrailFilter.shouldRecord(
                 fix(0L), fix(5_000L, metersEast = 4.0, speed = 1.2f), reportedMoving = true,
+            )
+        )
+    }
+
+    @Test
+    fun `좌표가 그대로인데 속도만 튄 점은 이동 경로로 기록하지 않는다`() {
+        assertFalse(
+            MovementTrailFilter.shouldRecord(
+                fix(0L), fix(5_000L, speed = 1.2f), reportedMoving = true,
+            )
+        )
+    }
+
+    @Test
+    fun `속도 오차를 빼도 이동 중이고 실제 변위가 있으면 기록한다`() {
+        assertTrue(
+            MovementTrailFilter.shouldRecord(
+                fix(0L),
+                fix(5_000L, metersEast = 6.0, speed = 1.3f, speedAccuracy = 0.4f),
+                reportedMoving = true,
+            )
+        )
+    }
+
+    @Test
+    fun `속도 오차가 속도만큼 큰 점은 속도 근거로 기록하지 않는다`() {
+        assertFalse(
+            MovementTrailFilter.shouldRecord(
+                fix(0L, accuracy = 10f),
+                fix(
+                    5_000L,
+                    metersEast = 6.0,
+                    accuracy = 10f,
+                    speed = 1.2f,
+                    speedAccuracy = 1.1f,
+                ),
+                reportedMoving = true,
+            )
+        )
+    }
+
+    @Test
+    fun `15m 정확도에서도 보행 속도가 확인되면 모퉁이를 남긴다`() {
+        assertTrue(
+            MovementTrailFilter.shouldRecord(
+                fix(0L, accuracy = 15f),
+                fix(5_000L, metersEast = 6.0, accuracy = 15f, speed = 1.2f),
+                reportedMoving = true,
             )
         )
     }

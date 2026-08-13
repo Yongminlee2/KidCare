@@ -3,6 +3,7 @@ package com.kidcare.family.core
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.MetadataChanges
 import com.kidcare.family.core.model.RingerSettingsDoc
 import com.kidcare.family.core.model.ScheduleDoc
 import com.kidcare.family.logic.ScheduleRule
@@ -97,7 +98,7 @@ object ScheduleRepository {
         onChange: (docs: List<ScheduleDoc>, fromCache: Boolean) -> Unit,
         onError: (Exception) -> Unit,
     ): ListenerRegistration =
-        schedules(familyId, childUid).addSnapshotListener { snapshot, error ->
+        schedules(familyId, childUid).addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
             if (error != null) {
                 Log.w(TAG, "observeSchedules 실패: familyId=$familyId", error)
                 onError(error)

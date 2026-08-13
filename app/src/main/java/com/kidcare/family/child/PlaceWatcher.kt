@@ -15,6 +15,7 @@ import com.kidcare.family.core.model.EventType
 import com.kidcare.family.core.toPlace
 import com.kidcare.family.logic.Fix
 import com.kidcare.family.logic.GeofenceEvaluator
+import com.kidcare.family.logic.LocationFilter
 import com.kidcare.family.logic.Place
 
 /**
@@ -66,6 +67,39 @@ class PlaceWatcher(private val context: Context) {
     }
 
     /**
+     * 현재 좌표가 부모가 등록한 장소 안인지 빠르게 확인한다.
+     *
+     * 이 값은 알림 판정이 아니라 GPS 수집 주기를 낮추는 데만 쓴다. 정확도가 나쁜
+     * 점으로 모드를 바꾸면 실제로 학교를 나갔는데도 1분 주기에 머물 수 있으므로,
+     * 평상시 위치 기준(50m)을 넘는 점에서는 판단을 보류한다. 이미 안으로 판정된
+     * 장소에는 이탈 여유를 그대로 적용해 경계의 GPS 흔들림으로 주기가 출렁이지 않게 한다.
+     */
+    fun isInsideKnownPlace(fix: Fix): Boolean? {
+        if (
+            !fix.lat.isFinite() || !fix.lng.isFinite() ||
+            fix.lat !in -90.0..90.0 || fix.lng !in -180.0..180.0 ||
+            !fix.accuracy.isFinite() || fix.accuracy < 0f ||
+            fix.accuracy > LocationFilter.MAX_ACCURACY_METERS
+        ) return null
+
+        val known = places
+        if (known.isEmpty()) return false
+        val statesById = stateStore.states.associateBy { it.placeId }
+        return known.any { place ->
+            val distance = LocationFilter.distanceMeters(
+                Fix(place.lat, place.lng, 0f, 0L),
+                fix,
+            )
+            val margin = if (statesById[place.id]?.inside == true) {
+                GeofenceEvaluator.EXIT_MARGIN_METERS
+            } else {
+                0.0
+            }
+            distance <= place.radiusMeters + margin
+        }
+    }
+
+    /**
      * 위치 한 점으로 판정하고, 알릴 것이 나오면 `events/` 에 적는다.
      *
      * 장소를 아직 한 번도 못 읽었거나(오프라인 시작) 정말 하나도 없으면 그대로 돌아간다.
@@ -81,11 +115,12 @@ class PlaceWatcher(private val context: Context) {
         val known = places
         if (known.isEmpty()) return
 
-        val (hits, next) = GeofenceEvaluator.evaluate(known, stateStore.states, fix)
+        val previousStates = stateStore.states
+        val (hits, next) = GeofenceEvaluator.evaluate(known, previousStates, fix)
         // 상태를 **먼저** 저장한다. 이벤트 쓰기가 실패해 예외로 빠져나가더라도 "안에
         // 있다"는 사실은 남아야 한다. 반대 순서면, 오프라인일 때 같은 전환이 위치 점마다
         // 다시 잡혀 연결이 돌아오는 순간 같은 도착이 여러 번 올라간다.
-        stateStore.states = next
+        if (next != previousStates) stateStore.states = next
 
         for (hit in hits) {
             EventRepository.add(

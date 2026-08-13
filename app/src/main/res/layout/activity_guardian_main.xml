@@ -18,16 +18,16 @@
         android:id="@+id/child_selector_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurface"
+        android:background="@color/paper"
         android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="12dp"
         android:paddingVertical="8dp">
 
         <TextView
             android:id="@+id/child_selector"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="?attr/selectableItemBackground"
+            android:background="@drawable/bg_child_selector"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"

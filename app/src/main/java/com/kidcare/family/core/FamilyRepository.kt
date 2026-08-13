@@ -494,6 +494,23 @@ object FamilyRepository {
         db.collection("families").document(familyId)
             .collection("children").document(childUid)
             .get().await().toObject(ChildStatusDoc::class.java)
+
+    /** 선택한 아이의 상태 문서를 실시간으로 구독한다. 호출자는 화면 종료 시 리스너를 제거해야 한다. */
+    fun observeChildStatus(
+        familyId: String,
+        childUid: String,
+        onChange: (ChildStatusDoc?) -> Unit,
+        onError: (Exception) -> Unit,
+    ): ListenerRegistration =
+        db.collection("families").document(familyId)
+            .collection("children").document(childUid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    onError(error)
+                    return@addSnapshotListener
+                }
+                onChange(snapshot?.toObject(ChildStatusDoc::class.java))
+            }
 }
 
 /** 초대 코드와 대상 역할. 한 가족이 자녀용·보호자용 코드를 동시에 가질 수 있다. */

@@ -3,13 +3,12 @@ package com.kidcare.family.guardian
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import androidx.core.view.doOnNextLayout
-import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -23,17 +22,17 @@ import com.kidcare.family.core.errorMessage
 import com.kidcare.family.core.model.CommandType
 import com.kidcare.family.core.model.PlaceDoc
 import com.kidcare.family.databinding.FragmentPlaceBinding
+import com.naver.maps.geometry.LatLng
+import com.naver.maps.map.CameraUpdate
+import com.naver.maps.map.NaverMap
+import com.naver.maps.map.OnMapReadyCallback
+import com.naver.maps.map.overlay.CircleOverlay
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 import kotlin.math.roundToInt
-import org.osmdroid.events.MapListener
-import org.osmdroid.events.ScrollEvent
-import org.osmdroid.events.ZoomEvent
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.overlay.Polygon
 
 /**
  * 장소 탭. "학교에 도착하면 알려줘" 같은 장소를 만들고 고치고 지운다(설계서 §4.6).
@@ -71,7 +70,7 @@ import org.osmdroid.views.overlay.Polygon
  * 20개다(설계서 §4.6). 21번째를 만들려 하면 **추가 버튼이 잠기고 그 위에 이유가 뜬다**
  * ([renderList]) — 반응 없는 버튼만 두면 부모는 앱이 고장 난 줄 안다.
  */
-class PlaceFragment : Fragment() {
+class PlaceFragment : Fragment(), OnMapReadyCallback {
 
     private var _binding: FragmentPlaceBinding? = null
 
@@ -94,7 +93,7 @@ class PlaceFragment : Fragment() {
      * 한 번만 읽는다(아래 [subscribe] 의 onJoined) — 정확한 현재 위치가 아니라
      * "그 동네"만 필요해서 다시 읽을 이유가 없다.
      */
-    private var childHome: GeoPoint? = null
+    private var childHome: LatLng? = null
 
     /** 지금 화면이 책임지는 쓰기의 세대 번호. 규율은 [ScheduleFragment.writeGeneration] 과 같다. */
     private var writeGeneration = 0
@@ -132,10 +131,10 @@ class PlaceFragment : Fragment() {
      * 지금 편집 중인 좌표가 **뜻이 있는 값인가.**
      *
      * 좌표가 (0,0) 인지로 판단하면 안 된다. 지도를 프로그램으로 옮기면(아이 위치로
-     * 옮기거나, 아이 위치를 몰라 한반도 전체로 여는 것) osmdroid 가 스크롤 이벤트를
+     * 옮기거나, 아이 위치를 몰라 한반도 전체로 여는 것) 지도 SDK가 카메라 이벤트를
      * 되쏘아 [onMapMoved] 가 그 자리를 좌표로 적어버리기 때문이다 — 그 순간 "아직
      * 안 정했다"와 "한반도 한가운데를 골랐다"가 구분되지 않는다. 그 이벤트가 동기로
-     * 오는지 다음 그리기에서 오는지도 osmdroid 내부 사정이라, 순서에 기대면 기기마다
+     * 오는지 다음 그리기에서 오는지도 SDK 내부 사정이라, 순서에 기대면 기기마다
      * 다르게 동작한다.
      *
      * 그래서 뜻이 생기는 순간만 세 가지로 못박는다: 있는 장소를 고칠 때, 아이의 마지막
@@ -153,7 +152,7 @@ class PlaceFragment : Fragment() {
      * 지도를 **프로그램으로** 옮기는 동안 [onMapMoved] 가 좌표를 되받아쓰지 못하게 막는다.
      *
      * 없으면 이렇게 망가진다: 편집을 열며 좌표를 아이 위치로 정해두고 지도를 옮기는데,
-     * `setZoom` 이 그 자리에서 ZoomEvent 를 되쏜다 → [onMapMoved] 가 **아직 안 옮겨진**
+     * 카메라 이동이 이벤트를 되쏜다 → [onMapMoved] 가 **아직 안 옮겨진**
      * 지도의 중심(0,0)을 좌표로 적어버린다 → 바로 뒤따르는 setCenter 가 그 0,0 으로
      * 지도를 옮긴다. 부모가 장소를 처음 추가할 때 지도가 대서양 한가운데(파란 사각형)로
      * 열리던 것이 이것이었다. 지도가 명령을 무시한 게 아니라 우리가 0,0 으로 가라고
@@ -166,10 +165,11 @@ class PlaceFragment : Fragment() {
     private var syncRetryJob: Job? = null
 
     /** 반경 원. 지도 위에서 하나만 유지하고 점만 갈아 끼운다. */
-    private var radiusCircle: Polygon? = null
+    private var naverMap: NaverMap? = null
+    private var radiusCircle: CircleOverlay? = null
 
     /** 지도 이동을 좌표로 옮기는 리스너. [onDestroyView] 에서 반드시 뗀다. */
-    private var mapListener: MapListener? = null
+    private var mapListener: NaverMap.OnCameraIdleListener? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -214,7 +214,7 @@ class PlaceFragment : Fragment() {
             renderNotifyHint()
         }
 
-        setUpMap(b)
+        setUpMap(b, savedInstanceState)
 
         val callback = object : OnBackPressedCallback(editorVisible) {
             override fun handleOnBackPressed() = cancelEditor()
@@ -240,44 +240,51 @@ class PlaceFragment : Fragment() {
      * 것이 이 화면의 전부인데 그 동작이 반만 되는 셈이다.
      */
     @SuppressLint("ClickableViewAccessibility")
-    private fun setUpMap(b: FragmentPlaceBinding) {
-        b.placeMap.setMultiTouchControls(true)
-        b.placeMap.setOnTouchListener { v, _ ->
+    private fun setUpMap(b: FragmentPlaceBinding, savedInstanceState: Bundle?) {
+        b.placeMap.onCreate(savedInstanceState)
+        b.placeMap.setOnTouchListener { v, event ->
             v.parent?.requestDisallowInterceptTouchEvent(true)
             // 사람이 지도를 만졌다 = 이 자리를 골랐다. 스크롤 이벤트가 아니라 터치로
             // 판단하는 이유는 [coordinateChosen] 주석에 있다.
-            if (!coordinateChosen) {
+            if (event.actionMasked == MotionEvent.ACTION_DOWN && !coordinateChosen) {
                 coordinateChosen = true
                 renderEditorMapNotice()
             }
-            // false 를 돌려줘야 osmdroid 자신의 터치 처리(이동·확대)가 그대로 이어진다.
+            // false 를 돌려줘야 네이버 지도 자신의 터치 처리(이동·확대)가 그대로 이어진다.
             false
         }
-        val listener = object : MapListener {
-            override fun onScroll(event: ScrollEvent?): Boolean {
-                onMapMoved()
-                return false
-            }
+        b.placeMap.getMapAsync(this)
+    }
 
-            override fun onZoom(event: ZoomEvent?): Boolean {
-                // 확대·축소로는 가운데가 안 바뀌지만 원의 화면상 크기는 바뀐다.
-                // 다시 그리지 않으면 확대한 뒤 원만 옛 배율에 남는다.
-                onMapMoved()
-                return false
-            }
+    override fun onMapReady(map: NaverMap) {
+        if (_binding == null || !isAdded) return
+        naverMap = map
+        map.uiSettings.apply {
+            isZoomControlEnabled = false
+            isLocationButtonEnabled = false
+            isScaleBarEnabled = false
+            setLogoMargin(dp(8), 0, 0, dp(8))
         }
-        b.placeMap.addMapListener(listener)
+        val listener = NaverMap.OnCameraIdleListener { onMapMoved() }
+        map.addOnCameraIdleListener(listener)
         mapListener = listener
+        if (editorVisible) centerEditorMap()
     }
 
     /** 지도가 움직였다 = 좌표가 바뀌었다. 화면 가운데가 곧 이 장소의 가운데다. */
     private fun onMapMoved() {
         if (suppressMapCallbacks) return
-        val b = _binding ?: return
-        val center = b.placeMap.mapCenter
+        _binding ?: return
+        val center = naverMap?.cameraPosition?.target ?: return
+        if (!isValidCoordinate(center.latitude, center.longitude)) return
         editorLat = center.latitude
         editorLng = center.longitude
         drawRadiusCircle()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        _binding?.placeMap?.onStart()
     }
 
     override fun onResume() {
@@ -289,6 +296,16 @@ class PlaceFragment : Fragment() {
     override fun onPause() {
         _binding?.placeMap?.onPause()
         super.onPause()
+    }
+
+    override fun onStop() {
+        _binding?.placeMap?.onStop()
+        super.onStop()
+    }
+
+    override fun onLowMemory() {
+        _binding?.placeMap?.onLowMemory()
+        super.onLowMemory()
     }
 
     /**
@@ -304,6 +321,7 @@ class PlaceFragment : Fragment() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        _binding?.placeMap?.onSaveInstanceState(outState)
         outState.putBoolean(KEY_EDITOR_VISIBLE, editorVisible)
         outState.putString(KEY_EDITOR_PLACE_ID, editorPlaceId)
         outState.putString(KEY_EDITOR_NEW_DOC_ID, editorNewDocId)
@@ -327,7 +345,8 @@ class PlaceFragment : Fragment() {
         editorRadius = snapRadius(saved.getDouble(KEY_EDITOR_RADIUS, DEFAULT_RADIUS_METERS))
         editorNotifyEnter = saved.getBoolean(KEY_EDITOR_NOTIFY_ENTER, true)
         editorNotifyExit = saved.getBoolean(KEY_EDITOR_NOTIFY_EXIT, true)
-        coordinateChosen = saved.getBoolean(KEY_COORDINATE_CHOSEN, false)
+        coordinateChosen = saved.getBoolean(KEY_COORDINATE_CHOSEN, false) &&
+            isValidCoordinate(editorLat, editorLng)
         // 진행 중이던 쓰기의 코루틴은 뷰와 함께 취소됐다. 잠금만 남으면 저장 버튼이
         // 영영 안 눌린다(쓰기 자체는 Firestore 가 이어서 끝낸다).
         editorBusy = false
@@ -400,9 +419,11 @@ class PlaceFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val status = FamilyRepository.fetchChildStatus(fid, uid) ?: return@launch
-                if (status.lat == 0.0 && status.lng == 0.0) return@launch
+                if (!isValidCoordinate(status.lat, status.lng) ||
+                    (status.lat == 0.0 && status.lng == 0.0)
+                ) return@launch
                 _binding ?: return@launch
-                val home = GeoPoint(status.lat, status.lng)
+                val home = LatLng(status.lat, status.lng)
                 childHome = home
                 // 이미 새 장소 편집을 열어 둔 채 기다리고 있었다면 그때 지도를 옮겨준다.
                 // 부모가 그 사이 손으로 옮겨봤다면 coordinateChosen 이 이미 true 라
@@ -450,7 +471,8 @@ class PlaceFragment : Fragment() {
         val home = childHome
         editorLat = doc?.lat ?: home?.latitude ?: 0.0
         editorLng = doc?.lng ?: home?.longitude ?: 0.0
-        coordinateChosen = doc != null || home != null
+        coordinateChosen = (doc != null || home != null) &&
+            isValidCoordinate(editorLat, editorLng)
         editorRadius = snapRadius(doc?.radiusMeters?.takeIf { it > 0.0 } ?: DEFAULT_RADIUS_METERS)
         editorNotifyEnter = doc?.notifyEnter ?: true
         editorNotifyExit = doc?.notifyExit ?: true
@@ -485,39 +507,30 @@ class PlaceFragment : Fragment() {
      */
     private fun centerEditorMap() {
         val b = _binding ?: return
-        // **크기를 받은 뒤에 옮겨야 한다.** osmdroid 는 뷰가 아직 0×0 일 때 들어온
-        // setCenter/setZoom 을 그냥 버린다. 편집 판을 막 펼친 그 순간이 정확히 0×0 이라,
-        // 부모가 장소를 **난생처음 추가할 때만** 지도가 기본 위치(0,0 — 대서양 한가운데)에
-        // 머물러 파란 사각형 하나로 보였다. 두 번째부터는 뷰에 이미 크기가 있어 멀쩡해서
-        // 코드만 읽어서는 안 보였고, 실기기에서 첫 화면을 열어보고서야 드러났다.
-        //
-        // doOnLayout 은 여기서 쓰면 안 된다 — 방금까지 GONE 이던 뷰도 isLaidOut 은 true 라
-        // 크기 0 인 채로 즉시 실행돼 같은 결함이 그대로 남는다. 크기를 직접 본다.
-        // 그리기 직전에 맞춘다. 이 지도는 편집 판이 펼쳐지기 전까지 한 번도 그려진 적이
-        // 없는데, osmdroid 는 첫 그리기 때 투영(projection)을 만들면서 그 전에 들어온
-        // setCenter 를 버린다 — 크기가 이미 있어도 그렇다. 실기기에서 줌은 16 으로
-        // 먹었는데 중심만 0,0(대서양)에 남는 것으로 드러났다.
-        b.placeMap.doOnPreDraw { applyEditorCamera() }
-        b.placeMap.doOnNextLayout { applyEditorCamera() }
+        // 편집 판은 직전까지 GONE이라 크기가 0일 수 있다. 뷰가 실제 레이아웃된 다음
+        // 네이버 지도 객체가 준비됐을 때 카메라를 적용한다.
+        postForCurrentView(b.placeMap) { applyEditorCamera() }
     }
 
     /** 지도에 크기가 생긴 뒤에만 부른다([centerEditorMap]). */
     private fun applyEditorCamera() {
         // 그리기 직전은 화면이 사라진 뒤에도 올 수 있다.
         val laid = _binding ?: return
+        val map = naverMap ?: return
         suppressMapCallbacks = true
-        if (coordinateChosen) {
-            laid.placeMap.controller.setZoom(PLACE_ZOOM)
-            laid.placeMap.controller.setCenter(GeoPoint(editorLat, editorLng))
+        val chosenCenter = editorCenterOrNull()
+        if (coordinateChosen && chosenCenter == null) coordinateChosen = false
+        val update = if (coordinateChosen && chosenCenter != null) {
+            CameraUpdate.scrollAndZoomTo(chosenCenter, PLACE_ZOOM)
         } else {
             // 아이 위치를 모른다. 그럴듯한 좌표를 기본값으로 찍어두지 않고 넓게 연다 —
             // 좌표는 부모가 지도에 손을 대는 순간에야 생긴다([coordinateChosen]).
-            laid.placeMap.controller.setZoom(COUNTRY_ZOOM)
-            laid.placeMap.controller.setCenter(GeoPoint(COUNTRY_LAT, COUNTRY_LNG))
+            CameraUpdate.scrollAndZoomTo(LatLng(COUNTRY_LAT, COUNTRY_LNG), COUNTRY_ZOOM)
         }
+        map.moveCamera(update)
         // 되쏘는 이벤트는 이 프레임 안에 오기도 하고 다음 그리기에 오기도 한다
-        // (osmdroid 내부 사정). 다음 메시지까지 미뤄 두 경우를 모두 덮는다.
-        laid.placeMap.post { suppressMapCallbacks = false }
+        // (SDK 내부 사정). 다음 메시지까지 미뤄 두 경우를 모두 덮는다.
+        postForCurrentView(laid.placeMap) { suppressMapCallbacks = false }
         drawRadiusCircle()
         renderEditorMapNotice()
     }
@@ -539,26 +552,38 @@ class PlaceFragment : Fragment() {
      * 지금 고른 반경만큼의 원을 지도 가운데에 그린다.
      *
      * 원이 없으면 슬라이더의 "300m"가 화면에서 아무 뜻이 없다 — 부모는 300m 가 자기
-     * 아파트 단지보다 큰지 작은지 모른다. [MapTimelineFragment.drawAccuracyCircle] 이
-     * 쓰는 `Polygon.pointsAsCircle` 을 그대로 쓴다.
+     * 아파트 단지보다 큰지 작은지 모른다. 네이버 [CircleOverlay]에 실제 미터 반경을 준다.
      *
      * 다만 색은 그쪽보다 진하다. 저 원은 "이만큼 불확실하다"는 번짐이라 안 보일수록
      * 좋지만, 이 원은 부모가 **지금 정하고 있는 값 자체**라 또렷해야 한다.
      */
     private fun drawRadiusCircle() {
-        val b = _binding ?: return
-        val circle = radiusCircle ?: Polygon(b.placeMap).also {
-            // setFillColor/setStrokeColor 는 deprecated 라 Paint 를 직접 만진다
-            // (MapTimelineFragment 의 폴리라인·원과 같은 이유).
-            it.fillPaint.color = RADIUS_FILL_COLOR
-            it.outlinePaint.color = RADIUS_STROKE_COLOR
-            it.outlinePaint.strokeWidth = RADIUS_STROKE_WIDTH
-            b.placeMap.overlays.add(it)
+        _binding ?: return
+        val map = naverMap ?: return
+        val center = editorCenterOrNull()
+        if (!editorVisible || !coordinateChosen || center == null) {
+            radiusCircle?.map = null
+            radiusCircle = null
+            return
+        }
+        val circle = radiusCircle ?: CircleOverlay(center, editorRadius).also {
+            it.color = RADIUS_FILL_COLOR
+            it.outlineColor = RADIUS_STROKE_COLOR
+            it.outlineWidth = dp(RADIUS_STROKE_WIDTH_DP)
+            // 기본 생성자의 중심은 NaN이다. 중심과 반경을 넣은 뒤에만 지도에 붙여야
+            // 네이버 SDK가 "center is invalid"로 앱을 종료시키지 않는다.
+            it.map = map
             radiusCircle = it
         }
-        circle.points = Polygon.pointsAsCircle(GeoPoint(editorLat, editorLng), editorRadius)
-        b.placeMap.invalidate()
+        circle.center = center
+        circle.radius = editorRadius
     }
+
+    private fun editorCenterOrNull(): LatLng? =
+        if (isValidCoordinate(editorLat, editorLng)) LatLng(editorLat, editorLng) else null
+
+    private fun isValidCoordinate(lat: Double, lng: Double): Boolean =
+        lat.isFinite() && lng.isFinite() && lat in -90.0..90.0 && lng in -180.0..180.0
 
     /**
      * 저장 버튼. 관문은 하나다 — **이름이 비면 막는다.**
@@ -881,12 +906,12 @@ class PlaceFragment : Fragment() {
         backCallback?.remove()
         backCallback = null
         _binding?.radiusSlider?.clearOnChangeListeners()
-        mapListener?.let { _binding?.placeMap?.removeMapListener(it) }
+        mapListener?.let { naverMap?.removeOnCameraIdleListener(it) }
         mapListener = null
-        // onDetach() 는 osmdroid 가 띄운 타일 스레드·리시버를 정리한다 — 안 부르면
-        // 탭을 오갈 때마다 조금씩 샌다(MapTimelineFragment 와 같다).
-        _binding?.placeMap?.onDetach()
+        radiusCircle?.map = null
         radiusCircle = null
+        naverMap = null
+        _binding?.placeMap?.onDestroy()
         _binding = null
         super.onDestroyView()
     }
@@ -923,7 +948,7 @@ class PlaceFragment : Fragment() {
         // 정확도 원(0x22/0x55)보다 진하다 — 저건 '번짐'이고 이건 부모가 지금 정하는 값이다.
         const val RADIUS_FILL_COLOR = 0x333D6DF5
         const val RADIUS_STROKE_COLOR = 0xBB3D6DF5.toInt()
-        const val RADIUS_STROKE_WIDTH = 4f
+        const val RADIUS_STROKE_WIDTH_DP = 4
 
         const val KEY_EDITOR_VISIBLE = "editor_visible"
         const val KEY_EDITOR_PLACE_ID = "editor_place_id"
@@ -935,5 +960,20 @@ class PlaceFragment : Fragment() {
         const val KEY_EDITOR_NOTIFY_ENTER = "editor_notify_enter"
         const val KEY_EDITOR_NOTIFY_EXIT = "editor_notify_exit"
         const val KEY_COORDINATE_CHOSEN = "coordinate_chosen"
+    }
+
+    private fun dp(value: Int): Int {
+        val density = _binding?.root?.resources?.displayMetrics?.density
+            ?: context?.resources?.displayMetrics?.density
+            ?: 1f
+        return (value * density).toInt()
+    }
+
+    /** 지도 준비·카메라 작업이 이전 Fragment View에 뒤늦게 실행되는 것을 막는다. */
+    private fun postForCurrentView(view: View, action: () -> Unit) {
+        val expectedBinding = _binding ?: return
+        view.post {
+            if (_binding === expectedBinding && isAdded) action()
+        }
     }
 }

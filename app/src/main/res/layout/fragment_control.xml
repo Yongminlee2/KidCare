@@ -52,10 +52,62 @@
             android:text="@string/control_section_ringer"
             android:textAppearance="?attr/textAppearanceTitleLarge" />
 
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@color/grass_soft"
+            app:shapeAppearance="@style/ShapeAppearance.KidCare.Small"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14dp">
+
+                <ImageView
+                    android:id="@+id/ringer_state_icon"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_volume_up"
+                    app:tint="@color/grass" />
+
+                <TextView
+                    android:id="@+id/ringer_state"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="9dp"
+                    android:layout_weight="1"
+                    android:maxLines="2"
+                    android:text="@string/control_ringer_status_loading"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="@color/ink" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/ringer_refresh_button"
+                    style="@style/Widget.KidCare.Button.Text"
+                    android:layout_width="92dp"
+                    android:layout_height="40dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:text="@string/control_ringer_refresh"
+                    android:textSize="12sp"
+                    app:icon="@drawable/ic_refresh"
+                    app:iconGravity="textStart"
+                    app:iconPadding="2dp"
+                    app:iconSize="17dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:baselineAligned="false"
             android:orientation="horizontal">
 
@@ -65,48 +117,51 @@
                 android:id="@+id/mode_normal_button"
                 style="@style/Widget.KidCare.Button.Tonal"
                 android:layout_width="0dp"
-                android:layout_height="64dp"
+                android:layout_height="72dp"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
                 android:insetLeft="0dp"
                 android:insetRight="0dp"
                 android:paddingHorizontal="8dp"
                 android:text="@string/control_mode_normal"
+                app:strokeWidth="0dp"
                 app:icon="@drawable/ic_volume_up"
-                app:iconGravity="textStart"
-                app:iconPadding="6dp"
+                app:iconGravity="textTop"
+                app:iconPadding="4dp"
                 app:iconSize="22dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/mode_vibrate_button"
                 style="@style/Widget.KidCare.Button.Tonal"
                 android:layout_width="0dp"
-                android:layout_height="64dp"
+                android:layout_height="72dp"
                 android:layout_marginHorizontal="6dp"
                 android:layout_weight="1"
                 android:insetLeft="0dp"
                 android:insetRight="0dp"
                 android:paddingHorizontal="8dp"
                 android:text="@string/control_mode_vibrate"
+                app:strokeWidth="0dp"
                 app:icon="@drawable/ic_vibration"
-                app:iconGravity="textStart"
-                app:iconPadding="6dp"
+                app:iconGravity="textTop"
+                app:iconPadding="4dp"
                 app:iconSize="22dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/mode_silent_button"
                 style="@style/Widget.KidCare.Button.Tonal"
                 android:layout_width="0dp"
-                android:layout_height="64dp"
+                android:layout_height="72dp"
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
                 android:insetLeft="0dp"
                 android:insetRight="0dp"
                 android:paddingHorizontal="8dp"
                 android:text="@string/control_mode_silent"
+                app:strokeWidth="0dp"
                 app:icon="@drawable/ic_volume_off"
-                app:iconGravity="textStart"
-                app:iconPadding="6dp"
+                app:iconGravity="textTop"
+                app:iconPadding="4dp"
                 app:iconSize="22dp" />
         </LinearLayout>
 

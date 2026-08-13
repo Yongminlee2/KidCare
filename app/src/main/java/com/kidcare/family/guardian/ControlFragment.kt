@@ -1,12 +1,14 @@
 package com.kidcare.family.guardian
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.children
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.chip.Chip
@@ -123,6 +125,14 @@ class ControlFragment : Fragment() {
      * 꺼졌다"와 "그 밖의 완료"가 서로 다른 일을 해야 한다.
      */
     private var trackingType: String? = null
+    private var trackingRingerMode: String? = null
+
+    /** status 문서에서 마지막으로 확인했거나, 이 화면에서 완료 응답을 받은 소리 모드. */
+    private var currentRingerMode: String? = null
+    private var ringerAppliedInSession = false
+
+    /** 자녀 폰에 실제 시스템 소리 상태를 묻고 응답을 기다리는 동안 true. */
+    private var ringerQueryInFlight = false
 
     /**
      * 지금 따라가고 있는 명령이 **메시지**인가.
@@ -193,6 +203,7 @@ class ControlFragment : Fragment() {
         b.modeNormalButton.setOnClickListener { sendRinger(MODE_NORMAL) }
         b.modeVibrateButton.setOnClickListener { sendRinger(MODE_VIBRATE) }
         b.modeSilentButton.setOnClickListener { sendRinger(MODE_SILENT) }
+        b.ringerRefreshButton.setOnClickListener { queryRingerNow() }
 
         b.findButton.setOnClickListener {
             if (believedRinging()) sendStopFind() else sendFindPhone()
@@ -228,6 +239,7 @@ class ControlFragment : Fragment() {
         setChildDependentButtonsEnabled(false)
         renderFindButton()
         renderAlarm()
+        renderRingerState(loading = true)
         renderCommand(CommandUi.Idle)
         subscribe()
 
@@ -271,6 +283,7 @@ class ControlFragment : Fragment() {
         setChildDependentButtonsEnabled(true)
         showChildState(null)
         loadStatus(fid, selectedUid)
+        queryRingerNow()
 
         settingsListener = ScheduleRepository.observeRingerSettings(
             fid,
@@ -285,27 +298,40 @@ class ControlFragment : Fragment() {
             onJoined = { uid ->
                 if (uid == childUid) return@observeChildJoined
                 childUid = uid
+                // 앞 아이에게 보내 둔 조회가 새 아이의 자동 조회를 막지 않게 한다.
+                ringerQueryInFlight = false
                 setChildDependentButtonsEnabled(true)
                 showChildState(null)
                 loadStatus(fid, uid)
+                queryRingerNow()
             },
             onError = { e -> showChildState(errorMessageOrNull(e)) },
         )
     }
 
     /**
-     * 마지막 신호 시각만 쓴다 — 60초 무응답 문구에 붙일 값이다(설계서 §5).
+     * 마지막 신호 시각과 마지막 소리 모드를 한 번 읽는다. 소리 모드는 곧이어 보내는
+     * QUERY_RINGER 응답 뒤 다시 읽어 실제 현재값으로 확정한다.
      *
      * 옛 코드는 이 문서를 화면이 떠 있는 내내 구독했다. 자녀 폰이 위치를 올릴 때마다
      * 이 문서를 덮어쓰던 시절에는 그게 "실시간"이었지만, 이제 이 문서는 부모가
      * 물어볼 때와 하루 한 번만 바뀐다(docs/known-issues.md 12번) — 구독을 유지해도
      * 얻는 것 없이 읽기만 는다. 화면을 열 때 한 번 읽고 끝낸다.
      */
-    private fun loadStatus(fid: String, uid: String) {
+    private fun loadStatus(fid: String, uid: String, confirmedNow: Boolean = false) {
         statusJob?.cancel()
+        if (!confirmedNow) {
+            currentRingerMode = null
+            ringerAppliedInSession = false
+        }
+        renderRingerState(loading = true)
         statusJob = viewLifecycleOwner.lifecycleScope.launch {
             try {
-                lastSignal = FamilyRepository.fetchChildStatus(fid, uid)?.lastSignal()
+                val status = FamilyRepository.fetchChildStatus(fid, uid)
+                lastSignal = status?.lastSignal()
+                currentRingerMode = status?.ringerMode?.takeIf(::isKnownRingerMode)
+                ringerAppliedInSession = confirmedNow
+                renderRingerState()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -313,6 +339,7 @@ class ControlFragment : Fragment() {
                 // 오류로 덮지 않는다 — lastSeenPhrase 가 "아직 한 번도 신호가
                 // 없었어요"로 정직하게 물러난다.
                 Log.w(TAG, "마지막 신호 시각을 못 읽었다", e)
+                renderRingerState()
             }
         }
     }
@@ -323,6 +350,17 @@ class ControlFragment : Fragment() {
         // 페이로드 키 "mode" 는 child/CommandHandler 가 읽는 키다. 여기서 오타가 나면
         // 아이 폰은 빈 모드를 받아 실패로 처리한다.
         send(CommandType.SET_RINGER, mapOf(PAYLOAD_MODE to mode))
+    }
+
+    /**
+     * 서버에 남은 옛 값을 읽는 대신 자녀 폰의 AudioManager 에 지금 적용된 모드를 묻는다.
+     * QUERY_RINGER 는 소리·진동을 만들지 않고 상태 필드 하나만 갱신한다.
+     */
+    private fun queryRingerNow() {
+        if (familyId == null || childUid == null || ringerQueryInFlight) return
+        ringerQueryInFlight = true
+        renderRingerState()
+        send(CommandType.QUERY_RINGER)
     }
 
     private fun sendFindPhone() {
@@ -455,12 +493,19 @@ class ControlFragment : Fragment() {
             renderCommand(CommandUi.Failed(getString(R.string.map_no_child)))
             return
         }
+        // 상태 조회 중 다른 명령을 누르면 그 명령이 화면의 새 주인이 된다. 앞 조회의
+        // 응답은 세대 번호로 무시되므로, 새로 확인 버튼도 여기서 다시 쓸 수 있게 푼다.
+        if (trackingType == CommandType.QUERY_RINGER && type != CommandType.QUERY_RINGER) {
+            ringerQueryInFlight = false
+            renderRingerState()
+        }
         stopTracking()
         timedOut = false
         // 상태 줄이 무슨 뜻으로 읽혀야 하는지가 명령 종류에 달렸다([trackingMessage]).
         // 세대 번호와 같은 자리에서 정해 둬야 늦게 오는 앞 명령의 콜백이 새 명령의
         // 해석을 물려받지 않는다.
         trackingType = type
+        trackingRingerMode = if (type == CommandType.SET_RINGER) payload[PAYLOAD_MODE] else null
         // 발행 결과를 기다리는 동안 부모가 다른 버튼을 누를 수 있다. 지금 이 순간의
         // 세대를 붙잡아 두고, 왕복이 끝난 뒤 그 값이 아직 최신인지로 판단한다
         // ([commandGeneration] 주석 참고).
@@ -493,6 +538,7 @@ class ControlFragment : Fragment() {
                     // "맞춰져 있어요"로 적는다(sendSetAlarm). 큐에 들어간 것은 나간
                     // 것이 아니다.
                     if (generation != commandGeneration) return@launch
+                    finishRingerQueryIfCurrent(type)
                     renderCommand(CommandUi.Queued)
                     return@launch
                 }
@@ -514,6 +560,7 @@ class ControlFragment : Fragment() {
                 // 실패 문구로 덮어쓰면, 정작 진행 중인 명령이 실패한 것처럼 보인다.
                 if (generation != commandGeneration) return@launch
                 val ctx = context ?: return@launch
+                finishRingerQueryIfCurrent(type)
                 renderCommand(CommandUi.Failed(errorMessage(ctx, e)))
             }
         }
@@ -543,6 +590,7 @@ class ControlFragment : Fragment() {
                 if (message != null) {
                     timeoutJob?.cancel()
                     timeoutJob = null
+                    finishRingerQueryIfCurrent(trackingType)
                     renderCommand(CommandUi.Failed(message))
                 }
             },
@@ -568,6 +616,19 @@ class ControlFragment : Fragment() {
                     childUid?.let { alarmMemo.recordConfirmed(it) }
                     renderAlarm()
                 }
+                if (trackingType == CommandType.SET_RINGER) {
+                    trackingRingerMode?.takeIf(::isKnownRingerMode)?.let { mode ->
+                        currentRingerMode = mode
+                        ringerAppliedInSession = true
+                        renderRingerState()
+                    }
+                }
+                if (trackingType == CommandType.QUERY_RINGER) {
+                    ringerQueryInFlight = false
+                    val fid = familyId
+                    val uid = childUid
+                    if (fid != null && uid != null) loadStatus(fid, uid, confirmedNow = true)
+                }
                 // 메시지의 done 은 "아이가 확인했어요를 눌렀다"는 뜻이다. '완료'라고
                 // 적으면 부모는 그걸 "보내기가 끝났다"로 읽는다 — 전혀 다른 말이다.
                 renderCommand(if (trackingMessage) CommandUi.MessageRead else CommandUi.Done)
@@ -581,6 +642,7 @@ class ControlFragment : Fragment() {
                     childUid?.let { alarmMemo.clear(it) }
                     renderAlarm()
                 }
+                finishRingerQueryIfCurrent(trackingType)
                 // 실패도 대답이다 — 아이 폰이 살아 있으니 error 를 적을 수 있었다.
                 // 연결 끊김 배너가 알리려는 것은 "죽어서 아무 말이 없다"이지
                 // "할 수 없다고 답했다"가 아니다.
@@ -619,6 +681,7 @@ class ControlFragment : Fragment() {
     private suspend fun onTimedOut(generation: Int) {
         _binding ?: return
         timedOut = true
+        finishRingerQueryIfCurrent(trackingType)
         // 마지막 신호 문구는 서버 시각을 물어보느라 잠깐 걸릴 수 있다. 그동안 스피너가
         // 계속 도는 일이 없도록 실패 표시를 먼저 확정하고, 문구는 뒤에 채워 넣는다.
         renderCommand(CommandUi.Failed(getString(R.string.control_command_timeout)))
@@ -890,6 +953,61 @@ class ControlFragment : Fragment() {
         }
     }
 
+    /** 마지막으로 확인된 모드를 글과 버튼 색 두 곳에서 같은 값으로 보여준다. */
+    private fun renderRingerState(loading: Boolean = false) {
+        val b = _binding ?: return
+        val ctx = context ?: return
+        val busy = loading || ringerQueryInFlight
+        val mode = currentRingerMode
+        val label = when (mode) {
+            MODE_NORMAL -> getString(R.string.control_mode_normal)
+            MODE_VIBRATE -> getString(R.string.control_mode_vibrate)
+            MODE_SILENT -> getString(R.string.control_mode_silent)
+            else -> null
+        }
+        b.ringerState.text = when {
+            busy -> getString(R.string.control_ringer_status_loading)
+            label == null -> getString(R.string.control_ringer_status_unknown)
+            ringerAppliedInSession -> getString(R.string.control_ringer_status_applied, label)
+            else -> getString(R.string.control_ringer_status_format, label)
+        }
+        b.ringerStateIcon.setImageResource(
+            when (mode) {
+                MODE_VIBRATE -> R.drawable.ic_vibration
+                MODE_SILENT -> R.drawable.ic_volume_off
+                else -> R.drawable.ic_volume_up
+            },
+        )
+        b.ringerRefreshButton.isEnabled = childUid != null && !busy
+
+        listOf(
+            b.modeNormalButton to MODE_NORMAL,
+            b.modeVibrateButton to MODE_VIBRATE,
+            b.modeSilentButton to MODE_SILENT,
+        ).forEach { (button, buttonMode) ->
+            val selected = mode == buttonMode
+            val background = ContextCompat.getColor(
+                ctx, if (selected) R.color.sky else R.color.sky_soft,
+            )
+            val foreground = ContextCompat.getColor(
+                ctx, if (selected) R.color.on_accent else R.color.sky,
+            )
+            button.backgroundTintList = ColorStateList.valueOf(background)
+            button.setTextColor(foreground)
+            button.iconTint = ColorStateList.valueOf(foreground)
+        }
+    }
+
+    private fun isKnownRingerMode(mode: String): Boolean =
+        mode == MODE_NORMAL || mode == MODE_VIBRATE || mode == MODE_SILENT
+
+    /** 현재 추적 중인 것이 소리 상태 조회일 때만 조회 중 표시를 끝낸다. */
+    private fun finishRingerQueryIfCurrent(type: String?) {
+        if (type != CommandType.QUERY_RINGER) return
+        ringerQueryInFlight = false
+        renderRingerState()
+    }
+
     /** [message] 가 null 이면 안내를 감춘다. */
     private fun showChildState(message: String?) {
         val b = _binding ?: return
@@ -910,6 +1028,7 @@ class ControlFragment : Fragment() {
         b.modeNormalButton.isEnabled = enabled
         b.modeVibrateButton.isEnabled = enabled
         b.modeSilentButton.isEnabled = enabled
+        b.ringerRefreshButton.isEnabled = enabled && !ringerQueryInFlight
         b.findButton.isEnabled = enabled
         b.findStopButton.isEnabled = enabled
         // 칩과 입력칸은 그대로 둔다. 아이 폰이 아직 안 붙었어도 부모가 문장을 미리
@@ -942,6 +1061,7 @@ class ControlFragment : Fragment() {
         findResetJob = null
         lockSaveJob?.cancel()
         lockSaveJob = null
+        ringerQueryInFlight = false
         _binding = null
         super.onDestroyView()
     }

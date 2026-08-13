@@ -14,6 +14,7 @@ import android.content.pm.ServiceInfo
 import android.media.AudioManager
 import android.os.BatteryManager
 import android.os.Build
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -29,12 +30,17 @@ import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.CommandRepository
 import com.kidcare.family.core.RoleStore
 import com.kidcare.family.core.model.CommandType
+import com.kidcare.family.logic.AdaptiveMovementDetector
+import com.kidcare.family.logic.AdaptiveMovementState
 import com.kidcare.family.logic.Decision
 import com.kidcare.family.logic.Fix
 import com.kidcare.family.logic.LocationFilter
+import com.kidcare.family.logic.LiveLocationRefiner
 import com.kidcare.family.logic.MovementTrailFilter
 import com.kidcare.family.onboarding.PermissionStep
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -58,6 +64,12 @@ class TrackingService : LifecycleService() {
     /** 상태 보고용 25m 필터와 별개로, 이동 경로 파일에 마지막으로 남긴 5초 점. */
     private var lastTrailFix: Fix? = null
 
+    /** 활동 인식 한 비트만 믿지 않고 실제 좌표·속도로 이동을 재확인한다. */
+    private val movementDetector = AdaptiveMovementDetector()
+    private var insideKnownPlace = false
+    private var lastRouteWasMoving = false
+    private var forceNextStayPoint = true
+
     private val trailUploader by lazy { TrailUploader(this) }
 
     /**
@@ -70,12 +82,29 @@ class TrackingService : LifecycleService() {
      * 이미 다른 문제가 더 크다.
      */
     private var lastUploadAt = 0L
+    private var lastConditionCheckElapsed = 0L
 
     // 받은 명령을 분배·실행하는 곳(Task 3). 리스너 자체는 subscribeToCommands 가
     // 걸고 뗀다. locate_now 는 이 서비스만 답할 수 있으므로(위치 버퍼가 여기 있다)
     // 콜백으로 넘겨준다 — CommandHandler 가 서비스를 거꾸로 붙들지 않게 하려는 것이다.
-    private val commandHandler by lazy { CommandHandler(this, ::uploadNow, placeWatcher) }
+    private val commandHandler by lazy {
+        CommandHandler(
+            this,
+            ::uploadNow,
+            ::startLiveTracking,
+            ::stopLiveTracking,
+            placeWatcher,
+        )
+    }
     private var commandListener: ListenerRegistration? = null
+
+    /** 실시간 보기 세션에서만 쓰는 최신 보정 위치와 업로드 작업. 평상시에는 모두 비어 있다. */
+    private var liveTracking = false
+    private var liveLocation: Fix? = null
+    private var pendingLiveLocation: Fix? = null
+    private var liveReportJob: Job? = null
+    private val liveSessionJobs = mutableMapOf<String, Job>()
+    private var lastLiveReportAt = 0L
 
     // status 문서의 ringerMode 를 채우는 데 쓴다(Task 4) — 지금 실제로 무슨 소리
     // 모드인지 매 업로드마다 다시 읽어야 하므로 캐시하지 않는다.
@@ -144,13 +173,13 @@ class TrackingService : LifecycleService() {
         // 이걸 안 되찾으면 부모가 오후에 '지금 위치 확인'을 눌렀을 때 오전 기록이
         // 통째로 사라진 하루 문서가 올라간다 — 옛 구조에서는 점이 이미 한 개씩
         // Firestore 에 들어가 있어 이런 위험 자체가 없었다.
-        trailUploader.restore()
+        lastTrailFix = trailUploader.restore()
 
         // ActivityTransitionReceiver(매니페스트 등록, 별도 인스턴스)가 지금 도는
-        // 서비스의 collector 에 닿을 방법이 없어 정적 참조로 다리를 놓는다.
+        // 서비스의 이동 판정 상태에 닿을 방법이 없어 정적 참조로 다리를 놓는다.
         // onDestroy 에서 반드시 null 로 되돌린다 — 안 그러면 죽은 서비스의
-        // collector 를 계속 붙들어 leak 이 된다.
-        activeCollector = collector
+        // 콜백이 서비스 인스턴스를 계속 붙들어 leak 이 된다.
+        activeMovementHook = { moving -> onActivityMovingChanged(moving) }
         registerActivityTransitions()
 
         ringerReceiver = RingerModeReceiver(ringerController, RingerStateStore(this)).also {
@@ -174,10 +203,9 @@ class TrackingService : LifecycleService() {
     @SuppressLint("MissingPermission")
     private fun registerActivityTransitions() {
         if (!PermissionStep.ACTIVITY_RECOGNITION.isGranted(this)) {
-            // 권한이 없으면 등록 자체를 건너뛴다. LocationCollector 는 moving=true 로
-            // 시작해 그대로 유지되므로 5초 주기가 계속된다 — 배터리보다 위치
-            // 신뢰성이 먼저다.
-            Log.i(TAG, "활동 인식 권한 없음 — 이동(5초) 고정으로 계속 동작")
+            // 권한이 없으면 등록 자체를 건너뛴다. 좌표 기반 판정기가 5초로 짧게
+            // 확인한 뒤 이동 증거가 없으면 30초로 낮추므로 정확도와 배터리를 함께 지킨다.
+            Log.i(TAG, "활동 인식 권한 없음 — 좌표 기반 적응형 판정으로 동작")
             return
         }
         val request = ActivityTransitionRequest(
@@ -204,13 +232,21 @@ class TrackingService : LifecycleService() {
      * 를 무조건 부르는 것과 같은 이유다. "지금 권한이 있는가"로 이 해제를 게이트하면,
      * 등록해 둔 뒤 권한이 취소된 경우 딱 그 순간 해제가 통째로 스킵돼 구글 플레이
      * 서비스 쪽 구독이 아무도 못 지우는 채로 영원히 남는다(배터리 누수). 그래서 여기는
-     * "이 인스턴스가 실제로 등록했는가"(transitionsRegistered)로만 판단한다.
+     * "이 인스턴스가 실제로 등록했는가"(transitionsRegistered)로 판단해 해제를 시도하되,
+     * 기기별 구현이 권한을 다시 확인해 SecurityException 을 던지는 경우는 안전하게 끝낸다.
      */
     private fun unregisterActivityTransitions() {
         if (!transitionsRegistered) return
         transitionsRegistered = false
-        ActivityRecognition.getClient(this)
-            .removeActivityTransitionUpdates(activityTransitionPendingIntent())
+        try {
+            ActivityRecognition.getClient(this)
+                .removeActivityTransitionUpdates(activityTransitionPendingIntent())
+                .addOnFailureListener { e -> Log.w(TAG, "활동 인식 해제 실패", e) }
+        } catch (e: SecurityException) {
+            // 등록 뒤 권한이 취소된 기기에서는 해제 API 자체가 거부될 수 있다.
+            // 상태값은 이미 false 로 바꿨으므로 서비스는 이동(5초) 모드로 안전하게 복귀한다.
+            Log.w(TAG, "활동 인식 권한이 없어 구독 해제를 완료하지 못함", e)
+        }
     }
 
     /**
@@ -258,7 +294,7 @@ class TrackingService : LifecycleService() {
         // 위치 점이 하나도 안 들어오므로 아래 handle() 의 검사가 영원히 안 돈다 —
         // 이 한 줄을 아래로 내리면 이 앱에서 제일 중요한 경고가 정확히 제일 중요한
         // 순간에만 침묵한다(ConditionWatcher 클래스 주석).
-        if (familyId != null) checkConditions(familyId)
+        if (familyId != null) checkConditions(familyId, force = true)
 
         // onCreate 에서 권한이 없어 이미 stopSelf() 를 예약해 뒀다면 여기서도 아무
         // 일도 하지 않는다 — collector.start() 가 권한 없이 불리는 일을 막는다.
@@ -275,11 +311,14 @@ class TrackingService : LifecycleService() {
         refreshPlaces(familyId)
 
         // 매니페스트에 등록된 PlaceGeofenceReceiver 가 지금 도는 이 서비스에 닿을
-        // 방법이 없어 정적 참조로 다리를 놓는다(activeCollector 와 같은 방식).
+        // 방법이 없어 정적 참조로 다리를 놓는다(활동 전환 다리와 같은 방식).
         // onDestroy 에서 반드시 null 로 되돌린다.
-        activePlaceHook = { fix -> evaluatePlaces(familyId, fix) }
+        activePlaceHook = { fix ->
+            updateKnownPlaceSampling(fix)
+            evaluatePlaces(familyId, fix)
+        }
 
-        collector.start { fix, moving -> handle(familyId, fix, moving) }
+        collector.start { fix, activityMoving -> handle(familyId, fix, activityMoving) }
         return START_STICKY
     }
 
@@ -334,11 +373,11 @@ class TrackingService : LifecycleService() {
      * **부르는 곳이 둘이고, 둘이 서로의 사각을 덮는다.**
      * - [onStartCommand]: 서비스가 (재)시작될 때마다. 권한 취소로 프로세스가 죽었다
      *   살아난 직후가 여기다 — 위치 권한이 꺼진 경우 이것 말고는 기회가 없다.
-     * - [handle]: 위치 점이 들어올 때마다(이동 5초·정지 5분). 서비스가 계속 살아 있는
+     * - [handle]: 위치 점이 들어오되 최대 1분에 한 번(정지는 위치 주기상 5분). 서비스가 계속 살아 있는
      *   동안 꺼지는 권한(방해 금지 접근은 런타임 권한이 아니라 프로세스도 안 죽는다)과
      *   서서히 닳는 배터리는 이쪽이 잡는다.
      *
-     * 위치 점마다 도는데도 통신 비용이 늘지 않는다. 검사는 전부 폰 안에서 끝나고
+     * 검사를 자주 해도 통신 비용은 늘지 않는다. 검사는 전부 폰 안에서 끝나고
      * (배터리 한 번 + 권한 넷), Firestore 는 **상태가 실제로 바뀐 순간에만** 건드린다.
      * 별도 주기 알람을 새로 걸지 않은 이유이기도 하다 — 이미 규칙적으로 도는 자리가
      * 있는데 알람을 하나 더 걸면 재부팅·강제종료·정확한 알람 권한 같은 함정이 따라온다.
@@ -346,7 +385,10 @@ class TrackingService : LifecycleService() {
      * 배터리 값을 여기서 읽어 넘기는 것은 [uploadNow] 가 쓰는 [batteryPercent] 를
      * 그대로 재사용하려는 것이다(같은 값을 두 곳에서 다르게 읽지 않는다).
      */
-    private fun checkConditions(familyId: String) {
+    private fun checkConditions(familyId: String, force: Boolean = false) {
+        val elapsed = SystemClock.elapsedRealtime()
+        if (!force && elapsed - lastConditionCheckElapsed < CONDITION_CHECK_INTERVAL_MILLIS) return
+        lastConditionCheckElapsed = elapsed
         val battery = batteryPercent()
         lifecycleScope.launch {
             try {
@@ -416,7 +458,67 @@ class TrackingService : LifecycleService() {
         )
     }
 
-    private fun handle(familyId: String, fix: Fix, moving: Boolean) {
+    private fun onActivityMovingChanged(nowMoving: Boolean) {
+        movementDetector.reset(fast = nowMoving && !insideKnownPlace)
+        if (!nowMoving) forceNextStayPoint = true
+        collector.onMovingChanged(nowMoving)
+    }
+
+    /** 등록 장소 안에서는 학교 복도 같은 작은 움직임을 이동 경로로 만들지 않는다. */
+    private fun updateKnownPlaceSampling(fix: Fix): Boolean {
+        val inside = placeWatcher.isInsideKnownPlace(fix) ?: return false
+        if (insideKnownPlace == inside) return false
+
+        val wasInside = insideKnownPlace
+        insideKnownPlace = inside
+        movementDetector.reset(fast = !inside)
+        collector.setInsideKnownPlace(inside)
+        forceNextStayPoint = inside
+
+        // 지오펜스 이탈은 실제 이동의 강한 증거다. 활동 인식 EXIT가 늦더라도 곧바로
+        // 5초 확인을 시작해 학교·집을 나선 첫 구간을 놓치지 않는다.
+        val exitedKnownPlace = wasInside && !inside
+        if (exitedKnownPlace) collector.onMovingChanged(true)
+        return exitedKnownPlace
+    }
+
+    private fun recordMovementFixes(fixes: List<Fix>) {
+        fixes.sortedBy { it.at }.forEach { candidate ->
+            if (MovementTrailFilter.shouldRecord(lastTrailFix, candidate, reportedMoving = true)) {
+                trailUploader.onCollected(candidate)
+                lastTrailFix = candidate
+            }
+        }
+    }
+
+    /**
+     * 머무름도 시작점과 5분 간격 기준점은 남긴다. 그래야 서버에 하루치를 올렸을 때
+     * 학교·집에 있었던 시간이 보이면서, GPS 흔들림은 촘촘한 이동선이 되지 않는다.
+     */
+    private fun recordStayFix(candidate: Fix, force: Boolean): Boolean {
+        if (
+            !candidate.lat.isFinite() || !candidate.lng.isFinite() ||
+            candidate.lat !in -90.0..90.0 || candidate.lng !in -180.0..180.0 ||
+            !candidate.accuracy.isFinite() || candidate.accuracy < 0f ||
+            candidate.accuracy > LocationFilter.MAX_ACCURACY_METERS ||
+            candidate.speed > LocationFilter.MAX_SPEED_MPS
+        ) return false
+
+        val previous = lastTrailFix
+        if (previous != null) {
+            val elapsed = candidate.at - previous.at
+            if (elapsed <= 0L) return false
+            if (!force && elapsed < STAY_ANCHOR_INTERVAL_MILLIS) return false
+            val impliedSpeed = LocationFilter.distanceMeters(previous, candidate) / (elapsed / 1_000.0)
+            if (impliedSpeed > LocationFilter.MAX_SPEED_MPS) return false
+        }
+
+        trailUploader.onCollected(candidate)
+        lastTrailFix = candidate
+        return true
+    }
+
+    private fun handle(familyId: String, fix: Fix, activityMoving: Boolean) {
         // 이 fix 를 받아들일지와 무관하게 먼저 한다(5단계 Task 7). 아래 판정에서 걸러지는
         // 점(너무 가깝다·오차가 크다)이라도 "이 폰이 아직 살아 있고 지금 배터리와 권한이
         // 이렇다"는 사실은 똑같이 유효하다. 판정 안쪽으로 넣으면 신호가 나쁜 날에는 배터리
@@ -431,9 +533,9 @@ class TrackingService : LifecycleService() {
         // 확인하면 늦어도 한 주기 안에 감지한다. 되돌릴 값은 5분이 아니라 5초다 —
         // 위치 신뢰성이 배터리보다 먼저다.
         if (transitionsRegistered && !PermissionStep.ACTIVITY_RECOGNITION.isGranted(this)) {
-            Log.w(TAG, "활동 인식 권한이 도중에 취소됨 — 구독 해제하고 이동(5초)으로 되돌림")
+            Log.w(TAG, "활동 인식 권한이 도중에 취소됨 — 좌표 기반 적응형 판정으로 되돌림")
             unregisterActivityTransitions()
-            collector.onMovingChanged(true)
+            onActivityMovingChanged(true)
         }
 
         // 시계가 거꾸로 갔으면(아이가 설정에서 일부러 되돌리거나, NTP 재동기화로
@@ -448,15 +550,41 @@ class TrackingService : LifecycleService() {
             Log.w(TAG, "시계가 거꾸로 감: lastFix.at=${previous.at} > fix.at=${fix.at} — lastFix 초기화")
             lastFix = null
             lastTrailFix = null
+            liveLocation = null
+            movementDetector.reset()
+            lastRouteWasMoving = false
+            forceNextStayPoint = true
         }
 
-        // 경로 기록은 상태 보고의 25m/10분 필터보다 먼저, 별개로 판단한다. 그래야
-        // 보행 중 5초 점이 SKIP_TOO_CLOSE로 사라지지 않는다. 정지 상태·오차 반경 안의
-        // 흔들림·비현실적 순간이동은 MovementTrailFilter가 제외한다.
-        if (MovementTrailFilter.shouldRecord(lastTrailFix, fix, moving)) {
-            trailUploader.onCollected(fix)
-            lastTrailFix = fix
+        val exitedKnownPlace = updateKnownPlaceSampling(fix)
+        handleLiveFix(familyId, fix)
+
+        // 평상시 경로는 활동 인식만으로 곧장 '이동'으로 보지 않는다. 좌표·속도가
+        // 10초 이상 실제 진행을 보여야 5초 경로 기록을 시작한다. 그 전 후보점도 함께
+        // 되살려 출발 부분이 잘리지 않게 한다. 등록 장소 안과 활동 인식 정지는
+        // 머무름으로 처리하되, 실시간 보기의 2초 화면 표시는 이 판정과 무관하게 위에서 한다.
+        val movementEligible = activityMoving || exitedKnownPlace
+        val movementUpdate = if (movementEligible && !insideKnownPlace) {
+            movementDetector.onFix(fix)
+        } else {
+            null
         }
+        movementUpdate?.let { collector.setAdaptiveMovementState(it.state) }
+
+        val routeMoving = movementEligible && !insideKnownPlace &&
+            movementUpdate?.state == AdaptiveMovementState.MOVING
+        movementUpdate?.promotionBuffer
+            ?.takeIf { it.isNotEmpty() }
+            ?.let(::recordMovementFixes)
+
+        if (routeMoving) {
+            recordMovementFixes(listOf(fix))
+            forceNextStayPoint = false
+        } else {
+            val force = forceNextStayPoint || lastRouteWasMoving
+            if (recordStayFix(fix, force)) forceNextStayPoint = false
+        }
+        lastRouteWasMoving = routeMoving
 
         val decision = LocationFilter.decide(lastFix, fix)
 
@@ -558,6 +686,95 @@ class TrackingService : LifecycleService() {
         lastUploadAt = System.currentTimeMillis()
     }
 
+    /** 부모의 실시간 보기 명령을 받은 동안에만 2초 고정밀 수집과 상태 업로드를 켠다. */
+    private suspend fun startLiveTracking(
+        familyId: String,
+        childUid: String,
+        durationSeconds: Long,
+        sessionId: String,
+    ) {
+        liveSessionJobs.remove(sessionId)?.cancel()
+        if (!liveTracking) {
+            liveLocation = null
+            pendingLiveLocation = null
+            lastLiveReportAt = 0L
+            liveTracking = true
+            collector.setLiveTrackingEnabled(true)
+        }
+
+        liveSessionJobs[sessionId] = lifecycleScope.launch {
+            delay(durationSeconds.coerceAtMost(MAX_LIVE_DURATION_SECONDS) * 1_000L)
+            liveSessionJobs.remove(sessionId)
+            if (liveSessionJobs.isEmpty()) finishLiveTracking(familyId, childUid)
+        }
+    }
+
+    /** 실시간 세션을 끄고 기존 이동/정지 수집 주기로 돌아간 뒤, 모인 5초 경로를 한 번 올린다. */
+    private suspend fun stopLiveTracking(
+        familyId: String,
+        childUid: String,
+        sessionId: String?,
+    ) {
+        if (sessionId == null) {
+            // 세션 ID를 보내지 않는 구버전 보호자와의 호환: 모든 실시간 요청을 종료한다.
+            liveSessionJobs.values.forEach(Job::cancel)
+            liveSessionJobs.clear()
+        } else {
+            liveSessionJobs.remove(sessionId)?.cancel()
+        }
+        if (liveSessionJobs.isNotEmpty()) return
+        finishLiveTracking(familyId, childUid)
+    }
+
+    private suspend fun finishLiveTracking(familyId: String, childUid: String) {
+        if (!liveTracking) return
+        liveTracking = false
+        liveReportJob?.cancel()
+        liveReportJob = null
+        pendingLiveLocation = null
+        collector.setLiveTrackingEnabled(false)
+
+        // 실시간 표시는 status 문서로 이미 전달했고, 경로 기록은 기존 5초 필터를 그대로 사용한다.
+        trailUploader.upload(familyId, childUid)
+    }
+
+    /** 나쁜 정확도와 순간이동을 제거하고 가장 최신인 위치를 최대 2초마다 상태 문서에 쓴다. */
+    private fun handleLiveFix(familyId: String, fix: Fix) {
+        if (!liveTracking) return
+        val refined = LiveLocationRefiner.refine(liveLocation, fix) ?: return
+        liveLocation = refined
+        pendingLiveLocation = refined
+        if (liveReportJob?.isActive == true) return
+
+        liveReportJob = lifecycleScope.launch {
+            try {
+                while (liveTracking) {
+                    val queued = pendingLiveLocation ?: break
+                    pendingLiveLocation = null
+                    val remaining = LIVE_REPORT_INTERVAL_MILLIS -
+                        (System.currentTimeMillis() - lastLiveReportAt)
+                    if (remaining > 0L) delay(remaining)
+                    if (!liveTracking) break
+
+                    val childUid = AuthGateway.currentUid() ?: AuthGateway.signIn()
+                    reporter.report(
+                        familyId,
+                        childUid,
+                        queued,
+                        batteryPercent(),
+                        isCharging(),
+                        ringerController.currentMode(),
+                    )
+                    lastLiveReportAt = System.currentTimeMillis()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "실시간 위치 업로드 실패: familyId=$familyId", e)
+            }
+        }
+    }
+
     private fun batteryPercent(): Int {
         val bm = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
         return bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
@@ -598,10 +815,15 @@ class TrackingService : LifecycleService() {
         // 서비스가 죽으면서 활동 인식 구독을 그대로 두면, 서비스는 없는데 센서만
         // 계속 도는 배터리 누수가 된다 — 이 작업이 막으려는 것과 정반대다.
         unregisterActivityTransitions()
-        activeCollector = null
+        activeMovementHook = null
         // 지오펜스 다리도 끊는다. 안 끊으면 죽은 서비스의 lifecycleScope 를 붙든 람다가
         // 남아, 다음 전환에서 이미 취소된 스코프에 코루틴을 던진다.
         activePlaceHook = null
+        liveTracking = false
+        liveSessionJobs.values.forEach(Job::cancel)
+        liveSessionJobs.clear()
+        liveReportJob?.cancel()
+        liveReportJob = null
         collector.stop()
         // 되돌리기 리시버도 같은 이유로 뗀다 — cancelPending 을 먼저 부르지 않으면
         // 서비스가 죽은 뒤 3초 지연 중이던 Runnable 이 죽은 컨트롤러를 붙든 채 터진다.
@@ -633,16 +855,20 @@ class TrackingService : LifecycleService() {
          * 실제로 쓰는 기능 쪽에 예산을 남긴다.
          */
         private const val SAFETY_UPLOAD_INTERVAL_MILLIS = 24 * 60 * 60 * 1000L
+        private const val LIVE_REPORT_INTERVAL_MILLIS = 2_000L
+        private const val MAX_LIVE_DURATION_SECONDS = 10 * 60L
+        private const val STAY_ANCHOR_INTERVAL_MILLIS = 5 * 60_000L
+        private const val CONDITION_CHECK_INTERVAL_MILLIS = 60_000L
 
         // ActivityTransitionReceiver(매니페스트 등록, 이 서비스와 다른 컴포넌트)가
-        // 지금 살아있는 서비스의 LocationCollector 를 부를 통로. 서비스가 없을 때
-        // (activeCollector == null) 전환이 와도 조용히 버린다 — 그때는 위치 수집도
+        // 지금 살아있는 서비스의 이동 판정을 부를 통로. 서비스가 없을 때
+        // (activeMovementHook == null) 전환이 와도 조용히 버린다 — 그때는 위치 수집도
         // 멈춰 있어 주기를 바꿀 대상 자체가 없다.
         @Volatile
-        private var activeCollector: LocationCollector? = null
+        private var activeMovementHook: ((Boolean) -> Unit)? = null
 
         fun notifyMovingChanged(nowMoving: Boolean) {
-            activeCollector?.onMovingChanged(nowMoving)
+            activeMovementHook?.invoke(nowMoving)
         }
 
         /**

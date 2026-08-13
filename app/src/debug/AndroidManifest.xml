@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".guardian.DesignPreviewActivity"
+            android:exported="true" />
+        <activity-alias
+            android:name=".debug.GuardianAuditAlias"
+            android:exported="true"
+            android:targetActivity=".guardian.GuardianMainActivity" />
+        <activity-alias
+            android:name=".debug.ChildHomeAuditAlias"
+            android:exported="true"
+            android:targetActivity=".child.ChildHomeActivity" />
+        <activity-alias
+            android:name=".debug.PermissionAuditAlias"
+            android:exported="true"
+            android:targetActivity=".onboarding.PermissionActivity" />
+        <activity-alias
+            android:name=".debug.RoleSelectAuditAlias"
+            android:exported="true"
+            android:targetActivity=".onboarding.RoleSelectActivity" />
+        <activity-alias
+            android:name=".debug.ChildPairingAuditAlias"
+            android:exported="true"
+            android:targetActivity=".onboarding.ChildPairingActivity" />
+        <activity-alias
+            android:name=".debug.FindPhoneAuditAlias"
+            android:exported="true"
+            android:targetActivity=".child.FindPhoneActivity" />
+        <activity-alias
+            android:name=".debug.MessageAuditAlias"
+            android:exported="true"
+            android:targetActivity=".child.MessageActivity" />
+    </application>
+</manifest>

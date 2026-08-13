@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.KidCare" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.KidCare" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/sky</item>
         <item name="colorOnPrimary">@color/on_accent</item>
         <item name="colorPrimaryContainer">@color/sky_soft</item>
@@ -72,6 +72,7 @@
         <item name="android:windowLightStatusBar" tools:targetApi="m">@bool/light_system_bars</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">@bool/light_system_bars</item>
         <item name="android:windowBackground">@color/paper</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
     </style>
 
     <style parent="" name="ShapeAppearance.KidCare.ExtraSmall">
@@ -97,6 +98,13 @@
     <style parent="" name="ShapeAppearance.KidCare.Pill">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
+    </style>
+    <style parent="" name="ShapeAppearance.KidCare.BottomSheet">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">28dp</item>
+        <item name="cornerSizeTopRight">28dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
     </style>
 
     <style name="TextAppearance.KidCare.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
@@ -165,6 +173,13 @@
         <item name="cardBackgroundColor">@color/paper_card</item>
         <item name="shapeAppearance">@style/ShapeAppearance.KidCare.Medium</item>
         <item name="cardElevation">0dp</item>
+        <item name="strokeColor">@color/line_soft</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+    <style name="Widget.KidCare.Card.Floating" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">@color/paper_card</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.KidCare.ExtraLarge</item>
+        <item name="cardElevation">6dp</item>
         <item name="strokeColor">@color/line_soft</item>
         <item name="strokeWidth">1dp</item>
     </style>

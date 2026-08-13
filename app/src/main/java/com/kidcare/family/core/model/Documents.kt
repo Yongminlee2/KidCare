@@ -199,6 +199,8 @@ data class CommandDoc(
 
 object CommandType {
     const val SET_RINGER = "set_ringer"
+    /** 자녀 폰의 실제 시스템 벨소리 모드만 읽어 상태 문서에 갱신한다. 소리는 내지 않는다. */
+    const val QUERY_RINGER = "query_ringer"
     const val FIND_PHONE = "find_phone"
     const val STOP_FIND = "stop_find"
     /** 예약 규칙이 바뀌었으니 다시 읽어 알람을 새로 걸라는 신호. */
@@ -216,6 +218,12 @@ object CommandType {
      * 것으로 읽는다.
      */
     const val LOCATE_NOW = "locate_now"
+
+    /** 부모 지도에서 실시간 보기를 켜거나 끄는 세션 명령. */
+    const val START_LIVE_TRACKING = "start_live_tracking"
+    const val STOP_LIVE_TRACKING = "stop_live_tracking"
+    const val PAYLOAD_DURATION_SECONDS = "durationSeconds"
+    const val PAYLOAD_SESSION_ID = "sessionId"
 
     /** [LOCATE_NOW] 가 위치를 못 잡았을 때 자녀 폰이 error 필드에 적는 코드. */
     const val ERROR_NO_FIX = "locate_no_fix"

@@ -1,29 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Calm family-care palette: clean surfaces, reassuring teal, warm secondary accents. -->
-    <color name="paper">#F5F8F7</color>
-    <color name="paper_card">#FFFFFF</color>
-    <color name="paper_fold">#E8F0EE</color>
+    <!-- Soft sticker-diary palette: warm paper, lavender navigation and peach highlights. -->
+    <color name="paper">#FFFBF6</color>
+    <color name="paper_card">#FFFEFC</color>
+    <color name="paper_fold">#F5F0FF</color>
 
-    <color name="ink">#172522</color>
-    <color name="ink_soft">#52635F</color>
+    <color name="ink">#342D3F</color>
+    <color name="ink_soft">#776E84</color>
     <color name="on_accent">#FFFFFF</color>
 
-    <color name="sky">#287D70</color>
-    <color name="sky_soft">#D8EEE9</color>
-    <color name="apricot">#F2A65A</color>
-    <color name="apricot_soft">#FFF0DF</color>
-    <color name="on_apricot_soft">#4A2B0D</color>
-    <color name="grass">#4EA970</color>
-    <color name="grass_soft">#DDF3E4</color>
-    <color name="berry">#ED7272</color>
-    <color name="berry_soft">#FCE7E7</color>
-    <color name="on_berry">#3D1515</color>
-    <color name="on_berry_soft">#4B1717</color>
-    <color name="berry_ink">#A23E3E</color>
+    <color name="sky">#826DCC</color>
+    <color name="sky_soft">#EEE9FF</color>
+    <color name="apricot">#F2A05F</color>
+    <color name="apricot_soft">#FFF0E2</color>
+    <color name="on_apricot_soft">#5A3216</color>
+    <color name="grass">#7E9D68</color>
+    <color name="grass_soft">#EDF4E7</color>
+    <color name="berry">#E878AC</color>
+    <color name="berry_soft">#FDE8F2</color>
+    <color name="on_berry">#48152D</color>
+    <color name="on_berry_soft">#5B213C</color>
+    <color name="berry_ink">#B64C66</color>
 
-    <color name="line">#71827E</color>
-    <color name="line_soft">#D8E3E0</color>
+    <color name="line">#A398AE</color>
+    <color name="line_soft">#E9E1ED</color>
+    <color name="route_apricot">#F3A35E</color>
+    <color name="route_pink">#EA79AF</color>
+    <color name="route_lavender">#9B7DE2</color>
+    <color name="route_halo">#F7FFFFFF</color>
+    <color name="map_accuracy_fill">#269B7DE2</color>
+    <color name="map_accuracy_stroke">#669B7DE2</color>
     <bool name="light_system_bars">true</bool>
 
     <!-- Fixed brand illustration colors; these intentionally do not change in night mode. -->

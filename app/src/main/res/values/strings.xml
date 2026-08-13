@@ -37,6 +37,7 @@
     <string name="guardian_start_title">어떻게 시작할까요?</string>
     <string name="guardian_start_new_family">새 가족 만들기</string>
     <string name="guardian_start_join_family">초대 번호로 기존 가족 참여</string>
+    <string name="dialog_cancel">취소</string>
     <string name="pairing_not_found">그런 번호가 없어요. 다시 확인해 주세요.</string>
     <string name="pairing_expired">번호가 만료됐어요. 엄마 폰에서 새 번호를 받아주세요.</string>
     <string name="pairing_full">이미 다른 폰이 연결돼 있어요.</string>
@@ -126,11 +127,15 @@
          docs/known-issues.md 12번) 화면의 점은 항상 "마지막으로 확인한 위치"다.
          그래서 배터리 옆에 그게 언제였는지를 반드시 함께 적는다 — "지금 위치"라고
          읽히면 안 된다. -->
-    <string name="map_status_format">%1$d%% · %2$s 확인한 위치예요</string>
+    <string name="map_status_format">배터리 %1$d%%\n%2$s 기준</string>
     <string name="map_status_never">아직 위치를 확인한 적이 없어요. \'지금 위치 확인\'을 눌러주세요.</string>
     <string name="map_locate_now">지금 위치 확인</string>
     <string name="map_locating">애기폰에 물어보는 중…</string>
     <string name="map_locate_no_fix">애기폰이 아직 위치를 못 잡았어요. 잠시 뒤에 다시 눌러주세요.</string>
+    <string name="map_child_avatar">선택한 아이 캐릭터</string>
+    <string name="map_battery_info_title">아이 휴대폰 배터리</string>
+    <string name="map_battery_info_message">현재 잔량은 아이 휴대폰이 보낸 상태로 확인할 수 있어요. 어떤 앱이 배터리를 얼마나 사용했는지는 안드로이드 보안 정책상 원격으로 읽을 수 없으며, 아이 휴대폰의 설정 &gt; 배터리에서 직접 확인해야 해요.</string>
+    <string name="map_battery_info_confirm">확인</string>
 
     <string name="tab_map">지도</string>
     <string name="tab_alert">알림</string>
@@ -154,6 +159,11 @@
 
     <string name="control_header_subtitle">소리, 메시지, 알람을 아이 폰으로 바로 보내세요.</string>
     <string name="control_section_ringer">지금 바로 바꾸기</string>
+    <string name="control_ringer_status_loading">애기폰의 현재 소리 상태를 확인하는 중이에요</string>
+    <string name="control_ringer_status_unknown">마지막 소리 상태를 아직 확인하지 못했어요</string>
+    <string name="control_ringer_status_format">마지막 확인 · %1$s</string>
+    <string name="control_ringer_status_applied">현재 상태 · %1$s</string>
+    <string name="control_ringer_refresh">새로 확인</string>
     <string name="control_mode_normal">벨소리</string>
     <string name="control_mode_vibrate">진동</string>
     <string name="control_mode_silent">무음</string>
@@ -421,10 +431,28 @@
 
     <string name="timeline_unknown_place">머무른 곳</string>
     <string name="timeline_move_title">이동 %1$s</string>
-    <string name="timeline_detail">%1$s · %2$s</string>
+    <string name="timeline_detail">%1$s\n%2$s</string>
     <string name="timeline_empty">이 날은 기록이 없어요</string>
     <string name="timeline_expand">이동 기록 펼치기</string>
     <string name="timeline_collapse">이동 기록 접기</string>
+    <string name="timeline_drag_handle">위아래로 끌어 이동 기록 높이 조절</string>
+    <string name="timeline_view_records">이동 기록 보기</string>
+    <string name="timeline_hide_all_routes">전체 이동경로 숨기기</string>
+    <string name="timeline_show_all_routes">전체 이동경로 보기</string>
+    <string name="timeline_route_visible">지도 표시 중</string>
+    <string name="timeline_route_hidden">지도에서 숨김</string>
+    <string name="timeline_summary_routes_hidden">%1$s · 경로 숨김</string>
+    <string name="timeline_summary_routes_partial">%1$s · 일부 숨김</string>
+    <string name="timeline_summary_today">오늘 %1$s</string>
+    <string name="timeline_summary_day">이 날 %1$s</string>
+    <string name="timeline_summary_empty">오늘 이동 기록</string>
     <string name="day_prev">이전 날</string>
     <string name="day_next">다음 날</string>
+    <string name="map_live_start">실시간 보기</string>
+    <string name="map_live_stop">실시간 종료</string>
+    <string name="map_live_connecting">실시간 연결 중…</string>
+    <string name="map_live_active_status">실시간 추적 중 · 정확도 약 %1$dm · 배터리 %2$d%%</string>
+    <string name="map_live_waiting">실시간 위치를 잡는 중이에요. GPS 신호가 잡힐 때까지 잠시 기다려 주세요.</string>
+    <string name="map_live_stopped">실시간 보기를 종료했어요. 지도에는 마지막으로 받은 위치가 남아 있어요.</string>
+    <string name="map_live_timeout">10분 안전 제한으로 실시간 보기를 종료했어요.</string>
 </resources>

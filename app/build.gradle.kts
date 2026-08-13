@@ -13,6 +13,9 @@ val localProps = Properties().apply {
     if (f.exists()) f.inputStream().use { load(it) }
 }
 val releaseStoreFile = localProps.getProperty("releaseStoreFile")
+// 모바일 지도 SDK에는 Secret을 넣지 않는다. 패키지명으로 제한된 NCP Key ID만
+// local.properties에서 읽어 매니페스트에 주입한다.
+val naverMapNcpKeyId = localProps.getProperty("naverMapNcpKeyId").orEmpty()
 val hasReleaseSigning = releaseStoreFile != null &&
     rootProject.file(releaseStoreFile).exists() &&
     localProps.getProperty("releaseStorePassword") != null &&
@@ -41,6 +44,7 @@ android {
         // USB adb reverse를 통해 PC의 로컬 에뮬레이터에 붙는다.
         buildConfigField("boolean", "USE_FIREBASE_EMULATOR", useFirebaseEmulator.toString())
         manifestPlaceholders["usesCleartextTraffic"] = "false"
+        manifestPlaceholders["naverMapNcpKeyId"] = naverMapNcpKeyId
     }
 
     buildFeatures {
@@ -100,9 +104,14 @@ android {
 // 빌드가 죽는다. 지역 변수로 한 번 옮겨 담으면 람다가 값만 들고 간다.
 run {
     val signingConfigured = hasReleaseSigning
+    val naverMapConfigured = naverMapNcpKeyId.isNotBlank()
     tasks.configureEach {
         if (name == "packageRelease") {
             doFirst {
+                check(naverMapConfigured) {
+                    "네이버 지도 NCP Key ID가 없습니다. local.properties에 " +
+                        "naverMapNcpKeyId=발급받은_Client_ID 를 추가하세요."
+                }
                 check(signingConfigured) {
                     """
                     릴리스 서명 정보가 없다. local.properties 에 아래 네 줄을 넣고 다시 돌린다.
@@ -136,6 +145,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.play.services.location)
     implementation(libs.androidx.lifecycle.service)
-    implementation(libs.osmdroid.android)
+    implementation(libs.naver.map)
     testImplementation(libs.junit)
 }

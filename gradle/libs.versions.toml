@@ -3,10 +3,7 @@ agp = "9.2.1"
 googleServices = "4.5.0"
 firebaseBom = "34.17.0"
 playServicesLocation = "21.4.0"
-# 카카오로 되돌릴 때 쓴다 — 지금은 osmdroid 로 교체돼 app/build.gradle.kts 가
-# 이 버전을 참조하지 않는다.
-kakaoMap = "2.14.1"
-osmdroid = "6.1.20"
+naverMap = "3.23.3"
 coroutines = "1.11.0"
 coreKtx = "1.19.0"
 appcompat = "1.7.1"
@@ -34,9 +31,7 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
-# 카카오로 되돌릴 때 쓴다 — app/build.gradle.kts 에서 참조를 지웠다.
-kakao-map = { group = "com.kakao.maps.open", name = "android", version.ref = "kakaoMap" }
-osmdroid-android = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
+naver-map = { group = "com.naver.maps", name = "map-sdk", version.ref = "naverMap" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]

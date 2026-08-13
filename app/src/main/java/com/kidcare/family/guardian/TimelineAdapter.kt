@@ -1,7 +1,11 @@
 package com.kidcare.family.guardian
 
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
+import androidx.core.widget.ImageViewCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -23,6 +27,15 @@ class TimelineAdapter(
     private val zone: ZoneId,
     private val onRowClick: (SegmentDoc) -> Unit,
 ) : ListAdapter<SegmentDoc, TimelineAdapter.Holder>(Diff) {
+
+    private var hiddenMoveStarts: Set<Long> = emptySet()
+
+    @Suppress("NotifyDataSetChanged")
+    fun setHiddenMoveStarts(hidden: Set<Long>) {
+        if (hiddenMoveStarts == hidden) return
+        hiddenMoveStarts = hidden
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = Holder(
         ItemTimelineBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -52,6 +65,21 @@ class TimelineAdapter(
             binding.iconText.setImageResource(
                 if (stay) R.drawable.ic_tab_place else R.drawable.ic_route
             )
+            binding.iconText.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(
+                    context,
+                    if (stay) R.color.apricot_soft else R.color.berry_soft,
+                ),
+            )
+            ImageViewCompat.setImageTintList(
+                binding.iconText,
+                ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        context,
+                        if (stay) R.color.apricot else R.color.berry,
+                    ),
+                ),
+            )
             binding.titleText.text = if (stay) {
                 doc.placeName.ifEmpty { context.getString(R.string.timeline_unknown_place) }
             } else {
@@ -65,6 +93,13 @@ class TimelineAdapter(
                 SegmentSummarizer.timeRange(segment, zone),
                 SegmentSummarizer.durationText(doc.endAt - doc.startAt),
             )
+            val routeHidden = !stay && doc.startAt in hiddenMoveStarts
+            binding.routeState.visibility = if (stay) View.GONE else View.VISIBLE
+            binding.routeState.setText(
+                if (routeHidden) R.string.timeline_route_hidden
+                else R.string.timeline_route_visible,
+            )
+            binding.root.alpha = if (routeHidden) 0.62f else 1f
             binding.root.setOnClickListener { onRowClick(doc) }
         }
     }

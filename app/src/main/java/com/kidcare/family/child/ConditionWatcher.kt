@@ -44,8 +44,8 @@ import com.kidcare.family.onboarding.PermissionStep
  *   물음에 대답을 못 하게 된다.** 그건 4단계의 연결 끊김 배너가 이미 덮는 자리다
  *   ([com.kidcare.family.logic.DisconnectRule]). 게다가 OEM 의 자동 절전 관리가 사람
  *   손 없이 이 값을 껐다 켰다 하는 기기가 있어, 알리기 시작하면 헛경보가 섞인다.
- * - [PermissionStep.ACTIVITY_RECOGNITION] — 없어도 앱이 망가지지 않는다. 수집 주기가
- *   이동(5초) 고정으로 돌 뿐이라 위치는 오히려 더 촘촘하다(그 enum 주석 참고).
+ * - [PermissionStep.ACTIVITY_RECOGNITION] — 없어도 앱이 망가지지 않는다. 좌표 기반
+ *   적응형 판정이 처음 30초를 확인한 뒤 30초 저주기로 내려가며 이동을 계속 찾는다.
  *
  * ## 한 번만 알린다 — 프로세스가 죽어도
  *

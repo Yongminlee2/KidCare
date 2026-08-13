@@ -1,17 +1,26 @@
 package com.kidcare.family.guardian
 
+import android.annotation.SuppressLint
+import android.content.res.ColorStateList
+import android.graphics.PointF
 import android.os.Bundle
+import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
-import androidx.core.content.ContextCompat
+import android.view.ViewConfiguration
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.firestore.ListenerRegistration
 import com.kidcare.family.R
 import com.kidcare.family.core.AuthGateway
@@ -27,19 +36,31 @@ import com.kidcare.family.core.model.SegmentDoc
 import com.kidcare.family.core.model.TrailPoint
 import com.kidcare.family.databinding.FragmentMapTimelineBinding
 import com.kidcare.family.logic.DayPicker
+import com.kidcare.family.logic.Fix
+import com.kidcare.family.logic.RoutePathRefiner
+import com.kidcare.family.logic.SegmentSummarizer
+import com.kidcare.family.logic.SegmentType
+import com.naver.maps.geometry.LatLng
+import com.naver.maps.geometry.LatLngBounds
+import com.naver.maps.map.CameraAnimation
+import com.naver.maps.map.CameraUpdate
+import com.naver.maps.map.NaverMap
+import com.naver.maps.map.OnMapReadyCallback
+import com.naver.maps.map.overlay.CircleOverlay
+import com.naver.maps.map.overlay.Marker
+import com.naver.maps.map.overlay.OverlayImage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.time.ZoneId
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Polygon
-import org.osmdroid.views.overlay.Polyline
+import java.util.UUID
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /**
- * 보호자 메인. osmdroid 지도 위에 아이의 위치를 찍고 그 아래에 하루 요약을 보여준다.
+ * 보호자 메인. 네이버 지도 위에 아이의 위치를 찍고 그 아래에 하루 요약을 보여준다.
  *
  * ## "지금 위치"가 아니라 "마지막으로 확인한 위치"다
  *
@@ -62,23 +83,28 @@ import org.osmdroid.views.overlay.Polyline
  *
  * 3단계 Task 5 가 지도 아래에 하루 요약 타임라인과 날짜 이동을 붙였다.
  * 3단계 Task 6 이 [drawRoute] 로 지도 위에 하루 경로 폴리라인을 붙였다.
- * osmdroid 교체(카카오 앱키 미발급 문제 해결) 시점에 카카오 API 호출을 osmdroid로
- * 옮겼다 — 지도가 그리는 내용과 동작 규칙은 그대로다. `.superpowers/map-swap-report.md`
- * 에 API 매핑 근거를 적어뒀다.
+ * 지도 엔진은 네이버 Mobile Dynamic Map SDK를 사용한다. 아이 위치 수집과 서버 기록은
+ * 지도 SDK와 무관하며, 이 화면이 열릴 때만 네이버 지도를 사용한다.
  */
-class MapTimelineFragment : Fragment() {
+class MapTimelineFragment : Fragment(), OnMapReadyCallback {
 
     private var _binding: FragmentMapTimelineBinding? = null
     private val binding get() = _binding!!
 
     // 아이 위치 마커. 처음 생길 때만 카메라를 이동시키기 위해 null 여부로
     // "이미 그린 적 있는가"를 판정한다 — 아래 renderStatus() 참고.
+    private var naverMap: NaverMap? = null
     private var childMarker: Marker? = null
 
     // 마커 주변에 그리는 오차 원. 마커와 따로 들고 있어야 갱신할 때 이전 원만
     // 골라 지울 수 있다(routeLine 과 같은 규율).
-    private var accuracyCircle: Polygon? = null
-    private var routeLine: Polyline? = null
+    private var accuracyCircle: CircleOverlay? = null
+    private var routeOverlay: GradientRouteOverlay? = null
+    private var routeSections: List<RouteSection> = emptyList()
+    private val hiddenRouteStarts = mutableSetOf<Long>()
+    private var lastRouteLegs: List<List<LatLng>> = emptyList()
+    private var lastRoutePositions: List<LatLng> = emptyList()
+    private var lastMapStatus: ChildStatusDoc? = null
 
     // 자녀가 members 에 들어오는 순간을 계속 지켜본다(known-issues 3): 부모가 이 화면을
     // 켜 둔 채로 아이가 페어링을 끝내면, 한 번 조회 방식에서는 화면을 다시 만들기
@@ -104,6 +130,17 @@ class MapTimelineFragment : Fragment() {
     private var timeoutJob: Job? = null
     private var commandGeneration = 0
 
+    /** 실시간 보기 명령과 상태 문서 구독은 기존 '지금 위치 확인' 명령과 독립적으로 관리한다. */
+    private var liveCommandListener: ListenerRegistration? = null
+    private var liveStatusListener: ListenerRegistration? = null
+    private var liveCommandTimeoutJob: Job? = null
+    private var liveSessionTimeoutJob: Job? = null
+    private var liveCommandGeneration = 0
+    private var liveTrackingActive = false
+    private var liveTrackingBusy = false
+    private var liveBaselineAt = Long.MIN_VALUE
+    private var liveSessionId: String? = null
+
     // 기기 시간대를 한 번만 읽어 고정한다 — 화면이 떠 있는 동안 시간대가 바뀌는 일은
     // 실질적으로 없고, DayPicker 를 부를 때마다 매번 물어보면 호출부만 늘어난다.
     private val zone: ZoneId = ZoneId.systemDefault()
@@ -114,7 +151,10 @@ class MapTimelineFragment : Fragment() {
     private var childUid: String? = null
     private lateinit var timelineAdapter: TimelineAdapter
     private var timelineExpanded = false
+    /** 접었다 다시 펼쳐도 사용자가 드래그해 정한 높이를 되살리기 위한 콘텐츠 높이. */
+    private var lastExpandedTimelineHeight = 0
     private var focusChildOnNextLoad = false
+    private var routeSummaryBaseText: CharSequence = ""
 
     /** 연결 끊김 배너의 판정 재료를 적는 곳([RequestLog], DisconnectRule 주석 참고). */
     private val requestLog by lazy { RequestLog(requireContext().applicationContext) }
@@ -132,6 +172,10 @@ class MapTimelineFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         timelineExpanded = savedInstanceState?.getBoolean(KEY_TIMELINE_EXPANDED) ?: false
+        lastExpandedTimelineHeight = savedInstanceState
+            ?.getInt(KEY_TIMELINE_CONTENT_HEIGHT)
+            ?.takeIf { it > 0 }
+            ?: dp(DEFAULT_TIMELINE_CONTENT_HEIGHT_DP)
 
         // 지도만 상태바 뒤까지 그리고, 그 위에 뜬 상태 카드는 상태바 아래로 내린다.
         // 레이아웃에 적힌 12dp 여백에 상태바 높이를 **더한다** — 덮어쓰면 상태바가
@@ -146,8 +190,13 @@ class MapTimelineFragment : Fragment() {
         // 타임라인은 지도와 무관하다. 아직 childUid 를 못 구한 첫 실행 구간에서 화면이
         // "아무 설명 없이 텅 빈 채로" 남으면 고장으로 읽히므로, 읽기 결과를 기다리지
         // 않고 여기서 빈 목록으로 한 번 먼저 그려 empty 안내부터 보여준다.
-        timelineAdapter = TimelineAdapter(zone) { doc -> focusOn(doc.lat, doc.lng) }
-        binding.timelineList.layoutManager = LinearLayoutManager(requireContext())
+        timelineAdapter = TimelineAdapter(zone) { doc ->
+            if (doc.type == SegmentType.MOVE.name) toggleRoute(doc)
+            else focusOn(doc.lat, doc.lng)
+        }
+        binding.timelineList.layoutManager = LinearLayoutManager(
+            requireContext(), LinearLayoutManager.HORIZONTAL, false,
+        )
         binding.timelineList.adapter = timelineAdapter
         renderTimeline(emptyList())
         binding.prevDayButton.setOnClickListener { changeDay(-1) }
@@ -156,18 +205,57 @@ class MapTimelineFragment : Fragment() {
             timelineExpanded = !timelineExpanded
             renderTimelinePanel()
         }
+        bindTimelineDragHandle()
+        binding.routeVisibilityButton.setOnClickListener { toggleAllRoutes() }
+        binding.mapChildSelector.setOnClickListener {
+            (activity as? GuardianMainActivity)?.showChildMenuFrom(it)
+        }
+        binding.statusDetails.setOnClickListener { showBatteryInfo() }
         binding.locateButton.setOnClickListener { locateNow() }
-        binding.locateButton.isEnabled = false
+        binding.liveTrackingButton.setOnClickListener {
+            if (liveTrackingActive || liveTrackingBusy) stopLiveTracking()
+            else startLiveTracking()
+        }
+        setLocateButtonEnabled(false)
+        renderLiveTrackingState()
         binding.statusBar.text = getString(R.string.map_no_child)
         renderDayHeader()
         renderTimelinePanel()
+        refreshSelectedChildHeader()
 
+        binding.mapView.onCreate(savedInstanceState)
+        binding.mapView.getMapAsync(this)
         subscribe()
+    }
 
-        // osmdroid는 mapView.start(...) 같은 비동기 준비 콜백이 없다 — MapView 는
-        // 위 FragmentMapTimelineBinding.inflate() 시점에 XML 인플레이트로 이미 완전히
-        // 생성되어 있고, 마커/폴리라인을 바로 추가해도 된다.
-        binding.mapView.setMultiTouchControls(true)
+    override fun onMapReady(map: NaverMap) {
+        val b = _binding ?: return
+        if (!isAdded) return
+        naverMap = map
+        map.uiSettings.apply {
+            isZoomControlEnabled = false
+            isLocationButtonEnabled = false
+            isScaleBarEnabled = false
+            logoGravity = Gravity.START or Gravity.BOTTOM
+        }
+        postForCurrentView(b.timelinePanel) { updateMapControls() }
+        renderMapStatus()
+        renderRouteOverlay()
+        if (timelineExpanded) postForCurrentView(b.mapView) { fitWholeRoute() }
+    }
+
+    fun refreshSelectedChildHeader() {
+        val b = _binding ?: return
+        b.childName.text = (activity as? GuardianMainActivity)?.selectedChildLabelText()
+            ?: getString(R.string.child_default_name)
+    }
+
+    private fun showBatteryInfo() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.map_battery_info_title)
+            .setMessage(R.string.map_battery_info_message)
+            .setPositiveButton(R.string.map_battery_info_confirm, null)
+            .show()
     }
 
     /**
@@ -186,9 +274,11 @@ class MapTimelineFragment : Fragment() {
                 // uid 가 그대로면 다시 읽을 이유가 없다 — 매번 다시 읽으면 그게 곧
                 // 무료 한도를 갉아먹는 읽기다.
                 if (uid == childUid) return@observeChildJoined
+                stopLiveTracking(targetUid = childUid)
+                clearMapForChildSwitch()
                 childUid = uid
                 _binding ?: return@observeChildJoined
-                binding.locateButton.isEnabled = true
+                setLocateButtonEnabled(true)
                 load(familyId, uid)
             },
             onError = { e ->
@@ -362,6 +452,209 @@ class MapTimelineFragment : Fragment() {
         timeoutJob = null
     }
 
+    private fun startLiveTracking() {
+        val familyId = RoleStore(requireContext()).familyId ?: run {
+            showError(getString(R.string.map_no_child))
+            return
+        }
+        val uid = childUid ?: run {
+            showError(getString(R.string.map_no_child))
+            return
+        }
+
+        stopLiveCommandTracking()
+        val generation = ++liveCommandGeneration
+        val sessionId = UUID.randomUUID().toString()
+        liveSessionId = sessionId
+        liveTrackingBusy = true
+        liveBaselineAt = lastMapStatus?.at ?: Long.MIN_VALUE
+        renderLiveTrackingState()
+        binding.statusBar.text = getString(R.string.map_live_connecting)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val commandId = withTimeoutOrNull(SEND_TIMEOUT_MILLIS) {
+                    CommandRepository.send(
+                        familyId,
+                        uid,
+                        CommandType.START_LIVE_TRACKING,
+                        mapOf(
+                            CommandType.PAYLOAD_DURATION_SECONDS to
+                                LIVE_SESSION_DURATION_SECONDS.toString(),
+                            CommandType.PAYLOAD_SESSION_ID to sessionId,
+                        ),
+                    )
+                }
+                if (_binding == null || generation != liveCommandGeneration) return@launch
+                if (commandId == null) {
+                    failLiveStart(getString(R.string.control_command_queued))
+                    return@launch
+                }
+                trackLiveStart(familyId, uid, commandId, generation)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (generation != liveCommandGeneration) return@launch
+                val ctx = context ?: return@launch
+                failLiveStart(errorMessage(ctx, e))
+            }
+        }
+    }
+
+    private fun trackLiveStart(
+        familyId: String,
+        uid: String,
+        commandId: String,
+        generation: Int,
+    ) {
+        stopLiveCommandTracking()
+        liveCommandListener = CommandRepository.observeOne(
+            familyId,
+            uid,
+            commandId,
+            onChange = { doc ->
+                if (_binding == null || generation != liveCommandGeneration) return@observeOne
+                when (doc.state) {
+                    CommandState.DONE -> beginLiveStatusSubscription(familyId, uid, generation)
+                    CommandState.FAILED -> failLiveStart(childErrorText(doc.error))
+                    else -> Unit
+                }
+            },
+            onError = { error ->
+                if (_binding == null || generation != liveCommandGeneration) return@observeOne
+                val ctx = context ?: return@observeOne
+                failLiveStart(errorMessage(ctx, error))
+            },
+        )
+        liveCommandTimeoutJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(COMMAND_TIMEOUT_MILLIS)
+            if (generation != liveCommandGeneration || _binding == null) return@launch
+            failLiveStart(getString(R.string.control_command_timeout))
+        }
+    }
+
+    private fun beginLiveStatusSubscription(familyId: String, uid: String, generation: Int) {
+        stopLiveCommandTracking()
+        liveTrackingBusy = false
+        liveTrackingActive = true
+        renderLiveTrackingState()
+        binding.statusBar.text = getString(R.string.map_live_waiting)
+
+        liveStatusListener?.remove()
+        liveStatusListener = FamilyRepository.observeChildStatus(
+            familyId,
+            uid,
+            onChange = { status ->
+                if (_binding == null || generation != liveCommandGeneration ||
+                    !liveTrackingActive
+                ) return@observeChildStatus
+                // 구독 직후 되돌아오는 과거 문서는 실시간 위치처럼 표시하지 않는다.
+                if (status == null || status.at <= liveBaselineAt) {
+                    binding.statusBar.text = getString(R.string.map_live_waiting)
+                    return@observeChildStatus
+                }
+                lastMapStatus = status
+                binding.statusBar.text = getString(
+                    R.string.map_live_active_status,
+                    status.accuracy.coerceAtLeast(0f).roundToInt(),
+                    status.battery,
+                )
+                renderMapStatus()
+            },
+            onError = { error ->
+                if (_binding == null || generation != liveCommandGeneration) return@observeChildStatus
+                val ctx = context ?: return@observeChildStatus
+                showError(errorMessage(ctx, error))
+            },
+        )
+
+        liveSessionTimeoutJob?.cancel()
+        liveSessionTimeoutJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(LIVE_SESSION_DURATION_SECONDS * 1_000L)
+            if (generation != liveCommandGeneration || !liveTrackingActive) return@launch
+            stopLiveTracking()
+            showError(getString(R.string.map_live_timeout))
+        }
+    }
+
+    private fun failLiveStart(message: String) {
+        stopLiveTracking()
+        showError(message)
+    }
+
+    /**
+     * 화면의 실시간 구독을 즉시 끄고 아이 폰에도 종료 명령을 보낸다.
+     * 아이 폰은 종료 명령을 못 받더라도 자체 10분 제한으로 원래 수집 주기로 돌아간다.
+     */
+    private fun stopLiveTracking(
+        sendCommand: Boolean = true,
+        targetUid: String? = childUid,
+    ) {
+        val wasRunning = liveTrackingActive || liveTrackingBusy
+        val sessionId = liveSessionId
+        liveSessionId = null
+        ++liveCommandGeneration
+        liveTrackingActive = false
+        liveTrackingBusy = false
+        stopLiveCommandTracking()
+        liveStatusListener?.remove()
+        liveStatusListener = null
+        liveSessionTimeoutJob?.cancel()
+        liveSessionTimeoutJob = null
+        renderLiveTrackingState()
+
+        if (wasRunning && _binding != null) {
+            binding.statusBar.text = getString(R.string.map_live_stopped)
+        }
+
+        if (!sendCommand || !wasRunning || targetUid == null) return
+        val familyId = context?.let { RoleStore(it).familyId } ?: return
+        lifecycleScope.launch {
+            try {
+                withTimeoutOrNull(SEND_TIMEOUT_MILLIS) {
+                    CommandRepository.send(
+                        familyId,
+                        targetUid,
+                        CommandType.STOP_LIVE_TRACKING,
+                        sessionId?.let { mapOf(CommandType.PAYLOAD_SESSION_ID to it) }
+                            ?: emptyMap(),
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "실시간 종료 명령 전송 실패", e)
+            }
+        }
+    }
+
+    private fun stopLiveCommandTracking() {
+        liveCommandListener?.remove()
+        liveCommandListener = null
+        liveCommandTimeoutJob?.cancel()
+        liveCommandTimeoutJob = null
+    }
+
+    private fun renderLiveTrackingState() {
+        val b = _binding ?: return
+        val label = when {
+            liveTrackingBusy -> R.string.map_live_connecting
+            liveTrackingActive -> R.string.map_live_stop
+            else -> R.string.map_live_start
+        }
+        b.liveTrackingButton.setText(label)
+        b.liveTrackingButton.contentDescription = getString(label)
+        b.liveTrackingButton.isEnabled = childUid != null && !liveTrackingBusy
+        b.liveTrackingButton.alpha = if (b.liveTrackingButton.isEnabled) 1f else 0.55f
+        b.liveTrackingButton.backgroundTintList = ColorStateList.valueOf(
+            ContextCompat.getColor(
+                requireContext(),
+                if (liveTrackingActive) R.color.berry_ink else R.color.sky,
+            ),
+        )
+        setLocateButtonEnabled(childUid != null && !liveTrackingActive && !liveTrackingBusy)
+    }
+
     /** 아이 폰이 대답했다는 사실을 남기고 배너를 즉시 다시 판정하게 한다. */
     private fun recordAnswer() {
         childUid?.let { requestLog.recordAnswer(it) }
@@ -383,8 +676,17 @@ class MapTimelineFragment : Fragment() {
         val b = _binding ?: return
         b.locateProgress.visibility = if (busy) View.VISIBLE else View.GONE
         // 물어보는 중에 또 물어보면 명령 문서만 하나 더 만들어져 쓰기 예산을 깎는다.
-        b.locateButton.isEnabled = !busy && childUid != null
+        setLocateButtonEnabled(
+            !busy && childUid != null && !liveTrackingActive && !liveTrackingBusy,
+        )
         if (busy) b.statusBar.text = getString(R.string.map_locating)
+    }
+
+    /** MaterialCardView로 바꾼 현재위치 버튼의 비활성 상태도 눈에 보이게 맞춘다. */
+    private fun setLocateButtonEnabled(enabled: Boolean) {
+        val button = _binding?.locateButton ?: return
+        button.isEnabled = enabled
+        button.alpha = if (enabled) 1f else 0.48f
     }
 
     private fun showError(message: String) {
@@ -409,6 +711,8 @@ class MapTimelineFragment : Fragment() {
         val signal = status?.lastSignal()
         if (status == null || signal == null) {
             b.statusBar.text = getString(R.string.map_status_never)
+            lastMapStatus = null
+            renderMapStatus()
             return
         }
         val now = FamilyRepository.serverNow(
@@ -435,18 +739,35 @@ class MapTimelineFragment : Fragment() {
             LastSignalText.relativeText(ctx, signal, elapsed),
         )
 
-        val point = GeoPoint(status.lat, status.lng)
+        lastMapStatus = status
+        renderMapStatus()
+    }
+
+    /** 네이버 지도가 비동기로 준비되므로 상태를 보관했다가 준비 직후에도 다시 그린다. */
+    private fun renderMapStatus() {
+        val map = naverMap ?: return
+        val status = lastMapStatus
+        if (status == null || !status.lat.isFinite() || !status.lng.isFinite()) {
+            childMarker?.map = null
+            childMarker = null
+            accuracyCircle?.map = null
+            accuracyCircle = null
+            return
+        }
+
+        val point = LatLng(status.lat, status.lng)
         drawAccuracyCircle(point, status.accuracy)
         val marker = childMarker
-        val shouldFocusChild = marker == null || focusChildOnNextLoad
+        val shouldFocusChild = marker == null || focusChildOnNextLoad || liveTrackingActive
         if (marker == null) {
-            val newMarker = Marker(b.mapView)
-            newMarker.icon = ContextCompat.getDrawable(requireContext(), R.drawable.marker_child)
-            // 카카오 LabelStyle.setAnchorPoint(0.5f, 1.0f)와 같은 값 — 마커 아이콘의
+            val ctx = context ?: return
+            val newMarker = Marker()
+            newMarker.icon = OverlayImage.fromBitmap(ChildMarkerFactory.create(ctx))
+            // 마커 아이콘의
             // 가로 중앙·세로 맨 아래가 실제 좌표를 가리키게 한다(핀 모양 아이콘 전제).
-            newMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            newMarker.anchor = PointF(0.5f, 1.0f)
             newMarker.position = point
-            b.mapView.overlays.add(newMarker)
+            newMarker.map = map
             childMarker = newMarker
             // 카메라는 마커가 "처음 생길 때"만 움직인다 — 이후 갱신에서는 부모가 이미
             // 지도를 옮겨봤을 수 있으니 시점을 뺏지 않는다.
@@ -454,11 +775,14 @@ class MapTimelineFragment : Fragment() {
             marker.position = point
         }
         if (shouldFocusChild) {
-            b.mapView.controller.setZoom(CHILD_FOCUS_ZOOM)
-            b.mapView.controller.setCenter(point)
+            val update = if (liveTrackingActive) {
+                CameraUpdate.scrollTo(point).animate(CameraAnimation.Linear, 500)
+            } else {
+                CameraUpdate.scrollAndZoomTo(point, CHILD_FOCUS_ZOOM)
+            }
+            map.moveCamera(update)
             focusChildOnNextLoad = false
         }
-        b.mapView.invalidate()
     }
 
     /**
@@ -471,7 +795,7 @@ class MapTimelineFragment : Fragment() {
      *
      * 그리는 규칙:
      *  - **불확실성으로 읽혀야지 지오펜스나 강조로 읽히면 안 된다.** 옅은 채움에
-     *    가는 테두리를 쓰고 마커보다 **아래**(overlays 인덱스 0)에 넣는다.
+     *    가는 테두리를 쓰고 마커보다 낮은 Z 인덱스에 넣는다.
      *  - **최소 크기를 강제하지 않는다.** 오차가 작아 지금 배율에서 원이 안 보이면
      *    그게 맞는 결과다. 좋은 fix 를 억지로 큰 원으로 부풀리는 것은 그 자체가
      *    또 다른 거짓말이다.
@@ -479,29 +803,22 @@ class MapTimelineFragment : Fragment() {
      *    뜻이다(옛 문서·기기가 값을 안 줄 때 0 으로 읽힌다). 모르는 것을 완벽한
      *    것처럼 그리면 안 된다.
      */
-    private fun drawAccuracyCircle(center: GeoPoint, accuracyMeters: Float) {
-        val b = _binding ?: return
+    private fun drawAccuracyCircle(center: LatLng, accuracyMeters: Float) {
+        val map = naverMap ?: return
 
-        accuracyCircle?.let { b.mapView.overlays.remove(it) }
+        accuracyCircle?.map = null
         accuracyCircle = null
 
-        if (accuracyMeters <= 0f) {
-            b.mapView.invalidate()
-            return
-        }
+        if (accuracyMeters <= 0f) return
 
-        val circle = Polygon(b.mapView)
-        circle.setPoints(Polygon.pointsAsCircle(center, accuracyMeters.toDouble()))
-        // setFillColor/setStrokeColor 대신 Paint 를 직접 만진다 — 이 파일의
-        // Polyline 이 이미 같은 이유(구버전 API deprecated)로 그렇게 하고 있다.
-        circle.fillPaint.color = ACCURACY_FILL_COLOR
-        circle.outlinePaint.color = ACCURACY_STROKE_COLOR
-        circle.outlinePaint.strokeWidth = ACCURACY_STROKE_WIDTH
-        // 인덱스 0 = 가장 먼저 그려짐 = 가장 아래. 마커·경로선은 이 위에 남는다.
-        // 마커가 나중에 append 되므로 "원이 마커를 덮는" 순서가 나올 수 없다.
-        b.mapView.overlays.add(0, circle)
+        val circle = CircleOverlay(center, accuracyMeters.toDouble()).apply {
+            color = ACCURACY_FILL_COLOR
+            outlineColor = ACCURACY_STROKE_COLOR
+            outlineWidth = dp(ACCURACY_STROKE_WIDTH_DP)
+            globalZIndex = ACCURACY_Z_INDEX
+            this.map = map
+        }
         accuracyCircle = circle
-        b.mapView.invalidate()
     }
 
     /** "이전 날"/"다음 날" 버튼. 미래로는 못 가게 막는다 — 볼 데이터가 없는 날이다. */
@@ -535,11 +852,137 @@ class MapTimelineFragment : Fragment() {
 
     private fun renderTimelinePanel() {
         val b = _binding ?: return
-        b.timelineContent.visibility = if (timelineExpanded) View.VISIBLE else View.GONE
-        b.timelineToggleButton.rotation = if (timelineExpanded) 180f else 0f
+        val contentHeight = if (timelineExpanded) {
+            lastExpandedTimelineHeight.coerceAtMost(maxTimelineContentHeight(collapsedPanelHeight()))
+        } else {
+            0
+        }
+        setTimelineContentHeight(contentHeight)
+        renderTimelineToggleState()
+        // 고정 dp 대신 실제 패널 높이를 쓴다. 글꼴 크기나 기기 비율이 달라도 현재 위치
+        // 버튼과 네이버 로고가 패널 위 같은 간격에 놓인다.
+        postForCurrentView(b.timelinePanel) {
+            updateMapControls()
+            if (timelineExpanded) fitWholeRoute()
+        }
+    }
+
+    private fun renderTimelineToggleState() {
+        val b = _binding ?: return
+        b.timelineToggleButton.setText(
+            if (timelineExpanded) R.string.timeline_collapse else R.string.timeline_view_records,
+        )
         b.timelineToggleButton.contentDescription = getString(
             if (timelineExpanded) R.string.timeline_collapse else R.string.timeline_expand,
         )
+    }
+
+    /**
+     * 보라색 손잡이를 실제 높이 조절 손잡이로 만든다. 패널 전체 높이를 억지로 고정하지
+     * 않고 가운데 콘텐츠 높이만 바꾸므로, 위 요약 줄과 아래 날짜 줄은 항상 온전히 남는다.
+     */
+    @SuppressLint("ClickableViewAccessibility") // performClick을 ACTION_UP에서 직접 호출한다.
+    private fun bindTimelineDragHandle() {
+        val b = _binding ?: return
+        val handle = b.timelineDragHandle
+        val touchSlop = ViewConfiguration.get(requireContext()).scaledTouchSlop
+        var startRawY = 0f
+        var startContentHeight = 0
+        var currentContentHeight = 0
+        var basePanelHeight = 0
+        var dragging = false
+
+        // 짧게 누르면 기존 접기/펼치기와 같은 동작을 해 접근성 클릭도 의미가 있게 한다.
+        handle.setOnClickListener {
+            timelineExpanded = !timelineExpanded
+            renderTimelinePanel()
+        }
+        handle.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    startRawY = event.rawY
+                    startContentHeight = if (b.timelineContent.isVisible) {
+                        b.timelineContent.height
+                    } else {
+                        0
+                    }
+                    currentContentHeight = startContentHeight
+                    basePanelHeight = (b.timelinePanel.height - startContentHeight)
+                        .coerceAtLeast(dp(COLLAPSED_PANEL_HEIGHT_DP))
+                    dragging = false
+                    view.parent?.requestDisallowInterceptTouchEvent(true)
+                    true
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    val deltaY = event.rawY - startRawY
+                    if (!dragging && abs(deltaY) > touchSlop) dragging = true
+                    if (dragging) {
+                        currentContentHeight = (startContentHeight - deltaY.roundToInt())
+                            .coerceIn(0, maxTimelineContentHeight(basePanelHeight))
+                        setTimelineContentHeight(currentContentHeight)
+                        // 레이아웃 측정 한 프레임을 기다리지 않아 손잡이와 버튼이 함께 움직인다.
+                        updateMapControls(basePanelHeight + currentContentHeight)
+                    }
+                    true
+                }
+
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    view.parent?.requestDisallowInterceptTouchEvent(false)
+                    if (dragging) {
+                        settleTimelineDrag(currentContentHeight, basePanelHeight)
+                    } else if (event.actionMasked == MotionEvent.ACTION_UP) {
+                        view.performClick()
+                    }
+                    true
+                }
+
+                else -> false
+            }
+        }
+    }
+
+    private fun settleTimelineDrag(contentHeight: Int, basePanelHeight: Int) {
+        val maxHeight = maxTimelineContentHeight(basePanelHeight)
+        val settledHeight = if (contentHeight < dp(DRAG_COLLAPSE_THRESHOLD_DP)) {
+            0
+        } else {
+            contentHeight.coerceIn(dp(MIN_EXPANDED_CONTENT_HEIGHT_DP), maxHeight)
+        }
+        timelineExpanded = settledHeight > 0
+        if (timelineExpanded) lastExpandedTimelineHeight = settledHeight
+        setTimelineContentHeight(settledHeight)
+        renderTimelineToggleState()
+        postForCurrentView(binding.timelinePanel) {
+            updateMapControls()
+            if (timelineExpanded) fitWholeRoute()
+        }
+    }
+
+    private fun setTimelineContentHeight(height: Int) {
+        val content = _binding?.timelineContent ?: return
+        val safeHeight = height.coerceAtLeast(0)
+        content.updateLayoutParams<ViewGroup.LayoutParams> { this.height = safeHeight }
+        content.isVisible = safeHeight > 0
+    }
+
+    private fun collapsedPanelHeight(): Int {
+        val b = _binding ?: return dp(COLLAPSED_PANEL_HEIGHT_DP)
+        val contentHeight = if (b.timelineContent.isVisible) {
+            b.timelineContent.height
+        } else {
+            0
+        }
+        return (b.timelinePanel.height - contentHeight)
+            .coerceAtLeast(dp(COLLAPSED_PANEL_HEIGHT_DP))
+    }
+
+    private fun maxTimelineContentHeight(basePanelHeight: Int): Int {
+        val rootHeight = _binding?.root?.height ?: 0
+        if (rootHeight <= 0) return dp(MAX_TIMELINE_CONTENT_HEIGHT_DP)
+        val maxPanelHeight = (rootHeight * MAX_TIMELINE_PANEL_RATIO).roundToInt()
+        return (maxPanelHeight - basePanelHeight)
+            .coerceAtLeast(dp(MIN_EXPANDED_CONTENT_HEIGHT_DP))
     }
 
     private fun renderTimeline(
@@ -548,6 +991,15 @@ class MapTimelineFragment : Fragment() {
     ) {
         _binding ?: return
         timelineAdapter.submitList(docs)
+        val distance = SegmentSummarizer.distanceText(docs.sumOf { it.distanceMeters })
+        routeSummaryBaseText = if (docs.isEmpty()) {
+            getString(R.string.timeline_summary_empty)
+        } else if (dayKey == DayPicker.todayKey(zone, System.currentTimeMillis())) {
+            getString(R.string.timeline_summary_today, distance)
+        } else {
+            getString(R.string.timeline_summary_day, distance)
+        }
+        binding.routeSummary.text = routeSummaryBaseText
         renderTimelineEmpty(docs.isEmpty())
         drawRoute(points, docs)
     }
@@ -562,10 +1014,8 @@ class MapTimelineFragment : Fragment() {
     }
 
     private fun focusOn(lat: Double, lng: Double) {
-        val b = _binding ?: return
-        val point = GeoPoint(lat, lng)
-        b.mapView.controller.setZoom(CHILD_FOCUS_ZOOM)
-        b.mapView.controller.setCenter(point)
+        val map = naverMap ?: return
+        map.moveCamera(CameraUpdate.scrollAndZoomTo(LatLng(lat, lng), CHILD_FOCUS_ZOOM))
     }
 
     /**
@@ -580,37 +1030,214 @@ class MapTimelineFragment : Fragment() {
      * 낙서가 된다.
      */
     private fun drawRoute(points: List<TrailPoint>, docs: List<SegmentDoc>) {
-        val b = _binding ?: return
+        _binding ?: return
 
-        // 위치 마커는 overlays 리스트의 다른 요소라 별개다 — 여기서는 이전 경로선만
+        // 위치 마커는 별개 오버레이다 — 여기서는 이전 경로선만
         // 지우고 마커는 건드리지 않는다.
-        routeLine?.let { b.mapView.overlays.remove(it) }
-        routeLine = null
+        routeOverlay?.remove()
+        routeOverlay = null
 
-        // 하루 문서에는 필터를 통과한 원시 위치점이 이미 함께 들어 있다. 예전에는 구간
-        // 요약의 끝점만 이어 실제 골목과 회전을 많이 잘라냈다. 원시점이 있는 새 기록은
-        // 전부 이어 그리고, 옛 문서는 구간 좌표를 이용해 계속 표시한다.
-        val positions = if (points.size >= 2) {
-            points.sortedBy { it.at }.map { GeoPoint(it.lat, it.lng) }
-        } else {
-            docs.map { GeoPoint(it.lat, it.lng) }
-        }
-        if (positions.size < 2) {
-            b.mapView.invalidate() // 점 하나로는 선이 안 된다 — 지운 것만 반영하고 끝.
-            return
-        }
+        routeSections = buildRouteSections(points, docs)
+        val validKeys = routeSections.mapTo(mutableSetOf()) { it.startAt }
+        hiddenRouteStarts.retainAll(validKeys)
+        timelineAdapter.setHiddenMoveStarts(hiddenRouteStarts.toSet())
+        renderRouteVisibilityState()
 
-        val polyline = Polyline(b.mapView)
-        // setColor/setWidth 는 구버전 API로 deprecated 됐다 — 실제 선을 그리는 Paint 를
-        // 직접 건드리는 쪽이 권장 방식이다.
-        polyline.outlinePaint.color = ROUTE_COLOR
-        polyline.outlinePaint.strokeWidth = ROUTE_LINE_WIDTH
-        polyline.setPoints(positions)
-        b.mapView.overlays.add(polyline)
-        routeLine = polyline
+        renderRouteOverlay()
+        if (timelineExpanded) postForCurrentView(binding.mapView) { fitWholeRoute() }
         // 카메라는 여기서 움직이지 않는다 — 부모가 이미 지도를 옮겨봤을 수 있으니
         // 마커가 처음 생길 때(renderStatus())만 이동하고, 경로 갱신으로는 시점을 뺏지 않는다.
-        b.mapView.invalidate()
+    }
+
+    private fun renderRouteOverlay() {
+        routeOverlay?.remove()
+        routeOverlay = null
+        lastRouteLegs = routeSections
+            .filterNot { it.startAt in hiddenRouteStarts }
+            .flatMap { it.legs }
+        lastRoutePositions = lastRouteLegs.flatten()
+        val map = naverMap ?: return
+        if (lastRouteLegs.sumOf { it.lastIndex.coerceAtLeast(0) } < 1) return
+        val ctx = context ?: return
+        routeOverlay = GradientRouteOverlay(ctx, lastRouteLegs).also { it.attach(map) }
+    }
+
+    /** 이동 카드 하나를 누르면 그 구간 선만 지도에서 켜거나 끈다. */
+    private fun toggleRoute(doc: SegmentDoc) {
+        if (routeSections.none { it.startAt == doc.startAt }) {
+            focusOn(doc.lat, doc.lng)
+            return
+        }
+        if (!hiddenRouteStarts.add(doc.startAt)) hiddenRouteStarts.remove(doc.startAt)
+        timelineAdapter.setHiddenMoveStarts(hiddenRouteStarts.toSet())
+        renderRouteVisibilityState()
+        renderRouteOverlay()
+    }
+
+    /** 모두 보이는 중이면 전부 숨기고, 하나라도 숨겨져 있으면 전부 다시 보인다. */
+    private fun toggleAllRoutes() {
+        val keys = routeSections.mapTo(mutableSetOf()) { it.startAt }
+        if (keys.isEmpty()) return
+        if (keys.all { it !in hiddenRouteStarts }) hiddenRouteStarts.addAll(keys)
+        else hiddenRouteStarts.removeAll(keys)
+        timelineAdapter.setHiddenMoveStarts(hiddenRouteStarts.toSet())
+        renderRouteVisibilityState()
+        renderRouteOverlay()
+    }
+
+    private fun renderRouteVisibilityState() {
+        val b = _binding ?: return
+        val keys = routeSections.map { it.startAt }
+        val allVisible = keys.isNotEmpty() && keys.all { it !in hiddenRouteStarts }
+        b.routeVisibilityButton.isEnabled = keys.isNotEmpty()
+        b.routeVisibilityButton.alpha = if (keys.isNotEmpty()) 1f else 0.38f
+        b.routeVisibilityButton.setIconResource(
+            if (allVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off,
+        )
+        b.routeVisibilityButton.contentDescription = getString(
+            if (allVisible) R.string.timeline_hide_all_routes
+            else R.string.timeline_show_all_routes,
+        )
+        val hiddenCount = keys.count { it in hiddenRouteStarts }
+        b.routeSummary.text = when {
+            hiddenCount == 0 -> routeSummaryBaseText
+            hiddenCount == keys.size -> getString(
+                R.string.timeline_summary_routes_hidden, routeSummaryBaseText,
+            )
+            else -> getString(R.string.timeline_summary_routes_partial, routeSummaryBaseText)
+        }
+    }
+
+    /** 원시 GPS 점을 MOVE 시간 범위별로 나눠 카드 하나와 지도 선 하나를 연결한다. */
+    private fun buildRouteSections(
+        points: List<TrailPoint>,
+        docs: List<SegmentDoc>,
+    ): List<RouteSection> {
+        val sortedPoints = points.sortedBy { it.at }
+        return docs.mapIndexedNotNull { index, doc ->
+            if (doc.type != SegmentType.MOVE.name) return@mapIndexedNotNull null
+
+            // 바로 앞·뒤 점도 경계로 포함해 출발/도착 부근의 짧은 끊김을 막는다.
+            val window = buildList {
+                sortedPoints.lastOrNull { it.at < doc.startAt }?.let(::add)
+                addAll(sortedPoints.filter { it.at in doc.startAt..doc.endAt })
+                sortedPoints.firstOrNull { it.at > doc.endAt }?.let(::add)
+            }.distinct()
+            val refined = if (window.size >= 2) {
+                RoutePathRefiner.refine(
+                    window.map { Fix(it.lat, it.lng, it.accuracy, it.at, it.speed) },
+                ).map { leg -> leg.points.map { LatLng(it.lat, it.lng) } }
+                    .filter { it.size >= 2 }
+            } else {
+                emptyList()
+            }
+
+            // points가 없던 옛 기록도 양옆 구간 좌표로 근사해 계속 볼 수 있게 한다.
+            val legs = if (refined.isNotEmpty()) refined else {
+                val fallback = listOfNotNull(
+                    docs.getOrNull(index - 1), doc, docs.getOrNull(index + 1),
+                ).filter { it.lat.isFinite() && it.lng.isFinite() }
+                    .distinctBy { it.lat to it.lng }
+                    .map { LatLng(it.lat, it.lng) }
+                if (fallback.size >= 2) listOf(fallback) else emptyList()
+            }
+            if (legs.isEmpty()) null else RouteSection(doc.startAt, legs)
+        }
+    }
+
+    private fun fitWholeRoute() {
+        _binding ?: return
+        val map = naverMap ?: return
+        if (lastRoutePositions.size < 2) return
+        val bounds = LatLngBounds.Builder().apply {
+            lastRoutePositions.forEach(::include)
+        }.build()
+        val horizontal = dp(48)
+        val top = dp(112)
+        val bottom = timelinePanelHeight() + dp(24)
+        map.moveCamera(
+            CameraUpdate.fitBounds(bounds, horizontal, top, horizontal, bottom)
+                .animate(CameraAnimation.Easing, 350),
+        )
+    }
+
+    /** 아래 패널에 가려지지 않도록 네이버 법적 고지 로고를 항상 지도 안에 남긴다. */
+    private fun updateNaverLogoMargin(panelHeight: Int = timelinePanelHeight()) {
+        val map = naverMap ?: return
+        map.uiSettings.setLogoMargin(
+            dp(14),
+            0,
+            0,
+            panelHeight + dp(8),
+        )
+    }
+
+    /** 지도 위 부유 컨트롤을 하단 패널의 실제 높이에 맞춘다. */
+    private fun updateMapControls(panelHeight: Int = timelinePanelHeight()) {
+        val b = _binding ?: return
+        b.locateButton.updateLayoutParams<android.widget.FrameLayout.LayoutParams> {
+            bottomMargin = panelHeight + dp(12)
+        }
+        b.liveTrackingButton.updateLayoutParams<android.widget.FrameLayout.LayoutParams> {
+            bottomMargin = panelHeight + dp(72)
+        }
+        updateNaverLogoMargin(panelHeight)
+    }
+
+    private fun timelinePanelHeight(): Int {
+        val height = _binding?.timelinePanel?.height ?: 0
+        return if (height > 0) height else {
+            dp(COLLAPSED_PANEL_HEIGHT_DP) + if (timelineExpanded) {
+                lastExpandedTimelineHeight.takeIf { it > 0 }
+                    ?: dp(DEFAULT_TIMELINE_CONTENT_HEIGHT_DP)
+            } else {
+                0
+            }
+        }
+    }
+
+    private fun clearMapForChildSwitch() {
+        lastMapStatus = null
+        routeSections = emptyList()
+        hiddenRouteStarts.clear()
+        lastRouteLegs = emptyList()
+        lastRoutePositions = emptyList()
+        childMarker?.map = null
+        childMarker = null
+        accuracyCircle?.map = null
+        accuracyCircle = null
+        routeOverlay?.remove()
+        routeOverlay = null
+    }
+
+    /**
+     * 지도 SDK와 View.post 콜백은 Fragment가 화면에서 떨어지는 순간에도 마지막 한 번
+     * 도착할 수 있다. Fragment.resources는 그 구간에 예외를 던지므로, 살아 있는 View의
+     * 리소스를 우선 쓰고 이미 정리됐다면 안전한 기본 배율로 계산한다.
+     */
+    private fun dp(value: Int): Int {
+        val density = _binding?.root?.resources?.displayMetrics?.density
+            ?: context?.resources?.displayMetrics?.density
+            ?: 1f
+        return (value * density).toInt()
+    }
+
+    /** 현재 화면에서 예약한 작업만 실행해, 이전 Fragment View의 지연 작업을 버린다. */
+    private fun postForCurrentView(view: View, action: () -> Unit) {
+        val expectedBinding = _binding ?: return
+        view.post {
+            if (_binding === expectedBinding && isAdded) action()
+        }
+    }
+
+    private data class RouteSection(
+        val startAt: Long,
+        val legs: List<List<LatLng>>,
+    )
+
+    override fun onStart() {
+        super.onStart()
+        _binding?.mapView?.onStart()
     }
 
     override fun onResume() {
@@ -623,8 +1250,20 @@ class MapTimelineFragment : Fragment() {
         super.onPause()
     }
 
+    override fun onStop() {
+        _binding?.mapView?.onStop()
+        super.onStop()
+    }
+
+    override fun onLowMemory() {
+        _binding?.mapView?.onLowMemory()
+        super.onLowMemory()
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putBoolean(KEY_TIMELINE_EXPANDED, timelineExpanded)
+        outState.putInt(KEY_TIMELINE_CONTENT_HEIGHT, lastExpandedTimelineHeight)
+        _binding?.mapView?.onSaveInstanceState(outState)
         super.onSaveInstanceState(outState)
     }
 
@@ -634,37 +1273,42 @@ class MapTimelineFragment : Fragment() {
         loadJob?.cancel()
         loadJob = null
         stopTracking()
-        // onDetach()는 osmdroid가 내부적으로 띄운 타일 다운로드 스레드·리시버를
-        // 정리한다 — 안 부르면 화면을 나갔다 들어올 때마다 조금씩 샌다.
-        _binding?.mapView?.onDetach()
-        childMarker = null
-        accuracyCircle = null
-        routeLine = null
+        stopLiveTracking()
+        clearMapForChildSwitch()
+        naverMap = null
+        _binding?.mapView?.onDestroy()
         _binding = null
         super.onDestroyView()
     }
 
     private companion object {
+        private const val TAG = "MapTimelineFragment"
         /** 관리 탭의 무응답 표시와 같은 값이어야 한다(설계서 §5). */
         private const val COMMAND_TIMEOUT_MILLIS = 60_000L
 
         /** 명령 발행(서버 확인)을 기다리는 시간. 근거는 [ControlFragment.SEND_TIMEOUT_MILLIS]. */
         private const val SEND_TIMEOUT_MILLIS = 15_000L
+        private const val LIVE_SESSION_DURATION_SECONDS = 10 * 60L
 
         private const val KEY_TIMELINE_EXPANDED = "timeline_expanded"
+        private const val KEY_TIMELINE_CONTENT_HEIGHT = "timeline_content_height"
+        private const val DEFAULT_TIMELINE_CONTENT_HEIGHT_DP = 174
+        private const val MAX_TIMELINE_CONTENT_HEIGHT_DP = 340
+        private const val MIN_EXPANDED_CONTENT_HEIGHT_DP = 96
+        private const val DRAG_COLLAPSE_THRESHOLD_DP = 56
+        private const val COLLAPSED_PANEL_HEIGHT_DP = 136
+        private const val MAX_TIMELINE_PANEL_RATIO = 0.72f
         private const val CHILD_FOCUS_ZOOM = 18.0
-
-        private const val ROUTE_LINE_WIDTH = 14f
-        private const val ROUTE_COLOR = 0xFF287D70.toInt()
 
         // 경로선과 같은 파랑에 알파만 크게 낮춘 값이다. 색을 따로 만들지 않는 이유:
         // 새 색은 "다른 무언가"라는 신호를 주는데, 이 원은 마커가 가리키는 그 위치의
         // 불확실성일 뿐 별개의 대상이 아니다. 채움 0x22(약 13%)는 아래 지도 타일의
         // 도로·건물 이름이 그대로 읽히는 정도라 영역을 '칠한' 느낌이 안 난다.
-        private const val ACCURACY_FILL_COLOR = 0x22287D70
+        private const val ACCURACY_FILL_COLOR = 0x269B7DE2
         // 테두리는 채움보다 조금만 진하게. 진하면 지오펜스 경계선처럼 보인다.
-        private const val ACCURACY_STROKE_COLOR = 0x55287D70
+        private const val ACCURACY_STROKE_COLOR = 0x669B7DE2
         // 경로선(14f)의 1/7. 가늘어야 '경계'가 아니라 '번짐'으로 읽힌다.
-        private const val ACCURACY_STROKE_WIDTH = 2f
+        private const val ACCURACY_STROKE_WIDTH_DP = 2
+        private const val ACCURACY_Z_INDEX = -190_000
     }
 }

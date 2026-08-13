@@ -1,193 +1,339 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:animateLayoutChanges="true"
-    android:orientation="vertical">
+    android:background="@color/paper"
+    android:clipChildren="false">
 
-    <FrameLayout
+    <com.naver.maps.map.MapView
+        android:id="@+id/map_view"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="match_parent" />
 
-        <org.osmdroid.views.MapView
-            android:id="@+id/map_view"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/status_card"
+        style="@style/Widget.KidCare.Card.Floating"
+        android:layout_width="match_parent"
+        android:layout_height="76dp"
+        android:layout_gravity="top"
+        android:layout_marginHorizontal="14dp"
+        android:layout_marginTop="12dp">
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="10dp"
+            android:paddingEnd="12dp">
 
-        <!-- 지도는 상태바 뒤까지 그린다(타일이 화면 끝까지 차야 지도답다). 하지만 이
-             카드는 글자라서 가려지면 못 읽는다 — 실기기에서 배터리 문구가 상태바
-             시계와 겹쳐 찍혔다. 위쪽 여백은 MapTimelineFragment 가 상태바 높이만큼
-             더해 준다.
+            <ImageView
+                android:id="@+id/child_avatar"
+                android:layout_width="54dp"
+                android:layout_height="54dp"
+                android:background="@drawable/bg_avatar_ring"
+                android:contentDescription="@string/map_child_avatar"
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/mascot_3d" />
 
-             **layout_margin 을 지우면 안 된다.** 프래그먼트가 화면이 뜰 때 여기
-             topMargin 을 읽어 기준값으로 삼고 거기에 상태바 높이를 더한다.
-             margin 자체가 없어지면 더할 기준이 사라진다.
-
-             카드는 이 앱에서 유일하게 그림자를 쓰는 자리다(테마 기본은 0dp). 진짜로
-             지도 위에 떠 있는 종이 한 장이라 테두리만으로는 타일과 안 갈린다. -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/status_card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top"
-            android:layout_margin="12dp"
-            app:cardElevation="6dp"
-            app:shapeAppearance="@style/ShapeAppearance.KidCare.Large"
-            app:strokeWidth="0dp">
-
-            <!-- 왼쪽 글자가 "언제 확인한 위치인지"를 말하고, 오른쪽 버튼이 "다시
-                 물어보기"다. 두 개가 반드시 한 줄에 함께 있어야 한다 — 주기적 보고가
-                 없어진 뒤로 이 화면의 점은 항상 과거의 점이고, 그 사실과 고치는 방법이
-                 같은 자리에 없으면 부모는 묵은 위치를 지금 위치로 읽는다. -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:baselineAligned="false"
+                android:id="@+id/map_child_selector"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="10dp"
-                android:paddingVertical="10dp">
+                android:paddingStart="10dp"
+                android:paddingEnd="8dp">
+
+                <TextView
+                    android:id="@+id/child_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@string/child_default_name"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="2dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="@color/sky" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="36dp"
+                android:background="@color/line_soft" />
+
+            <LinearLayout
+                android:id="@+id/status_details"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="10dp">
 
                 <ImageView
                     android:layout_width="22dp"
                     android:layout_height="22dp"
-                    android:layout_marginEnd="10dp"
                     android:importantForAccessibility="no"
                     android:src="@drawable/ic_battery"
-                    app:tint="@color/sky" />
+                    app:tint="@color/grass" />
 
                 <TextView
                     android:id="@+id/status_bar"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="7dp"
                     android:layout_weight="1"
-                    android:textAppearance="?attr/textAppearanceBodyMedium" />
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="@color/ink_soft" />
 
                 <ProgressBar
                     android:id="@+id/locate_progress"
                     style="?android:attr/progressBarStyleSmall"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="4dp"
                     android:visibility="gone" />
-
-                <!-- 카드가 지도를 가리는 넓이를 줄이려고 버튼 높이만 기본(56dp)에서
-                     내렸다. 여백(inset)까지 0 으로 둬야 실제 높이가 내려간다. -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/locate_button"
-                    style="@style/Widget.KidCare.Button.Tonal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:minHeight="48dp"
-                    android:text="@string/map_locate_now" />
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-    </FrameLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
-    <!-- 날짜 이동 줄. 지도(사진처럼 꽉 찬 면)와 타임라인(종이 위 목록) 사이를
-         가르는 자리라 종이색을 깔고 아래에 선을 하나 긋는다. 안 그러면 목록 첫 줄이
-         지도에 매달린 것처럼 보인다. -->
-    <LinearLayout
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/live_tracking_button"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_gravity="end|bottom"
+        android:layout_marginEnd="14dp"
+        android:layout_marginBottom="184dp"
+        android:contentDescription="@string/map_live_start"
+        android:fontFamily="sans-serif-medium"
+        android:minHeight="0dp"
+        android:text="@string/map_live_start"
+        android:textAllCaps="false"
+        android:textColor="@color/on_accent"
+        android:textSize="14sp"
+        app:backgroundTint="@color/sky"
+        app:cornerRadius="24dp"
+        app:elevation="5dp"
+        app:icon="@drawable/ic_map_crosshair"
+        app:iconGravity="textStart"
+        app:iconPadding="7dp"
+        app:iconSize="20dp"
+        app:iconTint="@color/on_accent" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/locate_button"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_gravity="end|bottom"
+        android:layout_marginEnd="14dp"
+        android:layout_marginBottom="120dp"
+        android:clickable="true"
+        android:contentDescription="@string/map_locate_now"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
+        app:cardBackgroundColor="@color/paper_card"
+        app:cardCornerRadius="26dp"
+        app:cardElevation="5dp"
+        app:strokeColor="@color/line_soft"
+        app:strokeWidth="1dp">
+
+        <!-- MaterialButton에 빈 텍스트와 아이콘만 넣으면 아이콘이 텍스트 시작점 기준으로
+             계산돼 왼쪽으로 밀릴 수 있다. 독립 ImageView를 정중앙에 둬 위치를 고정한다. -->
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_map_crosshair"
+            app:tint="@color/sky" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/timeline_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurface"
-        android:elevation="8dp"
-        android:orientation="vertical">
+        android:layout_gravity="bottom"
+        app:cardBackgroundColor="@color/paper_card"
+        app:cardElevation="10dp"
+        app:shapeAppearance="@style/ShapeAppearance.KidCare.BottomSheet"
+        app:strokeWidth="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="4dp">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/prev_day_button"
-                style="@style/Widget.KidCare.Button.Text"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:contentDescription="@string/day_prev"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:minWidth="0dp"
-                android:text=""
-                app:icon="@drawable/ic_chevron_left"
-                app:iconPadding="0dp"
-                app:iconTint="?attr/colorOnSurfaceVariant" />
+            <!-- 보라색 선 자체는 5dp지만 이 28dp 영역 전체가 손잡이다. 얇은 선만
+                 터치 대상으로 두면 손가락으로 잡기 어려워 실제 드래그가 거의 안 된다. -->
+            <FrameLayout
+                android:id="@+id/timeline_drag_handle"
+                android:layout_width="match_parent"
+                android:layout_height="28dp"
+                android:clickable="true"
+                android:contentDescription="@string/timeline_drag_handle"
+                android:focusable="true">
 
-            <TextView
-                android:id="@+id/day_header"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:maxLines="1"
-                android:textAppearance="?attr/textAppearanceTitleMedium" />
+                <View
+                    android:layout_width="42dp"
+                    android:layout_height="5dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_timeline_handle"
+                    android:importantForAccessibility="no" />
+            </FrameLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/next_day_button"
-                style="@style/Widget.KidCare.Button.Text"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:contentDescription="@string/day_next"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:minWidth="0dp"
-                android:text=""
-                app:icon="@drawable/ic_chevron_right"
-                app:iconPadding="0dp"
-                app:iconTint="?attr/colorOnSurfaceVariant" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="8dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/timeline_toggle_button"
-                style="@style/Widget.KidCare.Button.Text"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:contentDescription="@string/timeline_expand"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:minWidth="0dp"
-                android:text=""
-                app:icon="@drawable/ic_expand_more"
-                app:iconPadding="0dp"
-                app:iconTint="?attr/colorPrimary" />
+                <ImageView
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_route_icon"
+                    android:importantForAccessibility="no"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_route"
+                    app:tint="@color/sky" />
+
+                <TextView
+                    android:id="@+id/route_summary"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:maxLines="1"
+                    android:text="@string/timeline_summary_empty"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="@color/ink" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/route_visibility_button"
+                    style="@style/Widget.KidCare.Button.Text"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_marginEnd="2dp"
+                    android:contentDescription="@string/timeline_hide_all_routes"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="0dp"
+                    android:text=""
+                    app:icon="@drawable/ic_visibility"
+                    app:iconPadding="0dp"
+                    app:iconSize="22dp"
+                    app:iconTint="@color/sky" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/timeline_toggle_button"
+                    style="@style/Widget.KidCare.Button.Tonal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="42dp"
+                    android:contentDescription="@string/timeline_expand"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="0dp"
+                    android:text="@string/timeline_view_records"
+                    android:textSize="13sp"
+                    app:icon="@drawable/ic_expand_more"
+                    app:iconGravity="textEnd"
+                    app:iconPadding="4dp"
+                    app:iconSize="18dp" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/timeline_content"
+                android:layout_width="match_parent"
+                android:layout_height="174dp"
+                android:visibility="gone">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/timeline_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="6dp" />
+
+                <TextView
+                    android:id="@+id/timeline_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:padding="24dp"
+                    android:text="@string/timeline_empty"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/prev_day_button"
+                    style="@style/Widget.KidCare.Button.Text"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:contentDescription="@string/day_prev"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:text=""
+                    app:icon="@drawable/ic_chevron_left"
+                    app:iconPadding="0dp"
+                    app:iconTint="@color/sky" />
+
+                <TextView
+                    android:id="@+id/day_header"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_marginHorizontal="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_date_pill"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="@color/sky" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/next_day_button"
+                    style="@style/Widget.KidCare.Button.Text"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:contentDescription="@string/day_next"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:text=""
+                    app:icon="@drawable/ic_chevron_right"
+                    app:iconPadding="0dp"
+                    app:iconTint="@color/sky" />
+            </LinearLayout>
         </LinearLayout>
-
-        <FrameLayout
-            android:id="@+id/timeline_content"
-            android:layout_width="match_parent"
-            android:layout_height="240dp"
-            android:visibility="gone">
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="?attr/colorOutlineVariant" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/timeline_list"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingTop="4dp"
-                android:paddingBottom="8dp" />
-
-            <TextView
-                android:id="@+id/timeline_empty"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:padding="24dp"
-                android:text="@string/timeline_empty"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:visibility="gone" />
-        </FrameLayout>
-    </LinearLayout>
-</LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</FrameLayout>

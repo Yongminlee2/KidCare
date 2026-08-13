@@ -1,6 +1,7 @@
 package com.kidcare.family.child
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.kidcare.family.core.model.ChildStatusDoc
 import com.kidcare.family.logic.Fix
 import kotlinx.coroutines.tasks.await
@@ -58,5 +59,20 @@ class StatusReporter {
                     // 그대로 들어가 새 필드를 만든 이유가 사라진다. 쓰기는 여전히 한 번이다.
                 )
             ).await()
+    }
+
+    /**
+     * 부모 명령으로 소리 모드만 바뀐 경우 위치 전체를 다시 올리지 않고 해당 필드만
+     * 갱신한다. 명령 한 번당 쓰기 한 번이며, 부모가 관리 탭을 다시 열어도 마지막으로
+     * 실제 적용된 모드를 확인할 수 있게 한다.
+     */
+    suspend fun reportRingerMode(familyId: String, childUid: String, ringerMode: String) {
+        db.collection("families").document(familyId)
+            .collection("children").document(childUid)
+            // 위치를 아직 한 번도 올리지 않아 status 문서가 없어도 소리 상태는
+            // 확인할 수 있어야 한다. merge set은 문서가 있으면 이 필드만 바꾸고,
+            // 없으면 최소 상태 문서를 만든다.
+            .set(mapOf("ringerMode" to ringerMode), SetOptions.merge())
+            .await()
     }
 }

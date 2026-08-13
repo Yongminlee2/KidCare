@@ -5,7 +5,7 @@
     잃어 "확인을 눌렀는데 아무 일도 안 일어나는" 화면이 되기 쉽다).
 
     여기서는 이유가 하나 더 있다: 편집 판 안에 지도가 있다. 다이얼로그 안의 MapView 는
-    창 생명주기와 프래그먼트 생명주기가 어긋나서 onResume/onPause/onDetach 를 짝 맞춰
+    창 생명주기와 프래그먼트 생명주기가 어긋나서 지도 생명주기 콜백을 짝 맞춰
     부르기가 훨씬 까다롭다.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -171,18 +171,23 @@
                 android:text="@string/place_editor_name_label"
                 android:textAppearance="?attr/textAppearanceTitleMedium" />
 
-            <EditText
-                android:id="@+id/name_input"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:autofillHints="name"
-                android:hint="@string/place_editor_name_hint"
-                android:importantForAutofill="no"
-                android:inputType="text"
-                android:maxLength="20"
-                android:minHeight="56dp"
-                android:textAppearance="?attr/textAppearanceBodyLarge" />
+                android:hint="@string/place_editor_name_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/name_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="name"
+                    android:importantForAutofill="no"
+                    android:inputType="text"
+                    android:maxLength="20"
+                    android:minHeight="56dp"
+                    android:textAppearance="?attr/textAppearanceBodyLarge" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
                 android:id="@+id/editor_name_error"
@@ -228,7 +233,7 @@
                 android:layout_height="260dp"
                 android:layout_marginTop="8dp">
 
-                <org.osmdroid.views.MapView
+                <com.naver.maps.map.MapView
                     android:id="@+id/place_map"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />

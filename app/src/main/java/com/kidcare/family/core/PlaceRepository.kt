@@ -3,6 +3,7 @@ package com.kidcare.family.core
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.MetadataChanges
 import com.kidcare.family.core.model.PlaceDoc
 import com.kidcare.family.logic.Place
 import kotlinx.coroutines.tasks.await
@@ -79,7 +80,7 @@ object PlaceRepository {
         onChange: (docs: List<PlaceDoc>, fromCache: Boolean) -> Unit,
         onError: (Exception) -> Unit,
     ): ListenerRegistration =
-        places(familyId, childUid).addSnapshotListener { snapshot, error ->
+        places(familyId, childUid).addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
             if (error != null) {
                 Log.w(TAG, "observePlaces 실패: familyId=$familyId", error)
                 onError(error)

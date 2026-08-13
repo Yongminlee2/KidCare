@@ -415,18 +415,26 @@ cd /c/workAndroid/KidCare && ./gradlew.bat :app:assembleDebug && adb -s <아이�
 제조사 전용 기능이라 앱 코드로 감지·유도할 수 없다 — 사람이 수동으로 확인해야
 한다.
 
-## 지도 (osmdroid — 등록 절차 없음)
+## 네이버 지도 등록
 
-보호자 화면 지도는 osmdroid(OpenStreetMap) 를 쓴다. 카카오맵과 달리 앱키 발급이나
-플랫폼 등록이 필요 없다 — `implementation(libs.osmdroid.android)` 의존성만으로
-빌드하면 바로 동작한다. 원래는 카카오맵 SDK를 썼는데, 소유자가 카카오 네이티브
-앱키를 발급받지 않아 지도가 한 번도 그려진 적이 없어서 osmdroid로 교체했다
-(교체 근거는 `docs/superpowers/specs/2026-08-06-kidcare-design.md` §9 결정 기록,
-세부 API 매핑 근거는 `.superpowers/map-swap-report.md` 참고). 카카오 쪽 코드는
-`gradle/libs.versions.toml`의 `kakao-map` 별칭과 `settings.gradle.kts`의 카카오
-Maven 저장소에 "카카오로 되돌릴 때 쓴다"라는 주석과 함께 주석 처리된 채로 남아있다
-— 나중에 되돌리려면 그 두 곳의 주석을 풀고 `app/build.gradle.kts`에
-`implementation(libs.kakao.map)`을 다시 추가하면 된다.
+보호자의 경로 지도와 장소 지정 지도는 네이버 지도 Android SDK를 쓴다. 지도 키는
+저장소에 올리지 않고 `.gitignore` 대상인 `local.properties`에서만 읽는다.
+
+1. [네이버 클라우드 플랫폼 콘솔](https://console.ncloud.com/)에 로그인한다.
+2. `Services > Application Services > Maps`에서 Application을 등록한다.
+3. 사용할 API로 **Dynamic Map**(모바일 동적 지도)을 선택한다.
+4. Android 앱을 추가하고 패키지 이름을 정확히 `com.kidcare.family`로 등록한다.
+5. 발급 화면의 **NCP Key ID(Client ID)**를 복사한다. Client Secret은 Android 앱에
+   넣지 않는다.
+6. 프로젝트 루트의 `local.properties`에 다음 한 줄을 추가한다.
+
+```properties
+naverMapNcpKeyId=발급받은_Client_ID
+```
+
+패키지 이름이 다르면 인증 오류가 나고, Dynamic Map을 선택하지 않았으면 지도가
+표시되지 않는다. `local.properties`가 없는 CI 환경에서도 디버그 컴파일과 단위
+테스트는 가능하지만, 키가 없는 릴리스 APK 생성은 빈 지도 배포를 막기 위해 실패한다.
 
 ### 두 폰 확인 (Task 10, 1~2단계 최종 확인)
 
@@ -440,8 +448,8 @@ adb -s <아이폰시리얼> install -r app/build/outputs/apk/debug/app-debug.apk
 
 1. 두 폰 `pm clear com.kidcare.family` → 페어링 → 아이폰 권한 전부 켜기
 2. 아이폰을 창가에 두고 1~2분 기다린다
-3. 엄마폰에 OpenStreetMap 지도가 뜨고, 아이 위치에 파란 마커가 찍히는지 확인
-   (등록 절차가 없으므로 첫 실행부터 바로 떠야 한다 — 안 뜨면 인터넷 연결부터 의심)
+3. 엄마폰에 네이버 지도가 뜨고, 아이 위치에 앱 마스코트 마커가 찍히는지 확인
+   (안 뜨면 NCP Key ID, Dynamic Map 선택, Android 패키지 등록을 먼저 확인)
 4. 위쪽 카드에 `🔋 78% · 15:42 기준` 같은 문구가 보이는지 확인
 5. ~~아이폰을 들고 100m 이상 이동하면 엄마폰 마커가 앱을 만지지 않아도 따라
    움직이는지 확인~~ **2026-08-08 — 이제 그러면 안 된다.** 무료 한도 개편으로

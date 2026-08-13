@@ -3,25 +3,23 @@ package com.kidcare.family.child
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.kidcare.family.logic.AdaptiveMovementState
 import com.kidcare.family.logic.Fix
 
 /**
  * FusedLocationProvider 래퍼.
  *
- * 1~2단계는 고정 주기(1분, 고정밀)로만 받았다. 그때는 설계서 4.1의 '정지/이동에
- * 따른 주기 전환'을 일부러 미뤘다 — ActivityRecognition 까지 같이 넣으면, 위치가
- * 안 올라올 때 원인이 수집 주기 변경 쪽인지 업로드 경로 쪽인지 가려낼 수 없었기
- * 때문이다. 업로드 경로가 검증된 지금(3단계) 주기 전환을 붙인다.
- *
- * 활동 인식 전환 이벤트는 TrackingService 가 받아 onMovingChanged 로 넘겨준다.
- * 권한이 없거나, 있어도 전환 이벤트가 한 번도 안 오면 moving 은 시작값(true, 이동)
- * 그대로 남는다 — '모른다'를 '정지'로 해석해 주기를 5분으로 늘리는 일은 절대
- * 없다. 배터리보다 위치 신뢰성이 먼저라는 판단이다.
+ * 활동 인식, 좌표 기반 이동 확인, 등록 장소 여부를 합쳐 수집 주기를 바꾼다.
+ * 이동 가능성을 확인하는 동안은 5초, 실제 이동이 아니면 30초, 활동 인식 정지는
+ * 5분, 등록 장소 머무름은 1분이다. 부모가 실시간 보기를 켠 동안만 2초로 고정한다.
+ * 활동 인식 권한이 없어도 좌표가 30초 동안 실제 진행을 보이지 않으면 저주기 확인으로
+ * 내려가므로 하루 종일 5초 GPS가 켜진 채 남지 않는다.
  */
 class LocationCollector(private val context: Context) {
 
@@ -29,11 +27,12 @@ class LocationCollector(private val context: Context) {
     private var callback: LocationCallback? = null
     private var onFixCallback: ((Fix, Boolean) -> Unit)? = null
 
-    // 활동 인식이 아직 아무것도 알려주지 않았을 때의 기본값. true(이동)로 두는 이유는
-    // 둘이다 — 서비스가 막 켜졌을 때 첫 위치를 늦지 않게 잡아야 하고, 이미 가만히
-    // 앉아 있는 아이는 '정지 시작' 전환 자체가 원래 안 온다(전환은 상태가 바뀔 때만
-    // 오지, 지금 상태를 알려주지 않는다) — 그런 아이를 계속 5분 주기로 방치하면 안 된다.
-    private var moving = true
+    // 처음에는 이동 가능성을 빠르게 확인한다. 실제 진행이 없으면 판정기가 30초 뒤
+    // 저주기 확인으로 내리므로 활동 인식 권한이 없는 기기도 5초 고정으로 남지 않는다.
+    private var activityMoving = true
+    private var adaptiveState = AdaptiveMovementState.FAST_PROBE
+    private var insideKnownPlace = false
+    private var liveTracking = false
 
     /**
      * 권한은 호출 전에 확인돼 있어야 한다. TrackingService.onCreate 가 startForeground
@@ -56,8 +55,23 @@ class LocationCollector(private val context: Context) {
         val onFix = onFixCallback ?: return
         clearUpdates()
 
-        val interval = if (moving) MOVING_INTERVAL_MILLIS else STILL_INTERVAL_MILLIS
-        Log.i(TAG, "수집 주기 변경: ${if (moving) "이동" else "정지"} ${interval / 1000}초")
+        val interval = when {
+            liveTracking -> LIVE_INTERVAL_MILLIS
+            !activityMoving -> STILL_INTERVAL_MILLIS
+            insideKnownPlace -> KNOWN_PLACE_INTERVAL_MILLIS
+            adaptiveState == AdaptiveMovementState.MOVING -> MOVING_INTERVAL_MILLIS
+            adaptiveState == AdaptiveMovementState.FAST_PROBE -> MOVING_INTERVAL_MILLIS
+            else -> SLOW_PROBE_INTERVAL_MILLIS
+        }
+        val mode = when {
+            liveTracking -> "실시간"
+            !activityMoving -> "활동 인식 정지"
+            insideKnownPlace -> "등록 장소 머무름"
+            adaptiveState == AdaptiveMovementState.MOVING -> "이동 확정"
+            adaptiveState == AdaptiveMovementState.FAST_PROBE -> "이동 확인"
+            else -> "저주기 확인"
+        }
+        Log.i(TAG, "수집 주기 변경: $mode ${interval / 1000}초")
 
         // 정지 중에도 PRIORITY_HIGH_ACCURACY 를 쓴다(2026-08-07 변경. 예전엔 정지에
         // PRIORITY_BALANCED_POWER_ACCURACY 였다).
@@ -77,21 +91,27 @@ class LocationCollector(private val context: Context) {
         // 토글을 다는 것이 다음 수순이다(docs/known-issues.md).
         val builder = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, interval)
             .setMinUpdateIntervalMillis(interval)
+            .setGranularity(Granularity.GRANULARITY_FINE)
+            // 실시간 보기를 시작할 때 캐시된 오래된 위치 대신 새 측정값을 기다린다.
+            .setMaxUpdateAgeMillis(0L)
+            // 여러 위치를 묶어 늦게 전달하지 않고 요청 주기에 맞춰 바로 전달한다.
+            .setMaxUpdateDelayMillis(interval)
+            // 첫 콜백을 빨리 주려고 기지국·Wi-Fi 기반의 거친 좌표를 먼저 내보내는
+            // 대신, 가능한 경우 GNSS 고정밀 좌표를 잠깐 기다린다. 경로 시작점이 옆
+            // 블록에서 출발하는 모양을 줄이되 주기 자체(이동 5초)는 바꾸지 않는다.
+            .setWaitForAccurateLocation(true)
 
-        if (moving) {
-            // 이동 상태인데 실제로는 가만히 있는 폰(활동 인식 권한이 없어 moving 이
-            // true 로 굳은 경우가 대표적이다)을 5초마다 깨우지 않으려는 것이다.
-            //
+        if (
+            activityMoving && !liveTracking && !insideKnownPlace &&
+            adaptiveState == AdaptiveMovementState.MOVING
+        ) {
             // 3m는 보행 5초(보통 5~8m)를 삼키지 않으면서 아주 작은 좌표 흔들림은
             // 무선 계층에서 먼저 줄이는 값이다. 최종 기록 여부는 정확도 반경과 속도를
             // 함께 보는 MovementTrailFilter가 결정한다.
             //
-            // 대가가 있다: 완전히 멈춘 폰은 콜백 자체가 안 와서 LocationFilter 의
-            // 하트비트(10분)가 탈 fix 가 없어질 수 있다. 그래서 **정지 요청에는
-            // 이 필터를 걸지 않는다** — 활동 인식이 정상이면 STILL 전환이 1분 안에
-            // 와서 5분 주기(필터 없음)로 넘어가 생존 신호가 회복된다. 활동 인식
-            // 권한이 아예 없는 폰에서만 이 구멍이 남고, 그건 실기기에서 확인할
-            // 항목으로 known-issues 에 적어뒀다.
+            // 완전히 멈춘 폰은 이 필터 때문에 콜백이 굶을 수 있으므로, 좌표 판정까지
+            // 끝난 MOVING 상태에만 건다. 빠른/느린 확인·등록 장소·활동 인식 정지에는
+            // 필터가 없어 하트비트와 상태 검사가 계속 기회를 얻는다.
             builder.setMinUpdateDistanceMeters(MOVING_MIN_UPDATE_DISTANCE_METERS)
         }
 
@@ -99,8 +119,26 @@ class LocationCollector(private val context: Context) {
 
         val cb = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
-                val loc = result.lastLocation ?: return
-                onFix(Fix(loc.latitude, loc.longitude, loc.accuracy, loc.time, loc.speed), moving)
+                // 제조사 구현이나 잠깐의 절전 뒤에는 한 콜백에 여러 위치가 묶여 올 수
+                // 있다. lastLocation 하나만 쓰면 그 사이의 모퉁이가 사라져 경로가 건물을
+                // 가로지르는 직선이 된다. 묶음 안의 모든 점을 시간순으로 넘긴다.
+                result.locations.sortedBy { it.time }.forEach { loc ->
+                    onFix(
+                        Fix(
+                            lat = loc.latitude,
+                            lng = loc.longitude,
+                            accuracy = loc.accuracy,
+                            at = loc.time,
+                            speed = loc.speed,
+                            speedAccuracy = if (loc.hasSpeedAccuracy()) {
+                                loc.speedAccuracyMetersPerSecond
+                            } else {
+                                Float.POSITIVE_INFINITY
+                            },
+                        ),
+                        activityMoving,
+                    )
+                }
             }
         }
         callback = cb
@@ -123,8 +161,30 @@ class LocationCollector(private val context: Context) {
      * 다시 건다 — 안 그러면 같은 주기인데도 매번 지웠다 다시 걸어 배터리를 더 쓴다.
      */
     fun onMovingChanged(nowMoving: Boolean) {
-        if (moving == nowMoving) return
-        moving = nowMoving
+        if (activityMoving == nowMoving) return
+        activityMoving = nowMoving
+        adaptiveState = AdaptiveMovementState.FAST_PROBE
+        requestUpdates()
+    }
+
+    /** 좌표 증거로 확인한 이동 상태에 맞춰 평상시 수집 주기만 바꾼다. */
+    fun setAdaptiveMovementState(state: AdaptiveMovementState) {
+        if (adaptiveState == state) return
+        adaptiveState = state
+        requestUpdates()
+    }
+
+    /** 등록 장소 안에서는 작은 실내 움직임을 경로로 만들지 않고 이탈만 느슨하게 확인한다. */
+    fun setInsideKnownPlace(inside: Boolean) {
+        if (insideKnownPlace == inside) return
+        insideKnownPlace = inside
+        requestUpdates()
+    }
+
+    /** 부모가 실시간 보기를 켠 동안에만 2초 고정밀 요청으로 전환한다. */
+    fun setLiveTrackingEnabled(enabled: Boolean) {
+        if (liveTracking == enabled) return
+        liveTracking = enabled
         requestUpdates()
     }
 
@@ -138,6 +198,14 @@ class LocationCollector(private val context: Context) {
          * 모퉁이를 잘라먹었고, 차 안에서는 1km 에 한 점이었다. 설계서 §4.1 참고.
          */
         const val MOVING_INTERVAL_MILLIS = 5_000L
+
+        const val LIVE_INTERVAL_MILLIS = 2_000L
+
+        /** 활동 전환을 놓쳤을 때 실제 이동이 시작됐는지 확인하는 저주기 후보 수집. */
+        const val SLOW_PROBE_INTERVAL_MILLIS = 30_000L
+
+        /** 집·학교처럼 등록한 장소 안에서는 OS 지오펜스와 함께 이 주기로 이탈을 보조 확인한다. */
+        const val KNOWN_PLACE_INTERVAL_MILLIS = 60_000L
 
         /** 정지 중 주기. 설계서 §4.1 */
         const val STILL_INTERVAL_MILLIS = 5 * 60_000L

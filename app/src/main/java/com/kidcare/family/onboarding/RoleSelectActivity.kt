@@ -41,7 +41,7 @@ class RoleSelectActivity : AppCompatActivity() {
                 startActivity(Intent(this, next))
                 finish()
             }
-            .setNegativeButton(android.R.string.cancel, null)
+            .setNegativeButton(R.string.dialog_cancel, null)
             .show()
     }
 

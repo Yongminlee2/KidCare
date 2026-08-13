@@ -36,7 +36,7 @@ import java.util.Locale
  * 않고 그대로 둔 근거(실제 칸 너비)는 guardian_bottom_nav.xml 주석에 적었다.
  *
  * **replace 를 쓰지 않는다.** 프래그먼트를 태그로 찾아 두고 show/hide 로만 오간다.
- * replace 는 탭을 옮길 때마다 지도 프래그먼트를 새로 만들고, 그러면 osmdroid 가
+ * replace 는 탭을 옮길 때마다 지도 프래그먼트를 새로 만들고, 그러면 지도 SDK가
  * 타일을 처음부터 다시 내려받아 탭 이동마다 통신이 생기고 부모가 옮겨둔 지도 위치도
  * 초기화된다.
  *
@@ -218,6 +218,14 @@ class GuardianMainActivity : AppCompatActivity() {
         val selected = children.firstOrNull { it.uid == selectedUid }
         binding.childSelector.text = selected?.let { getString(R.string.child_selector_value, childLabel(it)) }
             ?: getString(R.string.child_selector_empty)
+        (supportFragmentManager.findFragmentByTag(TAG_MAP) as? MapTimelineFragment)
+            ?.refreshSelectedChildHeader()
+    }
+
+    fun selectedChildLabelText(): String {
+        val selectedUid = RoleStore(this).selectedChildUid
+        return children.firstOrNull { it.uid == selectedUid }?.let(::childLabel)
+            ?: getString(R.string.child_default_name)
     }
 
     private fun childLabel(child: FamilyMember): String {
@@ -226,8 +234,12 @@ class GuardianMainActivity : AppCompatActivity() {
             "$base · ${child.uid.takeLast(4)}" else base
     }
 
-    private fun showChildMenu() {
-        val popup = PopupMenu(this, binding.childSelector)
+    fun showChildMenuFrom(anchor: View) {
+        showChildMenu(anchor)
+    }
+
+    private fun showChildMenu(anchor: View = binding.childSelector) {
+        val popup = PopupMenu(this, anchor)
         children.forEachIndexed { index, child ->
             popup.menu.add(MENU_GROUP_CHILDREN, MENU_CHILD_BASE + index, index, childLabel(child))
                 .isChecked = child.uid == RoleStore(this).selectedChildUid
@@ -313,6 +325,7 @@ class GuardianMainActivity : AppCompatActivity() {
      * 지도가 두 개 겹쳐 쌓인다(타일도 두 벌 내려받는다).
      */
     private fun showTab(tab: Tab) {
+        binding.childSelectorBar.visibility = if (tab.menuId == R.id.tab_map) View.GONE else View.VISIBLE
         if (currentTabId == tab.menuId) return
         val fm = supportFragmentManager
         val tx = fm.beginTransaction()

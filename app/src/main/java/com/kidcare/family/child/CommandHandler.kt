@@ -35,6 +35,17 @@ import java.time.ZoneId
 class CommandHandler(
     private val context: Context,
     private val onLocateNow: suspend (familyId: String, childUid: String) -> Unit,
+    private val onStartLiveTracking: suspend (
+        familyId: String,
+        childUid: String,
+        durationSeconds: Long,
+        sessionId: String,
+    ) -> Unit,
+    private val onStopLiveTracking: suspend (
+        familyId: String,
+        childUid: String,
+        sessionId: String?,
+    ) -> Unit,
     private val placeWatcher: PlaceWatcher,
 ) {
 
@@ -129,6 +140,24 @@ class CommandHandler(
                         return
                     }
                     state.setOverride(mode, until)
+                    // 모드 적용 자체는 이미 성공했다. 상태 동기화가 실패해도 명령을
+                    // 실패로 뒤집지는 않고, 다음 위치 확인/안전 업로드가 다시 맞춘다.
+                    try {
+                        StatusReporter().reportRingerMode(familyId, childUid, mode)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.w(TAG, "소리 모드 상태 동기화 실패 — 다음 상태 업로드에서 복구", e)
+                    }
+                }
+                // 보호자 화면에 저장돼 있던 값이 아니라, 이 순간 Android 시스템에
+                // 실제로 적용된 벨소리 모드를 읽어 올린다. 조회만 하므로 소리나 진동은
+                // 발생하지 않는다. 상태 쓰기까지 성공한 뒤에만 아래 markDone 으로
+                // 내려가야 보호자 폰이 갱신된 값을 읽고 "현재 상태"라고 말할 수 있다.
+                CommandType.QUERY_RINGER -> {
+                    val currentMode = ringer.currentMode()
+                    StatusReporter().reportRingerMode(familyId, childUid, currentMode)
+                    Log.i(TAG, "실제 소리 모드 조회 완료: $currentMode")
                 }
                 CommandType.FIND_PHONE -> FindPhoneController.start(context)
                 CommandType.STOP_FIND -> FindPhoneController.stop(context)
@@ -151,6 +180,25 @@ class CommandHandler(
                 // 아래 catch 가 그 사유(locate_no_fix)를 명령 문서에 적어 부모에게 알린다 —
                 // 조용히 done 으로 끝내면 부모는 지도의 옛 위치를 방금 확인한 것으로 읽는다.
                 CommandType.LOCATE_NOW -> onLocateNow(familyId, childUid)
+                CommandType.START_LIVE_TRACKING -> {
+                    val durationSeconds = command.payload[CommandType.PAYLOAD_DURATION_SECONDS]
+                        ?.toLongOrNull()
+                        ?.coerceIn(MIN_LIVE_DURATION_SECONDS, MAX_LIVE_DURATION_SECONDS)
+                        ?: DEFAULT_LIVE_DURATION_SECONDS
+                    val sessionId = command.payload[CommandType.PAYLOAD_SESSION_ID]
+                        ?.trim()
+                        ?.take(MAX_SESSION_ID_LENGTH)
+                        ?.takeIf { it.isNotEmpty() }
+                        ?: command.id
+                    onStartLiveTracking(familyId, childUid, durationSeconds, sessionId)
+                }
+                CommandType.STOP_LIVE_TRACKING -> {
+                    val sessionId = command.payload[CommandType.PAYLOAD_SESSION_ID]
+                        ?.trim()
+                        ?.take(MAX_SESSION_ID_LENGTH)
+                        ?.takeIf { it.isNotEmpty() }
+                    onStopLiveTracking(familyId, childUid, sessionId)
+                }
                 // 부모의 한마디를 띄운다(5단계 Task 5). **여기서 done 을 적지 않고
                 // return 하는 것이 이 명령의 전부다** — done 은 아이가 '확인했어요'를
                 // 눌렀다는 뜻이고 그걸 적는 쪽은 MessageActivity 다. 아래 markDone 까지
@@ -267,5 +315,9 @@ class CommandHandler(
     private companion object {
         const val TAG = "CommandHandler"
         const val MAX_REMEMBERED = 100
+        const val MIN_LIVE_DURATION_SECONDS = 30L
+        const val DEFAULT_LIVE_DURATION_SECONDS = 10 * 60L
+        const val MAX_LIVE_DURATION_SECONDS = 10 * 60L
+        const val MAX_SESSION_ID_LENGTH = 100
     }
 }

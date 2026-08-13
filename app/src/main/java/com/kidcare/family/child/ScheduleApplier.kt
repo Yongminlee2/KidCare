@@ -75,8 +75,20 @@ class ScheduleApplier(private val context: Context) {
         // 변경이 없을 때 이 값을 읽는다(RingerStateStore.ruleMode 주석 참고).
         state.ruleMode = resolution.mode
 
+        val current = ringerController.currentMode()
+        val rememberedOverride = state.overrideMode
+        // 잠금이 꺼진 동안 아이가 폰에서 직접 모드를 바꿨다면 그 선택을 존중한다.
+        // 즉시 변경값은 다음 예약 경계까지 로컬에 남는데, 예전에는 앱/서비스가 다시
+        // 시작될 때 이 오래된 값을 무조건 재적용해 벨소리를 다시 무음으로 만들었다.
+        // 현재 모드가 기억값과 다르면 앱 밖에서 바뀐 것이므로 즉시 변경을 끝낸다.
+        // 잠금이 켜져 있으면 기존 의미대로 부모가 정한 모드를 계속 강제한다.
+        if (!state.lockEnabled && rememberedOverride != null && current != rememberedOverride) {
+            state.clearOverride()
+            Log.i(TAG, "잠금이 꺼진 동안 바뀐 현재 소리 모드를 유지한다: $current")
+        }
+
         val desired = ringerController.desiredMode(state, now)
-        if (desired != null && ringerController.currentMode() != desired) {
+        if (desired != null && current != desired) {
             ringerController.apply(desired)
         }
 

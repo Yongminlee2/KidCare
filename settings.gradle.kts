@@ -10,9 +10,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // 카카오로 되돌릴 때 쓴다 — 지금은 osmdroid(mavenCentral)로 교체돼 이 저장소가
-        // 필요 없다. app/build.gradle.kts 도 kakao-map 의존성을 참조하지 않는다.
-        // maven { url = uri("https://devrepo.kakao.com/nexus/repository/kakaomap-releases/") }
+        // 네이버 지도 Android SDK 공식 저장소.
+        maven { url = uri("https://repository.map.naver.com/archive/maven") }
     }
 }
 
