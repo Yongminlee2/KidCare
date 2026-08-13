@@ -120,6 +120,9 @@ class DesignPreviewActivity : AppCompatActivity(), OnMapReadyCallback {
         binding.locateButton.updateLayoutParams<FrameLayout.LayoutParams> {
             bottomMargin = dp(if (expanded) 320 else 150)
         }
+        binding.liveTrackingButton.updateLayoutParams<FrameLayout.LayoutParams> {
+            bottomMargin = dp(if (expanded) 320 else 150)
+        }
         updateLogoMargin()
         if (expanded) binding.mapView.post { fitRoute() }
     }

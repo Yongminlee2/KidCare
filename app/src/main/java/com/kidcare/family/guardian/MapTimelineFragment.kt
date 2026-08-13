@@ -278,7 +278,10 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
                 clearMapForChildSwitch()
                 childUid = uid
                 _binding ?: return@observeChildJoined
-                setLocateButtonEnabled(true)
+                // 화면 생성 때는 childUid가 아직 없어 실시간 토글이 비활성이다. 자녀를
+                // 비동기로 찾은 뒤 현재 위치 버튼만 켜면 토글은 계속 흐린 채 눌리지 않는다.
+                // 두 컨트롤의 활성 상태를 같은 함수에서 다시 계산한다.
+                renderLiveTrackingState()
                 load(familyId, uid)
             },
             onError = { e ->
@@ -638,19 +641,38 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
     private fun renderLiveTrackingState() {
         val b = _binding ?: return
         val label = when {
-            liveTrackingBusy -> R.string.map_live_connecting
+            liveTrackingBusy -> R.string.map_live_button_connecting
             liveTrackingActive -> R.string.map_live_stop
             else -> R.string.map_live_start
         }
+        val description = when {
+            liveTrackingBusy -> R.string.map_live_cancel_description
+            liveTrackingActive -> R.string.map_live_stop_description
+            else -> R.string.map_live_start_description
+        }
+        val background = when {
+            liveTrackingBusy -> R.color.apricot
+            liveTrackingActive -> R.color.grass
+            else -> R.color.paper_card
+        }
+        val foreground = when {
+            liveTrackingBusy || liveTrackingActive -> R.color.on_accent
+            else -> R.color.ink_soft
+        }
+        val stroke = if (liveTrackingActive || liveTrackingBusy) background else R.color.line
         b.liveTrackingButton.setText(label)
-        b.liveTrackingButton.contentDescription = getString(label)
-        b.liveTrackingButton.isEnabled = childUid != null && !liveTrackingBusy
+        b.liveTrackingButton.contentDescription = getString(description)
+        b.liveTrackingButton.isEnabled = childUid != null
         b.liveTrackingButton.alpha = if (b.liveTrackingButton.isEnabled) 1f else 0.55f
         b.liveTrackingButton.backgroundTintList = ColorStateList.valueOf(
-            ContextCompat.getColor(
-                requireContext(),
-                if (liveTrackingActive) R.color.berry_ink else R.color.sky,
-            ),
+            ContextCompat.getColor(requireContext(), background),
+        )
+        b.liveTrackingButton.setTextColor(ContextCompat.getColor(requireContext(), foreground))
+        b.liveTrackingButton.iconTint = ColorStateList.valueOf(
+            ContextCompat.getColor(requireContext(), foreground),
+        )
+        b.liveTrackingButton.strokeColor = ColorStateList.valueOf(
+            ContextCompat.getColor(requireContext(), stroke),
         )
         setLocateButtonEnabled(childUid != null && !liveTrackingActive && !liveTrackingBusy)
     }
@@ -1179,7 +1201,7 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
             bottomMargin = panelHeight + dp(12)
         }
         b.liveTrackingButton.updateLayoutParams<android.widget.FrameLayout.LayoutParams> {
-            bottomMargin = panelHeight + dp(72)
+            bottomMargin = panelHeight + dp(12)
         }
         updateNaverLogoMargin(panelHeight)
     }

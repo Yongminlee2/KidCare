@@ -448,8 +448,12 @@
     <string name="timeline_summary_empty">오늘 이동 기록</string>
     <string name="day_prev">이전 날</string>
     <string name="day_next">다음 날</string>
-    <string name="map_live_start">실시간 보기</string>
-    <string name="map_live_stop">실시간 종료</string>
+    <string name="map_live_start">실시간 위치  OFF</string>
+    <string name="map_live_stop">실시간 위치  ON</string>
+    <string name="map_live_button_connecting">실시간 위치  연결 중…</string>
+    <string name="map_live_start_description">실시간 위치 꺼짐. 눌러서 켜기</string>
+    <string name="map_live_stop_description">실시간 위치 켜짐. 눌러서 끄기</string>
+    <string name="map_live_cancel_description">실시간 위치 연결 중. 눌러서 취소</string>
     <string name="map_live_connecting">실시간 연결 중…</string>
     <string name="map_live_active_status">실시간 추적 중 · 정확도 약 %1$dm · 배터리 %2$d%%</string>
     <string name="map_live_waiting">실시간 위치를 잡는 중이에요. GPS 신호가 잡힐 때까지 잠시 기다려 주세요.</string>
