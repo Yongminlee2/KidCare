@@ -35,7 +35,67 @@ class MovementTrailFilterTest {
     fun `오차가 큰 점은 이동 중에도 버린다`() {
         assertFalse(
             MovementTrailFilter.shouldRecord(
-                null, fix(5_000L, accuracy = 31f), reportedMoving = true,
+                null, fix(5_000L, accuracy = 51f), reportedMoving = true,
+            )
+        )
+    }
+
+    @Test
+    fun `버스 구간의 40m 오차 점도 오차 이상 움직였으면 경로에 남긴다`() {
+        // 30m 상한이던 시절 이 점이 거절돼 경로 중간이 통째로 비었다.
+        // noiseRadius = hypot(40,40) ≈ 57m 이므로 80m 변위면 흔들림이 아니다.
+        assertTrue(
+            MovementTrailFilter.shouldRecord(
+                fix(0L, accuracy = 40f),
+                fix(5_000L, metersEast = 80.0, accuracy = 40f),
+                reportedMoving = true,
+            )
+        )
+    }
+
+    @Test
+    fun `정지 주기 사이 150m 변위는 이동의 증거다`() {
+        assertTrue(
+            MovementTrailFilter.isDisplacementEvidence(
+                fix(0L, accuracy = 40f),
+                fix(300_000L, metersEast = 160.0, accuracy = 40f),
+            )
+        )
+    }
+
+    @Test
+    fun `150m 미만 변위는 오차 흔들림일 수 있어 증거가 아니다`() {
+        assertFalse(
+            MovementTrailFilter.isDisplacementEvidence(
+                fix(0L, accuracy = 50f),
+                fix(300_000L, metersEast = 99.0, accuracy = 50f),
+            )
+        )
+    }
+
+    @Test
+    fun `이전 점이 없으면 변위 증거를 만들 수 없다`() {
+        assertFalse(
+            MovementTrailFilter.isDisplacementEvidence(null, fix(300_000L, metersEast = 500.0))
+        )
+    }
+
+    @Test
+    fun `오차 상한을 넘는 점은 변위 증거로 쓰지 않는다`() {
+        assertFalse(
+            MovementTrailFilter.isDisplacementEvidence(
+                fix(0L),
+                fix(300_000L, metersEast = 500.0, accuracy = 80f),
+            )
+        )
+    }
+
+    @Test
+    fun `순간이동 속도의 변위는 증거가 아니라 오류다`() {
+        assertFalse(
+            MovementTrailFilter.isDisplacementEvidence(
+                fix(0L),
+                fix(1_000L, metersEast = 500.0),
             )
         )
     }

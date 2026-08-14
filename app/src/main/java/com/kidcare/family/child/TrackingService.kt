@@ -70,6 +70,12 @@ class TrackingService : LifecycleService() {
     private var lastRouteWasMoving = false
     private var forceNextStayPoint = true
 
+    /**
+     * 좌표 변위 근거로 켠 이동 확인의 만료 시각. null 이면 안 켠 상태.
+     * 활동 인식이 놓친 이동을 좌표로 복구할 때만 쓴다 — handle() 의 정지 갈래 주석 참고.
+     */
+    private var coordinateKickExpiresAt: Long? = null
+
     private val trailUploader by lazy { TrailUploader(this) }
 
     /**
@@ -179,7 +185,12 @@ class TrackingService : LifecycleService() {
         // 서비스의 이동 판정 상태에 닿을 방법이 없어 정적 참조로 다리를 놓는다.
         // onDestroy 에서 반드시 null 로 되돌린다 — 안 그러면 죽은 서비스의
         // 콜백이 서비스 인스턴스를 계속 붙들어 leak 이 된다.
-        activeMovementHook = { moving -> onActivityMovingChanged(moving) }
+        activeMovementHook = { moving ->
+            // 활동 인식이 직접 말했으면 좌표 변위로 켠 임시 이동 확인은 걷는다 —
+            // 원 주인이 돌아왔으니 만료 감시가 대신 끌 이유가 없다(coordinateKickExpiresAt).
+            coordinateKickExpiresAt = null
+            onActivityMovingChanged(moving)
+        }
         registerActivityTransitions()
 
         ringerReceiver = RingerModeReceiver(ringerController, RingerStateStore(this)).also {
@@ -580,11 +591,39 @@ class TrackingService : LifecycleService() {
         if (routeMoving) {
             recordMovementFixes(listOf(fix))
             forceNextStayPoint = false
+            // 좌표 변위로 켠 이동 확인이 실제 이동으로 이어졌다 — 움직이는 동안 계속 연장한다.
+            if (coordinateKickExpiresAt != null) {
+                coordinateKickExpiresAt = fix.at + COORDINATE_KICK_WINDOW_MILLIS
+            }
         } else {
-            val force = forceNextStayPoint || lastRouteWasMoving
+            // 활동 인식이 정지라는데 정지 주기 한 번 사이에 좌표가 150m 넘게 옮겨졌다 —
+            // 가방 속 폰의 버스 이동처럼 활동 인식이 통째로 놓치는 사례다. 전환 이벤트는
+            // 상태가 바뀔 때만 오므로 한 번 놓치면 스스로는 영영 못 돌아온다. 좌표
+            // 자체를 이동 증거로 삼아 5초 확인을 켠다(지오펜스 이탈과 같은 원리).
+            // 이 구멍이 열려 있던 동안에는 이동 중에도 5분에 한 점만 남아, 부모 지도에
+            // 경로 중간이 삭제된 것처럼 보였다.
+            val displacementEvidence = !activityMoving && !insideKnownPlace &&
+                MovementTrailFilter.isDisplacementEvidence(lastTrailFix, fix)
+            val force = forceNextStayPoint || lastRouteWasMoving || displacementEvidence
             if (recordStayFix(fix, force)) forceNextStayPoint = false
+            if (displacementEvidence) {
+                Log.i(TAG, "정지 주기 사이 큰 변위 — 활동 인식 전환 없이 이동 확인 시작")
+                coordinateKickExpiresAt = fix.at + COORDINATE_KICK_WINDOW_MILLIS
+                onActivityMovingChanged(true)
+            }
         }
         lastRouteWasMoving = routeMoving
+
+        // 좌표 변위로 켠 이동 확인의 만료. 활동 인식은 여전히 정지라고 믿고 있어
+        // 전환을 다시 보내 주지 않으므로, 이동 확정 없이 시간이 다 가면 우리가
+        // 직접 정지(5분 주기)로 되돌려야 배터리가 새지 않는다.
+        coordinateKickExpiresAt?.let { expiry ->
+            if (!routeMoving && fix.at > expiry) {
+                coordinateKickExpiresAt = null
+                Log.i(TAG, "변위 근거 이동 확인 만료 — 정지 주기로 복귀")
+                onActivityMovingChanged(false)
+            }
+        }
 
         val decision = LocationFilter.decide(lastFix, fix)
 
@@ -858,6 +897,13 @@ class TrackingService : LifecycleService() {
         private const val LIVE_REPORT_INTERVAL_MILLIS = 2_000L
         private const val MAX_LIVE_DURATION_SECONDS = 10 * 60L
         private const val STAY_ANCHOR_INTERVAL_MILLIS = 5 * 60_000L
+
+        /**
+         * 좌표 변위로 켠 이동 확인을 이동 확정 없이 유지하는 시간. 판정기가 이 안에
+         * 실제 진행을 못 찾으면 정지 주기로 되돌린다 — 활동 인식은 전환을 다시
+         * 안 보내 주므로 이 만료가 없으면 배터리가 계속 샌다.
+         */
+        private const val COORDINATE_KICK_WINDOW_MILLIS = 5 * 60_000L
         private const val CONDITION_CHECK_INTERVAL_MILLIS = 60_000L
 
         // ActivityTransitionReceiver(매니페스트 등록, 이 서비스와 다른 컴포넌트)가

@@ -42,15 +42,30 @@ class AdaptiveMovementDetectorTest {
     }
 
     @Test
-    fun `오차가 큰 실내 좌표는 이동 판정 표본에서 제외한다`() {
+    fun `오차 상한을 넘는 좌표는 이동 판정 표본에서 제외한다`() {
+        // 상한은 50m 다(30m 시절에는 버스·번화가의 30~50m 구간이 통째로 빠졌다).
         val detector = AdaptiveMovementDetector()
         for (seconds in 0L..30L step 5L) {
             detector.onFix(
-                fix(seconds, seconds * 8.0, accuracy = 45f, speed = 2f, speedAccuracy = 0.1f),
+                fix(seconds, seconds * 8.0, accuracy = 55f, speed = 2f, speedAccuracy = 0.1f),
             )
         }
 
         assertEquals(AdaptiveMovementState.SLOW_PROBE, detector.state)
+    }
+
+    @Test
+    fun `45m 오차라도 오차 배수 이상 꾸준히 나아가면 이동으로 확정한다`() {
+        // 버스 구간의 전형: 오차는 거칠지만 30초에 240m 를 전진한다. 확정 문턱이
+        // 오차에 비례(hypot×2 ≈ 127m)하므로 정지 흔들림은 여기 못 미친다.
+        val detector = AdaptiveMovementDetector()
+        var promoted = false
+        for (seconds in 0L..30L step 5L) {
+            val result = detector.onFix(fix(seconds, seconds * 8.0, accuracy = 45f))
+            if (result.state == AdaptiveMovementState.MOVING) promoted = true
+        }
+
+        assertTrue(promoted)
     }
 
     @Test

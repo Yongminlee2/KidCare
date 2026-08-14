@@ -17,8 +17,27 @@ import kotlin.math.max
 object MovementTrailFilter {
 
     const val MIN_INTERVAL_MILLIS = 5_000L
-    /** 상태 마커보다 엄격한 경로용 문턱. 거친 점으로 선을 잇는 것보다 짧은 공백이 낫다. */
-    const val MAX_ACCURACY_METERS = 30f
+
+    /**
+     * 경로점으로 받는 정확도 상한. 상태 업로드([LocationFilter])와 같은 50m 다.
+     *
+     * 처음에는 30m 로 더 조였는데, 실기기에서 그 값이 **경로 중간을 통째로 비웠다** —
+     * 버스·번화가·실내 구간은 오차가 30~50m 로 몇 분씩 이어지는 게 정상이라, 그동안
+     * 후보가 전부 거절돼 5분짜리 머무름 기준점만 남고 지도에는 그 구간이 삭제된
+     * 것처럼 보였다. 거친 점의 흔들림은 아래 noiseRadius 판정이 오차에 비례해
+     * 알아서 더 크게 요구하므로, 상한을 올려도 정지한 폰이 선을 그리지는 않는다.
+     */
+    const val MAX_ACCURACY_METERS = 50f
+
+    /**
+     * 정지 주기(5분) 사이에 이만큼 옮겨졌으면 **좌표 자체가 이동의 증거**다.
+     *
+     * 활동 인식은 가방 속 폰의 버스 이동 같은 것을 통째로 놓칠 수 있고, 전환 이벤트는
+     * 상태가 바뀔 때만 오므로 한 번 놓치면 끝까지 5분 주기에 갇힌다. 두 점의 오차가
+     * 최악으로 반대 방향이어도 100m(50m×2)를 넘을 수 없으므로 150m 는 흔들림으로는
+     * 못 만드는 거리다.
+     */
+    const val DISPLACEMENT_EVIDENCE_METERS = 150.0
 
     /** 정확도가 좋은 야외에서 보행으로 볼 수 있는 최소 GNSS 속도. */
     const val MOVING_SPEED_MPS = 0.7f
@@ -34,6 +53,25 @@ object MovementTrailFilter {
 
     /** 속도값 하나만 튀어도 같은 좌표를 계속 기록하지 않도록 요구하는 최소 변위. */
     const val MIN_SPEED_EVIDENCE_DISPLACEMENT_METERS = 3.0
+
+    /**
+     * 활동 인식이 정지라고 하는데 좌표가 크게 옮겨졌는가.
+     *
+     * true 면 호출자([child.TrackingService])가 이동 확인(5초 주기)을 시작한다 —
+     * 지오펜스 이탈을 이동 증거로 쓰는 것과 같은 원리다. 두 점 다 상태 업로드
+     * 문턱(50m) 안쪽의 정확도여야 한다: 수백 미터 오차의 쓰레기 점 하나가
+     * 5초 주기를 켜게 두면 안 된다.
+     */
+    fun isDisplacementEvidence(previous: Fix?, candidate: Fix): Boolean {
+        if (previous == null) return false
+        if (!candidate.accuracy.isFinite() || candidate.accuracy > LocationFilter.MAX_ACCURACY_METERS) return false
+        if (!previous.accuracy.isFinite() || previous.accuracy > LocationFilter.MAX_ACCURACY_METERS) return false
+        val elapsed = candidate.at - previous.at
+        if (elapsed <= 0L) return false
+        val distance = LocationFilter.distanceMeters(previous, candidate)
+        if (distance / (elapsed / 1_000.0) > LocationFilter.MAX_SPEED_MPS) return false
+        return distance >= DISPLACEMENT_EVIDENCE_METERS
+    }
 
     fun shouldRecord(previous: Fix?, candidate: Fix, reportedMoving: Boolean): Boolean {
         if (!reportedMoving) return false

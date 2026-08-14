@@ -168,7 +168,11 @@ class AdaptiveMovementDetector {
     }
 
     companion object {
-        const val MAX_ACCURACY_METERS = 30f
+        // 30m 로 조였더니 버스·번화가의 30~50m 오차 구간에서 판정기가 점을 전부
+        // 버려 이동 확정(MOVING)에 영영 못 올라갔다 — 경로 기록까지 같이 굶는다.
+        // 판정 문턱들이 오차에 비례해 커지므로(NOISE_MULTIPLIER×hypot) 상한을
+        // 올려도 정지 흔들림이 이동으로 승격되지는 않는다. MovementTrailFilter 와 같은 값.
+        const val MAX_ACCURACY_METERS = 50f
         const val FAST_PROBE_MILLIS = 30_000L
         const val STOP_CONFIRM_MILLIS = 60_000L
         const val MIN_CONFIRM_MILLIS = 10_000L

@@ -38,6 +38,7 @@ import com.kidcare.family.databinding.FragmentMapTimelineBinding
 import com.kidcare.family.logic.DayPicker
 import com.kidcare.family.logic.Fix
 import com.kidcare.family.logic.RoutePathRefiner
+import com.kidcare.family.logic.RouteWindows
 import com.kidcare.family.logic.SegmentSummarizer
 import com.kidcare.family.logic.SegmentType
 import com.naver.maps.geometry.LatLng
@@ -1130,24 +1131,29 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    /** 원시 GPS 점을 MOVE 시간 범위별로 나눠 카드 하나와 지도 선 하나를 연결한다. */
+    /**
+     * 원시 GPS 점을 MOVE 시간 범위별로 나눠 카드 하나와 지도 선 하나를 연결한다.
+     *
+     * 창은 구간의 startAt..endAt 그대로가 아니라 [RouteWindows.partition] 으로
+     * **하루 전체를 빈틈없이 나눈 것**을 쓴다. 예전에는 창 밖(머무름 기준점, 구간
+     * 계산과 업로드의 미세한 어긋남, 마지막 이동 뒤의 최신 점)에 떨어진 점이 어느
+     * 선에도 안 들어가 조용히 사라졌다 — 아이 폰에는 다 쌓여 있는데 부모 지도만
+     * 중간이 삭제된 것처럼 보였던 원인. 흔들림 정리는 창이 아니라
+     * [RoutePathRefiner] 가 맡는다.
+     */
     private fun buildRouteSections(
         points: List<TrailPoint>,
         docs: List<SegmentDoc>,
     ): List<RouteSection> {
         val sortedPoints = points.sortedBy { it.at }
-        return docs.mapIndexedNotNull { index, doc ->
-            if (doc.type != SegmentType.MOVE.name) return@mapIndexedNotNull null
-
-            // 바로 앞·뒤 점도 경계로 포함해 출발/도착 부근의 짧은 끊김을 막는다.
-            val window = buildList {
-                sortedPoints.lastOrNull { it.at < doc.startAt }?.let(::add)
-                addAll(sortedPoints.filter { it.at in doc.startAt..doc.endAt })
-                sortedPoints.firstOrNull { it.at > doc.endAt }?.let(::add)
-            }.distinct()
-            val refined = if (window.size >= 2) {
+        val moveDocs = docs.filter { it.type == SegmentType.MOVE.name }.sortedBy { it.startAt }
+        val windows = RouteWindows.partition(moveDocs.map { it.startAt..it.endAt })
+        return moveDocs.mapIndexedNotNull { moveIndex, doc ->
+            val window = windows[moveIndex]
+            val windowPoints = sortedPoints.filter { it.at in window }
+            val refined = if (windowPoints.size >= 2) {
                 RoutePathRefiner.refine(
-                    window.map { Fix(it.lat, it.lng, it.accuracy, it.at, it.speed) },
+                    windowPoints.map { Fix(it.lat, it.lng, it.accuracy, it.at, it.speed) },
                 ).map { leg -> leg.points.map { LatLng(it.lat, it.lng) } }
                     .filter { it.size >= 2 }
             } else {
@@ -1155,7 +1161,8 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
             }
 
             // points가 없던 옛 기록도 양옆 구간 좌표로 근사해 계속 볼 수 있게 한다.
-            val legs = if (refined.isNotEmpty()) refined else {
+            val legs = refined.ifEmpty {
+                val index = docs.indexOf(doc)
                 val fallback = listOfNotNull(
                     docs.getOrNull(index - 1), doc, docs.getOrNull(index + 1),
                 ).filter { it.lat.isFinite() && it.lng.isFinite() }
