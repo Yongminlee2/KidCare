@@ -180,10 +180,33 @@ class AdaptiveMovementDetector {
         const val SPEED_TRUST_MAX_ACCURACY_METERS = 15f
         const val MIN_CONFIDENT_SPEED_MPS = 0.35f
         const val MIN_SPEED_DISPLACEMENT_METERS = 3.0
-        const val MIN_NET_DISPLACEMENT_METERS = 30.0
+
+        /**
+         * 이동 확정에 필요한 최소 순이동. 30m 에서 15m 로 내렸다.
+         *
+         * 30m 이던 시절에는 **걷는 아이가 절대 통과하지 못했다.** 확인 창이 30초인데
+         * 아이 보행 속도는 1.0~1.3m/s 라 그 안에 30~39m 를 간다. 오차가 15m 만 돼도
+         * 아래 [NOISE_MULTIPLIER] 배수가 문턱을 42m 로 올려 창 안에 도달할 수가 없었다.
+         * 그 결과 판정기가 영영 저주기에 머물러, 집 앞 놀이터에 다녀와도 5분짜리
+         * 머무름 기준점만 남고 경로가 통째로 비었다.
+         */
+        const val MIN_NET_DISPLACEMENT_METERS = 15.0
         const val SLOW_PROBE_MIN_DISPLACEMENT_METERS = 15.0
         const val STOP_RADIUS_METERS = 15.0
-        const val NOISE_MULTIPLIER = 2.0
+
+        /**
+         * 오차를 문턱으로 바꿀 때 곱하는 배수. 2.0 에서 1.0 으로 내렸다.
+         *
+         * 두 점의 변위 잡음은 표준편차가 `hypot(오차1, 오차2)` 이므로 1.0 배가 곧
+         * 1-시그마다. 2.0 배(=2-시그마)는 통계적으로는 안전하지만 **보행 속도로는
+         * 도달할 수 없는 거리**가 된다 — 오차 20m 에서 57m 를 30초 안에 가야 했다.
+         *
+         * 1-시그마로 내려도 오탐이 늘지 않는 이유는 이 배수가 혼자 판정하지 않기
+         * 때문이다: 표본 3개 이상([MIN_CONFIRM_POINTS]), 10초 이상([MIN_CONFIRM_MILLIS]),
+         * 그리고 중간 지점도 문턱의 60%([MIN_PROGRESS_RATIO])를 넘어야 한다. 제자리
+         * 흔들림은 방향이 무작위라 이 '꾸준한 전진' 조건을 연달아 만족하지 못한다.
+         */
+        const val NOISE_MULTIPLIER = 1.0
         const val MIN_PROGRESS_RATIO = 0.6
     }
 }

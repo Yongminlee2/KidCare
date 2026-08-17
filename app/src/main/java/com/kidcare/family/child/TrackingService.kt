@@ -574,15 +574,16 @@ class TrackingService : LifecycleService() {
         // 10초 이상 실제 진행을 보여야 5초 경로 기록을 시작한다. 그 전 후보점도 함께
         // 되살려 출발 부분이 잘리지 않게 한다. 등록 장소 안과 활동 인식 정지는
         // 머무름으로 처리하되, 실시간 보기의 2초 화면 표시는 이 판정과 무관하게 위에서 한다.
+        // **등록 장소 안에서도 판정을 돌린다.** 예전에는 `!insideKnownPlace` 조건이
+        // 붙어 있어서, 집 반경 안의 놀이터에 다녀오는 동안 판정기 자체가 안 돌았고
+        // 경로도 안 남았다(5분짜리 머무름 기준점만 남았다). 학교 복도 같은 작은
+        // 움직임을 경로로 만들지 않는 일은 판정기가 이미 한다 — 실제 전진이 없으면
+        // 저주기로 내려가므로, 여기서 한 번 더 막으면 진짜 외출까지 같이 막힌다.
         val movementEligible = activityMoving || exitedKnownPlace
-        val movementUpdate = if (movementEligible && !insideKnownPlace) {
-            movementDetector.onFix(fix)
-        } else {
-            null
-        }
+        val movementUpdate = if (movementEligible) movementDetector.onFix(fix) else null
         movementUpdate?.let { collector.setAdaptiveMovementState(it.state) }
 
-        val routeMoving = movementEligible && !insideKnownPlace &&
+        val routeMoving = movementEligible &&
             movementUpdate?.state == AdaptiveMovementState.MOVING
         movementUpdate?.promotionBuffer
             ?.takeIf { it.isNotEmpty() }

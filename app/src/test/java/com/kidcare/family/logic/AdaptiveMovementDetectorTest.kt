@@ -31,14 +31,44 @@ class AdaptiveMovementDetectorTest {
     }
 
     @Test
-    fun `정확도 반경 두 배 안의 한 방향 흔들림도 이동으로 확정하지 않는다`() {
+    fun `오차 반경 안의 작은 흔들림은 이동으로 확정하지 않는다`() {
+        // 오차 10m 에서 문턱은 max(15, hypot(10,10)×1.0) = 15m 다.
+        // 20초 동안 9m 는 서 있는 폰의 흔들림 범위라 확정하면 안 된다.
         val detector = AdaptiveMovementDetector()
         detector.onFix(fix(0, 0.0, accuracy = 10f))
-        detector.onFix(fix(10, 14.0, accuracy = 10f))
-        val result = detector.onFix(fix(20, 24.0, accuracy = 10f))
+        detector.onFix(fix(10, 5.0, accuracy = 10f))
+        val result = detector.onFix(fix(20, 9.0, accuracy = 10f))
 
         assertEquals(AdaptiveMovementState.FAST_PROBE, result.state)
         assertTrue(result.promotionBuffer.isEmpty())
+    }
+
+    @Test
+    fun `속도값이 없어도 걷는 속도로 꾸준히 나아가면 이동으로 확정한다`() {
+        // **이 테스트가 이 판정기의 존재 이유다.** 아이가 집 앞 놀이터에 걸어가는 것이
+        // 정확히 이 모양이다 — 20초에 24m(=1.2m/s), 오차 10m, 속도값 없음.
+        // 예전 배수(×2)에서는 문턱이 28m 라 통과할 수 없었고, 그래서 판정기가 영영
+        // 저주기에 머물러 경로가 한 줄도 안 남았다.
+        val detector = AdaptiveMovementDetector()
+        detector.onFix(fix(0, 0.0, accuracy = 10f))
+        detector.onFix(fix(10, 12.0, accuracy = 10f))
+        val result = detector.onFix(fix(20, 24.0, accuracy = 10f))
+
+        assertEquals(AdaptiveMovementState.MOVING, result.state)
+        assertTrue("출발 부분이 잘리지 않게 확정 직전 점들을 돌려준다", result.promotionBuffer.isNotEmpty())
+    }
+
+    @Test
+    fun `저주기로 내려가도 걷는 거리면 다시 확인으로 올라온다`() {
+        // 한번 저주기에 갇히면 못 나오던 함정. 30초 간격 두 점이 36m(=1.2m/s) 벌어지면
+        // 걷고 있는 것이므로 빠른 확인으로 복귀해야 한다. 예전에는 오차 15m 에서
+        // 42m 를 요구해 걸어서는 복귀가 불가능했다.
+        val detector = AdaptiveMovementDetector()
+        detector.reset(fast = false)
+        detector.onFix(fix(0, 0.0, accuracy = 15f))
+        val result = detector.onFix(fix(30, 36.0, accuracy = 15f))
+
+        assertEquals(AdaptiveMovementState.FAST_PROBE, result.state)
     }
 
     @Test

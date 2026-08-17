@@ -41,9 +41,9 @@ class MovementTrailFilterTest {
     }
 
     @Test
-    fun `버스 구간의 40m 오차 점도 오차 이상 움직였으면 경로에 남긴다`() {
-        // 30m 상한이던 시절 이 점이 거절돼 경로 중간이 통째로 비었다.
-        // noiseRadius = hypot(40,40) ≈ 57m 이므로 80m 변위면 흔들림이 아니다.
+    fun `버스 구간의 40m 오차 점도 경로에 남긴다`() {
+        // 상한이 30m 이던 시절 이 점은 정확도만으로 거절돼 경로 중간이 통째로 비었다.
+        // 상한은 이제 50m 다.
         assertTrue(
             MovementTrailFilter.shouldRecord(
                 fix(0L, accuracy = 40f),
@@ -139,17 +139,15 @@ class MovementTrailFilterTest {
     }
 
     @Test
-    fun `속도 오차가 속도만큼 큰 점은 속도 근거로 기록하지 않는다`() {
-        assertFalse(
+    fun `걷는 5초 변위는 오차가 거칠어도 경로점으로 남긴다`() {
+        // **이 테스트가 이번 변경의 핵심이다.** 아이가 5초 동안 걷는 거리는 약 6m 인데,
+        // 예전에는 오차 반경(hypot)을 요구해서 오차 20m 면 28m 를 넘어야 기록했다.
+        // 즉 걸어서는 경로점이 하나도 안 남았다. 이제 3m 만 넘으면 남기고, 흔들림
+        // 정리는 그리는 쪽(RoutePathRefiner)이 맡는다.
+        assertTrue(
             MovementTrailFilter.shouldRecord(
-                fix(0L, accuracy = 10f),
-                fix(
-                    5_000L,
-                    metersEast = 6.0,
-                    accuracy = 10f,
-                    speed = 1.2f,
-                    speedAccuracy = 1.1f,
-                ),
+                fix(0L, accuracy = 20f),
+                fix(5_000L, metersEast = 6.0, accuracy = 20f),
                 reportedMoving = true,
             )
         )
@@ -167,18 +165,19 @@ class MovementTrailFilterTest {
     }
 
     @Test
-    fun `속도가 없으면 오차 반경 안의 변화는 흔들림으로 본다`() {
+    fun `같은 자리의 반복 좌표는 기록하지 않는다`() {
+        // 3m 문턱이 걸러내는 것은 "사실상 같은 점"뿐이다.
         assertFalse(
             MovementTrailFilter.shouldRecord(
                 fix(0L, accuracy = 10f),
-                fix(5_000L, metersEast = 8.0, accuracy = 10f),
+                fix(5_000L, metersEast = 2.0, accuracy = 10f),
                 reportedMoving = true,
             )
         )
     }
 
     @Test
-    fun `속도가 없어도 오차 반경 밖으로 이동하면 기록한다`() {
+    fun `속도가 없어도 실제로 이동하면 기록한다`() {
         assertTrue(
             MovementTrailFilter.shouldRecord(
                 fix(0L, accuracy = 10f),
@@ -189,12 +188,15 @@ class MovementTrailFilterTest {
     }
 
     @Test
-    fun `실내의 부정확한 속도값은 정지 흔들림을 이동으로 만들지 않는다`() {
+    fun `정지로 판정된 동안에는 무엇이 와도 기록하지 않는다`() {
+        // 제자리 흔들림을 막는 책임은 이제 이 필터가 아니라 상류의 이동 판정기에 있다.
+        // 판정기가 정지라고 하면(reportedMoving=false) 거친 점이든 속도가 튄 점이든
+        // 한 줄도 안 남는다 — 그것이 이 구조에서 정지 보호가 사는 자리다.
         assertFalse(
             MovementTrailFilter.shouldRecord(
                 fix(0L, accuracy = 25f),
                 fix(5_000L, metersEast = 20.0, accuracy = 25f, speed = 4f),
-                reportedMoving = true,
+                reportedMoving = false,
             )
         )
     }

@@ -55,20 +55,25 @@ class LocationCollector(private val context: Context) {
         val onFix = onFixCallback ?: return
         clearUpdates()
 
+        // **등록 장소 안이라도 이동이 확인되면 5초를 쓴다.** 예전에는 이 분기가
+        // 이동 판정보다 위에 있어서, 집 반경 안의 놀이터에 다녀오는 동안 내내 1분
+        // 주기에 묶였다 — 그 사이의 경로가 통째로 비었다. 실내 흔들림 억제는
+        // 판정기(AdaptiveMovementDetector)가 이미 하는 일이라, 하드코딩으로 한 번 더
+        // 누르면 진짜 이동까지 같이 눌린다.
         val interval = when {
             liveTracking -> LIVE_INTERVAL_MILLIS
             !activityMoving -> STILL_INTERVAL_MILLIS
-            insideKnownPlace -> KNOWN_PLACE_INTERVAL_MILLIS
             adaptiveState == AdaptiveMovementState.MOVING -> MOVING_INTERVAL_MILLIS
             adaptiveState == AdaptiveMovementState.FAST_PROBE -> MOVING_INTERVAL_MILLIS
+            insideKnownPlace -> KNOWN_PLACE_INTERVAL_MILLIS
             else -> SLOW_PROBE_INTERVAL_MILLIS
         }
         val mode = when {
             liveTracking -> "실시간"
             !activityMoving -> "활동 인식 정지"
-            insideKnownPlace -> "등록 장소 머무름"
             adaptiveState == AdaptiveMovementState.MOVING -> "이동 확정"
             adaptiveState == AdaptiveMovementState.FAST_PROBE -> "이동 확인"
+            insideKnownPlace -> "등록 장소 머무름"
             else -> "저주기 확인"
         }
         Log.i(TAG, "수집 주기 변경: $mode ${interval / 1000}초")

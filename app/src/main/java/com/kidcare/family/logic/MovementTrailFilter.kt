@@ -42,8 +42,23 @@ object MovementTrailFilter {
     /** 정확도가 좋은 야외에서 보행으로 볼 수 있는 최소 GNSS 속도. */
     const val MOVING_SPEED_MPS = 0.7f
 
-    /** 정확도 값이 지나치게 좋게 나와도 5m 이내 변화는 GPS 흔들림으로 본다. */
-    const val MIN_DISPLACEMENT_METERS = 5.0
+    /**
+     * 경로점으로 인정하는 최소 변위. 5m 에서 3m 로 내렸고, **오차에 비례해 키우지
+     * 않는다.**
+     *
+     * 예전에는 `max(5m, hypot(오차1, 오차2))` 였다. 오차 20m 면 연속 두 점이 28m 는
+     * 벌어져야 기록했는데, **아이가 5초 동안 걷는 거리는 6m** 다. 즉 걸어서는 경로점이
+     * 하나도 안 남았고, 속도 근거 갈래(정확도 15m 이하 + 속도오차 확보)가 통과할 때만
+     * 우연히 남았다. 실내·번화가에서 그 갈래가 막히면 하루 종일 점이 안 쌓인다.
+     *
+     * 이제 **수집은 넉넉히 하고 흔들림은 그릴 때 정리한다**(RoutePathRefiner 의 오차
+     * 가중 평활과 단일 스파이크 제거). 버린 점은 영영 못 살리지만 남긴 점은 언제든
+     * 다듬을 수 있기 때문이다. 저장 비용은 근거가 된다 — 한 점이 CSV 한 줄 약 50바이트라
+     * 5초 간격으로 하루를 꽉 채워도 1MB 아래이고, 서버로는 어차피 하루 문서 하나만 간다.
+     *
+     * 3m 를 남긴 이유는 완전히 같은 좌표가 반복해 들어오는 것만 걸러내기 위해서다.
+     */
+    const val MIN_DISPLACEMENT_METERS = 3.0
 
     /** 이 이하 오차의 GNSS 속도만 보행 판정의 보조 근거로 신뢰한다. */
     const val SPEED_TRUST_MAX_ACCURACY_METERS = 15f
@@ -102,12 +117,9 @@ object MovementTrailFilter {
             distance >= MIN_SPEED_EVIDENCE_DISPLACEMENT_METERS
         ) return true
 
-        // 같은 실제 위치에서 나온 두 점은 각각의 오차 원 안에서 반대 방향으로 흔들릴
-        // 수 있다. 두 오차의 제곱합보다 멀리 벗어나야 실제 이동으로 인정한다.
-        val noiseRadius = max(
-            MIN_DISPLACEMENT_METERS,
-            hypot(previous.accuracy.toDouble(), candidate.accuracy.toDouble()),
-        )
-        return distance >= noiseRadius
+        // 예전에는 여기서 오차에 비례한 반경(hypot)을 요구했다. 그 판정이 걷는 아이를
+        // 통째로 지웠다([MIN_DISPLACEMENT_METERS] 주석). 이제는 같은 좌표의 반복만
+        // 걸러내고, 흔들림 판단은 그리는 쪽으로 넘긴다.
+        return distance >= MIN_DISPLACEMENT_METERS
     }
 }
