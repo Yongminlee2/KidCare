@@ -54,21 +54,46 @@ class MovementTrailFilterTest {
     }
 
     @Test
-    fun `정지 주기 사이 150m 변위는 이동의 증거다`() {
+    fun `집 앞 놀이터 거리도 좌표가 좋으면 이동의 증거다`() {
+        // **이 테스트가 짧은 외출을 지키는 자리다.** 집에서 60m 떨어진 놀이터는
+        // 지오펜스(집 반경 안)도 활동 인식(감지가 늦다)도 못 잡는다. 좌표가 좋을 때
+        // (오차 10m → 문턱 max(50, 21) = 50m) 이 변위가 유일한 시작 신호다.
         assertTrue(
             MovementTrailFilter.isDisplacementEvidence(
-                fix(0L, accuracy = 40f),
-                fix(300_000L, metersEast = 160.0, accuracy = 40f),
+                fix(0L, accuracy = 10f),
+                fix(60_000L, metersEast = 60.0, accuracy = 10f),
             )
         )
     }
 
     @Test
-    fun `150m 미만 변위는 오차 흔들림일 수 있어 증거가 아니다`() {
+    fun `좌표가 거칠면 같은 거리라도 증거로 쓰지 않는다`() {
+        // 오차 40m 두 점의 변위 잡음은 표준편차가 hypot(40,40)≈57m 라, 가만히 있어도
+        // 60m 는 예사로 벌어진다. 문턱이 max(50, 57×1.5)=85m 로 올라가 속지 않는다.
         assertFalse(
             MovementTrailFilter.isDisplacementEvidence(
-                fix(0L, accuracy = 50f),
-                fix(300_000L, metersEast = 99.0, accuracy = 50f),
+                fix(0L, accuracy = 40f),
+                fix(60_000L, metersEast = 60.0, accuracy = 40f),
+            )
+        )
+    }
+
+    @Test
+    fun `좌표가 거칠어도 충분히 멀면 증거가 된다`() {
+        assertTrue(
+            MovementTrailFilter.isDisplacementEvidence(
+                fix(0L, accuracy = 40f),
+                fix(60_000L, metersEast = 120.0, accuracy = 40f),
+            )
+        )
+    }
+
+    @Test
+    fun `50m 미만 변위는 좌표가 아무리 좋아도 증거가 아니다`() {
+        assertFalse(
+            MovementTrailFilter.isDisplacementEvidence(
+                fix(0L, accuracy = 5f),
+                fix(60_000L, metersEast = 45.0, accuracy = 5f),
             )
         )
     }

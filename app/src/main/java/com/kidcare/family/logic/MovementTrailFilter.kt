@@ -30,14 +30,29 @@ object MovementTrailFilter {
     const val MAX_ACCURACY_METERS = 50f
 
     /**
-     * 정지 주기(5분) 사이에 이만큼 옮겨졌으면 **좌표 자체가 이동의 증거**다.
+     * 정지 주기 사이에 이만큼 옮겨졌으면 **좌표 자체가 이동의 증거**다.
      *
-     * 활동 인식은 가방 속 폰의 버스 이동 같은 것을 통째로 놓칠 수 있고, 전환 이벤트는
-     * 상태가 바뀔 때만 오므로 한 번 놓치면 끝까지 5분 주기에 갇힌다. 두 점의 오차가
-     * 최악으로 반대 방향이어도 100m(50m×2)를 넘을 수 없으므로 150m 는 흔들림으로는
-     * 못 만드는 거리다.
+     * 활동 인식은 가방 속 폰의 버스 이동을 통째로 놓칠 수 있고, 전환 이벤트는 상태가
+     * 바뀔 때만 오므로 한 번 놓치면 스스로는 못 돌아온다. 그때 좌표가 대신 깨운다.
+     *
+     * 150m 에서 50m 로 내렸다. 150m 는 **집 앞 놀이터·근처 슈퍼를 전부 놓쳤다** —
+     * 그 거리가 애초에 60~100m 라 문턱에 닿지 못했고, 그래서 짧은 외출은 이동으로
+     * 시작조차 되지 않았다.
      */
-    const val DISPLACEMENT_EVIDENCE_METERS = 150.0
+    const val DISPLACEMENT_EVIDENCE_METERS = 50.0
+
+    /**
+     * 변위를 증거로 인정할 때 오차에 곱하는 배수.
+     *
+     * 고정 문턱만 쓰면 안 되는 이유: 두 점 다 오차 40m 여도 통과하는데(상한이 50m),
+     * 그 둘의 변위 잡음은 표준편차가 `hypot(40,40) ≈ 57m` 라 **가만히 있어도 50m 는
+     * 예사로 벌어진다.** 그러면 서 있는 폰이 5초 주기를 계속 켜서 배터리만 태운다.
+     *
+     * 그래서 문턱은 `max(50m, hypot × 1.5)` 다. 좌표가 좋을 때(오차 10m 안팎)는 50m
+     * 짜리 놀이터 외출이 잡히고, 좌표가 거칠 때는 애초에 구분할 수 없으므로 추측하지
+     * 않는다 — 못 믿을 재료로 판단하느니 활동 인식과 지오펜스에 맡긴다.
+     */
+    const val DISPLACEMENT_EVIDENCE_NOISE_MULTIPLIER = 1.5
 
     /** 정확도가 좋은 야외에서 보행으로 볼 수 있는 최소 GNSS 속도. */
     const val MOVING_SPEED_MPS = 0.7f
@@ -85,7 +100,12 @@ object MovementTrailFilter {
         if (elapsed <= 0L) return false
         val distance = LocationFilter.distanceMeters(previous, candidate)
         if (distance / (elapsed / 1_000.0) > LocationFilter.MAX_SPEED_MPS) return false
-        return distance >= DISPLACEMENT_EVIDENCE_METERS
+        val threshold = max(
+            DISPLACEMENT_EVIDENCE_METERS,
+            hypot(previous.accuracy.toDouble(), candidate.accuracy.toDouble()) *
+                DISPLACEMENT_EVIDENCE_NOISE_MULTIPLIER,
+        )
+        return distance >= threshold
     }
 
     fun shouldRecord(previous: Fix?, candidate: Fix, reportedMoving: Boolean): Boolean {

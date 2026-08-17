@@ -212,8 +212,22 @@ class LocationCollector(private val context: Context) {
         /** 집·학교처럼 등록한 장소 안에서는 OS 지오펜스와 함께 이 주기로 이탈을 보조 확인한다. */
         const val KNOWN_PLACE_INTERVAL_MILLIS = 60_000L
 
-        /** 정지 중 주기. 설계서 §4.1 */
-        const val STILL_INTERVAL_MILLIS = 5 * 60_000L
+        /**
+         * 활동 인식이 정지라고 할 때의 주기. 5분에서 1분으로 내렸다.
+         *
+         * 5분이면 **집 앞 놀이터에 다녀오는 것이 통째로 안 잡힌다.** 활동 인식이
+         * STILL 을 보고한 뒤 아이가 60m 떨어진 놀이터로 걸어가는 1분 동안, 지오펜스는
+         * (놀이터가 집 반경 안이라) 안 울리고 활동 인식의 걷기 감지는 30초~2분 늦으며
+         * 위치는 5분에 한 번만 들어온다 — 즉 산책이 끝날 때까지 좌표가 한 점도 없다.
+         * 좌표가 없으면 아래 [MovementTrailFilter.isDisplacementEvidence] 도 판단할
+         * 재료가 없어서, 이동을 시작할 방법 자체가 사라진다.
+         *
+         * 1분이면 짧은 외출도 한 번은 좌표에 걸리고, 그 한 점이 변위 증거가 되어
+         * 5초 확인을 켠다. 정지가 하루의 대부분이라 여기가 이 앱에서 배터리를 가장
+         * 많이 좌우하는 값이다 — 실기기 하루 측정 뒤에 다시 볼 것
+         * (`docs/known-issues.md` 10번의 "배터리 아끼기" 토글이 그 자리다).
+         */
+        const val STILL_INTERVAL_MILLIS = 60_000L
 
         /** 이동 요청에만 거는 최소 이동 거리. 값의 근거는 requestUpdates() 주석. */
         const val MOVING_MIN_UPDATE_DISTANCE_METERS = 3f
