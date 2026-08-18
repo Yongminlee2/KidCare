@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -19,6 +20,53 @@ class ScheduleResolverTest {
         start: Int = 9 * 60, end: Int = 15 * 60,
         mode: String = "vibrate", enabled: Boolean = true, priority: Int = 0,
     ) = ScheduleRule(id, days, start, end, mode, enabled, priority)
+
+    // ------------------------------------------------------------------ 공휴일
+
+    /** 2026-03-02(월)은 삼일절 대체공휴일이다. 그 주 월요일 하나만 쉬는 날이 된다. */
+    private val substituteMonday = setOf(LocalDate.of(2026, 3, 2))
+
+    @Test
+    fun `공휴일에는 평일 규칙이 시작하지 않는다`() {
+        val r = ScheduleResolver.resolveAt(
+            listOf(rule()), at(2026, 3, 2, 10, 0), seoul, substituteMonday,
+        )
+        assertNull("대체공휴일 낮인데 평일 규칙이 걸렸다", r.mode)
+    }
+
+    @Test
+    fun `공휴일 집합이 비면 예전처럼 요일만 본다`() {
+        val r = ScheduleResolver.resolveAt(listOf(rule()), at(2026, 3, 2, 10, 0), seoul)
+        assertEquals("vibrate", r.mode)
+    }
+
+    @Test
+    fun `공휴일 다음 날에는 다시 규칙이 돈다`() {
+        val r = ScheduleResolver.resolveAt(
+            listOf(rule()), at(2026, 3, 3, 10, 0), seoul, substituteMonday,
+        )
+        assertEquals("vibrate", r.mode)
+    }
+
+    @Test
+    fun `공휴일 전날 밤에 시작한 규칙은 그 아침까지 이어진다`() {
+        // 평일 22:00~07:00 규칙이 일요일 밤에 시작할 리는 없으니 금요일 밤으로 본다.
+        // 2026-02-27(금) 밤에 시작해 28일 새벽까지 가는 구간이다. 시작일 기준이라는
+        // 규칙이 요일과 공휴일 양쪽에 똑같이 적용되는지 확인한다.
+        val night = rule(start = 22 * 60, end = 7 * 60)
+        val holidays = setOf(LocalDate.of(2026, 2, 28))
+        val r = ScheduleResolver.resolveAt(listOf(night), at(2026, 2, 28, 3, 0), seoul, holidays)
+        assertEquals("28일이 쉬는 날이어도 27일 밤에 시작한 구간은 이어져야 한다", "vibrate", r.mode)
+    }
+
+    @Test
+    fun `다음 경계도 공휴일을 건너뛴다`() {
+        // 월요일이 쉬는 날이면 다음 시작은 화요일 09:00 이어야 한다.
+        val r = ScheduleResolver.resolveAt(
+            listOf(rule()), at(2026, 3, 2, 6, 0), seoul, substituteMonday,
+        )
+        assertEquals(at(2026, 3, 3, 9, 0), r.nextBoundaryMillis)
+    }
 
     @Test
     fun `규칙이 없으면 강제하는 모드도 없다`() {

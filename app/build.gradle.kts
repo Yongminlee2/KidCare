@@ -37,8 +37,8 @@ android {
         // 버전으로 쓴다 — 이 앱은 "몇 단계까지 들어간 빌드인가"가 개발일지와
         // 계획서의 유일한 좌표라, 따로 만든 번호 체계를 하나 더 두면 둘이
         // 어긋나는 날이 온다.
-        versionCode = 7
-        versionName = "0.7"
+        versionCode = 8
+        versionName = "0.8"
         // 실기기 N:N 통합 테스트용. 기본값은 false라 일반 디버그·릴리스 APK는
         // 운영 Firebase를 그대로 사용한다. -PfirebaseEmulator=true로 만든 빌드만
         // USB adb reverse를 통해 PC의 로컬 에뮬레이터에 붙는다.

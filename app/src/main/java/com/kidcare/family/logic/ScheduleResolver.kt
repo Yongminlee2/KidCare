@@ -65,10 +65,24 @@ object ScheduleResolver {
     /** 규칙 하나가 특정 날짜에 시작할 때 만드는 [시작, 끝) 구간. 자정을 넘으면 끝이 다음 날. */
     private data class Interval(val rule: ScheduleRule, val startAt: Long, val endAt: Long)
 
-    /** [rule] 이 [anchorDate] 에 시작한다고 볼 때의 구간. 그 날 요일이 days 에 없으면 null. */
-    private fun intervalStartingOn(rule: ScheduleRule, anchorDate: LocalDate, zone: ZoneId): Interval? {
+    /**
+     * [rule] 이 [anchorDate] 에 시작한다고 볼 때의 구간. 그 날 요일이 days 에 없으면 null.
+     *
+     * [holidays] 에 든 날에는 어떤 규칙도 **시작하지 않는다**. 판정을 시작일 기준으로만
+     * 하는 것은 요일과 똑같은 규칙이다 — "평일 22:00~07:00" 이 금요일 밤에 시작해
+     * 토요일 새벽까지 이어지듯, 목요일 밤에 시작한 규칙은 금요일이 공휴일이어도 그
+     * 아침까지는 이어진다. 부모가 정한 것은 "언제 시작하는가"이므로 그 기준을 한 곳에
+     * 둔다.
+     */
+    private fun intervalStartingOn(
+        rule: ScheduleRule,
+        anchorDate: LocalDate,
+        zone: ZoneId,
+        holidays: Set<LocalDate>,
+    ): Interval? {
         val weekday = anchorDate.dayOfWeek.value // 1=월 ~ 7=일, days 와 같은 규칙
         if (weekday !in rule.days) return null
+        if (anchorDate in holidays) return null
         val dayStart = anchorDate.atStartOfDay(zone).toInstant().toEpochMilli()
         val startAt = dayStart + rule.startMinute * MINUTE_MILLIS
         // 자정을 넘는 규칙: 끝이 시작보다 이르거나 같으면 다음 날로 넘긴다.
@@ -101,25 +115,39 @@ object ScheduleResolver {
         center: LocalDate,
         daysBefore: Long,
         daysAfter: Long,
+        holidays: Set<LocalDate>,
     ): List<Interval> {
         if (!rule.enabled) return emptyList()
         val result = mutableListOf<Interval>()
         var d = -daysBefore
         while (d <= daysAfter) {
             val anchor = center.plusDays(d)
-            intervalStartingOn(rule, anchor, zone)?.let { result += it }
+            intervalStartingOn(rule, anchor, zone, holidays)?.let { result += it }
             d++
         }
         return result
     }
 
-    fun resolveAt(rules: List<ScheduleRule>, atMillis: Long, zone: ZoneId): Resolution {
+    /**
+     * [holidays] 에 든 날은 예약이 통째로 쉰다. 빈 집합이면 예전과 똑같이 요일만 본다.
+     *
+     * 공휴일을 요일처럼 규칙 안에 넣지 않고 밖에서 받는 이유: 공휴일은 해마다 자리를
+     * 옮기고(설날·추석·부처님오신날이 음력이다) 대체공휴일은 그 해 요일 배치에 따라
+     * 생겼다 없어진다. 부모가 미리 찍어 둘 수 있는 값이 아니라 그때그때 계산해야 하는
+     * 값이라, 규칙(부모가 정한 것)과 달력(해마다 달라지는 것)을 섞지 않는다.
+     */
+    fun resolveAt(
+        rules: List<ScheduleRule>,
+        atMillis: Long,
+        zone: ZoneId,
+        holidays: Set<LocalDate> = emptySet(),
+    ): Resolution {
         val today = Instant.ofEpochMilli(atMillis).atZone(zone).toLocalDate()
 
         // 지금 시각을 포함하는 구간 후보: 오늘과 어제 시작한 것만 보면 충분하다.
         // 자정 넘김 규칙이라도 길이는 최대 24시간(시작==끝이면 정확히 24시간, 그 외엔
         // 그보다 짧다)을 넘지 않으므로, 그저께 시작한 구간이 오늘까지 이어질 수는 없다.
-        val activeCandidates = rules.flatMap { expand(it, zone, today, daysBefore = 1, daysAfter = 0) }
+        val activeCandidates = rules.flatMap { expand(it, zone, today, daysBefore = 1, daysAfter = 0, holidays = holidays) }
             .filter { atMillis >= it.startAt && atMillis < it.endAt }
 
         val winner = activeCandidates
@@ -130,7 +158,7 @@ object ScheduleResolver {
         // 앞으로 SEARCH_HORIZON_DAYS 일치를 펼쳐서 찾는다 — 요일 주기가 7일이라 그 안에
         // 반드시 다음 시작을 만나거나, 활성 규칙이 없으면 끝까지 못 찾고 null 이 된다.
         val allNearby = rules.flatMap {
-            expand(it, zone, today, daysBefore = 1, daysAfter = SEARCH_HORIZON_DAYS)
+            expand(it, zone, today, daysBefore = 1, daysAfter = SEARCH_HORIZON_DAYS, holidays = holidays)
         }
         val nextBoundary = allNearby
             .flatMap { listOf(it.startAt, it.endAt) }
@@ -151,13 +179,14 @@ object ScheduleResolver {
         // 지금 꺼 둔 규칙을 편집하는 중이어도, 나중에 켰을 때 다른 규칙과 부딪힐지는
         // 미리 알고 싶어한다. 반대로 비교 대상인 other 쪽은 아래에서 enabled 를 그대로
         // 걸러낸다: 이미 꺼져 있는 다른 규칙과는 지금 겹쳐도 경고할 대상이 아니다.
-        val candidateIntervals = expand(candidate.copy(enabled = true), zone, anchor, daysBefore = 0, daysAfter = 6)
+        // 겹침 경고는 요일 조합만 본다 — 공휴일에 둘 다 안 도는 것은 경고할 일이 아니다.
+        val candidateIntervals = expand(candidate.copy(enabled = true), zone, anchor, daysBefore = 0, daysAfter = 6, holidays = emptySet())
         if (candidateIntervals.isEmpty()) return emptyList()
 
         return rules.filter { other ->
             if (other.id == candidate.id) return@filter false
             if (!other.enabled) return@filter false
-            val otherIntervals = expand(other, zone, anchor, daysBefore = 0, daysAfter = 6)
+            val otherIntervals = expand(other, zone, anchor, daysBefore = 0, daysAfter = 6, holidays = emptySet())
             otherIntervals.any { o -> candidateIntervals.any { c -> intervalsOverlap(o, c) } }
         }
     }

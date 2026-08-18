@@ -7,6 +7,7 @@ import com.kidcare.family.core.ScheduleRepository
 import com.kidcare.family.core.model.CommandDoc
 import com.kidcare.family.core.model.CommandType
 import com.kidcare.family.core.toRule
+import com.kidcare.family.core.HolidayCalendar
 import com.kidcare.family.logic.ScheduleResolver
 import kotlinx.coroutines.CancellationException
 import java.time.ZoneId
@@ -303,7 +304,15 @@ class CommandHandler(
      */
     private suspend fun nextRuleBoundaryMillis(familyId: String, childUid: String): Long = try {
         val rules = ScheduleRepository.fetchSchedules(familyId, childUid).map { it.toRule() }
-        ScheduleResolver.resolveAt(rules, System.currentTimeMillis(), ZoneId.systemDefault())
+        val zone = ZoneId.systemDefault()
+        // 예약과 같은 달력을 봐야 한다. 여기만 공휴일을 모르면 공휴일에 즉시 변경이
+        // "다음 경계"라며 엉뚱한 시각에 풀린다.
+        val holidays = if (state.holidayOff) {
+            HolidayCalendar.around(java.time.LocalDate.now(zone))
+        } else {
+            emptySet()
+        }
+        ScheduleResolver.resolveAt(rules, System.currentTimeMillis(), zone, holidays)
             .nextBoundaryMillis ?: 0L
     } catch (e: CancellationException) {
         throw e

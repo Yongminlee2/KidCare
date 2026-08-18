@@ -298,6 +298,28 @@
     <string name="schedule_sync_pending">아직 애기폰에 전달되지 않았어요. 애기폰은 지금도 예전 규칙대로 동작해요.</string>
     <string name="schedule_sync_retry">다시 알리기</string>
 
+    <!-- 공휴일 -->
+    <string name="schedule_holiday_title">공휴일엔 쉬어요</string>
+    <string name="schedule_holiday_subtitle">쉬는 날에는 아래 규칙을 하나도 켜지 않아요.</string>
+    <string name="schedule_holiday_next">다음 쉬는 날은 %1$s %2$s이에요.</string>
+    <string name="schedule_holiday_unknown">이 기기에서는 공휴일 날짜를 계산하지 못했어요. 스위치를 켜도 요일대로만 돌아요.</string>
+    <string name="schedule_holiday_date">%1$d월 %2$d일</string>
+    <string name="schedule_holiday_saved">공휴일에는 예약을 쉬어요.</string>
+    <string name="schedule_holiday_cleared">공휴일에도 예약대로 바꿔요.</string>
+
+    <string name="holiday_new_year">신정</string>
+    <string name="holiday_seollal">설 연휴</string>
+    <string name="holiday_independence">삼일절</string>
+    <string name="holiday_buddha">부처님오신날</string>
+    <string name="holiday_children">어린이날</string>
+    <string name="holiday_memorial">현충일</string>
+    <string name="holiday_liberation">광복절</string>
+    <string name="holiday_chuseok">추석 연휴</string>
+    <string name="holiday_foundation">개천절</string>
+    <string name="holiday_hangul">한글날</string>
+    <string name="holiday_christmas">성탄절</string>
+    <string name="holiday_substitute">대체공휴일</string>
+
     <string name="schedule_allday_title">하루 종일로 저장할까요?</string>
     <string name="schedule_allday_message">시작과 끝이 %1$s(으)로 같아요.\n이대로 저장하면 고른 요일에는 24시간 내내 %2$s(으)로 바뀝니다.</string>
     <string name="schedule_allday_confirm">하루 종일로 저장</string>

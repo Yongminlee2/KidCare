@@ -450,4 +450,9 @@ object EventType {
  */
 data class RingerSettingsDoc(
     val lockEnabled: Boolean = false,
+    /**
+     * 공휴일에는 예약 규칙을 전부 쉬게 할지. 기본값 false 는 예전과 같은 동작이다 —
+     * 이 필드가 없는 옛 문서를 읽어도 예약이 갑자기 안 도는 일이 없어야 한다.
+     */
+    val holidayOff: Boolean = false,
 )

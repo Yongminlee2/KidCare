@@ -15,6 +15,7 @@ import com.google.android.material.timepicker.TimeFormat
 import com.google.firebase.firestore.ListenerRegistration
 import com.kidcare.family.R
 import com.kidcare.family.core.CommandRepository
+import com.kidcare.family.core.HolidayCalendar
 import com.kidcare.family.core.FamilyRepository
 import com.kidcare.family.core.RoleStore
 import com.kidcare.family.core.ScheduleRepository
@@ -23,12 +24,14 @@ import com.kidcare.family.core.model.CommandType
 import com.kidcare.family.core.model.ScheduleDoc
 import com.kidcare.family.core.toRule
 import com.kidcare.family.databinding.FragmentScheduleBinding
+import com.kidcare.family.logic.Holiday
 import com.kidcare.family.logic.ScheduleResolver
 import com.kidcare.family.logic.ScheduleRule
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import java.time.LocalDate
 import java.util.UUID
 
 /**
@@ -189,6 +192,10 @@ class ScheduleFragment : Fragment() {
      *  여러 번 밀어내지 않게 하나로 묶는다([retryPendingSync]). */
     private var syncRetryJob: Job? = null
 
+    /** 공휴일 스위치를 그리는 리스너와 마지막으로 읽은 값. */
+    private var settingsListener: ListenerRegistration? = null
+    private var holidayOff = false
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -214,6 +221,11 @@ class ScheduleFragment : Fragment() {
         b.scheduleList.adapter = adapter
 
         b.addButton.setOnClickListener { openEditor(null) }
+        // setOnCheckedChangeListener 가 아니라 setOnClickListener 인 이유는 규칙 줄의
+        // 스위치와 같다(ScheduleAdapter 주석) — 값을 대입해 그릴 때 리스너가 불려
+        // 쓰기가 나가면 안 된다.
+        b.holidaySwitch.setOnClickListener { setHolidayOff(b.holidaySwitch.isChecked) }
+        renderHoliday()
         b.editorCancelButton.setOnClickListener { cancelEditor() }
         b.editorSaveButton.setOnClickListener { onSaveClicked() }
         b.syncRetryButton.setOnClickListener { retryPendingSync() }
@@ -344,6 +356,21 @@ class ScheduleFragment : Fragment() {
                 listLoad = ListLoad.FAILED
                 showState(getString(R.string.schedule_error_format, errorMessage(ctx, e)))
                 renderList()
+            },
+        )
+
+        settingsListener = ScheduleRepository.observeRingerSettings(
+            fid,
+            selectedUid,
+            onChange = { doc ->
+                holidayOff = doc.holidayOff
+                renderHoliday()
+            },
+            // 이 값을 못 읽는 것은 목록을 못 읽는 것과 다르다 — 규칙은 잘 보이는데
+            // 스위치 하나만 모르는 상태다. 목록 위 안내 줄을 이 실패로 덮어쓰면
+            // 정작 규칙에 대한 안내가 가려지므로 스위치만 잠근다.
+            onError = {
+                _binding?.holidaySwitch?.isEnabled = false
             },
         )
 
@@ -622,6 +649,98 @@ class ScheduleFragment : Fragment() {
                 showState(errorMessage(ctx, e))
             }
         }
+    }
+
+    /**
+     * 공휴일 스위치를 저장하고 아이 폰에 알린다.
+     *
+     * 규칙 저장과 같은 길을 탄다([pendingSync] → [notifyChild]). 이 값도 결국 자녀 폰의
+     * [ScheduleApplier][com.kidcare.family.child.ScheduleApplier] 가 읽어야 효과가 나므로,
+     * 알리지 않으면 "부모 화면에서는 켰는데 아이 폰은 공휴일에도 무음"이 된다.
+     */
+    private fun setHolidayOff(enabled: Boolean) {
+        val fid = familyId
+        val uid = childUid
+        if (fid == null || uid == null) {
+            _binding?.holidaySwitch?.isChecked = holidayOff
+            showState(getString(R.string.schedule_no_family))
+            return
+        }
+        val generation = ++writeGeneration
+        holidayOff = enabled
+        renderHoliday()
+        showState(null)
+        pendingSync = true
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val done = withTimeoutOrNull(WRITE_TIMEOUT_MILLIS) {
+                    ScheduleRepository.setHolidayOff(fid, uid, enabled)
+                }
+                if (done == null && generation == writeGeneration) {
+                    showStateRes(R.string.schedule_save_slow)
+                } else if (generation == writeGeneration) {
+                    showStateRes(
+                        if (enabled) R.string.schedule_holiday_saved
+                        else R.string.schedule_holiday_cleared
+                    )
+                }
+                notifyChild(generation)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (generation != writeGeneration) return@launch
+                val ctx = context ?: return@launch
+                _binding ?: return@launch
+                // 서버가 거절했으면 화면도 되돌린다 — 켜진 스위치를 그대로 두면
+                // 부모는 공휴일에 쉬는 줄 알고 있는데 실제로는 안 쉰다.
+                holidayOff = !enabled
+                renderHoliday()
+                showState(errorMessage(ctx, e))
+            }
+        }
+    }
+
+    /**
+     * 스위치와 그 아래 한 줄. 켜져 있을 때만 다음 쉬는 날을 적는다.
+     *
+     * 날짜를 적는 것이 이 화면의 유일한 검산이다 — 음력 환산이 틀리면 아무 증상 없이
+     * 엉뚱한 날에 쉬는데, 다음 쉬는 날을 눈에 보이게 적어 두면 부모가 달력과 맞춰볼 수
+     * 있다.
+     */
+    private fun renderHoliday() {
+        val b = _binding ?: return
+        b.holidaySwitch.isChecked = holidayOff
+        if (!holidayOff) {
+            b.holidayHint.setText(R.string.schedule_holiday_subtitle)
+            return
+        }
+        val next = HolidayCalendar.next(LocalDate.now())
+        if (next == null) {
+            b.holidayHint.setText(R.string.schedule_holiday_unknown)
+            return
+        }
+        val (date, holiday) = next
+        b.holidayHint.text = getString(
+            R.string.schedule_holiday_next,
+            getString(R.string.schedule_holiday_date, date.monthValue, date.dayOfMonth),
+            getString(holidayNameRes(holiday)),
+        )
+    }
+
+    private fun holidayNameRes(holiday: Holiday): Int = when (holiday) {
+        Holiday.NEW_YEAR -> R.string.holiday_new_year
+        Holiday.SEOLLAL -> R.string.holiday_seollal
+        Holiday.INDEPENDENCE -> R.string.holiday_independence
+        Holiday.BUDDHA -> R.string.holiday_buddha
+        Holiday.CHILDREN -> R.string.holiday_children
+        Holiday.MEMORIAL -> R.string.holiday_memorial
+        Holiday.LIBERATION -> R.string.holiday_liberation
+        Holiday.CHUSEOK -> R.string.holiday_chuseok
+        Holiday.FOUNDATION -> R.string.holiday_foundation
+        Holiday.HANGUL -> R.string.holiday_hangul
+        Holiday.CHRISTMAS -> R.string.holiday_christmas
+        Holiday.SUBSTITUTE -> R.string.holiday_substitute
     }
 
     private fun confirmDelete(doc: ScheduleDoc) {
@@ -914,6 +1033,8 @@ class ScheduleFragment : Fragment() {
         scheduleListener = null
         joinedListener?.remove()
         joinedListener = null
+        settingsListener?.remove()
+        settingsListener = null
         syncRetryJob?.cancel()
         syncRetryJob = null
         activeDialog?.dismiss()

@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 규칙 한 줄. 왼쪽 글자 뭉치를 누르면 고치기, 스위치는 켬/끔, 오른쪽 끝은 삭제다.
+<!-- 규칙 한 장. 왼쪽 스티커를 누르면 고치기, 스위치는 켬/끔, 오른쪽 끝은 삭제다.
      세 동작이 한 줄에 있으므로 누르는 자리를 겹치지 않게 나눴다 — 글자 뭉치만
      클릭 가능하게 두고 줄 전체에는 클릭을 걸지 않는다.
 
      카드로 감싼 이유: 한 줄에 누를 곳이 셋이라 줄과 줄의 경계가 안 보이면 옆 규칙의
      삭제 버튼을 누르기 쉽다. 흰 종이 한 장씩 떼어 놓으면 "이 규칙"의 범위가 눈에
-     보인다. 색종이 방향과도 맞는다 — 규칙 하나가 색종이 한 장이다. -->
+     보인다. 색종이 방향과도 맞는다 — 규칙 하나가 색종이 한 장이다.
+
+     스티커와 하루 띠를 더한 이유는 이 화면이 다루는 것이 결국 **하루의 어디**이기
+     때문이다. 글자만 있으면 "22:00 ~ 다음 날 07:00"을 머릿속에서 시계로 옮겨야 하는데,
+     띠는 그 일을 대신 해 준다 — 밤에 걸린 규칙은 띠의 양 끝이 차 있고, 낮 규칙은
+     가운데가 차 있다. 규칙이 여러 개 쌓이면 하루가 어떻게 나뉘어 있는지가 목록만
+     훑어도 보인다. -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="12dp"
-    android:layout_marginVertical="5dp">
+    android:layout_marginHorizontal="14dp"
+    android:layout_marginVertical="5dp"
+    app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,7 +29,7 @@
         android:orientation="horizontal"
         android:paddingStart="12dp"
         android:paddingEnd="4dp"
-        android:paddingVertical="6dp">
+        android:paddingVertical="8dp">
 
         <LinearLayout
             android:id="@+id/row_body"
@@ -30,32 +37,86 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="?attr/selectableItemBackground"
+            android:baselineAligned="false"
             android:clickable="true"
             android:focusable="true"
+            android:gravity="center_vertical"
             android:minHeight="48dp"
-            android:orientation="vertical"
+            android:orientation="horizontal"
             android:paddingHorizontal="4dp"
-            android:paddingVertical="8dp">
+            android:paddingVertical="6dp">
 
-            <TextView
-                android:id="@+id/title_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceBodyLarge" />
+            <!-- 소리 모드 스티커. 색과 그림이 함께 모드를 말한다 — 색만으로 구분하면
+                 색을 못 가리는 눈에는 셋이 같은 동그라미가 된다. -->
+            <FrameLayout
+                android:id="@+id/mode_sticker"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_sticker_circle">
 
-            <TextView
-                android:id="@+id/detail_text"
-                android:layout_width="match_parent"
+                <ImageView
+                    android:id="@+id/mode_icon"
+                    android:layout_width="21dp"
+                    android:layout_height="21dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_volume_up" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/title_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+                <TextView
+                    android:id="@+id/detail_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <!-- 하루 띠: 자정부터 자정까지를 한 줄로 펴 놓고 규칙이 도는 동안만
+                     색을 채운다. 조각 셋으로 자정 넘김까지 표현된다 — 낮 규칙은
+                     가운데만, 밤 규칙은 양 끝이 찬다. 폭은 코드에서 weight 로 준다. -->
+                <LinearLayout
+                    android:id="@+id/day_ribbon"
+                    android:layout_width="match_parent"
+                    android:layout_height="7dp"
+                    android:layout_marginTop="7dp"
+                    android:background="@drawable/bg_ribbon_track"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:id="@+id/ribbon_head"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent" />
+
+                    <View
+                        android:id="@+id/ribbon_middle"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent" />
+
+                    <View
+                        android:id="@+id/ribbon_tail"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
 
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/enabled_switch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="6dp"
             android:minHeight="48dp" />
 
         <com.google.android.material.button.MaterialButton

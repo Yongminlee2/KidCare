@@ -25,7 +25,6 @@ import com.kidcare.family.core.errorMessage
 import com.kidcare.family.core.model.CommandDoc
 import com.kidcare.family.core.model.CommandState
 import com.kidcare.family.core.model.CommandType
-import com.kidcare.family.core.model.RingerSettingsDoc
 import com.kidcare.family.databinding.FragmentControlBinding
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -815,7 +814,7 @@ class ControlFragment : Fragment() {
                 // 한 줄로 말한다. 스위치를 되돌리지는 않는다: 쓰기는 큐에 살아 있고
                 // 연결되면 그대로 저장되므로, 되돌리면 그게 더 큰 거짓말이 된다.
                 val saved = withTimeoutOrNull(SEND_TIMEOUT_MILLIS) {
-                    ScheduleRepository.saveRingerSettings(fid, uid, RingerSettingsDoc(lockEnabled = enabled))
+                    ScheduleRepository.setRingerLock(fid, uid, enabled)
                 }
                 if (saved == null) {
                     _binding ?: return@launch

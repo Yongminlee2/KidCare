@@ -40,6 +40,15 @@ class RingerStateStore(context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_LOCK, value).apply()
 
     /**
+     * "공휴일엔 예약을 쉬어요". [lockEnabled] 와 같은 이유로 여기에 캐시한다 —
+     * 경계 계산은 네트워크 없이도 돌아야 하고, [CommandHandler] 의 즉시 변경 해제
+     * 시각 계산도 같은 값을 봐야 예약과 어긋나지 않는다.
+     */
+    var holidayOff: Boolean
+        get() = prefs.getBoolean(KEY_HOLIDAY_OFF, false)
+        set(value) = prefs.edit().putBoolean(KEY_HOLIDAY_OFF, value).apply()
+
+    /**
      * 예약 규칙이 지금 강제하는 모드(Task 8). [ScheduleApplier] 가 규칙을 다시 읽을
      * 때마다(경계 알람, 재부팅, SYNC_RULES) 갱신한다. null 이면 지금 적용 중인 규칙이
      * 없다는 뜻이다.
@@ -87,6 +96,7 @@ class RingerStateStore(context: Context) {
         const val KEY_MODE = "override_mode"
         const val KEY_UNTIL = "override_until"
         const val KEY_LOCK = "lock_enabled"
+        const val KEY_HOLIDAY_OFF = "holiday_off"
         const val KEY_RULE_MODE = "rule_mode"
     }
 }

@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.MetadataChanges
+import com.google.firebase.firestore.SetOptions
 import com.kidcare.family.core.model.RingerSettingsDoc
 import com.kidcare.family.core.model.ScheduleDoc
 import com.kidcare.family.logic.ScheduleRule
@@ -84,8 +85,19 @@ object ScheduleRepository {
         schedules(familyId, childUid).document(id).delete().await()
     }
 
-    suspend fun saveRingerSettings(familyId: String, childUid: String, doc: RingerSettingsDoc) {
-        ringerSettingsRef(familyId, childUid).set(doc).await()
+    /**
+     * 설정 문서에는 서로 다른 화면이 각자의 스위치를 쓴다(관리 탭의 잠금, 예약 탭의
+     * 공휴일). 문서를 통째로 덮으면 한쪽 화면이 저장할 때마다 다른 쪽 값이 기본값으로
+     * 되돌아가므로 **건드리는 필드만 병합**한다.
+     */
+    suspend fun setRingerLock(familyId: String, childUid: String, enabled: Boolean) {
+        ringerSettingsRef(familyId, childUid)
+            .set(mapOf("lockEnabled" to enabled), SetOptions.merge()).await()
+    }
+
+    suspend fun setHolidayOff(familyId: String, childUid: String, enabled: Boolean) {
+        ringerSettingsRef(familyId, childUid)
+            .set(mapOf("holidayOff" to enabled), SetOptions.merge()).await()
     }
 
     /** [onError] 를 삼키지 않는 이유는 다른 observe* 함수들과 같다(SegmentRepository 참고) —

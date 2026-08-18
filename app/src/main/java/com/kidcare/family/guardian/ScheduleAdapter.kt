@@ -1,8 +1,12 @@
 package com.kidcare.family.guardian
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -60,9 +64,66 @@ class ScheduleAdapter(
                 onToggle(doc, binding.enabledSwitch.isChecked)
             }
 
+            bindSticker(doc)
+            bindRibbon(doc)
+
             binding.rowBody.setOnClickListener { onEdit(doc) }
             binding.deleteButton.setOnClickListener { onDelete(doc) }
         }
+
+        /** 모드마다 색과 그림이 다른 동그란 스티커. 색만으로 나누지 않는 이유는 레이아웃 주석 참고. */
+        private fun bindSticker(doc: ScheduleDoc) {
+            val context = binding.root.context
+            val (iconRes, colorRes, softRes) = ScheduleText.modeLook(doc.mode)
+            binding.modeIcon.setImageResource(iconRes)
+            binding.modeIcon.imageTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(context, colorRes))
+            binding.modeSticker.backgroundTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(context, softRes))
+        }
+
+        /**
+         * 하루 띠를 채운다. 자정부터 자정까지를 1440분으로 펴 놓고 규칙이 도는 분만
+         * 색을 준다.
+         *
+         * 조각이 셋인 이유는 자정 넘김 때문이다. 낮 규칙(09:00~15:00)은 가운데만 차고,
+         * 밤 규칙(22:00~07:00)은 **양 끝**이 찬다 — 하루를 자른 자리가 눈에 그대로
+         * 보인다. 시작과 끝이 같은 '하루 종일'은 셋 다 채운다.
+         */
+        private fun bindRibbon(doc: ScheduleDoc) {
+            val context = binding.root.context
+            val (_, colorRes, _) = ScheduleText.modeLook(doc.mode)
+            val fill = ContextCompat.getColor(context, colorRes)
+            val start = doc.startMinute.coerceIn(0, MINUTES_PER_DAY)
+            val end = doc.endMinute.coerceIn(0, MINUTES_PER_DAY)
+
+            // 자정을 넘거나(끝 <= 시작) 하루 종일이면 양 끝이 차고 가운데가 빈다.
+            val overnight = end <= start
+            val heads = if (overnight) intArrayOf(end, start - end, MINUTES_PER_DAY - start)
+                        else intArrayOf(start, end - start, MINUTES_PER_DAY - end)
+            val filled = if (overnight) booleanArrayOf(true, false, true)
+                         else booleanArrayOf(false, true, false)
+            // 시작 == 끝은 24시간 규칙이다(ScheduleResolver 와 같은 해석). 위 식으로는
+            // 첫 조각이 0 이 되어 사라지므로 통째로 채운다.
+            val allDay = start == end
+
+            val views = arrayOf(binding.ribbonHead, binding.ribbonMiddle, binding.ribbonTail)
+            views.forEachIndexed { i, view ->
+                val params = view.layoutParams as LinearLayout.LayoutParams
+                params.weight = if (allDay) (if (i == 1) 1f else 0f) else heads[i].toFloat()
+                view.layoutParams = params
+                val on = if (allDay) i == 1 else filled[i]
+                view.setBackgroundColor(if (on) fill else android.graphics.Color.TRANSPARENT)
+            }
+            // 조각은 네모라 바탕의 둥근 모서리 밖으로 삐져나온다. 바탕 모양대로 자른다.
+            binding.dayRibbon.clipToOutline = true
+            binding.dayRibbon.alpha = if (doc.enabled) 1f else 0.45f
+            binding.dayRibbon.visibility = View.VISIBLE
+        }
+    }
+
+    private companion object {
+        const val MINUTES_PER_DAY = 24 * 60
     }
 
     private object Diff : DiffUtil.ItemCallback<ScheduleDoc>() {
@@ -145,6 +206,24 @@ object ScheduleText {
             timeText(context, startMinute),
             timeText(context, endMinute),
         )
+    }
+
+    /**
+     * 모드 하나의 생김새: (그림, 진한 색, 연한 색).
+     *
+     * 색을 여기 한 곳에 모으는 이유는 같은 색이 세 자리에 나와야 하기 때문이다 —
+     * 스티커 바탕, 스티커 그림, 하루 띠. 세 곳에 따로 적으면 하나를 바꿀 때 반드시
+     * 하나를 빠뜨린다.
+     */
+    fun modeLook(mode: String): Triple<Int, Int, Int> = when (mode) {
+        // 벨소리는 소리가 나는 상태라 팔레트에서 가장 따뜻한 살구빛을 준다.
+        MODE_NORMAL -> Triple(R.drawable.ic_volume_up, R.color.apricot, R.color.apricot_soft)
+        // 진동은 소리와 무음 사이라 중간 성격의 라벤더.
+        MODE_VIBRATE -> Triple(R.drawable.ic_vibration, R.color.sky, R.color.sky_soft)
+        // 무음은 조용한 상태라 가장 가라앉은 풀빛.
+        MODE_SILENT -> Triple(R.drawable.ic_volume_off, R.color.grass, R.color.grass_soft)
+        // 모르는 값이면 색으로 아는 척하지 않는다(modeText 와 같은 태도).
+        else -> Triple(R.drawable.ic_alarm, R.color.ink_soft, R.color.line_soft)
     }
 
     fun modeText(context: Context, mode: String): String = when (mode) {

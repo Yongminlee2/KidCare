@@ -6,12 +6,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import com.kidcare.family.core.HolidayCalendar
 import com.kidcare.family.core.ScheduleRepository
 import com.kidcare.family.core.model.ScheduleDoc
 import com.kidcare.family.core.toRule
 import com.kidcare.family.logic.ScheduleResolver
 import com.kidcare.family.logic.ScheduleRule
 import kotlinx.coroutines.CancellationException
+import java.time.LocalDate
 import java.time.ZoneId
 
 /**
@@ -46,7 +48,9 @@ class ScheduleApplier(private val context: Context) {
         val schedules: List<ScheduleDoc>
         try {
             schedules = ScheduleRepository.fetchSchedules(familyId, childUid)
-            state.lockEnabled = ScheduleRepository.fetchRingerSettings(familyId, childUid).lockEnabled
+            val settings = ScheduleRepository.fetchRingerSettings(familyId, childUid)
+            state.lockEnabled = settings.lockEnabled
+            state.holidayOff = settings.holidayOff
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -69,7 +73,8 @@ class ScheduleApplier(private val context: Context) {
      */
     fun applyNow(rules: List<ScheduleRule>) {
         val now = System.currentTimeMillis()
-        val resolution = ScheduleResolver.resolveAt(rules, now, ZoneId.systemDefault())
+        val zone = ZoneId.systemDefault()
+        val resolution = ScheduleResolver.resolveAt(rules, now, zone, holidays(zone))
 
         // 규칙이 지금 강제하는 모드를 캐시한다 — RingerController.desiredMode 가 즉시
         // 변경이 없을 때 이 값을 읽는다(RingerStateStore.ruleMode 주석 참고).
@@ -94,6 +99,15 @@ class ScheduleApplier(private val context: Context) {
 
         scheduleNextBoundary(resolution.nextBoundaryMillis)
     }
+
+    /**
+     * 공휴일 집합. 스위치가 꺼져 있으면 빈 집합이라 예전과 똑같이 요일만 본다.
+     *
+     * 앞뒤 해까지 함께 받는 이유는 [HolidayCalendar.around] 주석 참고 — 다음 경계를
+     * 찾을 때 열흘 앞까지 훑으므로 연말에는 다음 해 공휴일이 필요하다.
+     */
+    private fun holidays(zone: ZoneId): Set<LocalDate> =
+        if (state.holidayOff) HolidayCalendar.around(LocalDate.now(zone)) else emptySet()
 
     /**
      * [nextBoundaryMillis] 가 null 이면(=활성·비활성을 통틀어 규칙이 하나도 없으면)
