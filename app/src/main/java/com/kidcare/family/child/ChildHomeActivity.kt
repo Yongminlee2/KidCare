@@ -9,6 +9,7 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.kidcare.family.R
 import com.kidcare.family.RouterActivity
+import com.kidcare.family.core.LanguagePicker
 import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.FamilyRepository
 import com.kidcare.family.core.RoleStore
@@ -105,6 +106,7 @@ class ChildHomeActivity : AppCompatActivity() {
         // 튕겨나가는 대신) 이 화면으로 그대로 돌아와야 하기 때문이다. 남은 권한을
         // 끝까지 다 받으면 PermissionActivity 가 CLEAR_TOP 으로 이 낡은 인스턴스를
         // 정리하고 새 화면을 띄우므로 둘이 겹쳐 쌓이지 않는다(PermissionActivity 쪽 확인).
+        binding.languageButton.setOnClickListener { LanguagePicker.show(this) }
         binding.actionButton.setOnClickListener {
             startActivity(Intent(this, PermissionActivity::class.java))
         }

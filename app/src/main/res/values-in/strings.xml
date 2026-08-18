@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 자동 생성. 고치려면 i18n/id.json 을 고치고 gen.py 를 다시 돌린다. -->
+<resources>
+    <string name="alert_child_line">%1$s · %2$s</string>
+    <string name="alert_command_failed" formatted="false">Permintaan ke ponsel anak Anda gagal</string>
+    <string name="alert_empty" formatted="false">Belum ada kabar.\nSimpan sekolah atau tempat les di tab Tempat,\nlalu kedatangan akan muncul di sini.</string>
+    <string name="alert_error_format">Tidak bisa memuat kabar\n%1$s</string>
+    <string name="alert_header_subtitle" formatted="false">Kedatangan, baterai, dan koneksi, berurutan menurut waktu.</string>
+    <string name="alert_header_title" formatted="false">Kabar anak</string>
+    <string name="alert_low_battery" formatted="false">Baterai ponsel anak Anda tinggal sedikit</string>
+    <string name="alert_no_family" formatted="false">Keluarga tidak ditemukan. Tutup aplikasi lalu buka lagi.</string>
+    <string name="alert_notification_denied" formatted="false">Notifikasi sedang mati, jadi ini tidak bisa dinyalakan. Buka Setelan ponsel → Aplikasi → KidCare → Notifikasi lalu nyalakan.</string>
+    <string name="alert_notification_more">dan %1$d lagi</string>
+    <string name="alert_permission_off" formatted="false">Sebuah izin dimatikan di ponsel anak Anda</string>
+    <string name="alert_place_enter">Sampai di %1$s</string>
+    <string name="alert_place_exit">Keluar dari %1$s</string>
+    <string name="alert_row">%1$s · %2$s</string>
+    <string name="alert_service_hint" formatted="false">Kalau dinyalakan, kabar tetap sampai meski aplikasi tidak dibuka. Sebagai gantinya ada satu pemberitahuan kecil yang tetap di bilah status dan baterai terpakai sedikit lebih banyak. Kalau dimatikan, kabar hanya terlihat saat aplikasi dibuka.</string>
+    <string name="alert_service_notification_text" formatted="false">Menyala, supaya kabar langsung sampai. Bisa dimatikan di tab Kabar.</string>
+    <string name="alert_service_notification_title" formatted="false">Menunggu kabar</string>
+    <string name="alert_service_switch" formatted="false">Terima kabar seketika</string>
+    <string name="alert_signal_lost" formatted="false">Ponsel anak Anda sudah lama tidak menjawab</string>
+    <string name="alert_unknown" formatted="false">Ada kabar baru</string>
+    <string name="app_brand_short" formatted="false">KIDCARE</string>
+    <string name="app_name" formatted="false">KidCare</string>
+    <string name="channel_alert" formatted="false">Kabar anak</string>
+    <string name="channel_alert_service" formatted="false">Menunggu kabar</string>
+    <string name="channel_find_phone" formatted="false">Cari ponsel</string>
+    <string name="channel_message" formatted="false">Pesan dari orang tua</string>
+    <string name="channel_remote_alarm" formatted="false">Alarm dari orang tua</string>
+    <string name="channel_tracking" formatted="false">Berbagi lokasi</string>
+    <string name="child_default_name" formatted="false">Anak</string>
+    <string name="child_family_gone" formatted="false">Sekarang lokasimu tidak terkirim.\nMinta nomor baru di ponsel orang tuamu lalu sambungkan lagi.</string>
+    <string name="child_go_to_permission" formatted="false">Nyalakan izinnya</string>
+    <string name="child_home_title" formatted="false">Kamu tersambung dengan orang tuamu</string>
+    <string name="child_home_title_gone" formatted="false">Sambungan dengan orang tuamu terputus</string>
+    <string name="child_permission_missing">%1$s sedang mati.\nNyalakan supaya lokasimu bisa terkirim.</string>
+    <string name="child_play_services_fix" formatted="false">Perbaiki layanan Google Play</string>
+    <string name="child_play_services_fixable" formatted="false">Layanan Google Play tidak ada atau terlalu lama, jadi lokasi tidak bisa dikirim.\nKetuk tombol di bawah untuk memperbaikinya. (Pesan dan penggantian suara tetap jalan.)</string>
+    <string name="child_play_services_unfixable" formatted="false">Ponsel ini tidak punya layanan Google Play, jadi lokasi tidak bisa dikirim.\nTunjukkan layar ini ke orang tuamu. (Pesan dan penggantian suara tetap jalan.)</string>
+    <string name="child_repair" formatted="false">Sambungkan lagi</string>
+    <string name="child_selector_add_child" formatted="false">＋ Tambah anak</string>
+    <string name="child_selector_add_guardian" formatted="false">＋ Undang orang tua</string>
+    <string name="child_selector_add_guardian_count">＋ Undang orang tua · sekarang %1$d</string>
+    <string name="child_selector_empty" formatted="false">Sambungkan seorang anak ▾</string>
+    <string name="child_selector_load_failed" formatted="false">Tidak bisa memuat keluarga</string>
+    <string name="child_selector_value">Sedang melihat %1$s ▾</string>
+    <string name="child_sharing_on" formatted="false">Orang tuamu bisa melihat kamu sedang di mana.\nSupaya cepat menemukanmu kalau kamu tersesat.</string>
+    <string name="connect_failed">Tidak bisa memulai aplikasi\n%1$s</string>
+    <string name="connecting" formatted="false">Menyambung…</string>
+    <string name="control_alarm_cancel" formatted="false">Batalkan alarm yang dipasang</string>
+    <string name="control_alarm_hint_detail" formatted="false">Berbunyi sekali saja di ponsel anak Anda pada jam yang Anda pilih. Kalau jam itu sudah lewat, berbunyi pada jam yang sama keesokan harinya — hari ini atau besok ditentukan oleh jam di ponsel anak Anda. Selama alarm terpasang, ikon jam muncul di bilah status ponselnya, dan berhenti sendiri setelah 5 menit.</string>
+    <string name="control_alarm_label_hint" formatted="false">Nama alarm (mis. waktunya les)</string>
+    <string name="control_alarm_picker_title" formatted="false">Mau berbunyi jam berapa?</string>
+    <string name="control_alarm_set" formatted="false">Pasang alarm pada jam ini</string>
+    <string name="control_alarm_state_confirmed">Ada alarm jam %1$s di ponsel anak Anda</string>
+    <string name="control_alarm_state_labeled">%1$s «%2$s»</string>
+    <string name="control_alarm_state_pending">Alarm jam %1$s terkirim · menunggu jawaban ponsel anak Anda</string>
+    <string name="control_alarm_time_format">%1$s</string>
+    <string name="control_command_done" formatted="false">Selesai</string>
+    <string name="control_command_queued" formatted="false">Belum terkirim. Akan sampai ke ponsel anak Anda dan dijalankan begitu ada internet — keadaan bisa berubah sebelum itu.</string>
+    <string name="control_command_sending" formatted="false">Mengirim…</string>
+    <string name="control_command_timeout" formatted="false">Ponsel anak Anda tidak menjawab</string>
+    <string name="control_command_timeout_format">Ponsel anak Anda tidak menjawab\n%1$s</string>
+    <string name="control_error_alarm_exact_denied" formatted="false">Alarm tidak bisa dipasang karena «Alarm dan pengingat» mati di ponsel anak Anda. Buka Setelan → Aplikasi → KidCare → Alarm dan pengingat di ponsel itu lalu nyalakan.</string>
+    <string name="control_error_child_failed" formatted="false">Ponsel anak Anda tidak bisa menjalankan permintaan ini.</string>
+    <string name="control_error_message_notification_off" formatted="false">Pesan tidak bisa ditampilkan karena notifikasi mati di ponsel anak Anda. Buka Setelan → Aplikasi → KidCare → Notifikasi di ponsel itu lalu nyalakan.</string>
+    <string name="control_error_ringer_denied" formatted="false">Izin setelan suara mati di ponsel anak Anda. Harus dinyalakan di sana agar bisa diubah.</string>
+    <string name="control_find_hint" formatted="false">Berbunyi keras meski mode senyap. Berhenti sendiri setelah 5 menit.</string>
+    <string name="control_find_phone" formatted="false">Cari ponsel</string>
+    <string name="control_find_stop" formatted="false">Hentikan suaranya</string>
+    <string name="control_find_stop_hint" formatted="false">Hentikan suaranya kalau sudah berbunyi</string>
+    <string name="control_header_subtitle" formatted="false">Kirim suara, pesan, dan alarm langsung ke ponsel anak Anda.</string>
+    <string name="control_last_seen_days">%1$d hari lalu</string>
+    <string name="control_last_seen_format">Sinyal terakhir %1$s</string>
+    <string name="control_last_seen_hours">%1$d jam lalu</string>
+    <string name="control_last_seen_minutes">%1$d menit lalu</string>
+    <string name="control_last_seen_never" formatted="false">Sinyal belum pernah masuk</string>
+    <string name="control_last_seen_now" formatted="false">baru saja</string>
+    <string name="control_last_seen_skewed_value">%1$s (menurut jam di ponsel anak Anda, jadi tidak persis)</string>
+    <string name="control_lock_hint" formatted="false">Kalau anak Anda mengubah suaranya, beberapa detik kemudian kembali ke pilihan Anda.</string>
+    <string name="control_lock_switch" formatted="false">Ubah lagi kalau anak saya membatalkannya</string>
+    <string name="control_message_chip_call" formatted="false">Telepon aku, ya</string>
+    <string name="control_message_chip_come_home" formatted="false">Pulang, ya</string>
+    <string name="control_message_chip_meal" formatted="false">Sudah makan?</string>
+    <string name="control_message_chip_where" formatted="false">Sekarang di mana?</string>
+    <string name="control_message_empty" formatted="false">Tulis dulu pesannya.</string>
+    <string name="control_message_hint" formatted="false">Yang ingin Anda katakan ke anak Anda</string>
+    <string name="control_message_hint_detail" formatted="false">Muncul besar di layar anak Anda. Tanpa suara, hanya sekali getar. Begitu anak Anda menekan «Sudah lihat», ini berubah jadi «Dibaca».</string>
+    <string name="control_message_read" formatted="false">Dibaca</string>
+    <string name="control_message_send" formatted="false">Kirim pesannya</string>
+    <string name="control_message_unread" formatted="false">Sampai di ponsel anak Anda · belum dibaca</string>
+    <string name="control_mode_normal" formatted="false">Berdering</string>
+    <string name="control_mode_silent" formatted="false">Senyap</string>
+    <string name="control_mode_vibrate" formatted="false">Getar</string>
+    <string name="control_ringer_refresh" formatted="false">Periksa lagi</string>
+    <string name="control_ringer_status_applied">Sekarang · %1$s</string>
+    <string name="control_ringer_status_format">Terakhir diperiksa · %1$s</string>
+    <string name="control_ringer_status_loading" formatted="false">Memeriksa mode suara di ponsel anak Anda</string>
+    <string name="control_ringer_status_unknown" formatted="false">Mode suara terakhir belum diperiksa</string>
+    <string name="control_section_alarm" formatted="false">Pasang alarm</string>
+    <string name="control_section_message" formatted="false">Kirim sepatah kata</string>
+    <string name="control_section_ringer" formatted="false">Ubah sekarang juga</string>
+    <string name="day_next" formatted="false">Hari berikutnya</string>
+    <string name="day_prev" formatted="false">Hari sebelumnya</string>
+    <string name="dialog_cancel" formatted="false">Batal</string>
+    <string name="error_generic_format">Ada masalah dengan koneksinya\n%1$s</string>
+    <string name="error_server_setup" formatted="false">Penyiapan server belum selesai. Beri tahu orang yang memasang aplikasi ini untuk Anda.</string>
+    <string name="error_unauthenticated" formatted="false">Anda keluar dari akun. Tutup aplikasi lalu buka lagi.</string>
+    <string name="event_detail_battery">sisa %1$d%%</string>
+    <string name="event_detail_permission">%1$s — nyalakan lagi di ponsel anak Anda</string>
+    <string name="find_phone_notification_text" formatted="false">Ketuk untuk menghentikan suaranya</string>
+    <string name="find_phone_notification_title" formatted="false">Orang tua sedang mencari ponsel ini</string>
+    <string name="find_phone_stop" formatted="false">Ketemu (hentikan suaranya)</string>
+    <string name="find_phone_title" formatted="false">Orang tua sedang mencari ponsel ini</string>
+    <string name="guardian_disconnect_banner">Permintaan yang dikirim %1$s belum dijawab ponsel anak Anda\nBuka aplikasi KidCare sekali di ponselnya, sambungan akan pulih.</string>
+    <string name="guardian_start_join_family" formatted="false">Gabung ke keluarga dengan kode</string>
+    <string name="guardian_start_new_family" formatted="false">Buat keluarga baru</string>
+    <string name="guardian_start_title" formatted="false">Mau mulai dari mana?</string>
+    <string name="holiday_buddha" formatted="false">Hari Waisak Korea</string>
+    <string name="holiday_children" formatted="false">Hari Anak</string>
+    <string name="holiday_christmas" formatted="false">Natal</string>
+    <string name="holiday_chuseok" formatted="false">Libur Chuseok</string>
+    <string name="holiday_foundation" formatted="false">Hari Berdirinya Negara</string>
+    <string name="holiday_hangul" formatted="false">Hari Hangul</string>
+    <string name="holiday_independence" formatted="false">Hari Gerakan Kemerdekaan</string>
+    <string name="holiday_liberation" formatted="false">Hari Pembebasan</string>
+    <string name="holiday_memorial" formatted="false">Hari Pahlawan</string>
+    <string name="holiday_new_year" formatted="false">Tahun Baru</string>
+    <string name="holiday_seollal" formatted="false">Libur Tahun Baru Imlek</string>
+    <string name="holiday_substitute" formatted="false">Libur pengganti</string>
+    <string name="language_follow_system" formatted="false">Ikuti setelan sistem</string>
+    <string name="language_picker_title" formatted="false">Bahasa</string>
+    <string name="list_loading" formatted="false">Memuat…</string>
+    <string name="map_battery_info_confirm" formatted="false">Oke</string>
+    <string name="map_battery_info_message" formatted="false">Sisa daya yang tampil di sini adalah yang dilaporkan ponsel anak Anda. Aplikasi mana memakai berapa banyak baterai tidak bisa dibaca dari ponsel lain karena aturan Android, jadi itu harus dilihat di Setelan &gt; Baterai di ponselnya.</string>
+    <string name="map_battery_info_title" formatted="false">Baterai ponsel anak Anda</string>
+    <string name="map_child_avatar" formatted="false">Karakter anak yang dipilih</string>
+    <string name="map_error">Tidak bisa memuat peta\n%1$s</string>
+    <string name="map_live_active_status">Melacak langsung · ketepatan sekitar %1$dm · baterai %2$d%%</string>
+    <string name="map_live_button_connecting" formatted="false">Lokasi langsung  menyambung…</string>
+    <string name="map_live_cancel_description" formatted="false">Lokasi langsung sedang menyambung. Ketuk untuk membatalkan</string>
+    <string name="map_live_connecting" formatted="false">Menyambung langsung…</string>
+    <string name="map_live_start" formatted="false">Lokasi langsung  OFF</string>
+    <string name="map_live_start_description" formatted="false">Lokasi langsung mati. Ketuk untuk menyalakan</string>
+    <string name="map_live_stop" formatted="false">Lokasi langsung  ON</string>
+    <string name="map_live_stop_description" formatted="false">Lokasi langsung menyala. Ketuk untuk mematikan</string>
+    <string name="map_live_stopped" formatted="false">Tampilan langsung sudah berakhir. Lokasi terakhir yang diterima masih ada di peta.</string>
+    <string name="map_live_timeout" formatted="false">Tampilan langsung berakhir karena batas aman 10 menit.</string>
+    <string name="map_live_waiting" formatted="false">Mencari lokasi langsung. Tunggu sebentar sampai sinyal GPS masuk.</string>
+    <string name="map_locate_no_fix" formatted="false">Ponsel anak Anda belum menemukan lokasinya. Coba ketuk lagi sebentar lagi.</string>
+    <string name="map_locate_now" formatted="false">Lihat lokasi sekarang</string>
+    <string name="map_locating" formatted="false">Bertanya ke ponsel anak Anda…</string>
+    <string name="map_no_child" formatted="false">Belum ada ponsel anak yang tersambung.</string>
+    <string name="map_status_format">Baterai %1$d%%\nper %2$s</string>
+    <string name="map_status_never" formatted="false">Lokasi belum pernah diperiksa. Ketuk «Lihat lokasi sekarang».</string>
+    <string name="message_ack" formatted="false">Sudah lihat</string>
+    <string name="message_notification_title" formatted="false">Pesan dari orang tuamu</string>
+    <string name="message_title" formatted="false">Pesan dari orang tuamu</string>
+    <string name="pairing_child_hint" formatted="false">6 angka</string>
+    <string name="pairing_child_join" formatted="false">Sambungkan</string>
+    <string name="pairing_child_name_hint" formatted="false">Nama anak (mis. Minjun)</string>
+    <string name="pairing_child_title" formatted="false">Masukkan kode 6 angka\nyang muncul di ponsel orang tuamu</string>
+    <string name="pairing_code_expiry_format">Kode ini kedaluwarsa dalam %1$d menit</string>
+    <string name="pairing_code_placeholder" formatted="false">------</string>
+    <string name="pairing_expired" formatted="false">Kodenya kedaluwarsa. Minta kode baru di ponsel orang tuamu.</string>
+    <string name="pairing_failed">Tidak bisa menyambung\n%1$s</string>
+    <string name="pairing_full" formatted="false">Sudah ada ponsel lain yang tersambung.</string>
+    <string name="pairing_guardian_hint" formatted="false">Di ponsel anak Anda, buka aplikasinya,\npilih «Anak» lalu masukkan kode ini untuk menyambung.</string>
+    <string name="pairing_guardian_invite_guardian_hint" formatted="false">Di ponsel orang tua yang satu lagi, buka aplikasinya,\npilih «Orang tua» → «Gabung dengan kode» lalu masukkan kode ini.</string>
+    <string name="pairing_guardian_invite_guardian_title" formatted="false">Masukkan kode ini di ponsel orang tua yang satu lagi</string>
+    <string name="pairing_guardian_join_title" formatted="false">Masukkan kode 6 angka\nyang diberikan orang tua dalam keluarga ini</string>
+    <string name="pairing_guardian_name_hint" formatted="false">Nama orang tua (mis. Ibu, Ayah)</string>
+    <string name="pairing_guardian_title" formatted="false">Masukkan kode ini di ponsel anak Anda</string>
+    <string name="pairing_new_code_button" formatted="false">Minta kode baru</string>
+    <string name="pairing_not_found" formatted="false">Kode itu tidak ada. Periksa lagi.</string>
+    <string name="pairing_offline" formatted="false">Tidak bisa terhubung ke internet. Periksa Wi-Fi atau data selulernya.</string>
+    <string name="pairing_reset_role_button" formatted="false">Pilih peran lagi</string>
+    <string name="pairing_wrong_role" formatted="false">Kode ini bukan untuk peran yang Anda pilih. Periksa mana yang untuk anak dan mana yang untuk orang tua.</string>
+    <string name="perm_activity_reason" formatted="false">Kalau ketahuan anak sedang berjalan atau diam, saat diam lokasinya bisa diperiksa lebih jarang, jadi baterai lebih hemat.</string>
+    <string name="perm_activity_title" formatted="false">Pengenalan gerak</string>
+    <string name="perm_background_reason" formatted="false">Untuk mengirim lokasi saat aplikasi tidak dibuka, harus «Izinkan sepanjang waktu». Pilih «Izinkan sepanjang waktu» di layar setelan.</string>
+    <string name="perm_background_title" formatted="false">Lokasi «Izinkan sepanjang waktu»</string>
+    <string name="perm_battery_hint" formatted="false">Setelah layar setelan terbuka, cari KidCare di daftarnya lalu ubah jadi «Tanpa batasan».</string>
+    <string name="perm_battery_reason" formatted="false">Tanpa ini ponsel menidurkan aplikasinya dan lokasinya terputus. Pilih «Izinkan» di layar setelan.</string>
+    <string name="perm_battery_title" formatted="false">Tanpa penghematan baterai</string>
+    <string name="perm_denied_permanently" formatted="false">Baru saja ditolak, jadi layar ini tidak bisa bertanya lagi. Ketuk «Nyalakan di Setelan» untuk membuka setelan aplikasi, lalu nyalakan izinnya di sana.</string>
+    <string name="perm_dnd_reason" formatted="false">Izin ini membuat orang tua bisa mengubah suara dan getar. Cari KidCare di daftarnya lalu nyalakan.</string>
+    <string name="perm_dnd_title" formatted="false">Mengubah setelan suara</string>
+    <string name="perm_done" formatted="false">Semuanya sudah menyala. Ayo mulai!</string>
+    <string name="perm_grant" formatted="false">Nyalakan</string>
+    <string name="perm_location_reason" formatted="false">Diperlukan supaya orang tuamu tahu kamu sedang di mana.</string>
+    <string name="perm_location_title" formatted="false">Izin lokasi</string>
+    <string name="perm_notification_reason" formatted="false">Diperlukan untuk menerima pesan orang tuamu dan menunjukkan bahwa lokasi sedang dibagikan.</string>
+    <string name="perm_notification_title" formatted="false">Notifikasi</string>
+    <string name="perm_open_settings" formatted="false">Nyalakan di Setelan</string>
+    <string name="perm_start" formatted="false">Mulai</string>
+    <string name="perm_title" formatted="false">Ada beberapa hal yang perlu dinyalakan</string>
+    <string name="place_add" formatted="false">Tambah tempat</string>
+    <string name="place_delete" formatted="false">Hapus</string>
+    <string name="place_delete_cancel" formatted="false">Biarkan saja</string>
+    <string name="place_delete_confirm" formatted="false">Hapus</string>
+    <string name="place_delete_message">%1$s\n\nSetelah dihapus, sampai atau keluar dari sini tidak akan diberitahukan lagi.</string>
+    <string name="place_delete_title" formatted="false">Hapus tempat ini?</string>
+    <string name="place_deleting" formatted="false">Menghapus…</string>
+    <string name="place_editor_cancel" formatted="false">Batal</string>
+    <string name="place_editor_map_hint" formatted="false">Geser petanya sampai tanda silang di tengah pas di tempat ini. Lingkaran biru adalah daerah tempat pemberitahuan muncul.</string>
+    <string name="place_editor_map_label" formatted="false">Di mana tempatnya</string>
+    <string name="place_editor_name_hint" formatted="false">Sekolah, tempat les, rumah nenek…</string>
+    <string name="place_editor_name_label" formatted="false">Nama tempat</string>
+    <string name="place_editor_name_required" formatted="false">Tulis namanya. Nama ini yang muncul di pemberitahuan, seperti «Sampai di ○○».</string>
+    <string name="place_editor_no_child_location" formatted="false">Lokasi ponsel anak Anda belum diketahui, jadi petanya terbuka lebar. Geser dengan tangan untuk mencari tempatnya.</string>
+    <string name="place_editor_notify_enter" formatted="false">Beri tahu saat sampai</string>
+    <string name="place_editor_notify_exit" formatted="false">Beri tahu saat keluar</string>
+    <string name="place_editor_notify_label" formatted="false">Kapan harus diberitahukan</string>
+    <string name="place_editor_notify_none_hint" formatted="false">Kalau keduanya mati, tempat ini tidak mengirim pemberitahuan. Tempatnya tetap tersimpan.</string>
+    <string name="place_editor_radius_label" formatted="false">Sedekat apa baru dihitung</string>
+    <string name="place_editor_radius_value">radius %1$dm</string>
+    <string name="place_editor_save" formatted="false">Simpan</string>
+    <string name="place_editor_title_edit" formatted="false">Ubah tempat</string>
+    <string name="place_editor_title_new" formatted="false">Tempat baru</string>
+    <string name="place_empty" formatted="false">Belum ada tempat.\nKetuk «Tambah tempat» di bawah\nlalu simpan tempat seperti «Sekolah» atau «Les».\nKami beri tahu saat anak Anda sampai atau keluar.</string>
+    <string name="place_error_format">Tidak bisa memuat tempat\n%1$s</string>
+    <string name="place_header_subtitle" formatted="false">Simpan sekolah atau tempat les, lalu kami beri tahu kedatangan dan kepergiannya.</string>
+    <string name="place_header_title" formatted="false">Tempat aman</string>
+    <string name="place_limit_notice">Anda bisa menyimpan sampai %1$d tempat. Untuk menambah yang baru, hapus dulu tempat yang tidak dipakai lagi.</string>
+    <string name="place_no_family" formatted="false">Keluarga tidak ditemukan. Tutup aplikasi lalu buka lagi.</string>
+    <string name="place_notify_both" formatted="false">Beri tahu saat sampai dan keluar</string>
+    <string name="place_notify_enter" formatted="false">Hanya saat sampai</string>
+    <string name="place_notify_exit" formatted="false">Hanya saat keluar</string>
+    <string name="place_notify_none" formatted="false">Pemberitahuan mati</string>
+    <string name="place_row_detail">%1$s</string>
+    <string name="place_row_title">%1$s · radius %2$dm</string>
+    <string name="place_save_slow" formatted="false">Permintaan simpan sudah dikirim tapi server belum memastikan. Tersimpan sendiri begitu ada internet.</string>
+    <string name="place_saving" formatted="false">Menyimpan…</string>
+    <string name="place_summary">%1$s (radius %2$dm)</string>
+    <string name="place_sync_failed_format">Tempatnya tersimpan tapi ponsel anak Anda belum bisa diberi tahu. Buka layar ini lagi dan kami coba sekali lagi.\n%1$s</string>
+    <string name="place_sync_no_child" formatted="false">Tempatnya tersimpan. Berlaku sendiri begitu ponsel anak Anda tersambung.</string>
+    <string name="place_sync_pending" formatted="false">Belum sampai ke ponsel anak Anda. Ponselnya masih memakai tempat yang lama.</string>
+    <string name="place_sync_retry" formatted="false">Coba beri tahu lagi</string>
+    <string name="place_sync_slow" formatted="false">Tempatnya tersimpan. Memberi tahu ponsel anak Anda selesai begitu ada internet.</string>
+    <string name="remote_alarm_notification_text" formatted="false">Ketuk untuk mematikannya</string>
+    <string name="remote_alarm_stop" formatted="false">Matikan alarmnya</string>
+    <string name="remote_alarm_title" formatted="false">Ini alarm dari orang tuamu</string>
+    <string name="role_child" formatted="false">Anak</string>
+    <string name="role_guardian" formatted="false">Orang tua (ibu atau ayah)</string>
+    <string name="role_subtitle" formatted="false">Sebelum tersambung masih bisa dipilih ulang.\nSetelah tersambung tidak bisa diubah.</string>
+    <string name="role_title" formatted="false">Ini ponsel siapa?</string>
+    <string name="router_retry" formatted="false">Coba lagi</string>
+    <string name="schedule_add" formatted="false">Tambah aturan</string>
+    <string name="schedule_allday_cancel" formatted="false">Pilih jamnya lagi</string>
+    <string name="schedule_allday_confirm" formatted="false">Simpan sebagai sehari penuh</string>
+    <string name="schedule_allday_message">Awal dan akhirnya sama-sama %1$s.\nKalau disimpan begini, pada hari yang dipilih jadi %2$s selama 24 jam.</string>
+    <string name="schedule_allday_title" formatted="false">Simpan sebagai sehari penuh?</string>
+    <string name="schedule_day_fri" formatted="false">Jum</string>
+    <string name="schedule_day_mon" formatted="false">Sen</string>
+    <string name="schedule_day_sat" formatted="false">Sab</string>
+    <string name="schedule_day_sun" formatted="false">Min</string>
+    <string name="schedule_day_thu" formatted="false">Kam</string>
+    <string name="schedule_day_tue" formatted="false">Sel</string>
+    <string name="schedule_day_wed" formatted="false">Rab</string>
+    <string name="schedule_days_everyday" formatted="false">Setiap hari</string>
+    <string name="schedule_days_none" formatted="false">Tidak ada hari</string>
+    <string name="schedule_days_weekday" formatted="false">Hari kerja</string>
+    <string name="schedule_days_weekend" formatted="false">Akhir pekan</string>
+    <string name="schedule_delete" formatted="false">Hapus</string>
+    <string name="schedule_delete_cancel" formatted="false">Biarkan saja</string>
+    <string name="schedule_delete_confirm" formatted="false">Hapus</string>
+    <string name="schedule_delete_message">%1$s\n\nSetelah dihapus, suara pada jam segini tidak berubah sendiri lagi.</string>
+    <string name="schedule_delete_title" formatted="false">Hapus aturan ini?</string>
+    <string name="schedule_deleting" formatted="false">Menghapus…</string>
+    <string name="schedule_editor_cancel" formatted="false">Batal</string>
+    <string name="schedule_editor_days_label" formatted="false">Pada hari apa</string>
+    <string name="schedule_editor_days_required" formatted="false">Pilih setidaknya satu hari. Kalau tidak ada hari yang dipilih, aturan ini tidak pernah jalan.</string>
+    <string name="schedule_editor_end_title" formatted="false">Jam selesai</string>
+    <string name="schedule_editor_mode_label" formatted="false">Selama itu ponsel anak jadi</string>
+    <string name="schedule_editor_save" formatted="false">Simpan</string>
+    <string name="schedule_editor_start_title" formatted="false">Jam mulai</string>
+    <string name="schedule_editor_time_label" formatted="false">Dari jam berapa sampai jam berapa</string>
+    <string name="schedule_editor_title_edit" formatted="false">Ubah aturan</string>
+    <string name="schedule_editor_title_new" formatted="false">Aturan baru</string>
+    <string name="schedule_empty" formatted="false">Belum ada jam yang diatur.\nKetuk «Tambah aturan» di bawah\nlalu coba aturan seperti «Senyap tiap malam hari kerja».</string>
+    <string name="schedule_error_format">Tidak bisa memuat aturan\n%1$s</string>
+    <string name="schedule_header_subtitle" formatted="false">Berganti antara berdering, getar, dan senyap menurut hari dan jam.</string>
+    <string name="schedule_header_title" formatted="false">Jadwal suara harian</string>
+    <string name="schedule_holiday_cleared" formatted="false">Pada hari libur aturannya tetap jalan.</string>
+    <string name="schedule_holiday_date">%1$d/%2$d</string>
+    <string name="schedule_holiday_next">Hari libur berikutnya %1$s, %2$s.</string>
+    <string name="schedule_holiday_saved" formatted="false">Pada hari libur aturannya istirahat.</string>
+    <string name="schedule_holiday_subtitle" formatted="false">Pada hari libur tidak ada satu pun aturan di bawah yang jalan.</string>
+    <string name="schedule_holiday_title" formatted="false">Istirahat pada hari libur</string>
+    <string name="schedule_holiday_unknown" formatted="false">Ponsel ini tidak bisa menghitung tanggal hari libur. Meski sakelarnya menyala, hanya hari dalam seminggu yang dipakai.</string>
+    <string name="schedule_mode_normal" formatted="false">Berdering</string>
+    <string name="schedule_mode_silent" formatted="false">Senyap</string>
+    <string name="schedule_mode_vibrate" formatted="false">Getar</string>
+    <string name="schedule_no_family" formatted="false">Keluarga tidak ditemukan. Tutup aplikasi lalu buka lagi.</string>
+    <string name="schedule_overlap_cancel" formatted="false">Ubah</string>
+    <string name="schedule_overlap_confirm" formatted="false">Simpan saja</string>
+    <string name="schedule_overlap_message">Jam ini bertabrakan dengan aturan «%1$s».\nSelama bertabrakan, aturan yang dibuat belakangan yang menang.</string>
+    <string name="schedule_overlap_message_more">Jam ini bertabrakan dengan «%1$s» dan %2$d aturan lain.\nSelama bertabrakan, aturan yang dibuat belakangan yang menang.</string>
+    <string name="schedule_overlap_title" formatted="false">Ada aturan yang bertabrakan</string>
+    <string name="schedule_range">%1$s ~ %2$s</string>
+    <string name="schedule_range_allday">Sehari penuh (24 jam dari %1$s)</string>
+    <string name="schedule_range_overnight">%1$s ~ %2$s keesokan harinya</string>
+    <string name="schedule_range_separator" formatted="false">–</string>
+    <string name="schedule_row_detail">%1$s · %2$s</string>
+    <string name="schedule_row_detail_off">%1$s · %2$s (mati)</string>
+    <string name="schedule_save_slow" formatted="false">Permintaan simpan sudah dikirim tapi server belum memastikan. Tersimpan sendiri begitu ada internet.</string>
+    <string name="schedule_saving" formatted="false">Menyimpan…</string>
+    <string name="schedule_summary">%1$s · %2$s · %3$s</string>
+    <string name="schedule_sync_failed_format">Aturannya tersimpan tapi ponsel anak Anda belum bisa diberi tahu. Buka layar ini lagi dan kami coba sekali lagi.\n%1$s</string>
+    <string name="schedule_sync_no_child" formatted="false">Aturannya tersimpan. Berlaku sendiri begitu ponsel anak Anda tersambung.</string>
+    <string name="schedule_sync_pending" formatted="false">Belum sampai ke ponsel anak Anda. Ponselnya masih jalan dengan aturan yang lama.</string>
+    <string name="schedule_sync_retry" formatted="false">Coba beri tahu lagi</string>
+    <string name="schedule_sync_slow" formatted="false">Aturannya tersimpan. Memberi tahu ponsel anak Anda selesai begitu ada internet.</string>
+    <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="tab_alert" formatted="false">Kabar</string>
+    <string name="tab_control" formatted="false">Kendali</string>
+    <string name="tab_map" formatted="false">Peta</string>
+    <string name="tab_place" formatted="false">Tempat</string>
+    <string name="tab_schedule" formatted="false">Jadwal</string>
+    <string name="timeline_collapse" formatted="false">Tutup catatan perjalanan</string>
+    <string name="timeline_detail">%1$s\n%2$s</string>
+    <string name="timeline_drag_handle" formatted="false">Tarik ke atas atau ke bawah untuk mengatur tinggi catatannya</string>
+    <string name="timeline_empty" formatted="false">Hari ini tidak ada catatan</string>
+    <string name="timeline_error">Tidak bisa memuat catatan\n%1$s</string>
+    <string name="timeline_expand" formatted="false">Buka catatan perjalanan</string>
+    <string name="timeline_hide_all_routes" formatted="false">Sembunyikan semua rute</string>
+    <string name="timeline_move_title">Perjalanan %1$s</string>
+    <string name="timeline_route_hidden" formatted="false">Disembunyikan di peta</string>
+    <string name="timeline_route_visible" formatted="false">Terlihat di peta</string>
+    <string name="timeline_show_all_routes" formatted="false">Tampilkan semua rute</string>
+    <string name="timeline_summary_day">%1$s hari ini</string>
+    <string name="timeline_summary_empty" formatted="false">Catatan perjalanan hari ini</string>
+    <string name="timeline_summary_routes_hidden">%1$s · rute disembunyikan</string>
+    <string name="timeline_summary_routes_partial">%1$s · sebagian disembunyikan</string>
+    <string name="timeline_summary_today">%1$s hari ini</string>
+    <string name="timeline_unknown_place" formatted="false">Tempat dia berhenti</string>
+    <string name="timeline_view_records" formatted="false">Lihat catatan perjalanan</string>
+    <string name="tracking_notification_text" formatted="false">Memberi tahu orang tuamu kamu sedang di mana</string>
+    <string name="tracking_notification_title" formatted="false">Berbagi lokasi</string>
+    <string name="uid_format">ID perangkat saya\n%1$s</string>
+</resources>

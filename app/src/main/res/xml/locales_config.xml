@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 안드로이드 13+ 가 시스템 설정 > 앱 > 언어 목록을 만들 때 읽는다.
+     res/values-* 폴더 이름이 아니라 표준 태그(BCP-47)를 쓴다 -
+     인도네시아어가 values-in 인데 여기서는 id 인 것이 그 때문이다. -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en"/>
+    <locale android:name="ko"/>
+    <locale android:name="ja"/>
+    <locale android:name="zh-Hans"/>
+    <locale android:name="zh-Hant"/>
+    <locale android:name="es"/>
+    <locale android:name="pt"/>
+    <locale android:name="de"/>
+    <locale android:name="fr"/>
+    <locale android:name="it"/>
+    <locale android:name="ru"/>
+    <locale android:name="id"/>
+    <locale android:name="vi"/>
+    <locale android:name="th"/>
+</locale-config>

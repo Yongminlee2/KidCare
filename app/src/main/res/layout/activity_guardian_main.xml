@@ -25,7 +25,8 @@
 
         <TextView
             android:id="@+id/child_selector"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="48dp"
             android:background="@drawable/bg_child_selector"
             android:clickable="true"
@@ -35,6 +36,30 @@
             android:text="@string/child_selector_empty"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:textColor="?attr/colorOnSurface" />
+
+        <!-- 언어 고르기. 안드로이드 13+ 는 시스템 설정에도 앱 언어 칸이 생기지만
+             (매니페스트의 localeConfig) 그 아래 버전에는 그 칸이 없다. minSdk 가
+             26 이라 이 버튼이 없으면 절반쯤 되는 기기에서 언어를 바꿀 길이 아예
+             사라진다. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/language_button"
+            style="@style/Widget.KidCare.Button.Text"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="6dp"
+            android:contentDescription="@string/language_picker_title"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:paddingHorizontal="0dp"
+            app:icon="@drawable/ic_globe"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="22dp"
+            app:iconTint="@color/ink_soft" />
     </LinearLayout>
 
     <!-- 연결 끊김 배너. 아이 폰이 30분 넘게 아무 신호도 안 보냈을 때만 보인다

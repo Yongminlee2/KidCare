@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 자동 생성. 고치려면 i18n/vi.json 을 고치고 gen.py 를 다시 돌린다. -->
+<resources>
+    <string name="alert_child_line">%1$s · %2$s</string>
+    <string name="alert_command_failed" formatted="false">Một yêu cầu gửi tới điện thoại của con đã thất bại</string>
+    <string name="alert_empty" formatted="false">Chưa có tin nào.\nHãy lưu trường học hay lớp học thêm ở thẻ Địa điểm,\nrồi các lần con đến sẽ hiện ở đây.</string>
+    <string name="alert_error_format">Không tải được tin\n%1$s</string>
+    <string name="alert_header_subtitle" formatted="false">Lần đến, pin và kết nối, xếp theo thời gian.</string>
+    <string name="alert_header_title" formatted="false">Tin về con</string>
+    <string name="alert_low_battery" formatted="false">Điện thoại của con sắp hết pin</string>
+    <string name="alert_no_family" formatted="false">Không tìm thấy gia đình. Hãy đóng ứng dụng rồi mở lại.</string>
+    <string name="alert_notification_denied" formatted="false">Thông báo đang tắt nên không bật được. Vào Cài đặt điện thoại → Ứng dụng → KidCare → Thông báo rồi bật lên.</string>
+    <string name="alert_notification_more">và %1$d tin nữa</string>
+    <string name="alert_permission_off" formatted="false">Một quyền trên điện thoại của con đã bị tắt</string>
+    <string name="alert_place_enter">Đã đến %1$s</string>
+    <string name="alert_place_exit">Đã rời %1$s</string>
+    <string name="alert_row">%1$s · %2$s</string>
+    <string name="alert_service_hint" formatted="false">Bật lên thì tin vẫn đến dù không mở ứng dụng. Đổi lại, trên thanh trạng thái luôn còn một thông báo nhỏ và tốn pin thêm một chút. Để tắt thì chỉ thấy tin khi mở ứng dụng.</string>
+    <string name="alert_service_notification_text" formatted="false">Đang bật để tin đến ngay. Có thể tắt ở thẻ Tin.</string>
+    <string name="alert_service_notification_title" formatted="false">Đang chờ tin</string>
+    <string name="alert_service_switch" formatted="false">Nhận tin ngay</string>
+    <string name="alert_signal_lost" formatted="false">Điện thoại của con đã lâu không trả lời</string>
+    <string name="alert_unknown" formatted="false">Có tin mới</string>
+    <string name="app_brand_short" formatted="false">KIDCARE</string>
+    <string name="app_name" formatted="false">KidCare</string>
+    <string name="channel_alert" formatted="false">Tin về con</string>
+    <string name="channel_alert_service" formatted="false">Đang chờ tin</string>
+    <string name="channel_find_phone" formatted="false">Tìm điện thoại</string>
+    <string name="channel_message" formatted="false">Lời nhắn của bố mẹ</string>
+    <string name="channel_remote_alarm" formatted="false">Báo thức bố mẹ đặt</string>
+    <string name="channel_tracking" formatted="false">Đang chia sẻ vị trí</string>
+    <string name="child_default_name" formatted="false">Con</string>
+    <string name="child_family_gone" formatted="false">Bây giờ vị trí của con không được gửi đi.\nHãy xin số mới trên điện thoại của bố mẹ rồi kết nối lại.</string>
+    <string name="child_go_to_permission" formatted="false">Đi bật quyền</string>
+    <string name="child_home_title" formatted="false">Con đang kết nối với bố mẹ</string>
+    <string name="child_home_title_gone" formatted="false">Kết nối với bố mẹ đã đứt</string>
+    <string name="child_permission_missing">%1$s đang tắt.\nHãy bật lên để vị trí được gửi đi.</string>
+    <string name="child_play_services_fix" formatted="false">Sửa dịch vụ Google Play</string>
+    <string name="child_play_services_fixable" formatted="false">Dịch vụ Google Play không có hoặc quá cũ nên không gửi được vị trí.\nBấm nút bên dưới để sửa. (Nhận lời nhắn và đổi âm thanh vẫn dùng được.)</string>
+    <string name="child_play_services_unfixable" formatted="false">Điện thoại này không có dịch vụ Google Play nên không gửi được vị trí.\nHãy cho bố mẹ xem màn hình này. (Nhận lời nhắn và đổi âm thanh vẫn dùng được.)</string>
+    <string name="child_repair" formatted="false">Kết nối lại</string>
+    <string name="child_selector_add_child" formatted="false">＋ Thêm một bé</string>
+    <string name="child_selector_add_guardian" formatted="false">＋ Mời một phụ huynh</string>
+    <string name="child_selector_add_guardian_count">＋ Mời một phụ huynh · hiện có %1$d</string>
+    <string name="child_selector_empty" formatted="false">Hãy kết nối một bé ▾</string>
+    <string name="child_selector_load_failed" formatted="false">Không tải được gia đình</string>
+    <string name="child_selector_value">Đang xem %1$s ▾</string>
+    <string name="child_sharing_on" formatted="false">Bố mẹ có thể thấy con đang ở đâu.\nĐể tìm con thật nhanh nếu con lạc đường.</string>
+    <string name="connect_failed">Không khởi động được ứng dụng\n%1$s</string>
+    <string name="connecting" formatted="false">Đang kết nối…</string>
+    <string name="control_alarm_cancel" formatted="false">Bỏ báo thức đã đặt</string>
+    <string name="control_alarm_hint_detail" formatted="false">Nó kêu đúng một lần trên điện thoại của con vào giờ bạn chọn. Nếu giờ đó đã qua thì kêu vào cùng giờ hôm sau — hôm nay hay ngày mai là do đồng hồ trên điện thoại của con quyết định. Khi báo thức đang đặt, trên thanh trạng thái của con hiện hình đồng hồ, và sau 5 phút nó tự tắt.</string>
+    <string name="control_alarm_label_hint" formatted="false">Tên báo thức (ví dụ: đến giờ đi học thêm)</string>
+    <string name="control_alarm_picker_title" formatted="false">Mấy giờ thì kêu?</string>
+    <string name="control_alarm_set" formatted="false">Đặt báo thức vào giờ này</string>
+    <string name="control_alarm_state_confirmed">Trên điện thoại của con đã đặt báo thức lúc %1$s</string>
+    <string name="control_alarm_state_labeled">%1$s «%2$s»</string>
+    <string name="control_alarm_state_pending">Đã gửi báo thức lúc %1$s · đang chờ điện thoại của con trả lời</string>
+    <string name="control_alarm_time_format">%1$s</string>
+    <string name="control_command_done" formatted="false">Xong</string>
+    <string name="control_command_queued" formatted="false">Chưa gửi đi được. Khi có mạng nó sẽ đến điện thoại của con và chạy — lúc đó tình hình có thể đã khác.</string>
+    <string name="control_command_sending" formatted="false">Đang gửi…</string>
+    <string name="control_command_timeout" formatted="false">Điện thoại của con không trả lời</string>
+    <string name="control_command_timeout_format">Điện thoại của con không trả lời\n%1$s</string>
+    <string name="control_error_alarm_exact_denied" formatted="false">Không đặt được báo thức vì «Báo thức và lời nhắc» đang tắt trên điện thoại của con. Vào Cài đặt → Ứng dụng → KidCare → Báo thức và lời nhắc trên máy đó rồi bật lên.</string>
+    <string name="control_error_child_failed" formatted="false">Điện thoại của con không thực hiện được yêu cầu này.</string>
+    <string name="control_error_message_notification_off" formatted="false">Không hiện được lời nhắn vì thông báo đang tắt trên điện thoại của con. Vào Cài đặt → Ứng dụng → KidCare → Thông báo trên máy đó rồi bật lên.</string>
+    <string name="control_error_ringer_denied" formatted="false">Quyền chỉnh âm thanh đang tắt trên điện thoại của con. Phải bật ở máy đó thì mới đổi được.</string>
+    <string name="control_find_hint" formatted="false">Nó kêu to ngay cả khi đang im lặng. Sau 5 phút nó tự tắt.</string>
+    <string name="control_find_phone" formatted="false">Tìm điện thoại</string>
+    <string name="control_find_stop" formatted="false">Tắt tiếng</string>
+    <string name="control_find_stop_hint" formatted="false">Tắt tiếng nếu máy đang kêu</string>
+    <string name="control_header_subtitle" formatted="false">Gửi âm thanh, lời nhắn và báo thức thẳng tới điện thoại của con.</string>
+    <string name="control_last_seen_days">%1$d ngày trước</string>
+    <string name="control_last_seen_format">Tín hiệu cuối %1$s</string>
+    <string name="control_last_seen_hours">%1$d giờ trước</string>
+    <string name="control_last_seen_minutes">%1$d phút trước</string>
+    <string name="control_last_seen_never" formatted="false">Chưa từng có tín hiệu nào</string>
+    <string name="control_last_seen_now" formatted="false">vừa xong</string>
+    <string name="control_last_seen_skewed_value">%1$s (theo đồng hồ trên điện thoại của con nên không thật chính xác)</string>
+    <string name="control_lock_hint" formatted="false">Nếu con đổi âm thanh thì vài giây sau nó quay lại đúng như bạn đã chọn.</string>
+    <string name="control_lock_switch" formatted="false">Đổi lại nếu con hoàn tác</string>
+    <string name="control_message_chip_call" formatted="false">Gọi cho mẹ nhé</string>
+    <string name="control_message_chip_come_home" formatted="false">Về nhà đi con</string>
+    <string name="control_message_chip_meal" formatted="false">Con ăn chưa?</string>
+    <string name="control_message_chip_where" formatted="false">Con đang ở đâu?</string>
+    <string name="control_message_empty" formatted="false">Hãy viết lời muốn gửi.</string>
+    <string name="control_message_hint" formatted="false">Điều muốn nói với con</string>
+    <string name="control_message_hint_detail" formatted="false">Nó hiện thật to trên màn hình của con. Không kêu tiếng nào, chỉ rung một lần. Khi con bấm «Con thấy rồi», chỗ này đổi thành «Đã đọc».</string>
+    <string name="control_message_read" formatted="false">Đã đọc</string>
+    <string name="control_message_send" formatted="false">Gửi lời nhắn</string>
+    <string name="control_message_unread" formatted="false">Đã tới điện thoại của con · chưa đọc</string>
+    <string name="control_mode_normal" formatted="false">Chuông</string>
+    <string name="control_mode_silent" formatted="false">Im lặng</string>
+    <string name="control_mode_vibrate" formatted="false">Rung</string>
+    <string name="control_ringer_refresh" formatted="false">Kiểm tra lại</string>
+    <string name="control_ringer_status_applied">Hiện tại · %1$s</string>
+    <string name="control_ringer_status_format">Kiểm tra lần cuối · %1$s</string>
+    <string name="control_ringer_status_loading" formatted="false">Đang kiểm tra chế độ âm thanh trên điện thoại của con</string>
+    <string name="control_ringer_status_unknown" formatted="false">Chưa kiểm tra được chế độ âm thanh gần nhất</string>
+    <string name="control_section_alarm" formatted="false">Đặt báo thức</string>
+    <string name="control_section_message" formatted="false">Nhắn một câu</string>
+    <string name="control_section_ringer" formatted="false">Đổi ngay bây giờ</string>
+    <string name="day_next" formatted="false">Ngày sau</string>
+    <string name="day_prev" formatted="false">Ngày trước</string>
+    <string name="dialog_cancel" formatted="false">Hủy</string>
+    <string name="error_generic_format">Kết nối gặp trục trặc\n%1$s</string>
+    <string name="error_server_setup" formatted="false">Việc cài đặt máy chủ chưa xong. Hãy báo cho người đã cài ứng dụng giúp bạn.</string>
+    <string name="error_unauthenticated" formatted="false">Bạn đã bị đăng xuất. Hãy đóng ứng dụng rồi mở lại.</string>
+    <string name="event_detail_battery">còn %1$d%%</string>
+    <string name="event_detail_permission">%1$s — hãy bật lại trên điện thoại của con</string>
+    <string name="find_phone_notification_text" formatted="false">Bấm để tắt tiếng</string>
+    <string name="find_phone_notification_title" formatted="false">Bố mẹ đang tìm điện thoại này</string>
+    <string name="find_phone_stop" formatted="false">Thấy rồi (tắt tiếng)</string>
+    <string name="find_phone_title" formatted="false">Bố mẹ đang tìm điện thoại này</string>
+    <string name="guardian_disconnect_banner">Yêu cầu gửi %1$s vẫn chưa được điện thoại của con trả lời\nHãy mở ứng dụng KidCare một lần trên máy của con, kết nối sẽ trở lại.</string>
+    <string name="guardian_start_join_family" formatted="false">Vào gia đình có sẵn bằng mã</string>
+    <string name="guardian_start_new_family" formatted="false">Tạo gia đình mới</string>
+    <string name="guardian_start_title" formatted="false">Bạn muốn bắt đầu thế nào?</string>
+    <string name="holiday_buddha" formatted="false">Lễ Phật đản</string>
+    <string name="holiday_children" formatted="false">Ngày thiếu nhi</string>
+    <string name="holiday_christmas" formatted="false">Giáng sinh</string>
+    <string name="holiday_chuseok" formatted="false">Kỳ nghỉ Chuseok</string>
+    <string name="holiday_foundation" formatted="false">Ngày lập quốc</string>
+    <string name="holiday_hangul" formatted="false">Ngày chữ Hàn</string>
+    <string name="holiday_independence" formatted="false">Ngày phong trào độc lập</string>
+    <string name="holiday_liberation" formatted="false">Ngày giải phóng</string>
+    <string name="holiday_memorial" formatted="false">Ngày tưởng niệm</string>
+    <string name="holiday_new_year" formatted="false">Tết dương lịch</string>
+    <string name="holiday_seollal" formatted="false">Kỳ nghỉ Tết âm lịch</string>
+    <string name="holiday_substitute" formatted="false">Ngày nghỉ bù</string>
+    <string name="language_follow_system" formatted="false">Theo cài đặt của máy</string>
+    <string name="language_picker_title" formatted="false">Ngôn ngữ</string>
+    <string name="list_loading" formatted="false">Đang tải…</string>
+    <string name="map_battery_info_confirm" formatted="false">Đã hiểu</string>
+    <string name="map_battery_info_message" formatted="false">Mức pin hiện ở đây là mức mà điện thoại của con báo về. Ứng dụng nào tốn bao nhiêu pin thì Android không cho đọc từ máy khác, phải xem trực tiếp ở Cài đặt &gt; Pin trên máy của con.</string>
+    <string name="map_battery_info_title" formatted="false">Pin điện thoại của con</string>
+    <string name="map_child_avatar" formatted="false">Nhân vật của bé đã chọn</string>
+    <string name="map_error">Không tải được bản đồ\n%1$s</string>
+    <string name="map_live_active_status">Đang theo dõi trực tiếp · sai số khoảng %1$dm · pin %2$d%%</string>
+    <string name="map_live_button_connecting" formatted="false">Vị trí trực tiếp  đang kết nối…</string>
+    <string name="map_live_cancel_description" formatted="false">Vị trí trực tiếp đang kết nối. Bấm để hủy</string>
+    <string name="map_live_connecting" formatted="false">Đang kết nối trực tiếp…</string>
+    <string name="map_live_start" formatted="false">Vị trí trực tiếp  OFF</string>
+    <string name="map_live_start_description" formatted="false">Vị trí trực tiếp đang tắt. Bấm để bật</string>
+    <string name="map_live_stop" formatted="false">Vị trí trực tiếp  ON</string>
+    <string name="map_live_stop_description" formatted="false">Vị trí trực tiếp đang bật. Bấm để tắt</string>
+    <string name="map_live_stopped" formatted="false">Đã kết thúc xem trực tiếp. Trên bản đồ vẫn còn vị trí nhận được lần cuối.</string>
+    <string name="map_live_timeout" formatted="false">Xem trực tiếp đã dừng theo giới hạn an toàn 10 phút.</string>
+    <string name="map_live_waiting" formatted="false">Đang bắt vị trí trực tiếp. Chờ một chút cho tới khi có tín hiệu GPS.</string>
+    <string name="map_locate_no_fix" formatted="false">Điện thoại của con chưa bắt được vị trí. Lát nữa hãy bấm lại.</string>
+    <string name="map_locate_now" formatted="false">Xem vị trí bây giờ</string>
+    <string name="map_locating" formatted="false">Đang hỏi điện thoại của con…</string>
+    <string name="map_no_child" formatted="false">Chưa có điện thoại của bé nào được kết nối.</string>
+    <string name="map_status_format">Pin %1$d%%\ntính đến %2$s</string>
+    <string name="map_status_never" formatted="false">Chưa từng xem vị trí lần nào. Hãy bấm «Xem vị trí bây giờ».</string>
+    <string name="message_ack" formatted="false">Con thấy rồi</string>
+    <string name="message_notification_title" formatted="false">Lời nhắn của bố mẹ</string>
+    <string name="message_title" formatted="false">Lời nhắn của bố mẹ</string>
+    <string name="pairing_child_hint" formatted="false">6 chữ số</string>
+    <string name="pairing_child_join" formatted="false">Kết nối</string>
+    <string name="pairing_child_name_hint" formatted="false">Tên của bé (ví dụ: Minjun)</string>
+    <string name="pairing_child_title" formatted="false">Hãy nhập mã 6 chữ số\nhiện trên điện thoại của bố mẹ</string>
+    <string name="pairing_code_expiry_format">Mã này hết hạn sau %1$d phút</string>
+    <string name="pairing_code_placeholder" formatted="false">------</string>
+    <string name="pairing_expired" formatted="false">Mã đã hết hạn. Hãy xin mã mới trên điện thoại của bố mẹ.</string>
+    <string name="pairing_failed">Không kết nối được\n%1$s</string>
+    <string name="pairing_full" formatted="false">Đã có điện thoại khác kết nối rồi.</string>
+    <string name="pairing_guardian_hint" formatted="false">Trên điện thoại của con, hãy mở ứng dụng,\nchọn «Con» rồi nhập mã này để kết nối.</string>
+    <string name="pairing_guardian_invite_guardian_hint" formatted="false">Trên điện thoại của phụ huynh còn lại, hãy mở ứng dụng,\nchọn «Phụ huynh» → «Vào bằng mã» rồi nhập mã này.</string>
+    <string name="pairing_guardian_invite_guardian_title" formatted="false">Hãy nhập mã này trên điện thoại của phụ huynh còn lại</string>
+    <string name="pairing_guardian_join_title" formatted="false">Hãy nhập mã 6 chữ số\nmà một phụ huynh trong gia đình đưa cho bạn</string>
+    <string name="pairing_guardian_name_hint" formatted="false">Tên phụ huynh (ví dụ: Mẹ, Bố)</string>
+    <string name="pairing_guardian_title" formatted="false">Hãy nhập mã này trên điện thoại của con</string>
+    <string name="pairing_new_code_button" formatted="false">Lấy mã mới</string>
+    <string name="pairing_not_found" formatted="false">Không có mã đó. Hãy kiểm tra lại.</string>
+    <string name="pairing_offline" formatted="false">Không vào được mạng. Hãy kiểm tra Wi-Fi hoặc dữ liệu di động.</string>
+    <string name="pairing_reset_role_button" formatted="false">Chọn lại vai trò</string>
+    <string name="pairing_wrong_role" formatted="false">Mã này không phải của vai trò bạn đã chọn. Hãy xem mã nào cho con và mã nào cho phụ huynh.</string>
+    <string name="perm_activity_reason" formatted="false">Biết được con đang đi hay đứng yên thì lúc đứng yên có thể kiểm tra vị trí thưa hơn, nhờ đó tiết kiệm pin.</string>
+    <string name="perm_activity_title" formatted="false">Nhận biết chuyển động</string>
+    <string name="perm_background_reason" formatted="false">Để gửi vị trí khi không mở ứng dụng thì phải chọn «Luôn cho phép». Hãy chọn «Luôn cho phép» ở màn hình cài đặt.</string>
+    <string name="perm_background_title" formatted="false">Vị trí «Luôn cho phép»</string>
+    <string name="perm_battery_hint" formatted="false">Khi màn hình cài đặt mở ra, hãy tìm KidCare trong danh sách rồi đổi thành «Không giới hạn».</string>
+    <string name="perm_battery_reason" formatted="false">Không bật cái này thì điện thoại ru ngủ ứng dụng và vị trí bị đứt. Hãy chọn «Cho phép» ở màn hình cài đặt.</string>
+    <string name="perm_battery_title" formatted="false">Bỏ tối ưu pin</string>
+    <string name="perm_denied_permanently" formatted="false">Vừa bị từ chối nên màn hình này không hỏi lại được. Bấm «Bật trong Cài đặt» để sang phần cài đặt ứng dụng rồi bật quyền ở đó.</string>
+    <string name="perm_dnd_reason" formatted="false">Quyền này cho phép bố mẹ đổi âm thanh và rung. Hãy tìm KidCare trong danh sách rồi bật lên.</string>
+    <string name="perm_dnd_title" formatted="false">Đổi cài đặt âm thanh</string>
+    <string name="perm_done" formatted="false">Đã bật hết rồi. Bắt đầu thôi!</string>
+    <string name="perm_grant" formatted="false">Bật</string>
+    <string name="perm_location_reason" formatted="false">Cần có để bố mẹ biết con đang ở đâu.</string>
+    <string name="perm_location_title" formatted="false">Quyền vị trí</string>
+    <string name="perm_notification_reason" formatted="false">Cần có để nhận lời nhắn của bố mẹ và để hiện rằng vị trí đang được chia sẻ.</string>
+    <string name="perm_notification_title" formatted="false">Thông báo</string>
+    <string name="perm_open_settings" formatted="false">Bật trong Cài đặt</string>
+    <string name="perm_start" formatted="false">Bắt đầu</string>
+    <string name="perm_title" formatted="false">Chỉ cần bật vài thứ thôi</string>
+    <string name="place_add" formatted="false">Thêm địa điểm</string>
+    <string name="place_delete" formatted="false">Xóa</string>
+    <string name="place_delete_cancel" formatted="false">Để nguyên</string>
+    <string name="place_delete_confirm" formatted="false">Xóa</string>
+    <string name="place_delete_message">%1$s\n\nXóa rồi thì đến hay rời chỗ này cũng không báo nữa.</string>
+    <string name="place_delete_title" formatted="false">Xóa địa điểm này?</string>
+    <string name="place_deleting" formatted="false">Đang xóa…</string>
+    <string name="place_editor_cancel" formatted="false">Hủy</string>
+    <string name="place_editor_map_hint" formatted="false">Hãy di chuyển bản đồ cho dấu thập ở giữa trùng với chỗ này. Vòng tròn xanh là phạm vi báo.</string>
+    <string name="place_editor_map_label" formatted="false">Ở đâu</string>
+    <string name="place_editor_name_hint" formatted="false">Trường, lớp học thêm, nhà bà…</string>
+    <string name="place_editor_name_label" formatted="false">Tên địa điểm</string>
+    <string name="place_editor_name_required" formatted="false">Hãy viết tên. Đây là tên hiện trong thông báo, kiểu «Đã đến ○○».</string>
+    <string name="place_editor_no_child_location" formatted="false">Chưa biết điện thoại của con ở đâu nên bản đồ mở rất rộng. Hãy tự kéo để tìm chỗ.</string>
+    <string name="place_editor_notify_enter" formatted="false">Báo khi đến</string>
+    <string name="place_editor_notify_exit" formatted="false">Báo khi rời</string>
+    <string name="place_editor_notify_label" formatted="false">Khi nào thì báo</string>
+    <string name="place_editor_notify_none_hint" formatted="false">Tắt cả hai thì chỗ này không báo gì. Địa điểm vẫn được giữ lại.</string>
+    <string name="place_editor_radius_label" formatted="false">Đến gần bao nhiêu thì tính</string>
+    <string name="place_editor_radius_value">bán kính %1$dm</string>
+    <string name="place_editor_save" formatted="false">Lưu</string>
+    <string name="place_editor_title_edit" formatted="false">Sửa địa điểm</string>
+    <string name="place_editor_title_new" formatted="false">Địa điểm mới</string>
+    <string name="place_empty" formatted="false">Chưa có địa điểm nào.\nHãy bấm «Thêm địa điểm» bên dưới\nrồi lưu những chỗ như «Trường» hay «Lớp học thêm».\nChúng tôi sẽ báo khi con đến hoặc rời đi.</string>
+    <string name="place_error_format">Không tải được địa điểm\n%1$s</string>
+    <string name="place_header_subtitle" formatted="false">Lưu trường hay lớp học thêm, chúng tôi sẽ báo lúc con đến và lúc con đi.</string>
+    <string name="place_header_title" formatted="false">Nơi an tâm</string>
+    <string name="place_limit_notice">Bạn lưu được tối đa %1$d địa điểm. Muốn thêm chỗ mới, hãy xóa bớt chỗ không dùng nữa.</string>
+    <string name="place_no_family" formatted="false">Không tìm thấy gia đình. Hãy đóng ứng dụng rồi mở lại.</string>
+    <string name="place_notify_both" formatted="false">Báo cả lúc đến và lúc rời</string>
+    <string name="place_notify_enter" formatted="false">Chỉ báo lúc đến</string>
+    <string name="place_notify_exit" formatted="false">Chỉ báo lúc rời</string>
+    <string name="place_notify_none" formatted="false">Đã tắt báo</string>
+    <string name="place_row_detail">%1$s</string>
+    <string name="place_row_title">%1$s · bán kính %2$dm</string>
+    <string name="place_save_slow" formatted="false">Đã gửi yêu cầu lưu nhưng máy chủ chưa xác nhận. Khi có mạng nó sẽ tự lưu.</string>
+    <string name="place_saving" formatted="false">Đang lưu…</string>
+    <string name="place_summary">%1$s (bán kính %2$dm)</string>
+    <string name="place_sync_failed_format">Đã lưu địa điểm nhưng chưa báo được cho điện thoại của con. Mở lại màn hình này thì chúng tôi sẽ báo thêm một lần nữa.\n%1$s</string>
+    <string name="place_sync_no_child" formatted="false">Đã lưu địa điểm. Khi điện thoại của con kết nối thì nó tự có hiệu lực.</string>
+    <string name="place_sync_pending" formatted="false">Chưa tới điện thoại của con. Máy vẫn đang báo theo địa điểm cũ.</string>
+    <string name="place_sync_retry" formatted="false">Báo lại lần nữa</string>
+    <string name="place_sync_slow" formatted="false">Đã lưu địa điểm. Việc báo cho điện thoại của con sẽ xong khi có mạng.</string>
+    <string name="remote_alarm_notification_text" formatted="false">Bấm để tắt</string>
+    <string name="remote_alarm_stop" formatted="false">Tắt báo thức</string>
+    <string name="remote_alarm_title" formatted="false">Đây là báo thức bố mẹ đặt</string>
+    <string name="role_child" formatted="false">Con</string>
+    <string name="role_guardian" formatted="false">Phụ huynh (mẹ hoặc bố)</string>
+    <string name="role_subtitle" formatted="false">Trước khi kết nối vẫn chọn lại được.\nKết nối xong thì không đổi được nữa.</string>
+    <string name="role_title" formatted="false">Đây là điện thoại của ai?</string>
+    <string name="router_retry" formatted="false">Thử lại</string>
+    <string name="schedule_add" formatted="false">Thêm quy tắc</string>
+    <string name="schedule_allday_cancel" formatted="false">Chọn lại giờ</string>
+    <string name="schedule_allday_confirm" formatted="false">Lưu là cả ngày</string>
+    <string name="schedule_allday_message">Giờ bắt đầu và giờ kết thúc đều là %1$s.\nLưu như vậy thì vào những ngày đã chọn máy sẽ ở %2$s suốt 24 giờ.</string>
+    <string name="schedule_allday_title" formatted="false">Lưu là cả ngày nhé?</string>
+    <string name="schedule_day_fri" formatted="false">T6</string>
+    <string name="schedule_day_mon" formatted="false">T2</string>
+    <string name="schedule_day_sat" formatted="false">T7</string>
+    <string name="schedule_day_sun" formatted="false">CN</string>
+    <string name="schedule_day_thu" formatted="false">T5</string>
+    <string name="schedule_day_tue" formatted="false">T3</string>
+    <string name="schedule_day_wed" formatted="false">T4</string>
+    <string name="schedule_days_everyday" formatted="false">Mỗi ngày</string>
+    <string name="schedule_days_none" formatted="false">Chưa chọn ngày</string>
+    <string name="schedule_days_weekday" formatted="false">Ngày thường</string>
+    <string name="schedule_days_weekend" formatted="false">Cuối tuần</string>
+    <string name="schedule_delete" formatted="false">Xóa</string>
+    <string name="schedule_delete_cancel" formatted="false">Để nguyên</string>
+    <string name="schedule_delete_confirm" formatted="false">Xóa</string>
+    <string name="schedule_delete_message">%1$s\n\nXóa rồi thì trong khung giờ này âm thanh không tự đổi nữa.</string>
+    <string name="schedule_delete_title" formatted="false">Xóa quy tắc này?</string>
+    <string name="schedule_deleting" formatted="false">Đang xóa…</string>
+    <string name="schedule_editor_cancel" formatted="false">Hủy</string>
+    <string name="schedule_editor_days_label" formatted="false">Vào những ngày nào</string>
+    <string name="schedule_editor_days_required" formatted="false">Hãy chọn ít nhất một ngày. Không chọn ngày nào thì quy tắc này không bao giờ chạy.</string>
+    <string name="schedule_editor_end_title" formatted="false">Giờ kết thúc</string>
+    <string name="schedule_editor_mode_label" formatted="false">Trong lúc đó máy của con để ở</string>
+    <string name="schedule_editor_save" formatted="false">Lưu</string>
+    <string name="schedule_editor_start_title" formatted="false">Giờ bắt đầu</string>
+    <string name="schedule_editor_time_label" formatted="false">Từ mấy giờ đến mấy giờ</string>
+    <string name="schedule_editor_title_edit" formatted="false">Sửa quy tắc</string>
+    <string name="schedule_editor_title_new" formatted="false">Quy tắc mới</string>
+    <string name="schedule_empty" formatted="false">Chưa đặt khung giờ nào.\nHãy bấm «Thêm quy tắc» bên dưới\nrồi thử một quy tắc kiểu «Đêm ngày thường thì im lặng».</string>
+    <string name="schedule_error_format">Không tải được quy tắc\n%1$s</string>
+    <string name="schedule_header_subtitle" formatted="false">Tự đổi giữa chuông, rung và im lặng theo ngày và giờ.</string>
+    <string name="schedule_header_title" formatted="false">Lịch âm thanh hằng ngày</string>
+    <string name="schedule_holiday_cleared" formatted="false">Ngày lễ vẫn đổi theo lịch.</string>
+    <string name="schedule_holiday_date">%1$d/%2$d</string>
+    <string name="schedule_holiday_next">Ngày nghỉ tới là %1$s, %2$s.</string>
+    <string name="schedule_holiday_saved" formatted="false">Ngày lễ thì lịch nghỉ.</string>
+    <string name="schedule_holiday_subtitle" formatted="false">Vào ngày nghỉ không quy tắc nào bên dưới chạy cả.</string>
+    <string name="schedule_holiday_title" formatted="false">Nghỉ vào ngày lễ</string>
+    <string name="schedule_holiday_unknown" formatted="false">Máy này không tính được ngày lễ. Dù bật công tắc thì cũng chỉ chạy theo ngày trong tuần.</string>
+    <string name="schedule_mode_normal" formatted="false">Chuông</string>
+    <string name="schedule_mode_silent" formatted="false">Im lặng</string>
+    <string name="schedule_mode_vibrate" formatted="false">Rung</string>
+    <string name="schedule_no_family" formatted="false">Không tìm thấy gia đình. Hãy đóng ứng dụng rồi mở lại.</string>
+    <string name="schedule_overlap_cancel" formatted="false">Sửa</string>
+    <string name="schedule_overlap_confirm" formatted="false">Vẫn lưu</string>
+    <string name="schedule_overlap_message">Khung giờ này trùng với quy tắc «%1$s».\nTrong lúc trùng nhau, quy tắc tạo sau sẽ thắng.</string>
+    <string name="schedule_overlap_message_more">Khung giờ này trùng với «%1$s» và %2$d quy tắc khác.\nTrong lúc trùng nhau, quy tắc tạo sau sẽ thắng.</string>
+    <string name="schedule_overlap_title" formatted="false">Có quy tắc bị trùng</string>
+    <string name="schedule_range">%1$s ~ %2$s</string>
+    <string name="schedule_range_allday">Cả ngày (24 giờ tính từ %1$s)</string>
+    <string name="schedule_range_overnight">%1$s ~ %2$s hôm sau</string>
+    <string name="schedule_range_separator" formatted="false">–</string>
+    <string name="schedule_row_detail">%1$s · %2$s</string>
+    <string name="schedule_row_detail_off">%1$s · %2$s (đang tắt)</string>
+    <string name="schedule_save_slow" formatted="false">Đã gửi yêu cầu lưu nhưng máy chủ chưa xác nhận. Khi có mạng nó sẽ tự lưu.</string>
+    <string name="schedule_saving" formatted="false">Đang lưu…</string>
+    <string name="schedule_summary">%1$s · %2$s · %3$s</string>
+    <string name="schedule_sync_failed_format">Đã lưu quy tắc nhưng chưa báo được cho điện thoại của con. Mở lại màn hình này thì chúng tôi sẽ báo thêm một lần nữa.\n%1$s</string>
+    <string name="schedule_sync_no_child" formatted="false">Đã lưu quy tắc. Khi điện thoại của con kết nối thì nó tự có hiệu lực.</string>
+    <string name="schedule_sync_pending" formatted="false">Chưa tới điện thoại của con. Máy vẫn đang chạy theo quy tắc cũ.</string>
+    <string name="schedule_sync_retry" formatted="false">Báo lại lần nữa</string>
+    <string name="schedule_sync_slow" formatted="false">Đã lưu quy tắc. Việc báo cho điện thoại của con sẽ xong khi có mạng.</string>
+    <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="tab_alert" formatted="false">Tin</string>
+    <string name="tab_control" formatted="false">Điều khiển</string>
+    <string name="tab_map" formatted="false">Bản đồ</string>
+    <string name="tab_place" formatted="false">Địa điểm</string>
+    <string name="tab_schedule" formatted="false">Lịch</string>
+    <string name="timeline_collapse" formatted="false">Thu gọn nhật ký di chuyển</string>
+    <string name="timeline_detail">%1$s\n%2$s</string>
+    <string name="timeline_drag_handle" formatted="false">Kéo lên xuống để chỉnh chiều cao nhật ký</string>
+    <string name="timeline_empty" formatted="false">Ngày này không có ghi nhận nào</string>
+    <string name="timeline_error">Không tải được ghi nhận\n%1$s</string>
+    <string name="timeline_expand" formatted="false">Mở rộng nhật ký di chuyển</string>
+    <string name="timeline_hide_all_routes" formatted="false">Ẩn hết đường đi</string>
+    <string name="timeline_move_title">Di chuyển %1$s</string>
+    <string name="timeline_route_hidden" formatted="false">Đang ẩn trên bản đồ</string>
+    <string name="timeline_route_visible" formatted="false">Đang hiện trên bản đồ</string>
+    <string name="timeline_show_all_routes" formatted="false">Hiện hết đường đi</string>
+    <string name="timeline_summary_day">%1$s trong ngày này</string>
+    <string name="timeline_summary_empty" formatted="false">Nhật ký di chuyển hôm nay</string>
+    <string name="timeline_summary_routes_hidden">%1$s · đã ẩn đường đi</string>
+    <string name="timeline_summary_routes_partial">%1$s · ẩn một phần</string>
+    <string name="timeline_summary_today">%1$s hôm nay</string>
+    <string name="timeline_unknown_place" formatted="false">Chỗ con dừng lại</string>
+    <string name="timeline_view_records" formatted="false">Xem nhật ký di chuyển</string>
+    <string name="tracking_notification_text" formatted="false">Đang cho bố mẹ biết con ở đâu</string>
+    <string name="tracking_notification_title" formatted="false">Đang chia sẻ vị trí</string>
+    <string name="uid_format">ID máy của tôi\n%1$s</string>
+</resources>

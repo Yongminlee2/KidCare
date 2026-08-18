@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 자동 생성. 고치려면 i18n/zh_Hant.json 을 고치고 gen.py 를 다시 돌린다. -->
+<resources>
+    <string name="alert_child_line">%1$s · %2$s</string>
+    <string name="alert_command_failed" formatted="false">傳送到孩子手機的要求失敗了</string>
+    <string name="alert_empty" formatted="false">還沒有通知。\n在「地點」分頁設定學校或補習班，\n孩子抵達或離開時就會出現在這裡。</string>
+    <string name="alert_error_format">無法載入通知\n%1$s</string>
+    <string name="alert_header_subtitle" formatted="false">依時間順序整理抵達、電量和連線狀態。</string>
+    <string name="alert_header_title" formatted="false">孩子的動態</string>
+    <string name="alert_low_battery" formatted="false">孩子手機的電量不多了</string>
+    <string name="alert_no_family" formatted="false">找不到家庭資訊。請關閉應用程式後重新開啟。</string>
+    <string name="alert_notification_denied" formatted="false">通知已關閉，無法開啟。請到手機設定→應用程式→KidCare→通知裡打開。</string>
+    <string name="alert_notification_more">另有%1$d則</string>
+    <string name="alert_permission_off" formatted="false">孩子手機上的權限被關掉了</string>
+    <string name="alert_place_enter">已抵達%1$s</string>
+    <string name="alert_place_exit">已離開%1$s</string>
+    <string name="alert_row">%1$s · %2$s</string>
+    <string name="alert_service_hint" formatted="false">開啟後即使沒在看應用程式也能立刻收到通知。代價是這支手機的通知列會一直留一則提示，並且多耗一點電。關閉時只能在開啟應用程式時查看。</string>
+    <string name="alert_service_notification_text" formatted="false">已開啟，可以立刻把動態送到您這裡。可在通知分頁關閉。</string>
+    <string name="alert_service_notification_title" formatted="false">正在接收通知</string>
+    <string name="alert_service_switch" formatted="false">立刻接收通知</string>
+    <string name="alert_signal_lost" formatted="false">孩子手機有一段時間沒有回應了</string>
+    <string name="alert_unknown" formatted="false">有新的動態</string>
+    <string name="app_brand_short" formatted="false">KIDCARE</string>
+    <string name="app_name" formatted="false">KidCare</string>
+    <string name="channel_alert" formatted="false">孩子的動態</string>
+    <string name="channel_alert_service" formatted="false">正在接收通知</string>
+    <string name="channel_find_phone" formatted="false">尋找手機</string>
+    <string name="channel_message" formatted="false">家長的留言</string>
+    <string name="channel_remote_alarm" formatted="false">家長設定的鬧鐘</string>
+    <string name="channel_tracking" formatted="false">位置分享</string>
+    <string name="child_default_name" formatted="false">孩子</string>
+    <string name="child_family_gone" formatted="false">現在我的位置沒有傳出去。\n請在家長手機上取得新號碼，重新連線。</string>
+    <string name="child_go_to_permission" formatted="false">去開啟權限</string>
+    <string name="child_home_title" formatted="false">已經和爸爸媽媽連上了</string>
+    <string name="child_home_title_gone" formatted="false">和爸爸媽媽的連線斷了</string>
+    <string name="child_permission_missing">%1$s已關閉。\n打開後位置才會傳出去。</string>
+    <string name="child_play_services_fix" formatted="false">修復Google Play服務</string>
+    <string name="child_play_services_fixable" formatted="false">手機上的Google Play服務缺少或太舊，無法傳送位置。\n按下面的按鈕可以修復。（接收留言和變更聲音仍然可用。）</string>
+    <string name="child_play_services_unfixable" formatted="false">這支手機沒有Google Play服務，無法傳送位置。\n請把這個畫面拿給爸爸媽媽看。（接收留言和變更聲音仍然可用。）</string>
+    <string name="child_repair" formatted="false">重新連線</string>
+    <string name="child_selector_add_child" formatted="false">＋ 新增孩子</string>
+    <string name="child_selector_add_guardian" formatted="false">＋ 邀請家長</string>
+    <string name="child_selector_add_guardian_count">＋ 邀請家長 · 目前%1$d人</string>
+    <string name="child_selector_empty" formatted="false">請連接孩子 ▾</string>
+    <string name="child_selector_load_failed" formatted="false">無法載入家庭清單</string>
+    <string name="child_selector_value">正在查看%1$s ▾</string>
+    <string name="child_sharing_on" formatted="false">爸爸媽媽可以看到我現在在哪裡。\n就算迷路也能很快找到我。</string>
+    <string name="connect_failed">無法啟動應用程式\n%1$s</string>
+    <string name="connecting" formatted="false">連線中…</string>
+    <string name="control_alarm_cancel" formatted="false">取消已設的鬧鐘</string>
+    <string name="control_alarm_hint_detail" formatted="false">在您選的時刻，孩子手機上只響一次。如果那個時刻已經過了，就在隔天同一時刻響——今天還是明天由孩子手機的時鐘決定。鬧鐘設好後，孩子手機的狀態列會出現時鐘圖示，孩子也會知道，過5分鐘會自動停止。</string>
+    <string name="control_alarm_label_hint" formatted="false">鬧鐘名稱（例如：該去補習班了）</string>
+    <string name="control_alarm_picker_title" formatted="false">幾點響？</string>
+    <string name="control_alarm_set" formatted="false">在這個時刻設鬧鐘</string>
+    <string name="control_alarm_state_confirmed">孩子手機上已設好%1$s的鬧鐘</string>
+    <string name="control_alarm_state_labeled">%1$s「%2$s」</string>
+    <string name="control_alarm_state_pending">已傳送%1$s的鬧鐘 · 正在等孩子手機回應</string>
+    <string name="control_alarm_time_format">%1$s</string>
+    <string name="control_command_done" formatted="false">完成</string>
+    <string name="control_command_queued" formatted="false">還沒送到。等連上網路後會送到孩子手機執行——在那之前情況可能已經變了。</string>
+    <string name="control_command_sending" formatted="false">傳送中…</string>
+    <string name="control_command_timeout" formatted="false">孩子手機沒有回應</string>
+    <string name="control_command_timeout_format">孩子手機沒有回應\n%1$s</string>
+    <string name="control_error_alarm_exact_denied" formatted="false">孩子手機上的「鬧鐘和提醒」權限已關閉，無法設定鬧鐘。請在那支手機的設定→應用程式→KidCare→鬧鐘和提醒裡打開。</string>
+    <string name="control_error_child_failed" formatted="false">孩子手機無法執行這個動作。</string>
+    <string name="control_error_message_notification_off" formatted="false">孩子手機上的通知已關閉，無法顯示留言。請在那支手機的設定→應用程式→KidCare→通知裡打開。</string>
+    <string name="control_error_ringer_denied" formatted="false">孩子手機上的聲音設定權限已關閉。要在那支手機上打開才能變更。</string>
+    <string name="control_find_hint" formatted="false">即使是靜音也會大聲響起。過5分鐘會自動停止。</string>
+    <string name="control_find_phone" formatted="false">尋找手機</string>
+    <string name="control_find_stop" formatted="false">停止鈴聲</string>
+    <string name="control_find_stop_hint" formatted="false">如果已經在響，就停止它</string>
+    <string name="control_header_subtitle" formatted="false">把聲音、留言和鬧鐘直接送到孩子手機。</string>
+    <string name="control_last_seen_days">%1$d天前</string>
+    <string name="control_last_seen_format">最後訊號 %1$s</string>
+    <string name="control_last_seen_hours">%1$d小時前</string>
+    <string name="control_last_seen_minutes">%1$d分鐘前</string>
+    <string name="control_last_seen_never" formatted="false">還從來沒有訊號</string>
+    <string name="control_last_seen_now" formatted="false">剛剛</string>
+    <string name="control_last_seen_skewed_value">%1$s（依孩子手機的時鐘計算，不太準確）</string>
+    <string name="control_lock_hint" formatted="false">就算孩子改了聲音，幾秒後也會變回家長設定的樣子。</string>
+    <string name="control_lock_switch" formatted="false">孩子改回去就再改一次</string>
+    <string name="control_message_chip_call" formatted="false">打個電話給我</string>
+    <string name="control_message_chip_come_home" formatted="false">回家來</string>
+    <string name="control_message_chip_meal" formatted="false">吃飯了嗎？</string>
+    <string name="control_message_chip_where" formatted="false">現在在哪裡？</string>
+    <string name="control_message_empty" formatted="false">請寫下要傳送的話。</string>
+    <string name="control_message_hint" formatted="false">想對孩子說的話</string>
+    <string name="control_message_hint_detail" formatted="false">會在孩子手機螢幕上大大地顯示。不會發出聲音，只震動一次。孩子按下「我看到了」後，這裡會變成「已讀」。</string>
+    <string name="control_message_read" formatted="false">已讀</string>
+    <string name="control_message_send" formatted="false">傳送留言</string>
+    <string name="control_message_unread" formatted="false">已送到孩子手機 · 還沒讀</string>
+    <string name="control_mode_normal" formatted="false">響鈴</string>
+    <string name="control_mode_silent" formatted="false">靜音</string>
+    <string name="control_mode_vibrate" formatted="false">震動</string>
+    <string name="control_ringer_refresh" formatted="false">重新查看</string>
+    <string name="control_ringer_status_applied">目前狀態 · %1$s</string>
+    <string name="control_ringer_status_format">最後查看 · %1$s</string>
+    <string name="control_ringer_status_loading" formatted="false">正在查看孩子手機的聲音狀態</string>
+    <string name="control_ringer_status_unknown" formatted="false">還沒確認到最近的聲音狀態</string>
+    <string name="control_section_alarm" formatted="false">設定鬧鐘</string>
+    <string name="control_section_message" formatted="false">說一句話</string>
+    <string name="control_section_ringer" formatted="false">現在就改</string>
+    <string name="day_next" formatted="false">後一天</string>
+    <string name="day_prev" formatted="false">前一天</string>
+    <string name="dialog_cancel" formatted="false">取消</string>
+    <string name="error_generic_format">連線出了問題\n%1$s</string>
+    <string name="error_server_setup" formatted="false">伺服器還沒設定好。請告訴幫您安裝應用程式的人。</string>
+    <string name="error_unauthenticated" formatted="false">登入已失效。請關閉應用程式後重新開啟。</string>
+    <string name="event_detail_battery">還剩%1$d%%</string>
+    <string name="event_detail_permission">%1$s — 請在孩子手機上重新打開</string>
+    <string name="find_phone_notification_text" formatted="false">按一下可以停止鈴聲</string>
+    <string name="find_phone_notification_title" formatted="false">家長正在找這支手機</string>
+    <string name="find_phone_stop" formatted="false">找到了（停止鈴聲）</string>
+    <string name="find_phone_title" formatted="false">家長正在找這支手機</string>
+    <string name="guardian_disconnect_banner">%1$s傳送的要求，孩子手機還沒有回應\n請在孩子手機上開啟一次KidCare，就會重新連上。</string>
+    <string name="guardian_start_join_family" formatted="false">用邀請號碼加入既有家庭</string>
+    <string name="guardian_start_new_family" formatted="false">建立新家庭</string>
+    <string name="guardian_start_title" formatted="false">想怎麼開始？</string>
+    <string name="holiday_buddha" formatted="false">佛誕日</string>
+    <string name="holiday_children" formatted="false">兒童節</string>
+    <string name="holiday_christmas" formatted="false">聖誕節</string>
+    <string name="holiday_chuseok" formatted="false">中秋連假</string>
+    <string name="holiday_foundation" formatted="false">開天節</string>
+    <string name="holiday_hangul" formatted="false">韓文日</string>
+    <string name="holiday_independence" formatted="false">三一節</string>
+    <string name="holiday_liberation" formatted="false">光復節</string>
+    <string name="holiday_memorial" formatted="false">顯忠日</string>
+    <string name="holiday_new_year" formatted="false">元旦</string>
+    <string name="holiday_seollal" formatted="false">春節連假</string>
+    <string name="holiday_substitute" formatted="false">補假日</string>
+    <string name="language_follow_system" formatted="false">跟隨系統設定</string>
+    <string name="language_picker_title" formatted="false">語言</string>
+    <string name="list_loading" formatted="false">正在載入…</string>
+    <string name="map_battery_info_confirm" formatted="false">好</string>
+    <string name="map_battery_info_message" formatted="false">這裡顯示的電量是孩子手機回報的狀態。哪個應用程式用了多少電，依Android的安全規定無法從遠端讀取，需要在孩子手機的設定＞電池裡直接查看。</string>
+    <string name="map_battery_info_title" formatted="false">孩子手機的電量</string>
+    <string name="map_child_avatar" formatted="false">所選孩子的角色</string>
+    <string name="map_error">無法載入地圖\n%1$s</string>
+    <string name="map_live_active_status">即時追蹤中 · 精確度約%1$dm · 電量%2$d%%</string>
+    <string name="map_live_button_connecting" formatted="false">即時位置：連線中…</string>
+    <string name="map_live_cancel_description" formatted="false">即時位置連線中。按一下取消</string>
+    <string name="map_live_connecting" formatted="false">即時連線中…</string>
+    <string name="map_live_start" formatted="false">即時位置  OFF</string>
+    <string name="map_live_start_description" formatted="false">即時位置已關。按一下開啟</string>
+    <string name="map_live_stop" formatted="false">即時位置  ON</string>
+    <string name="map_live_stop_description" formatted="false">即時位置已開。按一下關閉</string>
+    <string name="map_live_stopped" formatted="false">已結束即時查看。地圖上留著最後收到的位置。</string>
+    <string name="map_live_timeout" formatted="false">達到10分鐘的安全上限，已結束即時查看。</string>
+    <string name="map_live_waiting" formatted="false">正在取得即時位置。請稍等，直到收到GPS訊號。</string>
+    <string name="map_locate_no_fix" formatted="false">孩子手機還沒定到位置。請過一會兒再按一次。</string>
+    <string name="map_locate_now" formatted="false">查看現在的位置</string>
+    <string name="map_locating" formatted="false">正在詢問孩子手機…</string>
+    <string name="map_no_child" formatted="false">還沒有連接孩子的手機。</string>
+    <string name="map_status_format">電量%1$d%%\n以%2$s為準</string>
+    <string name="map_status_never" formatted="false">還沒有查看過位置。請按「查看現在的位置」。</string>
+    <string name="message_ack" formatted="false">我看到了</string>
+    <string name="message_notification_title" formatted="false">爸爸媽媽說的話</string>
+    <string name="message_title" formatted="false">爸爸媽媽說的話</string>
+    <string name="pairing_child_hint" formatted="false">6位號碼</string>
+    <string name="pairing_child_join" formatted="false">連接</string>
+    <string name="pairing_child_name_hint" formatted="false">孩子的名字（例如：小明）</string>
+    <string name="pairing_child_title" formatted="false">請輸入家長手機上\n顯示的6位號碼</string>
+    <string name="pairing_code_expiry_format">這個號碼將在%1$d分鐘後過期</string>
+    <string name="pairing_code_placeholder" formatted="false">------</string>
+    <string name="pairing_expired" formatted="false">號碼已過期。請在家長手機上取得新號碼。</string>
+    <string name="pairing_failed">連線失敗\n%1$s</string>
+    <string name="pairing_full" formatted="false">已經有另一支手機連上了。</string>
+    <string name="pairing_guardian_hint" formatted="false">在孩子手機上開啟應用程式，\n選「孩子」後輸入這個號碼就能連上。</string>
+    <string name="pairing_guardian_invite_guardian_hint" formatted="false">在另一位家長的手機上開啟應用程式，\n選「家長」→「用邀請號碼加入」後輸入這個號碼。</string>
+    <string name="pairing_guardian_invite_guardian_title" formatted="false">請在另一位家長的手機上輸入這個號碼</string>
+    <string name="pairing_guardian_join_title" formatted="false">請輸入家庭中的家長\n給您的6位號碼</string>
+    <string name="pairing_guardian_name_hint" formatted="false">家長的名字（例如：媽媽、爸爸）</string>
+    <string name="pairing_guardian_title" formatted="false">請在孩子手機上輸入這個號碼</string>
+    <string name="pairing_new_code_button" formatted="false">取得新號碼</string>
+    <string name="pairing_not_found" formatted="false">沒有這個號碼。請再確認一次。</string>
+    <string name="pairing_offline" formatted="false">無法連上網路。請檢查Wi-Fi或行動數據。</string>
+    <string name="pairing_reset_role_button" formatted="false">重新選擇身分</string>
+    <string name="pairing_wrong_role" formatted="false">這個號碼不是您所選身分的邀請號碼。請確認哪個是孩子用的、哪個是家長用的。</string>
+    <string name="perm_activity_reason" formatted="false">知道孩子是在走路還是停著，停著的時候就能少查幾次位置，省電。</string>
+    <string name="perm_activity_title" formatted="false">動作偵測</string>
+    <string name="perm_background_reason" formatted="false">要在沒看應用程式的時候也傳送位置，必須選「一律允許」。請在設定畫面選「一律允許」。</string>
+    <string name="perm_background_title" formatted="false">位置「一律允許」</string>
+    <string name="perm_battery_hint" formatted="false">設定畫面開啟後，在清單裡找到KidCare，改成「不受限制」。</string>
+    <string name="perm_battery_reason" formatted="false">不開這個，手機會讓應用程式休眠，位置就會中斷。請在設定畫面選「允許」。</string>
+    <string name="perm_battery_title" formatted="false">不受電池最佳化限制</string>
+    <string name="perm_denied_permanently" formatted="false">剛才被拒絕了，這個畫面無法再詢問。按「到設定裡開啟」會進入應用程式設定，請在那裡開啟權限。</string>
+    <string name="perm_dnd_reason" formatted="false">這個權限讓家長可以變更聲音和震動。請在清單裡找到KidCare並開啟。</string>
+    <string name="perm_dnd_title" formatted="false">變更聲音設定</string>
+    <string name="perm_done" formatted="false">全都開好了。開始吧！</string>
+    <string name="perm_grant" formatted="false">開啟</string>
+    <string name="perm_location_reason" formatted="false">為了讓爸爸媽媽知道我現在在哪裡。</string>
+    <string name="perm_location_title" formatted="false">位置權限</string>
+    <string name="perm_notification_reason" formatted="false">為了接收爸爸媽媽的留言，並顯示正在分享位置。</string>
+    <string name="perm_notification_title" formatted="false">通知</string>
+    <string name="perm_open_settings" formatted="false">到設定裡開啟</string>
+    <string name="perm_start" formatted="false">開始</string>
+    <string name="perm_title" formatted="false">請開啟幾項設定</string>
+    <string name="place_add" formatted="false">新增地點</string>
+    <string name="place_delete" formatted="false">刪除</string>
+    <string name="place_delete_cancel" formatted="false">保留</string>
+    <string name="place_delete_confirm" formatted="false">刪除</string>
+    <string name="place_delete_message">%1$s\n\n刪除後，抵達或離開這裡都不會再通知。</string>
+    <string name="place_delete_title" formatted="false">要刪除這個地點嗎？</string>
+    <string name="place_deleting" formatted="false">正在刪除…</string>
+    <string name="place_editor_cancel" formatted="false">取消</string>
+    <string name="place_editor_map_hint" formatted="false">移動地圖，讓中間的十字對準這個地點。藍色圓圈是發出通知的範圍。</string>
+    <string name="place_editor_map_label" formatted="false">在哪裡</string>
+    <string name="place_editor_name_hint" formatted="false">學校、補習班、奶奶家…</string>
+    <string name="place_editor_name_label" formatted="false">地點名稱</string>
+    <string name="place_editor_name_required" formatted="false">請寫一個名稱。通知裡會顯示成「已抵達○○」。</string>
+    <string name="place_editor_no_child_location" formatted="false">還不知道孩子手機的位置，所以地圖開得很大。請用手移動來找。</string>
+    <string name="place_editor_notify_enter" formatted="false">抵達時通知</string>
+    <string name="place_editor_notify_exit" formatted="false">離開時通知</string>
+    <string name="place_editor_notify_label" formatted="false">什麼時候通知您</string>
+    <string name="place_editor_notify_none_hint" formatted="false">兩個都關掉，這個地點就不會有通知。地點本身仍然保留。</string>
+    <string name="place_editor_radius_label" formatted="false">靠近到多少公尺</string>
+    <string name="place_editor_radius_value">半徑%1$dm</string>
+    <string name="place_editor_save" formatted="false">儲存</string>
+    <string name="place_editor_title_edit" formatted="false">修改地點</string>
+    <string name="place_editor_title_new" formatted="false">新地點</string>
+    <string name="place_empty" formatted="false">還沒有設定地點。\n按下面的「新增地點」，\n設定「學校」「補習班」這樣的地方吧。\n孩子抵達或離開時會通知您。</string>
+    <string name="place_error_format">無法載入地點\n%1$s</string>
+    <string name="place_header_subtitle" formatted="false">登記學校或補習班後，會通知您孩子的抵達和離開。</string>
+    <string name="place_header_title" formatted="false">安心地點</string>
+    <string name="place_limit_notice">最多可以設定%1$d個地點。要新增，請先刪除不用的地點。</string>
+    <string name="place_no_family" formatted="false">找不到家庭資訊。請關閉應用程式後重新開啟。</string>
+    <string name="place_notify_both" formatted="false">抵達和離開都通知</string>
+    <string name="place_notify_enter" formatted="false">只通知抵達</string>
+    <string name="place_notify_exit" formatted="false">只通知離開</string>
+    <string name="place_notify_none" formatted="false">通知已關</string>
+    <string name="place_row_detail">%1$s</string>
+    <string name="place_row_title">%1$s · 半徑%2$dm</string>
+    <string name="place_save_slow" formatted="false">儲存要求已送出，但伺服器還沒確認。連上網路後會自動儲存。</string>
+    <string name="place_saving" formatted="false">正在儲存…</string>
+    <string name="place_summary">%1$s（半徑%2$dm）</string>
+    <string name="place_sync_failed_format">地點已儲存，但沒能通知孩子手機。重新開啟這個畫面會再通知一次。\n%1$s</string>
+    <string name="place_sync_no_child" formatted="false">地點已儲存。孩子手機連上後會自動生效。</string>
+    <string name="place_sync_pending" formatted="false">還沒送到孩子手機。它現在仍照舊的地點通知。</string>
+    <string name="place_sync_retry" formatted="false">再通知一次</string>
+    <string name="place_sync_slow" formatted="false">地點已儲存。通知孩子手機會在連上網路後完成。</string>
+    <string name="remote_alarm_notification_text" formatted="false">按一下可以關掉</string>
+    <string name="remote_alarm_stop" formatted="false">關掉鬧鐘</string>
+    <string name="remote_alarm_title" formatted="false">這是爸爸媽媽設的鬧鐘</string>
+    <string name="role_child" formatted="false">孩子</string>
+    <string name="role_guardian" formatted="false">家長（爸爸媽媽）</string>
+    <string name="role_subtitle" formatted="false">連線前還可以重新選。\n連線完成後就不能變更了。</string>
+    <string name="role_title" formatted="false">這是誰的手機？</string>
+    <string name="router_retry" formatted="false">重試</string>
+    <string name="schedule_add" formatted="false">新增規則</string>
+    <string name="schedule_allday_cancel" formatted="false">重新選時刻</string>
+    <string name="schedule_allday_confirm" formatted="false">以全天儲存</string>
+    <string name="schedule_allday_message">開始和結束都是%1$s。\n就這樣儲存的話，所選的日子會24小時一直是%2$s。</string>
+    <string name="schedule_allday_title" formatted="false">要以全天儲存嗎？</string>
+    <string name="schedule_day_fri" formatted="false">五</string>
+    <string name="schedule_day_mon" formatted="false">一</string>
+    <string name="schedule_day_sat" formatted="false">六</string>
+    <string name="schedule_day_sun" formatted="false">日</string>
+    <string name="schedule_day_thu" formatted="false">四</string>
+    <string name="schedule_day_tue" formatted="false">二</string>
+    <string name="schedule_day_wed" formatted="false">三</string>
+    <string name="schedule_days_everyday" formatted="false">每天</string>
+    <string name="schedule_days_none" formatted="false">未選日子</string>
+    <string name="schedule_days_weekday" formatted="false">平日</string>
+    <string name="schedule_days_weekend" formatted="false">週末</string>
+    <string name="schedule_delete" formatted="false">刪除</string>
+    <string name="schedule_delete_cancel" formatted="false">保留</string>
+    <string name="schedule_delete_confirm" formatted="false">刪除</string>
+    <string name="schedule_delete_message">%1$s\n\n刪除後，這個時段的聲音不會再自動改變。</string>
+    <string name="schedule_delete_title" formatted="false">要刪除這條規則嗎？</string>
+    <string name="schedule_deleting" formatted="false">正在刪除…</string>
+    <string name="schedule_editor_cancel" formatted="false">取消</string>
+    <string name="schedule_editor_days_label" formatted="false">在哪幾天</string>
+    <string name="schedule_editor_days_required" formatted="false">請至少選一天。一天都不選，這條規則永遠不會生效。</string>
+    <string name="schedule_editor_end_title" formatted="false">結束時刻</string>
+    <string name="schedule_editor_mode_label" formatted="false">這段時間把孩子手機設為</string>
+    <string name="schedule_editor_save" formatted="false">儲存</string>
+    <string name="schedule_editor_start_title" formatted="false">開始時刻</string>
+    <string name="schedule_editor_time_label" formatted="false">從幾點到幾點</string>
+    <string name="schedule_editor_title_edit" formatted="false">修改規則</string>
+    <string name="schedule_editor_title_new" formatted="false">新規則</string>
+    <string name="schedule_empty" formatted="false">還沒有設定時段。\n按下面的「新增規則」，\n試著做一條「平日晚上靜音」這樣的規則吧。</string>
+    <string name="schedule_error_format">無法載入規則\n%1$s</string>
+    <string name="schedule_header_subtitle" formatted="false">依星期和時間自動切換響鈴、震動和靜音。</string>
+    <string name="schedule_header_title" formatted="false">日常聲音預約</string>
+    <string name="schedule_holiday_cleared" formatted="false">國定假日也照預約切換。</string>
+    <string name="schedule_holiday_date">%1$d月%2$d日</string>
+    <string name="schedule_holiday_next">下一個休息日是%1$s的%2$s。</string>
+    <string name="schedule_holiday_saved" formatted="false">國定假日暫停預約。</string>
+    <string name="schedule_holiday_subtitle" formatted="false">休息日不會啟用下面任何規則。</string>
+    <string name="schedule_holiday_title" formatted="false">國定假日休息</string>
+    <string name="schedule_holiday_unknown" formatted="false">這支手機算不出國定假日的日期。就算打開開關，也只依星期運作。</string>
+    <string name="schedule_mode_normal" formatted="false">響鈴</string>
+    <string name="schedule_mode_silent" formatted="false">靜音</string>
+    <string name="schedule_mode_vibrate" formatted="false">震動</string>
+    <string name="schedule_no_family" formatted="false">找不到家庭資訊。請關閉應用程式後重新開啟。</string>
+    <string name="schedule_overlap_cancel" formatted="false">去修改</string>
+    <string name="schedule_overlap_confirm" formatted="false">仍然儲存</string>
+    <string name="schedule_overlap_message">這個時段和「%1$s」規則重疊。\n重疊期間，後做的規則優先。</string>
+    <string name="schedule_overlap_message_more">這個時段和「%1$s」等%2$d條規則重疊。\n重疊期間，後做的規則優先。</string>
+    <string name="schedule_overlap_title" formatted="false">有重疊的規則</string>
+    <string name="schedule_range">%1$s ~ %2$s</string>
+    <string name="schedule_range_allday">全天（從%1$s起24小時）</string>
+    <string name="schedule_range_overnight">%1$s ~ 隔天%2$s</string>
+    <string name="schedule_range_separator" formatted="false">–</string>
+    <string name="schedule_row_detail">%1$s · %2$s</string>
+    <string name="schedule_row_detail_off">%1$s · %2$s（已關）</string>
+    <string name="schedule_save_slow" formatted="false">儲存要求已送出，但伺服器還沒確認。連上網路後會自動儲存。</string>
+    <string name="schedule_saving" formatted="false">正在儲存…</string>
+    <string name="schedule_summary">%1$s · %2$s · %3$s</string>
+    <string name="schedule_sync_failed_format">規則已儲存，但沒能通知孩子手機。重新開啟這個畫面會再通知一次。\n%1$s</string>
+    <string name="schedule_sync_no_child" formatted="false">規則已儲存。孩子手機連上後會自動生效。</string>
+    <string name="schedule_sync_pending" formatted="false">還沒送到孩子手機。它現在仍照舊的規則運作。</string>
+    <string name="schedule_sync_retry" formatted="false">再通知一次</string>
+    <string name="schedule_sync_slow" formatted="false">規則已儲存。通知孩子手機會在連上網路後完成。</string>
+    <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="tab_alert" formatted="false">通知</string>
+    <string name="tab_control" formatted="false">管理</string>
+    <string name="tab_map" formatted="false">地圖</string>
+    <string name="tab_place" formatted="false">地點</string>
+    <string name="tab_schedule" formatted="false">預約</string>
+    <string name="timeline_collapse" formatted="false">收合移動紀錄</string>
+    <string name="timeline_detail">%1$s\n%2$s</string>
+    <string name="timeline_drag_handle" formatted="false">上下拖曳調整移動紀錄的高度</string>
+    <string name="timeline_empty" formatted="false">這一天沒有紀錄</string>
+    <string name="timeline_error">無法載入紀錄\n%1$s</string>
+    <string name="timeline_expand" formatted="false">展開移動紀錄</string>
+    <string name="timeline_hide_all_routes" formatted="false">隱藏全部路線</string>
+    <string name="timeline_move_title">移動 %1$s</string>
+    <string name="timeline_route_hidden" formatted="false">在地圖上隱藏</string>
+    <string name="timeline_route_visible" formatted="false">正在地圖上顯示</string>
+    <string name="timeline_show_all_routes" formatted="false">顯示全部路線</string>
+    <string name="timeline_summary_day">這一天 %1$s</string>
+    <string name="timeline_summary_empty" formatted="false">今天的移動紀錄</string>
+    <string name="timeline_summary_routes_hidden">%1$s · 路線已隱藏</string>
+    <string name="timeline_summary_routes_partial">%1$s · 部分隱藏</string>
+    <string name="timeline_summary_today">今天 %1$s</string>
+    <string name="timeline_unknown_place" formatted="false">停留的地方</string>
+    <string name="timeline_view_records" formatted="false">查看移動紀錄</string>
+    <string name="tracking_notification_text" formatted="false">正在把我的位置告訴爸爸媽媽</string>
+    <string name="tracking_notification_title" formatted="false">正在分享位置</string>
+    <string name="uid_format">我的裝置ID\n%1$s</string>
+</resources>

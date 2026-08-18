@@ -1,483 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 자동 생성. 고치려면 i18n/en.json 을 고치고 gen.py 를 다시 돌린다. -->
 <resources>
-    <string name="app_name">우리아이 지킴이</string>
-    <string name="app_brand_short">KIDCARE</string>
-    <string name="connecting">연결 중…</string>
-    <!-- 목록 화면 셋(알림·장소·예약)이 첫 스냅샷을 기다리는 동안 빈 목록 자리에 뜬다.
-         "아직 없어요"와 오류 사이의 세 번째 상태다 — 왜 필요한지는
-         guardian/ListLoadState.kt 주석에 있다. -->
-    <string name="list_loading">불러오는 중이에요…</string>
-    <string name="uid_format">내 기기 ID\n%1$s</string>
-    <!-- 앱을 켜자마자 익명 로그인이 실패했을 때(비행기 모드 첫 실행이 대표적).
-         "연결 실패" 한마디였던 것을 바꿨다 — 이 화면에는 다른 글자가 하나도 없어서
-         이 두 줄이 화면의 전부이고, 무엇이 실패한 건지가 안 적혀 있으면 부모는
-         자기가 뭘 잘못 눌렀는지부터 의심한다. 다음에 무엇을 누를지는 바로 아래
-         router_retry 버튼이 말한다(RouterActivity 주석). -->
-    <string name="connect_failed">앱을 시작하지 못했어요\n%1$s</string>
-    <string name="router_retry">다시 시도</string>
-    <string name="role_title">누구의 폰인가요?</string>
-    <string name="role_subtitle">연결 전에는 다시 고를 수 있어요.\n연결이 끝나면 바꿀 수 없습니다.</string>
-    <string name="role_guardian">보호자 (엄마·아빠)</string>
-    <string name="role_child">아이</string>
-    <string name="pairing_guardian_title">아이 폰에 이 번호를 입력하세요</string>
-    <string name="pairing_guardian_invite_guardian_title">다른 보호자 폰에 이 번호를 입력하세요</string>
-    <string name="pairing_guardian_hint">아이 폰에서 앱을 켜고\n\'아이\'를 고른 뒤 이 번호를 넣으면 연결됩니다.</string>
-    <string name="pairing_guardian_invite_guardian_hint">다른 보호자 폰에서 앱을 켜고\n\'보호자\' → \'초대 번호로 참여\'를 고른 뒤 이 번호를 넣으세요.</string>
-    <string name="pairing_failed">연결 실패\n%1$s</string>
-    <string name="pairing_code_placeholder">------</string>
-    <string name="pairing_reset_role_button">역할 다시 고르기</string>
-    <string name="pairing_new_code_button">새 번호 받기</string>
-    <string name="pairing_code_expiry_format">이 번호는 %1$d분 뒤에 만료돼요</string>
-    <string name="pairing_child_title">엄마 폰에 뜬\n6자리 번호를 넣어주세요</string>
-    <string name="pairing_child_hint">번호 6자리</string>
-    <string name="pairing_child_join">연결하기</string>
-    <string name="pairing_child_name_hint">아이 이름 (예: 민준)</string>
-    <string name="pairing_guardian_name_hint">보호자 이름 (예: 엄마, 아빠)</string>
-    <string name="pairing_guardian_join_title">가족 보호자에게 받은\n6자리 번호를 넣어주세요</string>
-    <string name="pairing_wrong_role">이 번호는 선택한 역할의 초대 번호가 아니에요. 아이용과 보호자용 번호를 확인해주세요.</string>
-    <string name="guardian_start_title">어떻게 시작할까요?</string>
-    <string name="guardian_start_new_family">새 가족 만들기</string>
-    <string name="guardian_start_join_family">초대 번호로 기존 가족 참여</string>
-    <string name="dialog_cancel">취소</string>
-    <string name="pairing_not_found">그런 번호가 없어요. 다시 확인해 주세요.</string>
-    <string name="pairing_expired">번호가 만료됐어요. 엄마 폰에서 새 번호를 받아주세요.</string>
-    <string name="pairing_full">이미 다른 폰이 연결돼 있어요.</string>
-    <string name="pairing_offline">인터넷에 연결할 수 없어요. 와이파이나 데이터 연결 상태를 확인해 주세요.</string>
-
-    <string name="error_server_setup">서버 설정이 아직 끝나지 않았어요. 앱을 설치해 준 사람에게 알려주세요.</string>
-    <string name="error_unauthenticated">로그인이 풀렸어요. 앱을 껐다가 다시 열어주세요.</string>
-    <string name="error_generic_format">연결에 문제가 생겼어요\n%1$s</string>
-
-    <string name="perm_title">몇 가지만 켜주세요</string>
-    <string name="perm_location_title">위치 권한</string>
-    <string name="perm_location_reason">지금 어디 있는지 부모님께 알려주기 위해 필요해요.</string>
-    <string name="perm_background_title">위치 \'항상 허용\'</string>
-    <string name="perm_background_reason">앱을 안 보고 있을 때도 위치를 보내려면 \'항상 허용\'이어야 해요. 설정 화면에서 \'항상 허용\'을 골라주세요.</string>
-    <string name="perm_notification_title">알림</string>
-    <string name="perm_notification_reason">부모님이 보낸 메시지를 받고, 위치 공유 중이라는 표시를 띄우기 위해 필요해요.</string>
-    <string name="perm_battery_title">배터리 최적화 제외</string>
-    <string name="perm_battery_reason">이걸 안 켜면 폰이 앱을 잠재워서 위치가 끊겨요. 설정 화면에서 \'허용\'을 골라주세요.</string>
-    <string name="perm_battery_hint">설정 화면이 열리면 목록에서 \'우리아이 지킴이\'를 찾아 \'제한 없음\'으로 바꿔주세요.</string>
-    <string name="perm_dnd_title">소리 설정 바꾸기</string>
-    <string name="perm_dnd_reason">부모님이 소리·진동을 바꿔줄 수 있게 하는 권한이에요. 목록에서 \'우리아이 지킴이\'를 찾아 켜주세요.</string>
-    <string name="perm_activity_title">움직임 감지</string>
-    <string name="perm_activity_reason">걷고 있는지 가만히 있는지 알면, 가만히 있을 때는 위치를 덜 자주 확인해서 배터리를 아낄 수 있어요.</string>
-    <string name="perm_grant">켜기</string>
-    <string name="perm_done">모두 켜졌어요. 시작할게요!</string>
-    <string name="perm_start">시작하기</string>
-    <string name="perm_denied_permanently">방금 거부돼서 이 화면에서는 다시 물어볼 수 없어요. \'설정에서 켜기\'를 누르면 앱 설정으로 가요. 거기서 권한을 켜주세요.</string>
-    <string name="perm_open_settings">설정에서 켜기</string>
-
-    <!-- 아이 홈 화면의 두 줄. 사실은 하나도 안 바꿨고 말투만 바꿨다.
-         "위치 공유 중"은 시스템이 사람에게 통보하는 말투다 — 아이가 자기 폰에서
-         매일 보는 첫 문장이 그것이면 이 앱은 아이 편이 아니라 아이를 지켜보는 쪽의
-         물건이 된다. 그렇다고 무슨 앱인지 흐리면 안 된다(ChildHomeActivity 주석의
-         원칙: 몰래 감시하지 않는다). 그래서 하는 일은 그대로 다 적고, 왜 하는지를
-         한 줄 덧붙였다. 친근함은 글자가 아니라 새싹이가 나른다. -->
-    <string name="child_home_title">엄마 아빠랑 이어져 있어요</string>
-    <string name="child_sharing_on">지금 내가 어디 있는지 엄마 아빠가 볼 수 있어요.\n길을 잃어도 금방 찾아올 수 있게요.</string>
-    <string name="child_permission_missing">%1$s 이(가) 꺼져 있어요.\n켜야 위치가 전달됩니다.</string>
-    <string name="child_go_to_permission">권한 켜러 가기</string>
-
-    <!-- 아이 홈 화면이 "공유 중"이라고 말하면 안 되는 두 경우. 둘 다 화면만 멀쩡하고
-         위치는 한 발짝도 안 나가는 상태라, 아무 말도 안 하면 아이도 부모도 몇 시간
-         뒤에야 알아챈다(부모 쪽 연결 끊김 배너는 명령을 한 번 보내야 뜬다).
-
-         문구는 무엇이 안 되는지와 **무엇은 아직 되는지**를 같이 적는다. 소리 바꾸기와
-         메시지는 Firestore 만 쓰므로 플레이 서비스가 없어도 그대로 동작한다 — 그걸
-         안 적으면 아이가 "앱이 통째로 고장났다"고 읽고 지워 버린다. -->
-    <string name="child_home_title_gone">엄마 아빠와 연결이 풀렸어요</string>
-    <string name="child_family_gone">지금은 내 위치가 전달되지 않아요.\n엄마 아빠 폰에서 새 번호를 받아 다시 연결해 주세요.</string>
-    <string name="child_repair">다시 연결하기</string>
-    <string name="child_play_services_fixable">폰의 \'Google Play 서비스\'가 없거나 너무 오래돼서 위치를 보낼 수 없어요.\n아래 버튼을 누르면 고칠 수 있어요. (메시지 받기와 소리 바꾸기는 그대로 돼요.)</string>
-    <string name="child_play_services_unfixable">이 폰에는 \'Google Play 서비스\'가 없어서 위치를 보낼 수 없어요.\n이 화면을 엄마 아빠께 보여주세요. (메시지 받기와 소리 바꾸기는 그대로 돼요.)</string>
-    <string name="child_play_services_fix">Google Play 서비스 고치기</string>
-
-    <string name="channel_tracking">위치 공유</string>
-    <string name="tracking_notification_title">위치 공유 중</string>
-    <string name="tracking_notification_text">부모님께 내 위치를 알려주고 있어요</string>
-
-    <string name="channel_find_phone">폰 찾기</string>
-    <string name="find_phone_title">엄마가 폰을 찾고 있어요</string>
-    <string name="find_phone_stop">찾았어요 (소리 끄기)</string>
-    <string name="find_phone_notification_title">엄마가 폰을 찾고 있어요</string>
-    <string name="find_phone_notification_text">눌러서 소리를 끌 수 있어요</string>
-
-    <!-- 부모가 보낸 한마디를 띄우는 아이 폰 화면(5단계 Task 5).
-         폰찾기와 달리 소리가 없고 잠금화면을 깨우지 않는다 — 채널 이름도 그래서
-         '폰 찾기'와 확실히 다른 말로 둔다. 아이가 알림 설정 목록에서 이 둘을 보고
-         무엇을 끄는지 알 수 있어야 한다. -->
-    <string name="channel_message">부모님 메시지</string>
-    <string name="message_title">엄마 아빠가 보낸 말이에요</string>
-    <string name="message_notification_title">엄마 아빠가 보낸 말이에요</string>
-    <!-- 아이가 답하는 유일한 통로. 이 버튼이 부모 화면의 '읽음'이 된다. -->
-    <string name="message_ack">확인했어요</string>
-
-    <!-- 부모가 맞춰 준 알람(5단계 Task 6). 채널 이름이 '폰 찾기'·'부모님 메시지'와
-         확실히 달라야 아이가 알림 설정 목록에서 무엇을 끄는지 안다. -->
-    <string name="channel_remote_alarm">부모님이 맞춘 알람</string>
-    <!-- 부모가 알람 이름을 안 적었을 때 알림 제목으로 쓰는 기본 문구. -->
-    <string name="remote_alarm_title">엄마 아빠가 맞춘 알람이에요</string>
-    <string name="remote_alarm_notification_text">눌러서 끌 수 있어요</string>
-    <string name="remote_alarm_stop">알람 끄기</string>
-
-    <string name="map_no_child">아직 아이 폰이 연결되지 않았어요.</string>
-    <string name="map_error">지도를 불러오지 못했어요\n%1$s</string>
-    <string name="timeline_error">기록을 불러오지 못했어요\n%1$s</string>
-    <!-- 지도 상단 카드. 애기폰은 이제 주기적으로 위치를 올리지 않으므로(무료 한도,
-         docs/known-issues.md 12번) 화면의 점은 항상 "마지막으로 확인한 위치"다.
-         그래서 배터리 옆에 그게 언제였는지를 반드시 함께 적는다 — "지금 위치"라고
-         읽히면 안 된다. -->
-    <string name="map_status_format">배터리 %1$d%%\n%2$s 기준</string>
-    <string name="map_status_never">아직 위치를 확인한 적이 없어요. \'지금 위치 확인\'을 눌러주세요.</string>
-    <string name="map_locate_now">지금 위치 확인</string>
-    <string name="map_locating">애기폰에 물어보는 중…</string>
-    <string name="map_locate_no_fix">애기폰이 아직 위치를 못 잡았어요. 잠시 뒤에 다시 눌러주세요.</string>
-    <string name="map_child_avatar">선택한 아이 캐릭터</string>
-    <string name="map_battery_info_title">아이 휴대폰 배터리</string>
-    <string name="map_battery_info_message">현재 잔량은 아이 휴대폰이 보낸 상태로 확인할 수 있어요. 어떤 앱이 배터리를 얼마나 사용했는지는 안드로이드 보안 정책상 원격으로 읽을 수 없으며, 아이 휴대폰의 설정 &gt; 배터리에서 직접 확인해야 해요.</string>
-    <string name="map_battery_info_confirm">확인</string>
-
-    <string name="tab_map">지도</string>
-    <string name="tab_alert">알림</string>
-    <string name="tab_control">관리</string>
-    <string name="tab_schedule">예약</string>
-    <string name="tab_place">장소</string>
-    <string name="child_selector_empty">아이를 연결해주세요 ▾</string>
-    <string name="child_selector_value">%1$s 보는 중 ▾</string>
-    <string name="child_selector_add_child">＋ 아이 추가</string>
-    <string name="child_selector_add_guardian">＋ 보호자 초대</string>
-    <string name="child_selector_add_guardian_count">＋ 보호자 초대 · 현재 %1$d명</string>
-    <string name="child_selector_load_failed">가족 목록을 불러오지 못했어요</string>
-    <string name="child_default_name">아이</string>
-
-    <!-- 연결 끊김 배너(GuardianMainActivity). 아이가 앱을 '강제 종료'하면 안드로이드가
-         모든 알람과 부팅 신호를 끊어버리는데, 사이드로드 앱은 그걸 막을 수 없다.
-         막을 수 없으니 부모에게 무엇을 하면 되는지를 말한다 — 지금 상태(언제 물어본
-         것에 대답이 없는지)와 할 일(아이 폰에서 앱을 한 번 열기)을 한 문장씩.
-         "마지막 신호"가 아니라 "마지막 물음"인 이유는 DisconnectRule 주석 참고. -->
-    <string name="guardian_disconnect_banner">%1$s 보낸 요청에 애기폰이 아직 대답하지 않았어요\n아이 폰에서 \'우리아이 지킴이\' 앱을 한 번 열어주세요. 그러면 다시 이어져요.</string>
-
-    <string name="control_header_subtitle">소리, 메시지, 알람을 아이 폰으로 바로 보내세요.</string>
-    <string name="control_section_ringer">지금 바로 바꾸기</string>
-    <string name="control_ringer_status_loading">애기폰의 현재 소리 상태를 확인하는 중이에요</string>
-    <string name="control_ringer_status_unknown">마지막 소리 상태를 아직 확인하지 못했어요</string>
-    <string name="control_ringer_status_format">마지막 확인 · %1$s</string>
-    <string name="control_ringer_status_applied">현재 상태 · %1$s</string>
-    <string name="control_ringer_refresh">새로 확인</string>
-    <string name="control_mode_normal">벨소리</string>
-    <string name="control_mode_vibrate">진동</string>
-    <string name="control_mode_silent">무음</string>
-    <string name="control_lock_switch">아이가 되돌리면 다시 바꾸기</string>
-    <string name="control_lock_hint">아이가 소리를 바꿔도 몇 초 뒤에 부모님이 정한 대로 돌아가요.</string>
-    <string name="control_find_phone">핸드폰 찾기</string>
-    <string name="control_find_stop">소리 끄기</string>
-    <string name="control_find_stop_hint">이미 울리고 있다면 소리 끄기</string>
-    <string name="control_find_hint">무음이어도 큰 소리로 울려요. 5분이 지나면 저절로 멈춰요.</string>
-    <string name="control_command_sending">전달 중…</string>
-    <string name="control_command_done">완료</string>
-    <!-- 오프라인이라 명령이 이 폰의 큐에만 들어간 상태. "실패"가 아니라 "아직 안 갔다"이고,
-         나중에 저절로 나가서 그때 실행된다는 것까지 말해야 부모가 다시 누를지 판단할 수 있다.
-         지도 탭의 '지금 위치 확인'도 같은 문구를 쓴다. -->
-    <string name="control_command_queued">아직 안 갔어요. 인터넷이 연결되면 그때 애기폰으로 가서 실행돼요 — 그 사이 상황이 달라졌을 수 있어요.</string>
-    <string name="control_command_timeout">애기폰이 응답하지 않아요</string>
-    <string name="control_command_timeout_format">애기폰이 응답하지 않아요\n%1$s</string>
-    <string name="control_last_seen_format">마지막 신호 %1$s</string>
-    <string name="control_last_seen_never">아직 한 번도 신호가 없었어요</string>
-    <string name="control_last_seen_now">방금 전</string>
-    <string name="control_last_seen_minutes">%1$d분 전</string>
-    <string name="control_last_seen_hours">%1$d시간 전</string>
-    <string name="control_last_seen_days">%1$d일 전</string>
-    <!-- 아이 폰 시계가 앞서 있어 "몇 분 전"을 계산할 수 없을 때 상대 표현 자리에
-         대신 들어가는 값. 상대 표현("방금 전")을 쓰면 같은 화면의 "애기폰이 응답하지
-         않아요"와 부딪히므로 절대 시각만 보여준다. 관리 탭과 지도 탭이 같은 값을
-         쓰므로 문장 전체가 아니라 "값"만 담는다(LastSignalText.relativeText). -->
-    <string name="control_last_seen_skewed_value">%1$s (애기폰 시계 기준이라 정확하지 않아요)</string>
-    <string name="control_error_ringer_denied">아이 폰에서 소리 설정 권한이 꺼져 있어요. 아이 폰 설정에서 켜야 바꿀 수 있어요.</string>
-    <string name="control_error_child_failed">아이 폰이 이 명령을 처리하지 못했어요.</string>
-
-    <!-- ====================== 관리 탭: 한마디 보내기 ====================== -->
-    <string name="control_section_message">한마디 보내기</string>
-    <string name="control_message_chip_where">지금 어디야?</string>
-    <string name="control_message_chip_call">전화 좀 해줘</string>
-    <string name="control_message_chip_come_home">집으로 와</string>
-    <string name="control_message_chip_meal">밥 먹었어?</string>
-    <string name="control_message_hint">아이에게 할 말</string>
-    <string name="control_message_send">메시지 보내기</string>
-    <!-- 아이 쪽에서 무슨 일이 벌어지는지 미리 말해준다. 소리가 안 난다는 것과
-         아이가 답하는 방법이 '확인했어요' 하나뿐이라는 것, 둘 다 부모가 알아야
-         기다림을 오해하지 않는다. -->
-    <string name="control_message_hint_detail">아이 폰 화면에 크게 떠요. 소리는 나지 않고 진동만 한 번 울려요. 아이가 \'확인했어요\'를 누르면 여기에 \'읽음\'으로 바뀝니다.</string>
-    <string name="control_message_empty">보낼 말을 적어주세요.</string>
-    <!-- '애기폰이 응답하지 않아요'와 반드시 다른 말이어야 한다. 이건 아이 폰이
-         멀쩡히 받아 화면에 띄운 상태이고, 안 눌린 것은 아이 손가락 하나뿐이다. -->
-    <string name="control_message_unread">애기폰에 도착했어요 · 아직 안 읽음</string>
-    <string name="control_message_read">읽음</string>
-    <string name="control_error_message_notification_off">아이 폰에서 알림이 꺼져 있어 메시지를 띄우지 못했어요. 아이 폰 설정 → 앱 → \'우리아이 지킴이\' → 알림에서 켜주세요.</string>
-
-    <!-- ====================== 관리 탭: 알람 맞추기 ====================== -->
-    <string name="control_section_alarm">알람 맞추기</string>
-    <string name="control_alarm_time_format">%1$s</string>
-    <string name="control_alarm_picker_title">몇 시에 울릴까요?</string>
-    <string name="control_alarm_label_hint">알람 이름 (예: 학원 가야 해)</string>
-    <string name="control_alarm_set">이 시각에 알람 맞추기</string>
-    <string name="control_alarm_cancel">맞춰둔 알람 끄기</string>
-    <!-- 부모가 한 번 읽고 알아야 하는 것 넷: 한 번만 운다는 것, 시각을 푸는 쪽이
-         애기폰이라는 것(그래서 여행 중이면 애기폰 시간대로 운다), 아이도 알람이
-         걸린 걸 본다는 것, 그리고 5분이면 저절로 멈춘다는 것. -->
-    <string name="control_alarm_hint_detail">고른 시각에 애기폰에서 한 번만 울려요. 이미 지난 시각이면 다음 날 그 시각에 울립니다 — 오늘인지 내일인지는 애기폰 시계로 정해져요. 알람이 걸리면 애기폰 상태바에 시계 모양이 떠서 아이도 알 수 있고, 5분이 지나면 저절로 멈춰요.</string>
-    <!-- 애기폰이 '완료'라고 답한 뒤. '울려요'라고 쓰지 않는 이유: 아이가 앱을 강제
-         종료하면 알람 예약이 지워지는데 그 사실은 부모 폰에 도착하지 않는다.
-         그때 부모에게 말해주는 것은 이 줄이 아니라 연결 끊김 배너다. -->
-    <string name="control_alarm_state_confirmed">애기폰에 %1$s 알람이 맞춰져 있어요</string>
-    <string name="control_alarm_state_pending">%1$s 알람을 보냈어요 · 애기폰 대답을 기다리는 중이에요</string>
-    <!-- 위 두 줄의 %1$s 자리. 이름을 안 적었으면 시각만 들어간다. -->
-    <string name="control_alarm_state_labeled">%1$s \'%2$s\'</string>
-    <string name="control_error_alarm_exact_denied">애기폰에서 \'알람 및 리마인더\' 권한이 꺼져 있어 알람을 맞추지 못했어요. 아이 폰 설정 → 앱 → \'우리아이 지킴이\' → 알람 및 리마인더에서 켜주세요.</string>
-
-    <!-- ========================= 예약 탭 (시간대 규칙) ========================= -->
-    <string name="schedule_header_title">생활 소리 예약</string>
-    <string name="schedule_header_subtitle">요일과 시간에 맞춰 벨소리·진동·무음을 자동으로 바꿔요.</string>
-    <string name="schedule_add">규칙 추가</string>
-    <string name="schedule_empty">아직 정해둔 시간대가 없어요.\n아래 \'규칙 추가\'를 눌러\n\'평일 밤에는 무음\' 같은 규칙을 만들어 보세요.</string>
-    <string name="schedule_error_format">규칙을 불러오지 못했어요\n%1$s</string>
-    <string name="schedule_no_family">가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요.</string>
-    <string name="schedule_delete">삭제</string>
-
-    <!-- 목록 한 줄. 첫 칸이 요일, 둘째 칸이 시간대다. -->
-    <!-- 대화상자에서 규칙을 가리킬 때 쓰는 한 줄 이름. 요일 · 시간대 · 모드. -->
-    <string name="schedule_summary">%1$s · %2$s · %3$s</string>
-    <string name="schedule_row_detail">%1$s · %2$s</string>
-    <string name="schedule_row_detail_off">%1$s · %2$s (꺼둠)</string>
-
-    <string name="schedule_time_format">%1$02d:%2$02d</string>
-    <string name="schedule_range">%1$s ~ %2$s</string>
-    <string name="schedule_range_separator">–</string>
-    <!-- 자정을 넘는 규칙. "22:00 ~ 07:00"만 쓰면 잘못 넣은 값처럼 보이므로
-         끝이 다음 날이라는 것을 글자로 말해준다. -->
-    <string name="schedule_range_overnight">%1$s ~ 다음 날 %2$s</string>
-    <string name="schedule_range_allday">하루 종일 (%1$s부터 24시간)</string>
-
-    <string name="schedule_days_everyday">매일</string>
-    <string name="schedule_days_weekday">평일</string>
-    <string name="schedule_days_weekend">주말</string>
-    <string name="schedule_days_none">요일 없음</string>
-    <string name="schedule_day_mon">월</string>
-    <string name="schedule_day_tue">화</string>
-    <string name="schedule_day_wed">수</string>
-    <string name="schedule_day_thu">목</string>
-    <string name="schedule_day_fri">금</string>
-    <string name="schedule_day_sat">토</string>
-    <string name="schedule_day_sun">일</string>
-
-    <string name="schedule_mode_normal">벨소리</string>
-    <string name="schedule_mode_vibrate">진동</string>
-    <string name="schedule_mode_silent">무음</string>
-
-    <string name="schedule_editor_title_new">새 규칙</string>
-    <string name="schedule_editor_title_edit">규칙 고치기</string>
-    <string name="schedule_editor_days_label">어떤 요일에</string>
-    <string name="schedule_editor_time_label">몇 시부터 몇 시까지</string>
-    <string name="schedule_editor_mode_label">그동안 아이 폰을</string>
-    <string name="schedule_editor_days_required">요일을 하나 이상 골라주세요. 요일을 안 고르면 이 규칙은 한 번도 켜지지 않아요.</string>
-    <string name="schedule_editor_start_title">시작 시각</string>
-    <string name="schedule_editor_end_title">끝나는 시각</string>
-    <string name="schedule_editor_save">저장</string>
-    <string name="schedule_editor_cancel">취소</string>
-
-    <string name="schedule_saving">저장 중…</string>
-    <string name="schedule_deleting">지우는 중…</string>
-    <!-- 오프라인이면 Firestore 쓰기가 서버 확인을 못 받고 계속 매달려 있는다. 화면을
-         영영 붙잡아 두는 대신 사실대로 말하고 놓아준다. -->
-    <string name="schedule_save_slow">저장 요청은 보냈지만 아직 서버 확인이 안 됐어요. 인터넷이 연결되면 저절로 저장돼요.</string>
-    <string name="schedule_sync_no_child">규칙을 저장했어요. 아이 폰이 연결되면 저절로 적용돼요.</string>
-    <string name="schedule_sync_failed_format">규칙은 저장했지만 아이 폰에 알리지 못했어요. 이 화면을 다시 열면 한 번 더 알릴게요.\n%1$s</string>
-    <string name="schedule_sync_slow">규칙은 저장했어요. 아이 폰에 알리는 것은 인터넷이 연결되면 끝나요.</string>
-    <!-- 목록 위에 계속 떠 있는 줄. 규칙은 저장됐지만 아이 폰이 아직 그 사실을 모른다 —
-         이 줄이 없으면 전달된 규칙과 안 된 규칙이 목록에서 똑같이 보인다. -->
-    <string name="schedule_sync_pending">아직 애기폰에 전달되지 않았어요. 애기폰은 지금도 예전 규칙대로 동작해요.</string>
-    <string name="schedule_sync_retry">다시 알리기</string>
-
-    <!-- 공휴일 -->
-    <string name="schedule_holiday_title">공휴일엔 쉬어요</string>
-    <string name="schedule_holiday_subtitle">쉬는 날에는 아래 규칙을 하나도 켜지 않아요.</string>
-    <string name="schedule_holiday_next">다음 쉬는 날은 %1$s %2$s이에요.</string>
-    <string name="schedule_holiday_unknown">이 기기에서는 공휴일 날짜를 계산하지 못했어요. 스위치를 켜도 요일대로만 돌아요.</string>
-    <string name="schedule_holiday_date">%1$d월 %2$d일</string>
-    <string name="schedule_holiday_saved">공휴일에는 예약을 쉬어요.</string>
-    <string name="schedule_holiday_cleared">공휴일에도 예약대로 바꿔요.</string>
-
-    <string name="holiday_new_year">신정</string>
-    <string name="holiday_seollal">설 연휴</string>
-    <string name="holiday_independence">삼일절</string>
-    <string name="holiday_buddha">부처님오신날</string>
-    <string name="holiday_children">어린이날</string>
-    <string name="holiday_memorial">현충일</string>
-    <string name="holiday_liberation">광복절</string>
-    <string name="holiday_chuseok">추석 연휴</string>
-    <string name="holiday_foundation">개천절</string>
-    <string name="holiday_hangul">한글날</string>
-    <string name="holiday_christmas">성탄절</string>
-    <string name="holiday_substitute">대체공휴일</string>
-
-    <string name="schedule_allday_title">하루 종일로 저장할까요?</string>
-    <string name="schedule_allday_message">시작과 끝이 %1$s(으)로 같아요.\n이대로 저장하면 고른 요일에는 24시간 내내 %2$s(으)로 바뀝니다.</string>
-    <string name="schedule_allday_confirm">하루 종일로 저장</string>
-    <string name="schedule_allday_cancel">시각 다시 고르기</string>
-
-    <string name="schedule_overlap_title">겹치는 규칙이 있어요</string>
-    <string name="schedule_overlap_message">이 시간대는 \'%1$s\' 규칙과 겹칩니다.\n겹치는 동안에는 나중에 만든 규칙이 이깁니다.</string>
-    <string name="schedule_overlap_message_more">이 시간대는 \'%1$s\' 외 %2$d개 규칙과 겹칩니다.\n겹치는 동안에는 나중에 만든 규칙이 이깁니다.</string>
-    <string name="schedule_overlap_confirm">그대로 저장</string>
-    <string name="schedule_overlap_cancel">고치기</string>
-
-    <string name="schedule_delete_title">이 규칙을 지울까요?</string>
-    <string name="schedule_delete_message">%1$s\n\n지우면 이 시간대에는 소리가 저절로 바뀌지 않아요.</string>
-    <string name="schedule_delete_confirm">지우기</string>
-    <string name="schedule_delete_cancel">그대로 두기</string>
-
-    <!-- ============================ 장소 탭 (지오펜스) ============================ -->
-    <string name="place_header_title">안심 장소</string>
-    <string name="place_header_subtitle">학교나 학원을 등록하면 도착과 출발을 알려드려요.</string>
-    <string name="place_add">장소 추가</string>
-    <string name="place_empty">아직 정해둔 장소가 없어요.\n아래 \'장소 추가\'를 눌러\n\'학교\', \'학원\' 같은 곳을 정해 보세요.\n아이가 도착하거나 나서면 알려드릴게요.</string>
-    <string name="place_error_format">장소를 불러오지 못했어요\n%1$s</string>
-    <string name="place_no_family">가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요.</string>
-    <string name="place_delete">삭제</string>
-
-    <!-- 목록 한 줄. '학교 · 반경 200m'. -->
-    <string name="place_row_title">%1$s · 반경 %2$dm</string>
-    <string name="place_row_detail">%1$s</string>
-    <!-- 대화상자에서 장소 하나를 가리킬 때 쓰는 한 줄 이름. -->
-    <string name="place_summary">%1$s (반경 %2$dm)</string>
-
-    <string name="place_notify_both">도착·이탈 알림</string>
-    <string name="place_notify_enter">도착 알림만</string>
-    <string name="place_notify_exit">이탈 알림만</string>
-    <!-- 둘 다 꺼둔 장소. 지우지 않고 잠깐 쉬게 해 둔 상태라 목록에서는 흐리게 보인다. -->
-    <string name="place_notify_none">알림 꺼둠</string>
-
-    <!-- 20개를 채웠을 때 목록 위에 뜬다. 상한이 있다는 사실과 이유, 그리고 부모가 할 수
-         있는 일(지우고 다시 만들기)까지 한 줄에 담는다 — 누를 수 없게 된 버튼만 두면
-         부모는 앱이 고장 났다고 읽는다. -->
-    <string name="place_limit_notice">장소는 %1$d개까지 정할 수 있어요. 새로 만들려면 안 쓰는 장소를 먼저 지워주세요.</string>
-
-    <string name="place_editor_title_new">새 장소</string>
-    <string name="place_editor_title_edit">장소 고치기</string>
-    <string name="place_editor_name_label">장소 이름</string>
-    <string name="place_editor_name_hint">학교, 학원, 할머니 댁…</string>
-    <string name="place_editor_name_required">이름을 적어주세요. 알림에 \'○○에 도착했어요\'로 뜨는 이름이에요.</string>
-    <string name="place_editor_map_label">어디인가요</string>
-    <!-- 지도 중앙 십자가 곧 좌표라는 것을 말해준다. 위경도 숫자를 직접 넣게 하면
-         부모가 쓸 수 없다. -->
-    <string name="place_editor_map_hint">지도를 움직여 가운데 십자를 이 장소에 맞춰주세요. 파란 원이 알림이 울리는 범위예요.</string>
-    <!-- 아이 폰 위치를 아직 한 번도 못 받았을 때. 지도를 아무 데나 찍어두고 그럴듯하게
-         보여주면 부모가 그 자리를 확인된 위치로 읽는다 — 모른다고 말하고 넓게 보여준다. -->
-    <string name="place_editor_no_child_location">아이 폰 위치를 아직 몰라서 지도가 넓게 열렸어요. 손으로 옮겨 찾아주세요.</string>
-    <string name="place_editor_radius_label">얼마나 가까이 오면</string>
-    <string name="place_editor_radius_value">반경 %1$dm</string>
-    <string name="place_editor_notify_label">언제 알려드릴까요</string>
-    <string name="place_editor_notify_enter">도착하면 알림</string>
-    <string name="place_editor_notify_exit">나서면 알림</string>
-    <!-- 둘 다 끄면 이 장소는 아무 일도 안 한다. 막지는 않는다 — 지우지 않고 잠깐
-         꺼두고 싶을 때가 있어서다. 대신 그 뜻을 분명히 적는다. -->
-    <string name="place_editor_notify_none_hint">둘 다 꺼두면 이 장소로는 알림이 오지 않아요. 장소는 그대로 남아 있어요.</string>
-    <string name="place_editor_save">저장</string>
-    <string name="place_editor_cancel">취소</string>
-
-    <string name="place_saving">저장 중…</string>
-    <string name="place_deleting">지우는 중…</string>
-    <string name="place_save_slow">저장 요청은 보냈지만 아직 서버 확인이 안 됐어요. 인터넷이 연결되면 저절로 저장돼요.</string>
-    <string name="place_sync_no_child">장소를 저장했어요. 아이 폰이 연결되면 저절로 적용돼요.</string>
-    <string name="place_sync_failed_format">장소는 저장했지만 아이 폰에 알리지 못했어요. 이 화면을 다시 열면 한 번 더 알릴게요.\n%1$s</string>
-    <string name="place_sync_slow">장소는 저장했어요. 아이 폰에 알리는 것은 인터넷이 연결되면 끝나요.</string>
-    <!-- 예약 탭의 같은 줄과 뜻이 같다. 여기서는 지운 장소가 특히 위험하다 — 아이 폰이
-         모르면 이미 지운 장소의 도착 알림이 계속 올라온다. -->
-    <string name="place_sync_pending">아직 애기폰에 전달되지 않았어요. 애기폰은 지금도 예전 장소대로 알려요.</string>
-    <string name="place_sync_retry">다시 알리기</string>
-
-    <string name="place_delete_title">이 장소를 지울까요?</string>
-    <string name="place_delete_message">%1$s\n\n지우면 이곳에 도착하거나 나서도 알림이 오지 않아요.</string>
-    <string name="place_delete_confirm">지우기</string>
-    <string name="place_delete_cancel">그대로 두기</string>
-
-    <!-- ============================== 알림 탭 ============================== -->
-    <!-- 상시 수신 스위치. 켜기 전에 무엇이 생기는지 먼저 말한다 — 남의 폰 알림줄에
-         표시를 하나 심는 일이라 기본값이 꺼짐이고, 끄면 무엇이 달라지는지도 함께
-         적는다(AlertService 클래스 주석의 판단을 부모의 말로 옮긴 것). -->
-    <string name="alert_header_title">아이 소식</string>
-    <string name="alert_header_subtitle">도착, 배터리, 연결 상태를 시간순으로 모아봐요.</string>
-    <string name="alert_service_switch">알림 바로 받기</string>
-    <string name="alert_service_hint">켜면 앱을 안 보고 있어도 아이 소식이 바로 와요. 대신 이 폰 알림줄에 \'알림 받는 중\' 표시가 하나 계속 떠 있고 배터리를 조금 더 씁니다. 꺼두면 앱을 열었을 때만 확인할 수 있어요.</string>
-    <!-- 알림 권한을 거절했을 때. 서비스는 켜지 않는다 — 알림이 안 뜨는데 상시 표시만
-         남는 것이 제일 나쁜 조합이라, 켠 척하지 않고 사실대로 말한다. -->
-    <string name="alert_notification_denied">알림 권한이 꺼져 있어서 켤 수 없어요. 폰 설정 → 앱 → \'우리아이 지킴이\' → 알림에서 켜주세요.</string>
-
-    <string name="channel_alert_service">알림 받는 중</string>
-    <string name="channel_alert">아이 소식</string>
-    <string name="alert_service_notification_title">알림 받는 중</string>
-    <string name="alert_service_notification_text">아이 소식을 바로 알려드릴 수 있게 켜져 있어요. 알림 탭에서 끌 수 있어요.</string>
-    <!-- 안 읽은 것이 여럿일 때 알림 하나에 접어 넣는 꼬리말. -->
-    <string name="alert_notification_more">외 %1$d건</string>
-
-    <!-- 목록 한 줄: '🏫 학교에 도착했어요 · 오후 3시 12분'. -->
-    <string name="alert_row">%1$s · %2$s</string>
     <string name="alert_child_line">%1$s · %2$s</string>
-    <string name="alert_place_enter">%1$s에 도착했어요</string>
-    <string name="alert_place_exit">%1$s에서 나섰어요</string>
-    <!-- 아래 넷은 5단계 Task 7 이 만드는 사건이다. 읽는 쪽을 먼저 붙여 둔 이유는
-         core/model/Documents.kt 의 EventType 주석 참고.
-         둘(low_battery·permission_off)은 Task 7 에서 실제로 쓰기 시작했고,
-         signal_lost·command_failed 는 **아무도 안 쓴다** — 아이 폰이 자기 침묵을 알릴
-         수는 없고(연결 끊김 배너가 부모 폰에서 그 자리를 덮는다), 명령 실패는 부모가
-         보고 있는 관리 화면의 상태 줄이 이미 말한다. 문구를 지우지 않고 두는 이유는
-         모르는 type 이 왔을 때 alert_unknown 으로 떨어지는 것보다 낫기 때문이다. -->
-    <string name="alert_low_battery">애기폰 배터리가 얼마 안 남았어요</string>
-    <string name="alert_permission_off">애기폰에서 권한이 꺼졌어요</string>
-    <string name="alert_signal_lost">애기폰이 한동안 대답하지 않았어요</string>
-    <string name="alert_command_failed">애기폰에 보낸 요청이 실패했어요</string>
-
-    <!-- 사건 한 줄 아래에 붙는 설명(EventDoc.detail). 아이 폰이 만들어 넣는 값이라
-         부모 폰의 앱 버전과 무관하게 그대로 보인다. -->
-    <string name="event_detail_battery">%1$d%% 남았어요</string>
-    <!-- 권한 이름은 권한 온보딩 화면과 같은 말을 쓴다(PermissionStep.titleRes) —
-         부모가 아이에게 전화로 불러줘야 하는 말이라, 아이 폰 화면에 실제로 적혀 있는
-         것과 글자가 달라지면 아이가 못 찾는다. -->
-    <string name="event_detail_permission">%1$s — 애기폰에서 다시 켜주세요</string>
-    <!-- 앱이 모르는 종류의 사건. 뜻은 몰라도 언제 무슨 일이 있었다는 사실은 남긴다. -->
-    <string name="alert_unknown">새로운 소식이 있어요</string>
-
-    <string name="alert_empty">아직 온 알림이 없어요.\n\'장소\' 탭에서 학교나 학원을 정해두면\n아이가 도착하거나 나설 때 여기에 쌓여요.</string>
-    <string name="alert_error_format">알림을 불러오지 못했어요\n%1$s</string>
-    <string name="alert_no_family">가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요.</string>
-
-    <string name="timeline_unknown_place">머무른 곳</string>
-    <string name="timeline_move_title">이동 %1$s</string>
+    <string name="alert_command_failed" formatted="false">A request to your child\'s phone failed</string>
+    <string name="alert_empty" formatted="false">No updates yet.\nPick a school or academy on the Places tab\nand arrivals will show up here.</string>
+    <string name="alert_error_format">Could not load updates\n%1$s</string>
+    <string name="alert_header_subtitle" formatted="false">Arrivals, battery and connection, in order of time.</string>
+    <string name="alert_header_title" formatted="false">Updates</string>
+    <string name="alert_low_battery" formatted="false">Your child\'s phone is low on battery</string>
+    <string name="alert_no_family" formatted="false">Could not find your family. Please close the app and open it again.</string>
+    <string name="alert_notification_denied" formatted="false">Notifications are turned off, so this cannot be enabled. Go to phone Settings → Apps → KidCare → Notifications and turn them on.</string>
+    <string name="alert_notification_more">and %1$d more</string>
+    <string name="alert_permission_off" formatted="false">A permission was turned off on your child\'s phone</string>
+    <string name="alert_place_enter">Arrived at %1$s</string>
+    <string name="alert_place_exit">Left %1$s</string>
+    <string name="alert_row">%1$s · %2$s</string>
+    <string name="alert_service_hint" formatted="false">Turn this on and updates reach you even when the app is closed. In exchange, a small notification stays in your status bar and it uses a little more battery. Left off, you only see updates when you open the app.</string>
+    <string name="alert_service_notification_text" formatted="false">On, so updates reach you right away. You can turn it off on the Updates tab.</string>
+    <string name="alert_service_notification_title" formatted="false">Watching for updates</string>
+    <string name="alert_service_switch" formatted="false">Get updates right away</string>
+    <string name="alert_signal_lost" formatted="false">Your child\'s phone has not answered for a while</string>
+    <string name="alert_unknown" formatted="false">There is a new update</string>
+    <string name="app_brand_short" formatted="false">KIDCARE</string>
+    <string name="app_name" formatted="false">KidCare</string>
+    <string name="channel_alert" formatted="false">Updates</string>
+    <string name="channel_alert_service" formatted="false">Watching for updates</string>
+    <string name="channel_find_phone" formatted="false">Find phone</string>
+    <string name="channel_message" formatted="false">Message from a parent</string>
+    <string name="channel_remote_alarm" formatted="false">Alarm set by a parent</string>
+    <string name="channel_tracking" formatted="false">Location sharing</string>
+    <string name="child_default_name" formatted="false">Child</string>
+    <string name="child_family_gone" formatted="false">Your location is not being shared right now.\nAsk a parent for a new code and connect again.</string>
+    <string name="child_go_to_permission" formatted="false">Turn permissions on</string>
+    <string name="child_home_title" formatted="false">You are connected to your parents</string>
+    <string name="child_home_title_gone" formatted="false">You are no longer connected to your parents</string>
+    <string name="child_permission_missing">%1$s is turned off.\nTurn it on so your location can be shared.</string>
+    <string name="child_play_services_fix" formatted="false">Fix Google Play services</string>
+    <string name="child_play_services_fixable" formatted="false">Google Play services is missing or too old, so location cannot be sent.\nTap the button below to fix it. (Messages and sound changes still work.)</string>
+    <string name="child_play_services_unfixable" formatted="false">This phone has no Google Play services, so location cannot be sent.\nShow this screen to your parents. (Messages and sound changes still work.)</string>
+    <string name="child_repair" formatted="false">Connect again</string>
+    <string name="child_selector_add_child" formatted="false">＋ Add a child</string>
+    <string name="child_selector_add_guardian" formatted="false">＋ Invite a parent</string>
+    <string name="child_selector_add_guardian_count">＋ Invite a parent · %1$d now</string>
+    <string name="child_selector_empty" formatted="false">Connect a child ▾</string>
+    <string name="child_selector_load_failed" formatted="false">Could not load your family</string>
+    <string name="child_selector_value">Viewing %1$s ▾</string>
+    <string name="child_sharing_on" formatted="false">Your parents can see where you are right now.\nSo they can find you quickly if you get lost.</string>
+    <string name="connect_failed">Could not start the app\n%1$s</string>
+    <string name="connecting" formatted="false">Connecting…</string>
+    <string name="control_alarm_cancel" formatted="false">Cancel the alarm</string>
+    <string name="control_alarm_hint_detail" formatted="false">It rings once on your child\'s phone at the time you pick. If that time has already passed, it rings at the same time the next day — your child\'s clock decides whether that is today or tomorrow. While an alarm is set, a clock icon shows in your child\'s status bar, and it stops on its own after 5 minutes.</string>
+    <string name="control_alarm_label_hint" formatted="false">Alarm name (e.g. Time for class)</string>
+    <string name="control_alarm_picker_title" formatted="false">What time should it ring?</string>
+    <string name="control_alarm_set" formatted="false">Set an alarm for this time</string>
+    <string name="control_alarm_state_confirmed">An alarm is set for %1$s on your child\'s phone</string>
+    <string name="control_alarm_state_labeled">%1$s \'%2$s\'</string>
+    <string name="control_alarm_state_pending">Sent the %1$s alarm · waiting for your child\'s phone to answer</string>
+    <string name="control_alarm_time_format">%1$s</string>
+    <string name="control_command_done" formatted="false">Done</string>
+    <string name="control_command_queued" formatted="false">Not sent yet. It will reach your child\'s phone and run once the internet connects — things may have changed by then.</string>
+    <string name="control_command_sending" formatted="false">Sending…</string>
+    <string name="control_command_timeout" formatted="false">Your child\'s phone is not answering</string>
+    <string name="control_command_timeout_format">Your child\'s phone is not answering\n%1$s</string>
+    <string name="control_error_alarm_exact_denied" formatted="false">The alarm could not be set because \'Alarms &amp; reminders\' is turned off on your child\'s phone. Go to Settings → Apps → KidCare → Alarms &amp; reminders on that phone and turn it on.</string>
+    <string name="control_error_child_failed" formatted="false">Your child\'s phone could not carry out this request.</string>
+    <string name="control_error_message_notification_off" formatted="false">The message could not be shown because notifications are off on your child\'s phone. Go to Settings → Apps → KidCare → Notifications on that phone and turn them on.</string>
+    <string name="control_error_ringer_denied" formatted="false">The sound setting permission is off on your child\'s phone. It has to be turned on there before this can change.</string>
+    <string name="control_find_hint" formatted="false">It rings loudly even in silent mode. It stops on its own after 5 minutes.</string>
+    <string name="control_find_phone" formatted="false">Find the phone</string>
+    <string name="control_find_stop" formatted="false">Stop the sound</string>
+    <string name="control_find_stop_hint" formatted="false">Stop the sound if it is already ringing</string>
+    <string name="control_header_subtitle" formatted="false">Send sounds, messages and alarms straight to your child\'s phone.</string>
+    <string name="control_last_seen_days">%1$d days ago</string>
+    <string name="control_last_seen_format">Last signal %1$s</string>
+    <string name="control_last_seen_hours">%1$d hours ago</string>
+    <string name="control_last_seen_minutes">%1$d minutes ago</string>
+    <string name="control_last_seen_never" formatted="false">No signal has ever arrived</string>
+    <string name="control_last_seen_now" formatted="false">just now</string>
+    <string name="control_last_seen_skewed_value">%1$s (based on your child\'s clock, so not exact)</string>
+    <string name="control_lock_hint" formatted="false">If your child changes the sound, it goes back to what you chose a few seconds later.</string>
+    <string name="control_lock_switch" formatted="false">Change it back if my child undoes it</string>
+    <string name="control_message_chip_call" formatted="false">Please call me</string>
+    <string name="control_message_chip_come_home" formatted="false">Come home</string>
+    <string name="control_message_chip_meal" formatted="false">Have you eaten?</string>
+    <string name="control_message_chip_where" formatted="false">Where are you now?</string>
+    <string name="control_message_empty" formatted="false">Please write something to send.</string>
+    <string name="control_message_hint" formatted="false">What to tell your child</string>
+    <string name="control_message_hint_detail" formatted="false">It shows up large on your child\'s screen. It makes no sound, just one vibration. When your child taps \'Got it\', this changes to \'Read\'.</string>
+    <string name="control_message_read" formatted="false">Read</string>
+    <string name="control_message_send" formatted="false">Send the message</string>
+    <string name="control_message_unread" formatted="false">Delivered to your child\'s phone · not read yet</string>
+    <string name="control_mode_normal" formatted="false">Ring</string>
+    <string name="control_mode_silent" formatted="false">Silent</string>
+    <string name="control_mode_vibrate" formatted="false">Vibrate</string>
+    <string name="control_ringer_refresh" formatted="false">Check again</string>
+    <string name="control_ringer_status_applied">Right now · %1$s</string>
+    <string name="control_ringer_status_format">Last checked · %1$s</string>
+    <string name="control_ringer_status_loading" formatted="false">Checking the sound mode on your child\'s phone</string>
+    <string name="control_ringer_status_unknown" formatted="false">The last sound mode has not been checked yet</string>
+    <string name="control_section_alarm" formatted="false">Set an alarm</string>
+    <string name="control_section_message" formatted="false">Send a word</string>
+    <string name="control_section_ringer" formatted="false">Change it right now</string>
+    <string name="day_next" formatted="false">Next day</string>
+    <string name="day_prev" formatted="false">Previous day</string>
+    <string name="dialog_cancel" formatted="false">Cancel</string>
+    <string name="error_generic_format">Something went wrong with the connection\n%1$s</string>
+    <string name="error_server_setup" formatted="false">The server setup is not finished yet. Tell whoever installed the app for you.</string>
+    <string name="error_unauthenticated" formatted="false">You were signed out. Please close the app and open it again.</string>
+    <string name="event_detail_battery">%1$d%% left</string>
+    <string name="event_detail_permission">%1$s — please turn it back on on your child\'s phone</string>
+    <string name="find_phone_notification_text" formatted="false">Tap to stop the sound</string>
+    <string name="find_phone_notification_title" formatted="false">A parent is looking for this phone</string>
+    <string name="find_phone_stop" formatted="false">Found it (stop the sound)</string>
+    <string name="find_phone_title" formatted="false">A parent is looking for this phone</string>
+    <string name="guardian_disconnect_banner">Your child\'s phone has not answered the request sent %1$s\nOpen the KidCare app once on your child\'s phone and it will connect again.</string>
+    <string name="guardian_start_join_family" formatted="false">Join an existing family with a code</string>
+    <string name="guardian_start_new_family" formatted="false">Create a new family</string>
+    <string name="guardian_start_title" formatted="false">How would you like to start?</string>
+    <string name="holiday_buddha" formatted="false">Buddha\'s Birthday</string>
+    <string name="holiday_children" formatted="false">Children\'s Day</string>
+    <string name="holiday_christmas" formatted="false">Christmas</string>
+    <string name="holiday_chuseok" formatted="false">Chuseok holiday</string>
+    <string name="holiday_foundation" formatted="false">National Foundation Day</string>
+    <string name="holiday_hangul" formatted="false">Hangul Day</string>
+    <string name="holiday_independence" formatted="false">Independence Movement Day</string>
+    <string name="holiday_liberation" formatted="false">National Liberation Day</string>
+    <string name="holiday_memorial" formatted="false">Memorial Day</string>
+    <string name="holiday_new_year" formatted="false">New Year\'s Day</string>
+    <string name="holiday_seollal" formatted="false">Lunar New Year holiday</string>
+    <string name="holiday_substitute" formatted="false">Substitute holiday</string>
+    <string name="language_follow_system" formatted="false">Follow the system setting</string>
+    <string name="language_picker_title" formatted="false">Language</string>
+    <string name="list_loading" formatted="false">Loading…</string>
+    <string name="map_battery_info_confirm" formatted="false">OK</string>
+    <string name="map_battery_info_message" formatted="false">The level shown here is what your child\'s phone reported. Android does not allow reading which app used how much battery from another phone, so that has to be checked in Settings &gt; Battery on your child\'s phone.</string>
+    <string name="map_battery_info_title" formatted="false">Your child\'s phone battery</string>
+    <string name="map_child_avatar" formatted="false">Character of the selected child</string>
+    <string name="map_error">Could not load the map\n%1$s</string>
+    <string name="map_live_active_status">Live tracking · accuracy about %1$dm · battery %2$d%%</string>
+    <string name="map_live_button_connecting" formatted="false">Live location  connecting…</string>
+    <string name="map_live_cancel_description" formatted="false">Live location connecting. Tap to cancel</string>
+    <string name="map_live_connecting" formatted="false">Connecting live…</string>
+    <string name="map_live_start" formatted="false">Live location  OFF</string>
+    <string name="map_live_start_description" formatted="false">Live location off. Tap to turn on</string>
+    <string name="map_live_stop" formatted="false">Live location  ON</string>
+    <string name="map_live_stop_description" formatted="false">Live location on. Tap to turn off</string>
+    <string name="map_live_stopped" formatted="false">Live view has ended. The last location received is still on the map.</string>
+    <string name="map_live_timeout" formatted="false">Live view ended after the 10 minute safety limit.</string>
+    <string name="map_live_waiting" formatted="false">Finding the live location. Please wait until the GPS signal comes through.</string>
+    <string name="map_locate_no_fix" formatted="false">Your child\'s phone has not found its location yet. Please try again in a moment.</string>
+    <string name="map_locate_now" formatted="false">Check location now</string>
+    <string name="map_locating" formatted="false">Asking your child\'s phone…</string>
+    <string name="map_no_child" formatted="false">No child\'s phone is connected yet.</string>
+    <string name="map_status_format">Battery %1$d%%\nas of %2$s</string>
+    <string name="map_status_never" formatted="false">The location has never been checked. Tap \'Check location now\'.</string>
+    <string name="message_ack" formatted="false">Got it</string>
+    <string name="message_notification_title" formatted="false">A word from your parents</string>
+    <string name="message_title" formatted="false">A word from your parents</string>
+    <string name="pairing_child_hint" formatted="false">6 digits</string>
+    <string name="pairing_child_join" formatted="false">Connect</string>
+    <string name="pairing_child_name_hint" formatted="false">Child\'s name (e.g. Minjun)</string>
+    <string name="pairing_child_title" formatted="false">Enter the 6-digit code\nshown on your parent\'s phone</string>
+    <string name="pairing_code_expiry_format">This code expires in %1$d minutes</string>
+    <string name="pairing_code_placeholder" formatted="false">------</string>
+    <string name="pairing_expired" formatted="false">The code has expired. Get a new one from your parent\'s phone.</string>
+    <string name="pairing_failed">Could not connect\n%1$s</string>
+    <string name="pairing_full" formatted="false">Another phone is already connected.</string>
+    <string name="pairing_guardian_hint" formatted="false">On your child\'s phone, open the app,\nchoose \'Child\' and enter this code to connect.</string>
+    <string name="pairing_guardian_invite_guardian_hint" formatted="false">On the other parent\'s phone, open the app,\nchoose \'Parent\' → \'Join with a code\' and enter this code.</string>
+    <string name="pairing_guardian_invite_guardian_title" formatted="false">Enter this code on the other parent\'s phone</string>
+    <string name="pairing_guardian_join_title" formatted="false">Enter the 6-digit code\nyou got from a parent in the family</string>
+    <string name="pairing_guardian_name_hint" formatted="false">Parent\'s name (e.g. Mum, Dad)</string>
+    <string name="pairing_guardian_title" formatted="false">Enter this code on your child\'s phone</string>
+    <string name="pairing_new_code_button" formatted="false">Get a new code</string>
+    <string name="pairing_not_found" formatted="false">There is no such code. Please check it again.</string>
+    <string name="pairing_offline" formatted="false">Cannot reach the internet. Please check your Wi-Fi or mobile data.</string>
+    <string name="pairing_reset_role_button" formatted="false">Choose the role again</string>
+    <string name="pairing_wrong_role" formatted="false">This code is not for the role you chose. Check which code is for the child and which is for a parent.</string>
+    <string name="perm_activity_reason" formatted="false">Knowing whether your child is walking or still lets the app check the location less often while still, which saves battery.</string>
+    <string name="perm_activity_title" formatted="false">Activity detection</string>
+    <string name="perm_background_reason" formatted="false">To send the location while the app is closed, this has to be \'Allow all the time\'. Choose \'Allow all the time\' on the settings screen.</string>
+    <string name="perm_background_title" formatted="false">Location \'Allow all the time\'</string>
+    <string name="perm_battery_hint" formatted="false">When the settings screen opens, find KidCare in the list and change it to \'Unrestricted\'.</string>
+    <string name="perm_battery_reason" formatted="false">Without this, the phone puts the app to sleep and the location stops. Choose \'Allow\' on the settings screen.</string>
+    <string name="perm_battery_title" formatted="false">Ignore battery optimisation</string>
+    <string name="perm_denied_permanently" formatted="false">It was just denied, so this screen cannot ask again. Tap \'Turn on in Settings\' to open the app settings and turn the permission on there.</string>
+    <string name="perm_dnd_reason" formatted="false">This lets a parent change the sound and vibration. Find KidCare in the list and turn it on.</string>
+    <string name="perm_dnd_title" formatted="false">Change sound settings</string>
+    <string name="perm_done" formatted="false">Everything is on. Let\'s start!</string>
+    <string name="perm_grant" formatted="false">Turn on</string>
+    <string name="perm_location_reason" formatted="false">Needed so your parents know where you are right now.</string>
+    <string name="perm_location_title" formatted="false">Location permission</string>
+    <string name="perm_notification_reason" formatted="false">Needed to receive messages from your parents and to show that the location is being shared.</string>
+    <string name="perm_notification_title" formatted="false">Notifications</string>
+    <string name="perm_open_settings" formatted="false">Turn on in Settings</string>
+    <string name="perm_start" formatted="false">Start</string>
+    <string name="perm_title" formatted="false">Just a few things to turn on</string>
+    <string name="place_add" formatted="false">Add a place</string>
+    <string name="place_delete" formatted="false">Delete</string>
+    <string name="place_delete_cancel" formatted="false">Keep it</string>
+    <string name="place_delete_confirm" formatted="false">Delete</string>
+    <string name="place_delete_message">%1$s\n\nOnce deleted, arriving or leaving here will no longer send an alert.</string>
+    <string name="place_delete_title" formatted="false">Delete this place?</string>
+    <string name="place_deleting" formatted="false">Deleting…</string>
+    <string name="place_editor_cancel" formatted="false">Cancel</string>
+    <string name="place_editor_map_hint" formatted="false">Move the map so the cross in the middle sits on this place. The blue circle is where the alert goes off.</string>
+    <string name="place_editor_map_label" formatted="false">Where is it</string>
+    <string name="place_editor_name_hint" formatted="false">School, academy, grandma\'s house…</string>
+    <string name="place_editor_name_label" formatted="false">Place name</string>
+    <string name="place_editor_name_required" formatted="false">Please write a name. This is the name that shows in the alert, as in \'Arrived at ○○\'.</string>
+    <string name="place_editor_no_child_location" formatted="false">Your child\'s location is not known yet, so the map opened wide. Please move it by hand to find the place.</string>
+    <string name="place_editor_notify_enter" formatted="false">Alert on arrival</string>
+    <string name="place_editor_notify_exit" formatted="false">Alert on leaving</string>
+    <string name="place_editor_notify_label" formatted="false">When should we tell you</string>
+    <string name="place_editor_notify_none_hint" formatted="false">With both off, this place sends no alerts. The place itself stays.</string>
+    <string name="place_editor_radius_label" formatted="false">How close counts</string>
+    <string name="place_editor_radius_value">%1$dm radius</string>
+    <string name="place_editor_save" formatted="false">Save</string>
+    <string name="place_editor_title_edit" formatted="false">Edit the place</string>
+    <string name="place_editor_title_new" formatted="false">New place</string>
+    <string name="place_empty" formatted="false">No places yet.\nTap \'Add a place\' below\nand pick somewhere like \'School\' or \'Academy\'.\nWe will tell you when your child arrives or leaves.</string>
+    <string name="place_error_format">Could not load places\n%1$s</string>
+    <string name="place_header_subtitle" formatted="false">Save a school or academy and we will tell you about arrivals and departures.</string>
+    <string name="place_header_title" formatted="false">Safe places</string>
+    <string name="place_limit_notice">You can save up to %1$d places. To add a new one, delete a place you no longer use.</string>
+    <string name="place_no_family" formatted="false">Could not find your family. Please close the app and open it again.</string>
+    <string name="place_notify_both" formatted="false">Arrival and departure alerts</string>
+    <string name="place_notify_enter" formatted="false">Arrival alerts only</string>
+    <string name="place_notify_exit" formatted="false">Departure alerts only</string>
+    <string name="place_notify_none" formatted="false">Alerts off</string>
+    <string name="place_row_detail">%1$s</string>
+    <string name="place_row_title">%1$s · %2$dm radius</string>
+    <string name="place_save_slow" formatted="false">The save was sent but the server has not confirmed it yet. It saves on its own once the internet connects.</string>
+    <string name="place_saving" formatted="false">Saving…</string>
+    <string name="place_summary">%1$s (%2$dm radius)</string>
+    <string name="place_sync_failed_format">The place was saved but your child\'s phone could not be told. Open this screen again and we will try once more.\n%1$s</string>
+    <string name="place_sync_no_child" formatted="false">The place is saved. It applies on its own once your child\'s phone connects.</string>
+    <string name="place_sync_pending" formatted="false">Not delivered to your child\'s phone yet. It is still using the old places.</string>
+    <string name="place_sync_retry" formatted="false">Try telling again</string>
+    <string name="place_sync_slow" formatted="false">The place is saved. Telling your child\'s phone finishes once the internet connects.</string>
+    <string name="remote_alarm_notification_text" formatted="false">Tap to turn it off</string>
+    <string name="remote_alarm_stop" formatted="false">Stop the alarm</string>
+    <string name="remote_alarm_title" formatted="false">An alarm your parents set</string>
+    <string name="role_child" formatted="false">Child</string>
+    <string name="role_guardian" formatted="false">Parent (mum or dad)</string>
+    <string name="role_subtitle" formatted="false">You can choose again before connecting.\nOnce connected, it cannot be changed.</string>
+    <string name="role_title" formatted="false">Whose phone is this?</string>
+    <string name="router_retry" formatted="false">Try again</string>
+    <string name="schedule_add" formatted="false">Add a rule</string>
+    <string name="schedule_allday_cancel" formatted="false">Pick the times again</string>
+    <string name="schedule_allday_confirm" formatted="false">Save as all day</string>
+    <string name="schedule_allday_message">The start and the end are both %1$s.\nSaved like this, the chosen days switch to %2$s for the whole 24 hours.</string>
+    <string name="schedule_allday_title" formatted="false">Save this as all day?</string>
+    <string name="schedule_day_fri" formatted="false">Fri</string>
+    <string name="schedule_day_mon" formatted="false">Mon</string>
+    <string name="schedule_day_sat" formatted="false">Sat</string>
+    <string name="schedule_day_sun" formatted="false">Sun</string>
+    <string name="schedule_day_thu" formatted="false">Thu</string>
+    <string name="schedule_day_tue" formatted="false">Tue</string>
+    <string name="schedule_day_wed" formatted="false">Wed</string>
+    <string name="schedule_days_everyday" formatted="false">Every day</string>
+    <string name="schedule_days_none" formatted="false">No days</string>
+    <string name="schedule_days_weekday" formatted="false">Weekdays</string>
+    <string name="schedule_days_weekend" formatted="false">Weekend</string>
+    <string name="schedule_delete" formatted="false">Delete</string>
+    <string name="schedule_delete_cancel" formatted="false">Keep it</string>
+    <string name="schedule_delete_confirm" formatted="false">Delete</string>
+    <string name="schedule_delete_message">%1$s\n\nOnce deleted, the sound will not change on its own during this time.</string>
+    <string name="schedule_delete_title" formatted="false">Delete this rule?</string>
+    <string name="schedule_deleting" formatted="false">Deleting…</string>
+    <string name="schedule_editor_cancel" formatted="false">Cancel</string>
+    <string name="schedule_editor_days_label" formatted="false">On which days</string>
+    <string name="schedule_editor_days_required" formatted="false">Please pick at least one day. With no day chosen, this rule never runs.</string>
+    <string name="schedule_editor_end_title" formatted="false">End time</string>
+    <string name="schedule_editor_mode_label" formatted="false">Set your child\'s phone to</string>
+    <string name="schedule_editor_save" formatted="false">Save</string>
+    <string name="schedule_editor_start_title" formatted="false">Start time</string>
+    <string name="schedule_editor_time_label" formatted="false">From when to when</string>
+    <string name="schedule_editor_title_edit" formatted="false">Edit the rule</string>
+    <string name="schedule_editor_title_new" formatted="false">New rule</string>
+    <string name="schedule_empty" formatted="false">No times set yet.\nTap \'Add a rule\' below\nand try something like \'Silent on weekday nights\'.</string>
+    <string name="schedule_error_format">Could not load the rules\n%1$s</string>
+    <string name="schedule_header_subtitle" formatted="false">Switches between ring, vibrate and silent by day and time.</string>
+    <string name="schedule_header_title" formatted="false">Daily sound schedule</string>
+    <string name="schedule_holiday_cleared" formatted="false">Rules run on public holidays too.</string>
+    <string name="schedule_holiday_date">%1$d/%2$d</string>
+    <string name="schedule_holiday_next">The next day off is %1$s, %2$s.</string>
+    <string name="schedule_holiday_saved" formatted="false">Rules rest on public holidays.</string>
+    <string name="schedule_holiday_subtitle" formatted="false">On days off, none of the rules below run.</string>
+    <string name="schedule_holiday_title" formatted="false">Rest on public holidays</string>
+    <string name="schedule_holiday_unknown" formatted="false">This phone could not work out the holiday dates. Even with the switch on, only the days of the week are used.</string>
+    <string name="schedule_mode_normal" formatted="false">Ring</string>
+    <string name="schedule_mode_silent" formatted="false">Silent</string>
+    <string name="schedule_mode_vibrate" formatted="false">Vibrate</string>
+    <string name="schedule_no_family" formatted="false">Could not find your family. Please close the app and open it again.</string>
+    <string name="schedule_overlap_cancel" formatted="false">Edit</string>
+    <string name="schedule_overlap_confirm" formatted="false">Save anyway</string>
+    <string name="schedule_overlap_message">This time overlaps the \'%1$s\' rule.\nWhile they overlap, the rule made later wins.</string>
+    <string name="schedule_overlap_message_more">This time overlaps \'%1$s\' and %2$d more rules.\nWhile they overlap, the rule made later wins.</string>
+    <string name="schedule_overlap_title" formatted="false">Another rule overlaps</string>
+    <string name="schedule_range">%1$s ~ %2$s</string>
+    <string name="schedule_range_allday">All day (24 hours from %1$s)</string>
+    <string name="schedule_range_overnight">%1$s ~ %2$s next day</string>
+    <string name="schedule_range_separator" formatted="false">–</string>
+    <string name="schedule_row_detail">%1$s · %2$s</string>
+    <string name="schedule_row_detail_off">%1$s · %2$s (off)</string>
+    <string name="schedule_save_slow" formatted="false">The save was sent but the server has not confirmed it yet. It saves on its own once the internet connects.</string>
+    <string name="schedule_saving" formatted="false">Saving…</string>
+    <string name="schedule_summary">%1$s · %2$s · %3$s</string>
+    <string name="schedule_sync_failed_format">The rule was saved but your child\'s phone could not be told. Open this screen again and we will try once more.\n%1$s</string>
+    <string name="schedule_sync_no_child" formatted="false">The rule is saved. It applies on its own once your child\'s phone connects.</string>
+    <string name="schedule_sync_pending" formatted="false">Not delivered to your child\'s phone yet. It is still running the old rules.</string>
+    <string name="schedule_sync_retry" formatted="false">Try telling again</string>
+    <string name="schedule_sync_slow" formatted="false">The rule is saved. Telling your child\'s phone finishes once the internet connects.</string>
+    <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="tab_alert" formatted="false">Updates</string>
+    <string name="tab_control" formatted="false">Control</string>
+    <string name="tab_map" formatted="false">Map</string>
+    <string name="tab_place" formatted="false">Places</string>
+    <string name="tab_schedule" formatted="false">Schedule</string>
+    <string name="timeline_collapse" formatted="false">Collapse the trip log</string>
     <string name="timeline_detail">%1$s\n%2$s</string>
-    <string name="timeline_empty">이 날은 기록이 없어요</string>
-    <string name="timeline_expand">이동 기록 펼치기</string>
-    <string name="timeline_collapse">이동 기록 접기</string>
-    <string name="timeline_drag_handle">위아래로 끌어 이동 기록 높이 조절</string>
-    <string name="timeline_view_records">이동 기록 보기</string>
-    <string name="timeline_hide_all_routes">전체 이동경로 숨기기</string>
-    <string name="timeline_show_all_routes">전체 이동경로 보기</string>
-    <string name="timeline_route_visible">지도 표시 중</string>
-    <string name="timeline_route_hidden">지도에서 숨김</string>
-    <string name="timeline_summary_routes_hidden">%1$s · 경로 숨김</string>
-    <string name="timeline_summary_routes_partial">%1$s · 일부 숨김</string>
-    <string name="timeline_summary_today">오늘 %1$s</string>
-    <string name="timeline_summary_day">이 날 %1$s</string>
-    <string name="timeline_summary_empty">오늘 이동 기록</string>
-    <string name="day_prev">이전 날</string>
-    <string name="day_next">다음 날</string>
-    <string name="map_live_start">실시간 위치  OFF</string>
-    <string name="map_live_stop">실시간 위치  ON</string>
-    <string name="map_live_button_connecting">실시간 위치  연결 중…</string>
-    <string name="map_live_start_description">실시간 위치 꺼짐. 눌러서 켜기</string>
-    <string name="map_live_stop_description">실시간 위치 켜짐. 눌러서 끄기</string>
-    <string name="map_live_cancel_description">실시간 위치 연결 중. 눌러서 취소</string>
-    <string name="map_live_connecting">실시간 연결 중…</string>
-    <string name="map_live_active_status">실시간 추적 중 · 정확도 약 %1$dm · 배터리 %2$d%%</string>
-    <string name="map_live_waiting">실시간 위치를 잡는 중이에요. GPS 신호가 잡힐 때까지 잠시 기다려 주세요.</string>
-    <string name="map_live_stopped">실시간 보기를 종료했어요. 지도에는 마지막으로 받은 위치가 남아 있어요.</string>
-    <string name="map_live_timeout">10분 안전 제한으로 실시간 보기를 종료했어요.</string>
+    <string name="timeline_drag_handle" formatted="false">Drag up or down to resize the trip log</string>
+    <string name="timeline_empty" formatted="false">No records for this day</string>
+    <string name="timeline_error">Could not load the records\n%1$s</string>
+    <string name="timeline_expand" formatted="false">Expand the trip log</string>
+    <string name="timeline_hide_all_routes" formatted="false">Hide all routes</string>
+    <string name="timeline_move_title">Trip %1$s</string>
+    <string name="timeline_route_hidden" formatted="false">Hidden on the map</string>
+    <string name="timeline_route_visible" formatted="false">Showing on the map</string>
+    <string name="timeline_show_all_routes" formatted="false">Show all routes</string>
+    <string name="timeline_summary_day">%1$s this day</string>
+    <string name="timeline_summary_empty" formatted="false">Today\'s trip log</string>
+    <string name="timeline_summary_routes_hidden">%1$s · routes hidden</string>
+    <string name="timeline_summary_routes_partial">%1$s · some hidden</string>
+    <string name="timeline_summary_today">%1$s today</string>
+    <string name="timeline_unknown_place" formatted="false">Where they stayed</string>
+    <string name="timeline_view_records" formatted="false">See the trip log</string>
+    <string name="tracking_notification_text" formatted="false">Letting your parents know where you are</string>
+    <string name="tracking_notification_title" formatted="false">Sharing location</string>
+    <string name="uid_format">My device ID\n%1$s</string>
 </resources>

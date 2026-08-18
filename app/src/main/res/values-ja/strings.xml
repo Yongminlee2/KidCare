@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 자동 생성. 고치려면 i18n/ja.json 을 고치고 gen.py 를 다시 돌린다. -->
+<resources>
+    <string name="alert_child_line">%1$s · %2$s</string>
+    <string name="alert_command_failed" formatted="false">お子さんの端末に送ったリクエストが失敗しました</string>
+    <string name="alert_empty" formatted="false">まだお知らせはありません。\n「場所」タブで学校や塾を登録すると\n到着や出発がここに集まります。</string>
+    <string name="alert_error_format">お知らせを読み込めませんでした\n%1$s</string>
+    <string name="alert_header_subtitle" formatted="false">到着、バッテリー、接続の状態を時間順にまとめます。</string>
+    <string name="alert_header_title" formatted="false">お子さんの様子</string>
+    <string name="alert_low_battery" formatted="false">お子さんの端末のバッテリーが残りわずかです</string>
+    <string name="alert_no_family" formatted="false">家族の情報が見つかりませんでした。アプリを閉じてもう一度開いてください。</string>
+    <string name="alert_notification_denied" formatted="false">通知がオフになっているため有効にできません。端末の設定→アプリ→KidCare→通知でオンにしてください。</string>
+    <string name="alert_notification_more">ほか%1$d件</string>
+    <string name="alert_permission_off" formatted="false">お子さんの端末で権限がオフになりました</string>
+    <string name="alert_place_enter">%1$sに到着しました</string>
+    <string name="alert_place_exit">%1$sを出ました</string>
+    <string name="alert_row">%1$s · %2$s</string>
+    <string name="alert_service_hint" formatted="false">オンにするとアプリを開いていなくてもお知らせがすぐ届きます。そのかわりこの端末の通知欄に表示が一つ残り、バッテリーを少し多く使います。オフにするとアプリを開いたときだけ確認できます。</string>
+    <string name="alert_service_notification_text" formatted="false">お知らせをすぐお届けできるようオンになっています。お知らせタブでオフにできます。</string>
+    <string name="alert_service_notification_title" formatted="false">お知らせを受信中</string>
+    <string name="alert_service_switch" formatted="false">お知らせをすぐ受け取る</string>
+    <string name="alert_signal_lost" formatted="false">お子さんの端末がしばらく応答していません</string>
+    <string name="alert_unknown" formatted="false">新しいお知らせがあります</string>
+    <string name="app_brand_short" formatted="false">KIDCARE</string>
+    <string name="app_name" formatted="false">KidCare</string>
+    <string name="channel_alert" formatted="false">お子さんの様子</string>
+    <string name="channel_alert_service" formatted="false">お知らせを受信中</string>
+    <string name="channel_find_phone" formatted="false">端末を探す</string>
+    <string name="channel_message" formatted="false">保護者からのメッセージ</string>
+    <string name="channel_remote_alarm" formatted="false">保護者が設定したアラーム</string>
+    <string name="channel_tracking" formatted="false">位置の共有</string>
+    <string name="child_default_name" formatted="false">お子さん</string>
+    <string name="child_family_gone" formatted="false">いまは自分の位置が届いていません。\n保護者の端末で新しい番号をもらって、もう一度つないでください。</string>
+    <string name="child_go_to_permission" formatted="false">権限をオンにしに行く</string>
+    <string name="child_home_title" formatted="false">保護者とつながっています</string>
+    <string name="child_home_title_gone" formatted="false">保護者とのつながりが切れました</string>
+    <string name="child_permission_missing">%1$sがオフになっています。\nオンにすると位置が届きます。</string>
+    <string name="child_play_services_fix" formatted="false">Google Play開発者サービスを直す</string>
+    <string name="child_play_services_fixable" formatted="false">端末のGoogle Play開発者サービスが無いか古すぎて位置を送れません。\n下のボタンで直せます。（メッセージの受信と音の変更はそのまま使えます。）</string>
+    <string name="child_play_services_unfixable" formatted="false">この端末にはGoogle Play開発者サービスが無いため位置を送れません。\nこの画面を保護者に見せてください。（メッセージの受信と音の変更はそのまま使えます。）</string>
+    <string name="child_repair" formatted="false">つなぎ直す</string>
+    <string name="child_selector_add_child" formatted="false">＋ お子さんを追加</string>
+    <string name="child_selector_add_guardian" formatted="false">＋ 保護者を招待</string>
+    <string name="child_selector_add_guardian_count">＋ 保護者を招待 · 現在%1$d人</string>
+    <string name="child_selector_empty" formatted="false">お子さんをつないでください ▾</string>
+    <string name="child_selector_load_failed" formatted="false">家族の一覧を読み込めませんでした</string>
+    <string name="child_selector_value">%1$sを表示中 ▾</string>
+    <string name="child_sharing_on" formatted="false">いまどこにいるかを保護者が見られます。\n道に迷ってもすぐ迎えに行けるように。</string>
+    <string name="connect_failed">アプリを開始できませんでした\n%1$s</string>
+    <string name="connecting" formatted="false">接続中…</string>
+    <string name="control_alarm_cancel" formatted="false">設定したアラームを解除</string>
+    <string name="control_alarm_hint_detail" formatted="false">選んだ時刻にお子さんの端末で一度だけ鳴ります。すでに過ぎた時刻なら翌日の同じ時刻に鳴ります。今日か明日かはお子さんの端末の時計で決まります。アラームが設定されるとお子さんの端末のステータスバーに時計の印が出るので本人も分かり、5分たつと自動で止まります。</string>
+    <string name="control_alarm_label_hint" formatted="false">アラームの名前（例：塾に行く時間）</string>
+    <string name="control_alarm_picker_title" formatted="false">何時に鳴らしますか？</string>
+    <string name="control_alarm_set" formatted="false">この時刻にアラームを設定</string>
+    <string name="control_alarm_state_confirmed">お子さんの端末に%1$sのアラームが設定されています</string>
+    <string name="control_alarm_state_labeled">%1$s「%2$s」</string>
+    <string name="control_alarm_state_pending">%1$sのアラームを送りました · お子さんの端末の返事を待っています</string>
+    <string name="control_alarm_time_format">%1$s</string>
+    <string name="control_command_done" formatted="false">完了</string>
+    <string name="control_command_queued" formatted="false">まだ届いていません。インターネットにつながったときにお子さんの端末へ届いて実行されます。そのあいだに状況が変わっているかもしれません。</string>
+    <string name="control_command_sending" formatted="false">送信中…</string>
+    <string name="control_command_timeout" formatted="false">お子さんの端末が応答しません</string>
+    <string name="control_command_timeout_format">お子さんの端末が応答しません\n%1$s</string>
+    <string name="control_error_alarm_exact_denied" formatted="false">お子さんの端末で「アラームとリマインダー」がオフのためアラームを設定できませんでした。その端末の設定→アプリ→KidCare→アラームとリマインダーでオンにしてください。</string>
+    <string name="control_error_child_failed" formatted="false">お子さんの端末がこの操作を実行できませんでした。</string>
+    <string name="control_error_message_notification_off" formatted="false">お子さんの端末で通知がオフのためメッセージを表示できませんでした。その端末の設定→アプリ→KidCare→通知でオンにしてください。</string>
+    <string name="control_error_ringer_denied" formatted="false">お子さんの端末で音の設定の権限がオフです。その端末でオンにしないと変更できません。</string>
+    <string name="control_find_hint" formatted="false">マナーモードでも大きな音で鳴ります。5分たつと自動で止まります。</string>
+    <string name="control_find_phone" formatted="false">端末を探す</string>
+    <string name="control_find_stop" formatted="false">音を止める</string>
+    <string name="control_find_stop_hint" formatted="false">すでに鳴っているなら音を止める</string>
+    <string name="control_header_subtitle" formatted="false">音、メッセージ、アラームをお子さんの端末へすぐ送れます。</string>
+    <string name="control_last_seen_days">%1$d日前</string>
+    <string name="control_last_seen_format">最後の信号 %1$s</string>
+    <string name="control_last_seen_hours">%1$d時間前</string>
+    <string name="control_last_seen_minutes">%1$d分前</string>
+    <string name="control_last_seen_never" formatted="false">まだ一度も信号がありません</string>
+    <string name="control_last_seen_now" formatted="false">たった今</string>
+    <string name="control_last_seen_skewed_value">%1$s（お子さんの端末の時計によるため正確ではありません）</string>
+    <string name="control_lock_hint" formatted="false">お子さんが音を変えても数秒後に保護者が決めたとおりに戻ります。</string>
+    <string name="control_lock_switch" formatted="false">戻されたらまた変える</string>
+    <string name="control_message_chip_call" formatted="false">電話してね</string>
+    <string name="control_message_chip_come_home" formatted="false">家に帰ってきて</string>
+    <string name="control_message_chip_meal" formatted="false">ごはん食べた？</string>
+    <string name="control_message_chip_where" formatted="false">いまどこ？</string>
+    <string name="control_message_empty" formatted="false">送る言葉を書いてください。</string>
+    <string name="control_message_hint" formatted="false">お子さんへ伝えたいこと</string>
+    <string name="control_message_hint_detail" formatted="false">お子さんの画面に大きく表示されます。音は鳴らず、振動が一度だけです。お子さんが「確認したよ」を押すとここが「既読」に変わります。</string>
+    <string name="control_message_read" formatted="false">既読</string>
+    <string name="control_message_send" formatted="false">メッセージを送る</string>
+    <string name="control_message_unread" formatted="false">お子さんの端末に届きました · まだ読んでいません</string>
+    <string name="control_mode_normal" formatted="false">着信音</string>
+    <string name="control_mode_silent" formatted="false">マナー</string>
+    <string name="control_mode_vibrate" formatted="false">バイブ</string>
+    <string name="control_ringer_refresh" formatted="false">確認し直す</string>
+    <string name="control_ringer_status_applied">現在の状態 · %1$s</string>
+    <string name="control_ringer_status_format">最後の確認 · %1$s</string>
+    <string name="control_ringer_status_loading" formatted="false">お子さんの端末の音の状態を確認しています</string>
+    <string name="control_ringer_status_unknown" formatted="false">音の状態をまだ確認できていません</string>
+    <string name="control_section_alarm" formatted="false">アラームを設定</string>
+    <string name="control_section_message" formatted="false">ひとこと送る</string>
+    <string name="control_section_ringer" formatted="false">いますぐ変える</string>
+    <string name="day_next" formatted="false">次の日</string>
+    <string name="day_prev" formatted="false">前の日</string>
+    <string name="dialog_cancel" formatted="false">キャンセル</string>
+    <string name="error_generic_format">接続に問題が起きました\n%1$s</string>
+    <string name="error_server_setup" formatted="false">サーバーの設定がまだ終わっていません。アプリを入れてくれた人に伝えてください。</string>
+    <string name="error_unauthenticated" formatted="false">ログインが切れました。アプリを閉じてもう一度開いてください。</string>
+    <string name="event_detail_battery">残り%1$d%%</string>
+    <string name="event_detail_permission">%1$s — お子さんの端末でオンにし直してください</string>
+    <string name="find_phone_notification_text" formatted="false">押すと音を止められます</string>
+    <string name="find_phone_notification_title" formatted="false">保護者がこの端末を探しています</string>
+    <string name="find_phone_stop" formatted="false">見つけた（音を止める）</string>
+    <string name="find_phone_title" formatted="false">保護者がこの端末を探しています</string>
+    <string name="guardian_disconnect_banner">%1$sに送ったリクエストにお子さんの端末がまだ答えていません\nお子さんの端末でKidCareを一度開いてください。そうすればまたつながります。</string>
+    <string name="guardian_start_join_family" formatted="false">招待番号で家族に参加</string>
+    <string name="guardian_start_new_family" formatted="false">新しい家族をつくる</string>
+    <string name="guardian_start_title" formatted="false">どのように始めますか？</string>
+    <string name="holiday_buddha" formatted="false">釈迦誕生日</string>
+    <string name="holiday_children" formatted="false">こどもの日</string>
+    <string name="holiday_christmas" formatted="false">クリスマス</string>
+    <string name="holiday_chuseok" formatted="false">秋夕の連休</string>
+    <string name="holiday_foundation" formatted="false">開天節</string>
+    <string name="holiday_hangul" formatted="false">ハングルの日</string>
+    <string name="holiday_independence" formatted="false">三一節</string>
+    <string name="holiday_liberation" formatted="false">光復節</string>
+    <string name="holiday_memorial" formatted="false">顕忠日</string>
+    <string name="holiday_new_year" formatted="false">元日</string>
+    <string name="holiday_seollal" formatted="false">旧正月の連休</string>
+    <string name="holiday_substitute" formatted="false">振替休日</string>
+    <string name="language_follow_system" formatted="false">端末の設定に従う</string>
+    <string name="language_picker_title" formatted="false">言語</string>
+    <string name="list_loading" formatted="false">読み込んでいます…</string>
+    <string name="map_battery_info_confirm" formatted="false">OK</string>
+    <string name="map_battery_info_message" formatted="false">ここに出る残量はお子さんの端末が送った状態です。どのアプリがどれだけバッテリーを使ったかはAndroidの仕組み上ほかの端末から読み取れないため、お子さんの端末の設定＞バッテリーで直接確認してください。</string>
+    <string name="map_battery_info_title" formatted="false">お子さんの端末のバッテリー</string>
+    <string name="map_child_avatar" formatted="false">選んだお子さんのキャラクター</string>
+    <string name="map_error">地図を読み込めませんでした\n%1$s</string>
+    <string name="map_live_active_status">リアルタイム追跡中 · 精度およそ%1$dm · バッテリー%2$d%%</string>
+    <string name="map_live_button_connecting" formatted="false">リアルタイム位置：接続中…</string>
+    <string name="map_live_cancel_description" formatted="false">リアルタイム位置を接続中。押すとキャンセル</string>
+    <string name="map_live_connecting" formatted="false">リアルタイム接続中…</string>
+    <string name="map_live_start" formatted="false">リアルタイム位置  OFF</string>
+    <string name="map_live_start_description" formatted="false">リアルタイム位置がオフ。押すとオン</string>
+    <string name="map_live_stop" formatted="false">リアルタイム位置  ON</string>
+    <string name="map_live_stop_description" formatted="false">リアルタイム位置がオン。押すとオフ</string>
+    <string name="map_live_stopped" formatted="false">リアルタイム表示を終了しました。地図には最後に受け取った位置が残っています。</string>
+    <string name="map_live_timeout" formatted="false">10分の安全制限でリアルタイム表示を終了しました。</string>
+    <string name="map_live_waiting" formatted="false">リアルタイムの位置を探しています。GPSの信号が入るまで少しお待ちください。</string>
+    <string name="map_locate_no_fix" formatted="false">お子さんの端末がまだ位置をつかめていません。少ししてからもう一度押してください。</string>
+    <string name="map_locate_now" formatted="false">いまの位置を確認</string>
+    <string name="map_locating" formatted="false">お子さんの端末に問い合わせています…</string>
+    <string name="map_no_child" formatted="false">まだお子さんの端末がつながっていません。</string>
+    <string name="map_status_format">バッテリー%1$d%%\n%2$s時点</string>
+    <string name="map_status_never" formatted="false">まだ位置を確認したことがありません。「いまの位置を確認」を押してください。</string>
+    <string name="message_ack" formatted="false">確認したよ</string>
+    <string name="message_notification_title" formatted="false">保護者からのことばです</string>
+    <string name="message_title" formatted="false">保護者からのことばです</string>
+    <string name="pairing_child_hint" formatted="false">6桁の番号</string>
+    <string name="pairing_child_join" formatted="false">つなぐ</string>
+    <string name="pairing_child_name_hint" formatted="false">お子さんの名前（例：みんじゅん）</string>
+    <string name="pairing_child_title" formatted="false">保護者の端末に出た\n6桁の番号を入れてください</string>
+    <string name="pairing_code_expiry_format">この番号は%1$d分後に期限が切れます</string>
+    <string name="pairing_code_placeholder" formatted="false">------</string>
+    <string name="pairing_expired" formatted="false">番号の期限が切れました。保護者の端末で新しい番号をもらってください。</string>
+    <string name="pairing_failed">つなげませんでした\n%1$s</string>
+    <string name="pairing_full" formatted="false">すでにほかの端末がつながっています。</string>
+    <string name="pairing_guardian_hint" formatted="false">お子さんの端末でアプリを開き\n「お子さん」を選んでこの番号を入れるとつながります。</string>
+    <string name="pairing_guardian_invite_guardian_hint" formatted="false">もう一人の保護者の端末でアプリを開き\n「保護者」→「招待番号で参加」を選んでこの番号を入れてください。</string>
+    <string name="pairing_guardian_invite_guardian_title" formatted="false">もう一人の保護者の端末にこの番号を入れてください</string>
+    <string name="pairing_guardian_join_title" formatted="false">家族の保護者からもらった\n6桁の番号を入れてください</string>
+    <string name="pairing_guardian_name_hint" formatted="false">保護者の名前（例：ママ、パパ）</string>
+    <string name="pairing_guardian_title" formatted="false">お子さんの端末にこの番号を入れてください</string>
+    <string name="pairing_new_code_button" formatted="false">新しい番号をもらう</string>
+    <string name="pairing_not_found" formatted="false">その番号はありません。もう一度確かめてください。</string>
+    <string name="pairing_offline" formatted="false">インターネットにつながりません。Wi-Fiやモバイルデータの状態を確かめてください。</string>
+    <string name="pairing_reset_role_button" formatted="false">役割を選び直す</string>
+    <string name="pairing_wrong_role" formatted="false">この番号は選んだ役割の招待番号ではありません。お子さん用と保護者用のどちらか確かめてください。</string>
+    <string name="perm_activity_reason" formatted="false">歩いているか止まっているかが分かると、止まっているときは位置を確認する回数を減らしてバッテリーを節約できます。</string>
+    <string name="perm_activity_title" formatted="false">動きの検出</string>
+    <string name="perm_background_reason" formatted="false">アプリを開いていないときも位置を送るには「常に許可」が必要です。設定画面で「常に許可」を選んでください。</string>
+    <string name="perm_background_title" formatted="false">位置情報「常に許可」</string>
+    <string name="perm_battery_hint" formatted="false">設定画面が開いたら一覧からKidCareを探して「制限なし」に変えてください。</string>
+    <string name="perm_battery_reason" formatted="false">これをオンにしないと端末がアプリを眠らせて位置が途切れます。設定画面で「許可」を選んでください。</string>
+    <string name="perm_battery_title" formatted="false">バッテリー最適化の対象外</string>
+    <string name="perm_denied_permanently" formatted="false">たったいま拒否されたのでこの画面からはもう一度聞けません。「設定で有効にする」を押すとアプリの設定に移動します。そこで権限をオンにしてください。</string>
+    <string name="perm_dnd_reason" formatted="false">保護者が音やバイブを変えられるようにする権限です。一覧からKidCareを探してオンにしてください。</string>
+    <string name="perm_dnd_title" formatted="false">音の設定を変える</string>
+    <string name="perm_done" formatted="false">すべてオンになりました。始めましょう！</string>
+    <string name="perm_grant" formatted="false">オンにする</string>
+    <string name="perm_location_reason" formatted="false">いまどこにいるかを保護者に伝えるために必要です。</string>
+    <string name="perm_location_title" formatted="false">位置情報の権限</string>
+    <string name="perm_notification_reason" formatted="false">保護者からのメッセージを受け取り、位置を共有中であることを表示するために必要です。</string>
+    <string name="perm_notification_title" formatted="false">通知</string>
+    <string name="perm_open_settings" formatted="false">設定で有効にする</string>
+    <string name="perm_start" formatted="false">はじめる</string>
+    <string name="perm_title" formatted="false">いくつかオンにしてください</string>
+    <string name="place_add" formatted="false">場所を追加</string>
+    <string name="place_delete" formatted="false">削除</string>
+    <string name="place_delete_cancel" formatted="false">そのままにする</string>
+    <string name="place_delete_confirm" formatted="false">削除する</string>
+    <string name="place_delete_message">%1$s\n\n削除するとここに到着しても出発してもお知らせが届きません。</string>
+    <string name="place_delete_title" formatted="false">この場所を削除しますか？</string>
+    <string name="place_deleting" formatted="false">削除しています…</string>
+    <string name="place_editor_cancel" formatted="false">キャンセル</string>
+    <string name="place_editor_map_hint" formatted="false">地図を動かして真ん中の十字をこの場所に合わせてください。青い円がお知らせの届く範囲です。</string>
+    <string name="place_editor_map_label" formatted="false">どこですか</string>
+    <string name="place_editor_name_hint" formatted="false">学校、塾、おばあちゃんの家…</string>
+    <string name="place_editor_name_label" formatted="false">場所の名前</string>
+    <string name="place_editor_name_required" formatted="false">名前を書いてください。お知らせに「○○に到着しました」と出る名前です。</string>
+    <string name="place_editor_no_child_location" formatted="false">お子さんの端末の位置がまだ分からないので地図が広く開きました。手で動かして探してください。</string>
+    <string name="place_editor_notify_enter" formatted="false">到着したらお知らせ</string>
+    <string name="place_editor_notify_exit" formatted="false">出発したらお知らせ</string>
+    <string name="place_editor_notify_label" formatted="false">いつお知らせしますか</string>
+    <string name="place_editor_notify_none_hint" formatted="false">どちらもオフにするとこの場所ではお知らせが届きません。場所はそのまま残ります。</string>
+    <string name="place_editor_radius_label" formatted="false">どれくらい近づいたら</string>
+    <string name="place_editor_radius_value">半径%1$dm</string>
+    <string name="place_editor_save" formatted="false">保存</string>
+    <string name="place_editor_title_edit" formatted="false">場所を編集</string>
+    <string name="place_editor_title_new" formatted="false">新しい場所</string>
+    <string name="place_empty" formatted="false">まだ登録した場所がありません。\n下の「場所を追加」を押して\n「学校」「塾」などを登録してみてください。\nお子さんが到着したり出発したらお知らせします。</string>
+    <string name="place_error_format">場所を読み込めませんでした\n%1$s</string>
+    <string name="place_header_subtitle" formatted="false">学校や塾を登録すると到着と出発をお知らせします。</string>
+    <string name="place_header_title" formatted="false">安心の場所</string>
+    <string name="place_limit_notice">場所は%1$d件まで登録できます。新しく作るには使っていない場所を先に削除してください。</string>
+    <string name="place_no_family" formatted="false">家族の情報が見つかりませんでした。アプリを閉じてもう一度開いてください。</string>
+    <string name="place_notify_both" formatted="false">到着と出発のお知らせ</string>
+    <string name="place_notify_enter" formatted="false">到着のお知らせだけ</string>
+    <string name="place_notify_exit" formatted="false">出発のお知らせだけ</string>
+    <string name="place_notify_none" formatted="false">お知らせオフ</string>
+    <string name="place_row_detail">%1$s</string>
+    <string name="place_row_title">%1$s · 半径%2$dm</string>
+    <string name="place_save_slow" formatted="false">保存のリクエストは送りましたがサーバーの確認がまだです。インターネットにつながれば自動で保存されます。</string>
+    <string name="place_saving" formatted="false">保存しています…</string>
+    <string name="place_summary">%1$s（半径%2$dm）</string>
+    <string name="place_sync_failed_format">場所は保存しましたがお子さんの端末に知らせられませんでした。この画面をもう一度開けばまた知らせます。\n%1$s</string>
+    <string name="place_sync_no_child" formatted="false">場所を保存しました。お子さんの端末がつながれば自動で反映されます。</string>
+    <string name="place_sync_pending" formatted="false">まだお子さんの端末に届いていません。いまも以前の場所でお知らせしています。</string>
+    <string name="place_sync_retry" formatted="false">もう一度知らせる</string>
+    <string name="place_sync_slow" formatted="false">場所は保存しました。お子さんの端末に知らせるのはインターネットにつながれば終わります。</string>
+    <string name="remote_alarm_notification_text" formatted="false">押すと止められます</string>
+    <string name="remote_alarm_stop" formatted="false">アラームを止める</string>
+    <string name="remote_alarm_title" formatted="false">保護者が設定したアラームです</string>
+    <string name="role_child" formatted="false">お子さん</string>
+    <string name="role_guardian" formatted="false">保護者（ママ・パパ）</string>
+    <string name="role_subtitle" formatted="false">つなぐ前なら選び直せます。\nつながったあとは変えられません。</string>
+    <string name="role_title" formatted="false">だれの端末ですか？</string>
+    <string name="router_retry" formatted="false">もう一度</string>
+    <string name="schedule_add" formatted="false">ルールを追加</string>
+    <string name="schedule_allday_cancel" formatted="false">時刻を選び直す</string>
+    <string name="schedule_allday_confirm" formatted="false">終日で保存</string>
+    <string name="schedule_allday_message">開始と終了がどちらも%1$sです。\nこのまま保存すると選んだ曜日は24時間ずっと%2$sになります。</string>
+    <string name="schedule_allday_title" formatted="false">終日として保存しますか？</string>
+    <string name="schedule_day_fri" formatted="false">金</string>
+    <string name="schedule_day_mon" formatted="false">月</string>
+    <string name="schedule_day_sat" formatted="false">土</string>
+    <string name="schedule_day_sun" formatted="false">日</string>
+    <string name="schedule_day_thu" formatted="false">木</string>
+    <string name="schedule_day_tue" formatted="false">火</string>
+    <string name="schedule_day_wed" formatted="false">水</string>
+    <string name="schedule_days_everyday" formatted="false">毎日</string>
+    <string name="schedule_days_none" formatted="false">曜日なし</string>
+    <string name="schedule_days_weekday" formatted="false">平日</string>
+    <string name="schedule_days_weekend" formatted="false">週末</string>
+    <string name="schedule_delete" formatted="false">削除</string>
+    <string name="schedule_delete_cancel" formatted="false">そのままにする</string>
+    <string name="schedule_delete_confirm" formatted="false">削除する</string>
+    <string name="schedule_delete_message">%1$s\n\n削除するとこの時間帯に音が自動で変わらなくなります。</string>
+    <string name="schedule_delete_title" formatted="false">このルールを削除しますか？</string>
+    <string name="schedule_deleting" formatted="false">削除しています…</string>
+    <string name="schedule_editor_cancel" formatted="false">キャンセル</string>
+    <string name="schedule_editor_days_label" formatted="false">どの曜日に</string>
+    <string name="schedule_editor_days_required" formatted="false">曜日を一つ以上選んでください。選ばないとこのルールは一度も動きません。</string>
+    <string name="schedule_editor_end_title" formatted="false">終わる時刻</string>
+    <string name="schedule_editor_mode_label" formatted="false">そのあいだお子さんの端末を</string>
+    <string name="schedule_editor_save" formatted="false">保存</string>
+    <string name="schedule_editor_start_title" formatted="false">始まる時刻</string>
+    <string name="schedule_editor_time_label" formatted="false">何時から何時まで</string>
+    <string name="schedule_editor_title_edit" formatted="false">ルールを編集</string>
+    <string name="schedule_editor_title_new" formatted="false">新しいルール</string>
+    <string name="schedule_empty" formatted="false">まだ決めた時間帯がありません。\n下の「ルールを追加」を押して\n「平日の夜はマナー」のようなルールを作ってみてください。</string>
+    <string name="schedule_error_format">ルールを読み込めませんでした\n%1$s</string>
+    <string name="schedule_header_subtitle" formatted="false">曜日と時間に合わせて着信音・バイブ・マナーを自動で切り替えます。</string>
+    <string name="schedule_header_title" formatted="false">毎日の音の予約</string>
+    <string name="schedule_holiday_cleared" formatted="false">祝日も予約どおりに切り替えます。</string>
+    <string name="schedule_holiday_date">%1$d月%2$d日</string>
+    <string name="schedule_holiday_next">次の休みは%1$sの%2$sです。</string>
+    <string name="schedule_holiday_saved" formatted="false">祝日は予約を休みます。</string>
+    <string name="schedule_holiday_subtitle" formatted="false">休みの日は下のルールを一つも動かしません。</string>
+    <string name="schedule_holiday_title" formatted="false">祝日は休む</string>
+    <string name="schedule_holiday_unknown" formatted="false">この端末では祝日の日付を計算できませんでした。オンにしても曜日だけで動きます。</string>
+    <string name="schedule_mode_normal" formatted="false">着信音</string>
+    <string name="schedule_mode_silent" formatted="false">マナー</string>
+    <string name="schedule_mode_vibrate" formatted="false">バイブ</string>
+    <string name="schedule_no_family" formatted="false">家族の情報が見つかりませんでした。アプリを閉じてもう一度開いてください。</string>
+    <string name="schedule_overlap_cancel" formatted="false">直す</string>
+    <string name="schedule_overlap_confirm" formatted="false">このまま保存</string>
+    <string name="schedule_overlap_message">この時間帯は「%1$s」のルールと重なります。\n重なっているあいだは後から作ったルールが優先されます。</string>
+    <string name="schedule_overlap_message_more">この時間帯は「%1$s」ほか%2$d件のルールと重なります。\n重なっているあいだは後から作ったルールが優先されます。</string>
+    <string name="schedule_overlap_title" formatted="false">重なるルールがあります</string>
+    <string name="schedule_range">%1$s ~ %2$s</string>
+    <string name="schedule_range_allday">終日（%1$sから24時間）</string>
+    <string name="schedule_range_overnight">%1$s ~ 翌日%2$s</string>
+    <string name="schedule_range_separator" formatted="false">–</string>
+    <string name="schedule_row_detail">%1$s · %2$s</string>
+    <string name="schedule_row_detail_off">%1$s · %2$s（オフ）</string>
+    <string name="schedule_save_slow" formatted="false">保存のリクエストは送りましたがサーバーの確認がまだです。インターネットにつながれば自動で保存されます。</string>
+    <string name="schedule_saving" formatted="false">保存しています…</string>
+    <string name="schedule_summary">%1$s · %2$s · %3$s</string>
+    <string name="schedule_sync_failed_format">ルールは保存しましたがお子さんの端末に知らせられませんでした。この画面をもう一度開けばまた知らせます。\n%1$s</string>
+    <string name="schedule_sync_no_child" formatted="false">ルールを保存しました。お子さんの端末がつながれば自動で反映されます。</string>
+    <string name="schedule_sync_pending" formatted="false">まだお子さんの端末に届いていません。いまも以前のルールで動いています。</string>
+    <string name="schedule_sync_retry" formatted="false">もう一度知らせる</string>
+    <string name="schedule_sync_slow" formatted="false">ルールは保存しました。お子さんの端末に知らせるのはインターネットにつながれば終わります。</string>
+    <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="tab_alert" formatted="false">お知らせ</string>
+    <string name="tab_control" formatted="false">そうさ</string>
+    <string name="tab_map" formatted="false">地図</string>
+    <string name="tab_place" formatted="false">場所</string>
+    <string name="tab_schedule" formatted="false">予約</string>
+    <string name="timeline_collapse" formatted="false">移動の記録をたたむ</string>
+    <string name="timeline_detail">%1$s\n%2$s</string>
+    <string name="timeline_drag_handle" formatted="false">上下に引いて移動の記録の高さを変える</string>
+    <string name="timeline_empty" formatted="false">この日は記録がありません</string>
+    <string name="timeline_error">記録を読み込めませんでした\n%1$s</string>
+    <string name="timeline_expand" formatted="false">移動の記録を広げる</string>
+    <string name="timeline_hide_all_routes" formatted="false">すべての経路を隠す</string>
+    <string name="timeline_move_title">移動 %1$s</string>
+    <string name="timeline_route_hidden" formatted="false">地図で非表示</string>
+    <string name="timeline_route_visible" formatted="false">地図に表示中</string>
+    <string name="timeline_show_all_routes" formatted="false">すべての経路を表示</string>
+    <string name="timeline_summary_day">この日 %1$s</string>
+    <string name="timeline_summary_empty" formatted="false">今日の移動の記録</string>
+    <string name="timeline_summary_routes_hidden">%1$s · 経路を非表示</string>
+    <string name="timeline_summary_routes_partial">%1$s · 一部を非表示</string>
+    <string name="timeline_summary_today">今日 %1$s</string>
+    <string name="timeline_unknown_place" formatted="false">とどまった場所</string>
+    <string name="timeline_view_records" formatted="false">移動の記録を見る</string>
+    <string name="tracking_notification_text" formatted="false">保護者に自分の位置を知らせています</string>
+    <string name="tracking_notification_title" formatted="false">位置を共有中</string>
+    <string name="uid_format">この端末のID\n%1$s</string>
+</resources>

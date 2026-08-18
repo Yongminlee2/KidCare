@@ -16,6 +16,28 @@
         android:paddingTop="20dp"
         android:paddingBottom="28dp">
 
+        <!-- 언어 고르기. 아이 폰도 부모 폰과 따로 언어를 고를 수 있어야 한다 -
+             둘이 같은 나라 말을 쓴다는 보장이 없다. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/language_button"
+            style="@style/Widget.KidCare.Button.Text"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_gravity="end"
+            android:contentDescription="@string/language_picker_title"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:paddingHorizontal="0dp"
+            app:icon="@drawable/ic_globe"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="21dp"
+            app:iconTint="@color/ink_soft" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -12,6 +12,7 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kidcare.family.R
+import com.kidcare.family.core.LanguagePicker
 import com.kidcare.family.core.model.ChildStatusDoc
 import com.kidcare.family.core.FamilyMember
 import com.kidcare.family.core.FamilyRepository
@@ -139,6 +140,7 @@ class GuardianMainActivity : AppCompatActivity() {
         setContentView(binding.root)
         bannerBaseTopPadding = binding.disconnectBanner.paddingTop
         binding.childSelector.setOnClickListener { showChildMenu() }
+        binding.languageButton.setOnClickListener { LanguagePicker.show(this) }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())

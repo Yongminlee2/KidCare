@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 자동 생성. 고치려면 i18n/ru.json 을 고치고 gen.py 를 다시 돌린다. -->
+<resources>
+    <string name="alert_child_line">%1$s · %2$s</string>
+    <string name="alert_command_failed" formatted="false">Запрос на телефон ребёнка не прошёл</string>
+    <string name="alert_empty" formatted="false">Пока новостей нет.\nУкажите школу или кружок на вкладке «Места»,\nи приходы будут появляться здесь.</string>
+    <string name="alert_error_format">Не удалось загрузить новости\n%1$s</string>
+    <string name="alert_header_subtitle" formatted="false">Приходы, батарея и связь — по порядку времени.</string>
+    <string name="alert_header_title" formatted="false">Новости о ребёнке</string>
+    <string name="alert_low_battery" formatted="false">На телефоне ребёнка мало заряда</string>
+    <string name="alert_no_family" formatted="false">Семья не найдена. Закройте приложение и откройте снова.</string>
+    <string name="alert_notification_denied" formatted="false">Уведомления выключены, поэтому включить не получится. Откройте Настройки телефона → Приложения → KidCare → Уведомления и включите их.</string>
+    <string name="alert_notification_more">и ещё %1$d</string>
+    <string name="alert_permission_off" formatted="false">На телефоне ребёнка выключили разрешение</string>
+    <string name="alert_place_enter">Пришёл в «%1$s»</string>
+    <string name="alert_place_exit">Ушёл из «%1$s»</string>
+    <string name="alert_row">%1$s · %2$s</string>
+    <string name="alert_service_hint" formatted="false">Если включить, новости придут даже при закрытом приложении. Взамен в строке состояния останется небольшое уведомление и расход батареи чуть вырастет. Если выключено, новости видны только при открытии приложения.</string>
+    <string name="alert_service_notification_text" formatted="false">Включено, чтобы новости приходили сразу. Выключить можно на вкладке «Новости».</string>
+    <string name="alert_service_notification_title" formatted="false">Слежу за новостями</string>
+    <string name="alert_service_switch" formatted="false">Получать новости сразу</string>
+    <string name="alert_signal_lost" formatted="false">Телефон ребёнка давно не отвечает</string>
+    <string name="alert_unknown" formatted="false">Есть новость</string>
+    <string name="app_brand_short" formatted="false">KIDCARE</string>
+    <string name="app_name" formatted="false">KidCare</string>
+    <string name="channel_alert" formatted="false">Новости о ребёнке</string>
+    <string name="channel_alert_service" formatted="false">Слежу за новостями</string>
+    <string name="channel_find_phone" formatted="false">Найти телефон</string>
+    <string name="channel_message" formatted="false">Сообщение от родителя</string>
+    <string name="channel_remote_alarm" formatted="false">Будильник от родителя</string>
+    <string name="channel_tracking" formatted="false">Геопозиция передаётся</string>
+    <string name="child_default_name" formatted="false">Ребёнок</string>
+    <string name="child_family_gone" formatted="false">Сейчас твоя геопозиция не передаётся.\nВозьми новый номер на телефоне родителей и подключись снова.</string>
+    <string name="child_go_to_permission" formatted="false">Включить разрешения</string>
+    <string name="child_home_title" formatted="false">Ты на связи с родителями</string>
+    <string name="child_home_title_gone" formatted="false">Связь с родителями оборвалась</string>
+    <string name="child_permission_missing">%1$s выключено.\nВключи, чтобы геопозиция передавалась.</string>
+    <string name="child_play_services_fix" formatted="false">Починить сервисы Google Play</string>
+    <string name="child_play_services_fixable" formatted="false">Сервисов Google Play нет или они слишком старые, поэтому геопозицию не отправить.\nНажми кнопку ниже, чтобы починить. (Сообщения и смена звука работают как раньше.)</string>
+    <string name="child_play_services_unfixable" formatted="false">На этом телефоне нет сервисов Google Play, поэтому геопозицию не отправить.\nПокажи этот экран родителям. (Сообщения и смена звука работают как раньше.)</string>
+    <string name="child_repair" formatted="false">Подключиться снова</string>
+    <string name="child_selector_add_child" formatted="false">＋ Добавить ребёнка</string>
+    <string name="child_selector_add_guardian" formatted="false">＋ Пригласить родителя</string>
+    <string name="child_selector_add_guardian_count">＋ Пригласить родителя · сейчас %1$d</string>
+    <string name="child_selector_empty" formatted="false">Подключите ребёнка ▾</string>
+    <string name="child_selector_load_failed" formatted="false">Не удалось загрузить семью</string>
+    <string name="child_selector_value">Смотрите %1$s ▾</string>
+    <string name="child_sharing_on" formatted="false">Родители видят, где ты сейчас.\nЧтобы быстро найти тебя, если ты потеряешься.</string>
+    <string name="connect_failed">Не удалось запустить приложение\n%1$s</string>
+    <string name="connecting" formatted="false">Подключение…</string>
+    <string name="control_alarm_cancel" formatted="false">Убрать поставленный будильник</string>
+    <string name="control_alarm_hint_detail" formatted="false">Прозвонит один раз на телефоне ребёнка в выбранное время. Если это время уже прошло, прозвонит в то же время на следующий день — сегодня это или завтра, решают часы на телефоне ребёнка. Пока будильник поставлен, в его строке состояния виден значок часов, и через 5 минут звонок прекращается сам.</string>
+    <string name="control_alarm_label_hint" formatted="false">Название будильника (например: пора на занятия)</string>
+    <string name="control_alarm_picker_title" formatted="false">Во сколько прозвонить?</string>
+    <string name="control_alarm_set" formatted="false">Поставить будильник на это время</string>
+    <string name="control_alarm_state_confirmed">На телефоне ребёнка стоит будильник на %1$s</string>
+    <string name="control_alarm_state_labeled">%1$s «%2$s»</string>
+    <string name="control_alarm_state_pending">Будильник на %1$s отправлен · ждём ответа от телефона ребёнка</string>
+    <string name="control_alarm_time_format">%1$s</string>
+    <string name="control_command_done" formatted="false">Готово</string>
+    <string name="control_command_queued" formatted="false">Ещё не ушло. Дойдёт до телефона ребёнка и выполнится, когда появится интернет — к тому времени всё может измениться.</string>
+    <string name="control_command_sending" formatted="false">Отправка…</string>
+    <string name="control_command_timeout" formatted="false">Телефон ребёнка не отвечает</string>
+    <string name="control_command_timeout_format">Телефон ребёнка не отвечает\n%1$s</string>
+    <string name="control_error_alarm_exact_denied" formatted="false">Будильник не поставился, потому что на телефоне ребёнка выключены «Будильники и напоминания». Откройте на том телефоне Настройки → Приложения → KidCare → Будильники и напоминания и включите.</string>
+    <string name="control_error_child_failed" formatted="false">Телефон ребёнка не смог выполнить этот запрос.</string>
+    <string name="control_error_message_notification_off" formatted="false">Сообщение не показалось, потому что на телефоне ребёнка выключены уведомления. Откройте на том телефоне Настройки → Приложения → KidCare → Уведомления и включите их.</string>
+    <string name="control_error_ringer_denied" formatted="false">На телефоне ребёнка выключено разрешение на настройки звука. Его нужно включить там, иначе изменить нельзя.</string>
+    <string name="control_find_hint" formatted="false">Звонит громко даже в беззвучном режиме. Через 5 минут прекращается сам.</string>
+    <string name="control_find_phone" formatted="false">Найти телефон</string>
+    <string name="control_find_stop" formatted="false">Остановить звук</string>
+    <string name="control_find_stop_hint" formatted="false">Остановить звук, если он уже звонит</string>
+    <string name="control_header_subtitle" formatted="false">Отправляйте звук, сообщения и будильники прямо на телефон ребёнка.</string>
+    <string name="control_last_seen_days">%1$d дн. назад</string>
+    <string name="control_last_seen_format">Последний сигнал %1$s</string>
+    <string name="control_last_seen_hours">%1$d ч. назад</string>
+    <string name="control_last_seen_minutes">%1$d мин. назад</string>
+    <string name="control_last_seen_never" formatted="false">Сигнала ещё ни разу не было</string>
+    <string name="control_last_seen_now" formatted="false">только что</string>
+    <string name="control_last_seen_skewed_value">%1$s (по часам телефона ребёнка, поэтому неточно)</string>
+    <string name="control_lock_hint" formatted="false">Если ребёнок поменяет звук, через несколько секунд он вернётся к тому, что выбрали вы.</string>
+    <string name="control_lock_switch" formatted="false">Возвращать, если ребёнок отменит</string>
+    <string name="control_message_chip_call" formatted="false">Позвони мне, пожалуйста</string>
+    <string name="control_message_chip_come_home" formatted="false">Иди домой</string>
+    <string name="control_message_chip_meal" formatted="false">Ты поел?</string>
+    <string name="control_message_chip_where" formatted="false">Ты сейчас где?</string>
+    <string name="control_message_empty" formatted="false">Напишите, что отправить.</string>
+    <string name="control_message_hint" formatted="false">Что сказать ребёнку</string>
+    <string name="control_message_hint_detail" formatted="false">Появится крупно на экране ребёнка. Без звука, только одна вибрация. Когда ребёнок нажмёт «Понял», здесь появится «Прочитано».</string>
+    <string name="control_message_read" formatted="false">Прочитано</string>
+    <string name="control_message_send" formatted="false">Отправить сообщение</string>
+    <string name="control_message_unread" formatted="false">Дошло до телефона ребёнка · ещё не прочитано</string>
+    <string name="control_mode_normal" formatted="false">Звонок</string>
+    <string name="control_mode_silent" formatted="false">Без звука</string>
+    <string name="control_mode_vibrate" formatted="false">Вибрация</string>
+    <string name="control_ringer_refresh" formatted="false">Проверить снова</string>
+    <string name="control_ringer_status_applied">Сейчас · %1$s</string>
+    <string name="control_ringer_status_format">Последняя проверка · %1$s</string>
+    <string name="control_ringer_status_loading" formatted="false">Проверяем режим звука на телефоне ребёнка</string>
+    <string name="control_ringer_status_unknown" formatted="false">Последний режим звука ещё не проверен</string>
+    <string name="control_section_alarm" formatted="false">Поставить будильник</string>
+    <string name="control_section_message" formatted="false">Сказать словечко</string>
+    <string name="control_section_ringer" formatted="false">Поменять прямо сейчас</string>
+    <string name="day_next" formatted="false">Следующий день</string>
+    <string name="day_prev" formatted="false">Предыдущий день</string>
+    <string name="dialog_cancel" formatted="false">Отмена</string>
+    <string name="error_generic_format">Со связью что-то не так\n%1$s</string>
+    <string name="error_server_setup" formatted="false">Настройка сервера ещё не закончена. Скажите тому, кто устанавливал приложение.</string>
+    <string name="error_unauthenticated" formatted="false">Вы вышли из аккаунта. Закройте приложение и откройте снова.</string>
+    <string name="event_detail_battery">осталось %1$d%%</string>
+    <string name="event_detail_permission">%1$s — включите снова на телефоне ребёнка</string>
+    <string name="find_phone_notification_text" formatted="false">Нажми, чтобы остановить звук</string>
+    <string name="find_phone_notification_title" formatted="false">Родитель ищет этот телефон</string>
+    <string name="find_phone_stop" formatted="false">Нашёл (остановить звук)</string>
+    <string name="find_phone_title" formatted="false">Родитель ищет этот телефон</string>
+    <string name="guardian_disconnect_banner">На запрос, отправленный %1$s, телефон ребёнка ещё не ответил\nОткройте на его телефоне приложение KidCare один раз, и связь восстановится.</string>
+    <string name="guardian_start_join_family" formatted="false">Войти в семью по коду</string>
+    <string name="guardian_start_new_family" formatted="false">Создать новую семью</string>
+    <string name="guardian_start_title" formatted="false">С чего начнём?</string>
+    <string name="holiday_buddha" formatted="false">День рождения Будды</string>
+    <string name="holiday_children" formatted="false">День детей</string>
+    <string name="holiday_christmas" formatted="false">Рождество</string>
+    <string name="holiday_chuseok" formatted="false">Праздники Чхусок</string>
+    <string name="holiday_foundation" formatted="false">День основания государства</string>
+    <string name="holiday_hangul" formatted="false">День хангыля</string>
+    <string name="holiday_independence" formatted="false">День движения за независимость</string>
+    <string name="holiday_liberation" formatted="false">День освобождения</string>
+    <string name="holiday_memorial" formatted="false">День памяти павших</string>
+    <string name="holiday_new_year" formatted="false">Новый год</string>
+    <string name="holiday_seollal" formatted="false">Праздники лунного Нового года</string>
+    <string name="holiday_substitute" formatted="false">Перенесённый выходной</string>
+    <string name="language_follow_system" formatted="false">Как в системе</string>
+    <string name="language_picker_title" formatted="false">Язык</string>
+    <string name="list_loading" formatted="false">Загрузка…</string>
+    <string name="map_battery_info_confirm" formatted="false">Понятно</string>
+    <string name="map_battery_info_message" formatted="false">Уровень здесь — тот, что сообщил телефон ребёнка. Какое приложение сколько батареи израсходовало, Android не даёт прочитать с другого телефона, это нужно смотреть в Настройках &gt; Батарея на его телефоне.</string>
+    <string name="map_battery_info_title" formatted="false">Батарея телефона ребёнка</string>
+    <string name="map_child_avatar" formatted="false">Персонаж выбранного ребёнка</string>
+    <string name="map_error">Не удалось загрузить карту\n%1$s</string>
+    <string name="map_live_active_status">Слежение вживую · точность около %1$dm · батарея %2$d%%</string>
+    <string name="map_live_button_connecting" formatted="false">Геопозиция вживую  подключение…</string>
+    <string name="map_live_cancel_description" formatted="false">Идёт подключение геопозиции вживую. Нажмите, чтобы отменить</string>
+    <string name="map_live_connecting" formatted="false">Подключение вживую…</string>
+    <string name="map_live_start" formatted="false">Геопозиция вживую  OFF</string>
+    <string name="map_live_start_description" formatted="false">Геопозиция вживую выключена. Нажмите, чтобы включить</string>
+    <string name="map_live_stop" formatted="false">Геопозиция вживую  ON</string>
+    <string name="map_live_stop_description" formatted="false">Геопозиция вживую включена. Нажмите, чтобы выключить</string>
+    <string name="map_live_stopped" formatted="false">Просмотр вживую закончен. На карте осталась последняя полученная точка.</string>
+    <string name="map_live_timeout" formatted="false">Просмотр вживую закончился по предохранителю в 10 минут.</string>
+    <string name="map_live_waiting" formatted="false">Ищем геопозицию вживую. Подождите, пока поймается сигнал GPS.</string>
+    <string name="map_locate_no_fix" formatted="false">Телефон ребёнка ещё не определил своё место. Нажмите ещё раз через минуту.</string>
+    <string name="map_locate_now" formatted="false">Узнать место сейчас</string>
+    <string name="map_locating" formatted="false">Спрашиваем телефон ребёнка…</string>
+    <string name="map_no_child" formatted="false">Телефон ребёнка ещё не подключён.</string>
+    <string name="map_status_format">Батарея %1$d%%\nна %2$s</string>
+    <string name="map_status_never" formatted="false">Место ещё ни разу не проверяли. Нажмите «Узнать место сейчас».</string>
+    <string name="message_ack" formatted="false">Понял</string>
+    <string name="message_notification_title" formatted="false">Словечко от родителей</string>
+    <string name="message_title" formatted="false">Словечко от родителей</string>
+    <string name="pairing_child_hint" formatted="false">6 цифр</string>
+    <string name="pairing_child_join" formatted="false">Подключить</string>
+    <string name="pairing_child_name_hint" formatted="false">Имя ребёнка (например: Минджун)</string>
+    <string name="pairing_child_title" formatted="false">Введи шестизначный номер\nс телефона родителей</string>
+    <string name="pairing_code_expiry_format">Этот номер истечёт через %1$d мин.</string>
+    <string name="pairing_code_placeholder" formatted="false">------</string>
+    <string name="pairing_expired" formatted="false">Номер истёк. Возьми новый на телефоне родителей.</string>
+    <string name="pairing_failed">Не удалось подключиться\n%1$s</string>
+    <string name="pairing_full" formatted="false">Другой телефон уже подключён.</string>
+    <string name="pairing_guardian_hint" formatted="false">На телефоне ребёнка откройте приложение,\nвыберите «Ребёнок» и введите этот номер.</string>
+    <string name="pairing_guardian_invite_guardian_hint" formatted="false">На телефоне другого родителя откройте приложение,\nвыберите «Родитель» → «Войти по коду» и введите этот номер.</string>
+    <string name="pairing_guardian_invite_guardian_title" formatted="false">Введите этот номер на телефоне другого родителя</string>
+    <string name="pairing_guardian_join_title" formatted="false">Введите шестизначный номер,\nкоторый вам дал родитель из семьи</string>
+    <string name="pairing_guardian_name_hint" formatted="false">Имя родителя (например: мама, папа)</string>
+    <string name="pairing_guardian_title" formatted="false">Введите этот номер на телефоне ребёнка</string>
+    <string name="pairing_new_code_button" formatted="false">Получить новый номер</string>
+    <string name="pairing_not_found" formatted="false">Такого номера нет. Проверьте ещё раз.</string>
+    <string name="pairing_offline" formatted="false">Нет доступа в интернет. Проверьте Wi-Fi или мобильные данные.</string>
+    <string name="pairing_reset_role_button" formatted="false">Выбрать роль заново</string>
+    <string name="pairing_wrong_role" formatted="false">Этот номер не для выбранной роли. Проверьте, какой номер для ребёнка, а какой для родителя.</string>
+    <string name="perm_activity_reason" formatted="false">Когда известно, идёт ребёнок или стоит, во время стоянки место можно проверять реже — так экономится батарея.</string>
+    <string name="perm_activity_title" formatted="false">Распознавание движения</string>
+    <string name="perm_background_reason" formatted="false">Чтобы отправлять геопозицию при закрытом приложении, нужно «Разрешать всегда». Выберите «Разрешать всегда» на экране настроек.</string>
+    <string name="perm_background_title" formatted="false">Геопозиция «Разрешать всегда»</string>
+    <string name="perm_battery_hint" formatted="false">Когда откроется экран настроек, найдите в списке KidCare и поставьте «Без ограничений».</string>
+    <string name="perm_battery_reason" formatted="false">Без этого телефон усыпляет приложение и геопозиция обрывается. Выберите «Разрешить» на экране настроек.</string>
+    <string name="perm_battery_title" formatted="false">Без экономии батареи</string>
+    <string name="perm_denied_permanently" formatted="false">Только что отказали, поэтому с этого экрана спросить снова нельзя. Нажмите «Включить в настройках», чтобы перейти в настройки приложения, и включите разрешение там.</string>
+    <string name="perm_dnd_reason" formatted="false">Это разрешение позволяет родителю менять звук и вибрацию. Найдите в списке KidCare и включите.</string>
+    <string name="perm_dnd_title" formatted="false">Менять настройки звука</string>
+    <string name="perm_done" formatted="false">Всё включено. Начинаем!</string>
+    <string name="perm_grant" formatted="false">Включить</string>
+    <string name="perm_location_reason" formatted="false">Нужно, чтобы родители знали, где ты сейчас.</string>
+    <string name="perm_location_title" formatted="false">Разрешение на геопозицию</string>
+    <string name="perm_notification_reason" formatted="false">Нужно, чтобы получать сообщения от родителей и показывать, что геопозиция передаётся.</string>
+    <string name="perm_notification_title" formatted="false">Уведомления</string>
+    <string name="perm_open_settings" formatted="false">Включить в настройках</string>
+    <string name="perm_start" formatted="false">Начать</string>
+    <string name="perm_title" formatted="false">Нужно включить пару вещей</string>
+    <string name="place_add" formatted="false">Добавить место</string>
+    <string name="place_delete" formatted="false">Удалить</string>
+    <string name="place_delete_cancel" formatted="false">Оставить</string>
+    <string name="place_delete_confirm" formatted="false">Удалить</string>
+    <string name="place_delete_message">%1$s\n\nПосле удаления приход сюда и уход отсюда больше не будут приходить уведомлением.</string>
+    <string name="place_delete_title" formatted="false">Удалить это место?</string>
+    <string name="place_deleting" formatted="false">Удаляем…</string>
+    <string name="place_editor_cancel" formatted="false">Отмена</string>
+    <string name="place_editor_map_hint" formatted="false">Двигайте карту, пока крестик в середине не встанет на это место. Синий круг — зона, в которой срабатывает уведомление.</string>
+    <string name="place_editor_map_label" formatted="false">Где это</string>
+    <string name="place_editor_name_hint" formatted="false">Школа, кружок, дом бабушки…</string>
+    <string name="place_editor_name_label" formatted="false">Название места</string>
+    <string name="place_editor_name_required" formatted="false">Напишите название. Оно появится в уведомлении, например «Пришёл в ○○».</string>
+    <string name="place_editor_no_child_location" formatted="false">Где телефон ребёнка, пока неизвестно, поэтому карта открылась широко. Подвиньте её рукой и найдите место.</string>
+    <string name="place_editor_notify_enter" formatted="false">Сообщать о приходе</string>
+    <string name="place_editor_notify_exit" formatted="false">Сообщать об уходе</string>
+    <string name="place_editor_notify_label" formatted="false">Когда сообщать</string>
+    <string name="place_editor_notify_none_hint" formatted="false">Если оба выключены, это место не шлёт уведомлений. Само место остаётся.</string>
+    <string name="place_editor_radius_label" formatted="false">С какого расстояния</string>
+    <string name="place_editor_radius_value">радиус %1$dm</string>
+    <string name="place_editor_save" formatted="false">Сохранить</string>
+    <string name="place_editor_title_edit" formatted="false">Изменить место</string>
+    <string name="place_editor_title_new" formatted="false">Новое место</string>
+    <string name="place_empty" formatted="false">Мест пока нет.\nНажмите «Добавить место» внизу\nи укажите, например, «Школа» или «Кружок».\nМы сообщим, когда ребёнок придёт или уйдёт.</string>
+    <string name="place_error_format">Не удалось загрузить места\n%1$s</string>
+    <string name="place_header_subtitle" formatted="false">Укажите школу или кружок, и мы сообщим о приходе и уходе.</string>
+    <string name="place_header_title" formatted="false">Спокойные места</string>
+    <string name="place_limit_notice">Можно сохранить до %1$d мест. Чтобы добавить новое, удалите место, которым больше не пользуетесь.</string>
+    <string name="place_no_family" formatted="false">Семья не найдена. Закройте приложение и откройте снова.</string>
+    <string name="place_notify_both" formatted="false">Уведомления о приходе и уходе</string>
+    <string name="place_notify_enter" formatted="false">Только о приходе</string>
+    <string name="place_notify_exit" formatted="false">Только об уходе</string>
+    <string name="place_notify_none" formatted="false">Уведомления выключены</string>
+    <string name="place_row_detail">%1$s</string>
+    <string name="place_row_title">%1$s · радиус %2$dm</string>
+    <string name="place_save_slow" formatted="false">Запрос на сохранение ушёл, но сервер ещё не подтвердил. Сохранится само, как только появится интернет.</string>
+    <string name="place_saving" formatted="false">Сохраняем…</string>
+    <string name="place_summary">%1$s (радиус %2$dm)</string>
+    <string name="place_sync_failed_format">Место сохранено, но телефон ребёнка не удалось предупредить. Откройте этот экран снова, и мы попробуем ещё раз.\n%1$s</string>
+    <string name="place_sync_no_child" formatted="false">Место сохранено. Оно заработает само, как только телефон ребёнка подключится.</string>
+    <string name="place_sync_pending" formatted="false">До телефона ребёнка ещё не дошло. Он всё ещё работает по старым местам.</string>
+    <string name="place_sync_retry" formatted="false">Предупредить ещё раз</string>
+    <string name="place_sync_slow" formatted="false">Место сохранено. Предупреждение телефона ребёнка закончится, как только появится интернет.</string>
+    <string name="remote_alarm_notification_text" formatted="false">Нажми, чтобы выключить</string>
+    <string name="remote_alarm_stop" formatted="false">Выключить будильник</string>
+    <string name="remote_alarm_title" formatted="false">Это будильник от родителей</string>
+    <string name="role_child" formatted="false">Ребёнок</string>
+    <string name="role_guardian" formatted="false">Родитель (мама или папа)</string>
+    <string name="role_subtitle" formatted="false">До подключения можно выбрать заново.\nПосле подключения изменить нельзя.</string>
+    <string name="role_title" formatted="false">Чей это телефон?</string>
+    <string name="router_retry" formatted="false">Повторить</string>
+    <string name="schedule_add" formatted="false">Добавить правило</string>
+    <string name="schedule_allday_cancel" formatted="false">Выбрать время заново</string>
+    <string name="schedule_allday_confirm" formatted="false">Сохранить на весь день</string>
+    <string name="schedule_allday_message">Начало и конец одинаковые — %1$s.\nЕсли сохранить так, в выбранные дни все 24 часа будет %2$s.</string>
+    <string name="schedule_allday_title" formatted="false">Сохранить как «весь день»?</string>
+    <string name="schedule_day_fri" formatted="false">Пт</string>
+    <string name="schedule_day_mon" formatted="false">Пн</string>
+    <string name="schedule_day_sat" formatted="false">Сб</string>
+    <string name="schedule_day_sun" formatted="false">Вс</string>
+    <string name="schedule_day_thu" formatted="false">Чт</string>
+    <string name="schedule_day_tue" formatted="false">Вт</string>
+    <string name="schedule_day_wed" formatted="false">Ср</string>
+    <string name="schedule_days_everyday" formatted="false">Каждый день</string>
+    <string name="schedule_days_none" formatted="false">Дни не выбраны</string>
+    <string name="schedule_days_weekday" formatted="false">Будни</string>
+    <string name="schedule_days_weekend" formatted="false">Выходные</string>
+    <string name="schedule_delete" formatted="false">Удалить</string>
+    <string name="schedule_delete_cancel" formatted="false">Оставить</string>
+    <string name="schedule_delete_confirm" formatted="false">Удалить</string>
+    <string name="schedule_delete_message">%1$s\n\nПосле удаления звук в этот промежуток больше не будет меняться сам.</string>
+    <string name="schedule_delete_title" formatted="false">Удалить это правило?</string>
+    <string name="schedule_deleting" formatted="false">Удаляем…</string>
+    <string name="schedule_editor_cancel" formatted="false">Отмена</string>
+    <string name="schedule_editor_days_label" formatted="false">В какие дни</string>
+    <string name="schedule_editor_days_required" formatted="false">Выберите хотя бы один день. Без дней это правило не сработает ни разу.</string>
+    <string name="schedule_editor_end_title" formatted="false">Время окончания</string>
+    <string name="schedule_editor_mode_label" formatted="false">Телефон ребёнка перевести в</string>
+    <string name="schedule_editor_save" formatted="false">Сохранить</string>
+    <string name="schedule_editor_start_title" formatted="false">Время начала</string>
+    <string name="schedule_editor_time_label" formatted="false">С какого часа до какого</string>
+    <string name="schedule_editor_title_edit" formatted="false">Изменить правило</string>
+    <string name="schedule_editor_title_new" formatted="false">Новое правило</string>
+    <string name="schedule_empty" formatted="false">Промежутки ещё не заданы.\nНажмите «Добавить правило» внизу\nи попробуйте, например, «Будни ночью — без звука».</string>
+    <string name="schedule_error_format">Не удалось загрузить правила\n%1$s</string>
+    <string name="schedule_header_subtitle" formatted="false">Переключает звонок, вибрацию и беззвучный режим по дню и времени.</string>
+    <string name="schedule_header_title" formatted="false">Расписание звука</string>
+    <string name="schedule_holiday_cleared" formatted="false">В праздники правила тоже работают.</string>
+    <string name="schedule_holiday_date">%1$d.%2$d</string>
+    <string name="schedule_holiday_next">Ближайший выходной — %1$s, %2$s.</string>
+    <string name="schedule_holiday_saved" formatted="false">В праздники правила отдыхают.</string>
+    <string name="schedule_holiday_subtitle" formatted="false">В выходные ни одно правило снизу не срабатывает.</string>
+    <string name="schedule_holiday_title" formatted="false">Отдыхать в праздники</string>
+    <string name="schedule_holiday_unknown" formatted="false">Этот телефон не смог вычислить даты праздников. Даже с включённым переключателем считаются только дни недели.</string>
+    <string name="schedule_mode_normal" formatted="false">Звонок</string>
+    <string name="schedule_mode_silent" formatted="false">Без звука</string>
+    <string name="schedule_mode_vibrate" formatted="false">Вибрация</string>
+    <string name="schedule_no_family" formatted="false">Семья не найдена. Закройте приложение и откройте снова.</string>
+    <string name="schedule_overlap_cancel" formatted="false">Изменить</string>
+    <string name="schedule_overlap_confirm" formatted="false">Всё равно сохранить</string>
+    <string name="schedule_overlap_message">Этот промежуток пересекается с правилом «%1$s».\nПока они пересекаются, побеждает правило, созданное позже.</string>
+    <string name="schedule_overlap_message_more">Этот промежуток пересекается с «%1$s» и ещё %2$d правилами.\nПока они пересекаются, побеждает правило, созданное позже.</string>
+    <string name="schedule_overlap_title" formatted="false">Есть пересекающееся правило</string>
+    <string name="schedule_range">%1$s ~ %2$s</string>
+    <string name="schedule_range_allday">Весь день (24 часа с %1$s)</string>
+    <string name="schedule_range_overnight">%1$s ~ %2$s следующего дня</string>
+    <string name="schedule_range_separator" formatted="false">–</string>
+    <string name="schedule_row_detail">%1$s · %2$s</string>
+    <string name="schedule_row_detail_off">%1$s · %2$s (выключено)</string>
+    <string name="schedule_save_slow" formatted="false">Запрос на сохранение ушёл, но сервер ещё не подтвердил. Сохранится само, как только появится интернет.</string>
+    <string name="schedule_saving" formatted="false">Сохраняем…</string>
+    <string name="schedule_summary">%1$s · %2$s · %3$s</string>
+    <string name="schedule_sync_failed_format">Правило сохранено, но телефон ребёнка не удалось предупредить. Откройте этот экран снова, и мы попробуем ещё раз.\n%1$s</string>
+    <string name="schedule_sync_no_child" formatted="false">Правило сохранено. Оно заработает само, как только телефон ребёнка подключится.</string>
+    <string name="schedule_sync_pending" formatted="false">До телефона ребёнка ещё не дошло. Он всё ещё работает по старым правилам.</string>
+    <string name="schedule_sync_retry" formatted="false">Предупредить ещё раз</string>
+    <string name="schedule_sync_slow" formatted="false">Правило сохранено. Предупреждение телефона ребёнка закончится, как только появится интернет.</string>
+    <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="tab_alert" formatted="false">Новости</string>
+    <string name="tab_control" formatted="false">Управление</string>
+    <string name="tab_map" formatted="false">Карта</string>
+    <string name="tab_place" formatted="false">Места</string>
+    <string name="tab_schedule" formatted="false">Расписание</string>
+    <string name="timeline_collapse" formatted="false">Свернуть журнал поездок</string>
+    <string name="timeline_detail">%1$s\n%2$s</string>
+    <string name="timeline_drag_handle" formatted="false">Потяните вверх или вниз, чтобы изменить высоту журнала</string>
+    <string name="timeline_empty" formatted="false">За этот день записей нет</string>
+    <string name="timeline_error">Не удалось загрузить записи\n%1$s</string>
+    <string name="timeline_expand" formatted="false">Развернуть журнал поездок</string>
+    <string name="timeline_hide_all_routes" formatted="false">Скрыть все маршруты</string>
+    <string name="timeline_move_title">Поездка %1$s</string>
+    <string name="timeline_route_hidden" formatted="false">Скрыт на карте</string>
+    <string name="timeline_route_visible" formatted="false">Виден на карте</string>
+    <string name="timeline_show_all_routes" formatted="false">Показать все маршруты</string>
+    <string name="timeline_summary_day">%1$s в этот день</string>
+    <string name="timeline_summary_empty" formatted="false">Журнал поездок за сегодня</string>
+    <string name="timeline_summary_routes_hidden">%1$s · маршруты скрыты</string>
+    <string name="timeline_summary_routes_partial">%1$s · часть скрыта</string>
+    <string name="timeline_summary_today">%1$s сегодня</string>
+    <string name="timeline_unknown_place" formatted="false">Где задержался</string>
+    <string name="timeline_view_records" formatted="false">Смотреть журнал поездок</string>
+    <string name="tracking_notification_text" formatted="false">Родители знают, где ты</string>
+    <string name="tracking_notification_title" formatted="false">Геопозиция передаётся</string>
+    <string name="uid_format">ID моего устройства\n%1$s</string>
+</resources>

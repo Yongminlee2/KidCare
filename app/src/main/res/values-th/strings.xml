@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 자동 생성. 고치려면 i18n/th.json 을 고치고 gen.py 를 다시 돌린다. -->
+<resources>
+    <string name="alert_child_line">%1$s · %2$s</string>
+    <string name="alert_command_failed" formatted="false">คำสั่งที่ส่งไปยังมือถือของลูกล้มเหลว</string>
+    <string name="alert_empty" formatted="false">ยังไม่มีข่าวคราว\nตั้งโรงเรียนหรือที่เรียนพิเศษในแท็บสถานที่\nแล้วการมาถึงจะมาปรากฏตรงนี้</string>
+    <string name="alert_error_format">โหลดข่าวคราวไม่ได้\n%1$s</string>
+    <string name="alert_header_subtitle" formatted="false">การมาถึง แบตเตอรี่ และการเชื่อมต่อ เรียงตามเวลา</string>
+    <string name="alert_header_title" formatted="false">ข่าวของลูก</string>
+    <string name="alert_low_battery" formatted="false">มือถือของลูกแบตเตอรี่เหลือน้อย</string>
+    <string name="alert_no_family" formatted="false">ไม่พบข้อมูลครอบครัว กรุณาปิดแอปแล้วเปิดใหม่</string>
+    <string name="alert_notification_denied" formatted="false">การแจ้งเตือนปิดอยู่จึงเปิดไม่ได้ ไปที่ตั้งค่าเครื่อง → แอป → KidCare → การแจ้งเตือน แล้วเปิด</string>
+    <string name="alert_notification_more">และอีก %1$d รายการ</string>
+    <string name="alert_permission_off" formatted="false">สิทธิ์บนมือถือของลูกถูกปิดไป</string>
+    <string name="alert_place_enter">ถึง %1$s แล้ว</string>
+    <string name="alert_place_exit">ออกจาก %1$s แล้ว</string>
+    <string name="alert_row">%1$s · %2$s</string>
+    <string name="alert_service_hint" formatted="false">ถ้าเปิด ข่าวจะมาถึงแม้ไม่ได้เปิดแอป แลกกับการที่มีแจ้งเตือนเล็ก ๆ ค้างอยู่ในแถบสถานะและกินแบตเพิ่มขึ้นเล็กน้อย ถ้าปิดไว้จะเห็นข่าวเฉพาะตอนเปิดแอป</string>
+    <string name="alert_service_notification_text" formatted="false">เปิดอยู่ เพื่อให้ข่าวมาถึงทันที ปิดได้ที่แท็บข่าว</string>
+    <string name="alert_service_notification_title" formatted="false">กำลังคอยข่าว</string>
+    <string name="alert_service_switch" formatted="false">รับข่าวทันที</string>
+    <string name="alert_signal_lost" formatted="false">มือถือของลูกไม่ตอบมาสักพักแล้ว</string>
+    <string name="alert_unknown" formatted="false">มีข่าวใหม่</string>
+    <string name="app_brand_short" formatted="false">KIDCARE</string>
+    <string name="app_name" formatted="false">KidCare</string>
+    <string name="channel_alert" formatted="false">ข่าวของลูก</string>
+    <string name="channel_alert_service" formatted="false">กำลังคอยข่าว</string>
+    <string name="channel_find_phone" formatted="false">หามือถือ</string>
+    <string name="channel_message" formatted="false">ข้อความจากผู้ปกครอง</string>
+    <string name="channel_remote_alarm" formatted="false">นาฬิกาปลุกที่ผู้ปกครองตั้ง</string>
+    <string name="channel_tracking" formatted="false">กำลังแชร์ตำแหน่ง</string>
+    <string name="child_default_name" formatted="false">ลูก</string>
+    <string name="child_family_gone" formatted="false">ตอนนี้ตำแหน่งของหนูไม่ได้ถูกส่งออกไป\nขอรหัสใหม่จากมือถือของพ่อแม่แล้วเชื่อมต่ออีกครั้งนะ</string>
+    <string name="child_go_to_permission" formatted="false">ไปเปิดสิทธิ์</string>
+    <string name="child_home_title" formatted="false">หนูเชื่อมต่อกับพ่อแม่อยู่</string>
+    <string name="child_home_title_gone" formatted="false">การเชื่อมต่อกับพ่อแม่ขาดไปแล้ว</string>
+    <string name="child_permission_missing">%1$s ปิดอยู่\nเปิดแล้วตำแหน่งถึงจะส่งได้</string>
+    <string name="child_play_services_fix" formatted="false">ซ่อมบริการ Google Play</string>
+    <string name="child_play_services_fixable" formatted="false">บริการ Google Play ไม่มีหรือเก่าเกินไป จึงส่งตำแหน่งไม่ได้\nกดปุ่มข้างล่างเพื่อซ่อม (การรับข้อความและการเปลี่ยนเสียงยังใช้ได้ปกติ)</string>
+    <string name="child_play_services_unfixable" formatted="false">มือถือเครื่องนี้ไม่มีบริการ Google Play จึงส่งตำแหน่งไม่ได้\nเอาหน้าจอนี้ให้พ่อแม่ดูนะ (การรับข้อความและการเปลี่ยนเสียงยังใช้ได้ปกติ)</string>
+    <string name="child_repair" formatted="false">เชื่อมต่อใหม่</string>
+    <string name="child_selector_add_child" formatted="false">＋ เพิ่มลูก</string>
+    <string name="child_selector_add_guardian" formatted="false">＋ เชิญผู้ปกครอง</string>
+    <string name="child_selector_add_guardian_count">＋ เชิญผู้ปกครอง · ตอนนี้ %1$d คน</string>
+    <string name="child_selector_empty" formatted="false">กรุณาเชื่อมต่อลูก ▾</string>
+    <string name="child_selector_load_failed" formatted="false">โหลดรายชื่อครอบครัวไม่ได้</string>
+    <string name="child_selector_value">กำลังดู %1$s ▾</string>
+    <string name="child_sharing_on" formatted="false">พ่อแม่เห็นได้ว่าตอนนี้หนูอยู่ที่ไหน\nเผื่อหลงทางจะได้มารับได้เร็ว</string>
+    <string name="connect_failed">เริ่มแอปไม่ได้\n%1$s</string>
+    <string name="connecting" formatted="false">กำลังเชื่อมต่อ…</string>
+    <string name="control_alarm_cancel" formatted="false">ยกเลิกนาฬิกาปลุกที่ตั้งไว้</string>
+    <string name="control_alarm_hint_detail" formatted="false">จะดังครั้งเดียวบนมือถือของลูกตามเวลาที่เลือก ถ้าเวลานั้นผ่านไปแล้วจะดังเวลาเดียวกันในวันถัดไป วันนี้หรือพรุ่งนี้ขึ้นอยู่กับนาฬิกาบนมือถือของลูก ระหว่างที่ตั้งไว้จะมีรูปนาฬิกาขึ้นบนแถบสถานะของลูก และหยุดเองเมื่อผ่านไป 5 นาที</string>
+    <string name="control_alarm_label_hint" formatted="false">ชื่อนาฬิกาปลุก (เช่น ได้เวลาไปเรียนพิเศษ)</string>
+    <string name="control_alarm_picker_title" formatted="false">จะให้ดังกี่โมง</string>
+    <string name="control_alarm_set" formatted="false">ตั้งปลุกเวลานี้</string>
+    <string name="control_alarm_state_confirmed">บนมือถือของลูกตั้งปลุกไว้เวลา %1$s</string>
+    <string name="control_alarm_state_labeled">%1$s «%2$s»</string>
+    <string name="control_alarm_state_pending">ส่งนาฬิกาปลุกเวลา %1$s แล้ว · กำลังรอมือถือของลูกตอบ</string>
+    <string name="control_alarm_time_format">%1$s</string>
+    <string name="control_command_done" formatted="false">เสร็จแล้ว</string>
+    <string name="control_command_queued" formatted="false">ยังไม่ได้ส่งออกไป เมื่อมีอินเทอร์เน็ตจะไปถึงมือถือของลูกและทำงาน ระหว่างนั้นสถานการณ์อาจเปลี่ยนไปแล้ว</string>
+    <string name="control_command_sending" formatted="false">กำลังส่ง…</string>
+    <string name="control_command_timeout" formatted="false">มือถือของลูกไม่ตอบ</string>
+    <string name="control_command_timeout_format">มือถือของลูกไม่ตอบ\n%1$s</string>
+    <string name="control_error_alarm_exact_denied" formatted="false">ตั้งปลุกไม่ได้เพราะ «นาฬิกาปลุกและการเตือน» ปิดอยู่บนมือถือของลูก ไปที่ตั้งค่า → แอป → KidCare → นาฬิกาปลุกและการเตือน บนเครื่องนั้นแล้วเปิด</string>
+    <string name="control_error_child_failed" formatted="false">มือถือของลูกทำคำสั่งนี้ไม่สำเร็จ</string>
+    <string name="control_error_message_notification_off" formatted="false">แสดงข้อความไม่ได้เพราะการแจ้งเตือนปิดอยู่บนมือถือของลูก ไปที่ตั้งค่า → แอป → KidCare → การแจ้งเตือน บนเครื่องนั้นแล้วเปิด</string>
+    <string name="control_error_ringer_denied" formatted="false">สิทธิ์ตั้งค่าเสียงปิดอยู่บนมือถือของลูก ต้องเปิดที่เครื่องนั้นถึงจะเปลี่ยนได้</string>
+    <string name="control_find_hint" formatted="false">ดังเสียงดังแม้อยู่ในโหมดเงียบ และหยุดเองเมื่อผ่านไป 5 นาที</string>
+    <string name="control_find_phone" formatted="false">หามือถือ</string>
+    <string name="control_find_stop" formatted="false">หยุดเสียง</string>
+    <string name="control_find_stop_hint" formatted="false">หยุดเสียงถ้ากำลังดังอยู่แล้ว</string>
+    <string name="control_header_subtitle" formatted="false">ส่งเสียง ข้อความ และนาฬิกาปลุกไปที่มือถือของลูกได้เลย</string>
+    <string name="control_last_seen_days">%1$d วันก่อน</string>
+    <string name="control_last_seen_format">สัญญาณล่าสุด %1$s</string>
+    <string name="control_last_seen_hours">%1$d ชั่วโมงก่อน</string>
+    <string name="control_last_seen_minutes">%1$d นาทีก่อน</string>
+    <string name="control_last_seen_never" formatted="false">ยังไม่เคยมีสัญญาณเลย</string>
+    <string name="control_last_seen_now" formatted="false">เมื่อครู่นี้</string>
+    <string name="control_last_seen_skewed_value">%1$s (คิดจากนาฬิกาบนมือถือของลูก จึงไม่แม่นนัก)</string>
+    <string name="control_lock_hint" formatted="false">ถ้าลูกเปลี่ยนเสียง อีกไม่กี่วินาทีจะกลับมาเป็นแบบที่คุณตั้งไว้</string>
+    <string name="control_lock_switch" formatted="false">เปลี่ยนกลับถ้าลูกเปลี่ยนคืน</string>
+    <string name="control_message_chip_call" formatted="false">โทรหาแม่หน่อย</string>
+    <string name="control_message_chip_come_home" formatted="false">กลับบ้านนะ</string>
+    <string name="control_message_chip_meal" formatted="false">กินข้าวหรือยัง</string>
+    <string name="control_message_chip_where" formatted="false">ตอนนี้อยู่ไหน</string>
+    <string name="control_message_empty" formatted="false">กรุณาเขียนข้อความที่จะส่ง</string>
+    <string name="control_message_hint" formatted="false">สิ่งที่อยากบอกลูก</string>
+    <string name="control_message_hint_detail" formatted="false">จะขึ้นตัวใหญ่บนหน้าจอของลูก ไม่มีเสียง มีแค่สั่นครั้งเดียว เมื่อลูกกด «รับทราบแล้ว» ตรงนี้จะเปลี่ยนเป็น «อ่านแล้ว»</string>
+    <string name="control_message_read" formatted="false">อ่านแล้ว</string>
+    <string name="control_message_send" formatted="false">ส่งข้อความ</string>
+    <string name="control_message_unread" formatted="false">ถึงมือถือของลูกแล้ว · ยังไม่ได้อ่าน</string>
+    <string name="control_mode_normal" formatted="false">เสียงเรียกเข้า</string>
+    <string name="control_mode_silent" formatted="false">เงียบ</string>
+    <string name="control_mode_vibrate" formatted="false">สั่น</string>
+    <string name="control_ringer_refresh" formatted="false">ตรวจอีกครั้ง</string>
+    <string name="control_ringer_status_applied">ตอนนี้ · %1$s</string>
+    <string name="control_ringer_status_format">ตรวจล่าสุด · %1$s</string>
+    <string name="control_ringer_status_loading" formatted="false">กำลังตรวจโหมดเสียงบนมือถือของลูก</string>
+    <string name="control_ringer_status_unknown" formatted="false">ยังไม่ได้ตรวจโหมดเสียงล่าสุด</string>
+    <string name="control_section_alarm" formatted="false">ตั้งนาฬิกาปลุก</string>
+    <string name="control_section_message" formatted="false">ฝากสักคำ</string>
+    <string name="control_section_ringer" formatted="false">เปลี่ยนเดี๋ยวนี้</string>
+    <string name="day_next" formatted="false">วันถัดไป</string>
+    <string name="day_prev" formatted="false">วันก่อนหน้า</string>
+    <string name="dialog_cancel" formatted="false">ยกเลิก</string>
+    <string name="error_generic_format">การเชื่อมต่อมีปัญหา\n%1$s</string>
+    <string name="error_server_setup" formatted="false">การตั้งค่าเซิร์ฟเวอร์ยังไม่เสร็จ กรุณาบอกคนที่ติดตั้งแอปให้คุณ</string>
+    <string name="error_unauthenticated" formatted="false">คุณถูกออกจากระบบ กรุณาปิดแอปแล้วเปิดใหม่</string>
+    <string name="event_detail_battery">เหลือ %1$d%%</string>
+    <string name="event_detail_permission">%1$s — กรุณาเปิดใหม่บนมือถือของลูก</string>
+    <string name="find_phone_notification_text" formatted="false">กดเพื่อหยุดเสียง</string>
+    <string name="find_phone_notification_title" formatted="false">ผู้ปกครองกำลังตามหามือถือเครื่องนี้</string>
+    <string name="find_phone_stop" formatted="false">เจอแล้ว (หยุดเสียง)</string>
+    <string name="find_phone_title" formatted="false">ผู้ปกครองกำลังตามหามือถือเครื่องนี้</string>
+    <string name="guardian_disconnect_banner">คำสั่งที่ส่งเมื่อ %1$s มือถือของลูกยังไม่ตอบกลับ\nลองเปิดแอป KidCare บนเครื่องของลูกสักครั้ง แล้วจะเชื่อมต่อกลับมา</string>
+    <string name="guardian_start_join_family" formatted="false">เข้าครอบครัวเดิมด้วยรหัสเชิญ</string>
+    <string name="guardian_start_new_family" formatted="false">สร้างครอบครัวใหม่</string>
+    <string name="guardian_start_title" formatted="false">อยากเริ่มแบบไหน</string>
+    <string name="holiday_buddha" formatted="false">วันประสูติพระพุทธเจ้า</string>
+    <string name="holiday_children" formatted="false">วันเด็ก</string>
+    <string name="holiday_christmas" formatted="false">คริสต์มาส</string>
+    <string name="holiday_chuseok" formatted="false">วันหยุดชูซอก</string>
+    <string name="holiday_foundation" formatted="false">วันสถาปนาประเทศ</string>
+    <string name="holiday_hangul" formatted="false">วันฮันกึล</string>
+    <string name="holiday_independence" formatted="false">วันขบวนการเอกราช</string>
+    <string name="holiday_liberation" formatted="false">วันปลดปล่อยประเทศ</string>
+    <string name="holiday_memorial" formatted="false">วันรำลึกผู้เสียสละ</string>
+    <string name="holiday_new_year" formatted="false">วันขึ้นปีใหม่</string>
+    <string name="holiday_seollal" formatted="false">วันหยุดตรุษเกาหลี</string>
+    <string name="holiday_substitute" formatted="false">วันหยุดชดเชย</string>
+    <string name="language_follow_system" formatted="false">ตามการตั้งค่าเครื่อง</string>
+    <string name="language_picker_title" formatted="false">ภาษา</string>
+    <string name="list_loading" formatted="false">กำลังโหลด…</string>
+    <string name="map_battery_info_confirm" formatted="false">ตกลง</string>
+    <string name="map_battery_info_message" formatted="false">ระดับแบตที่เห็นตรงนี้คือค่าที่มือถือของลูกส่งมา ส่วนที่ว่าแอปไหนใช้แบตไปเท่าไร ระบบแอนดรอยด์ไม่อนุญาตให้อ่านจากเครื่องอื่น ต้องดูที่ตั้งค่า &gt; แบตเตอรี่ บนเครื่องของลูกเอง</string>
+    <string name="map_battery_info_title" formatted="false">แบตเตอรี่มือถือของลูก</string>
+    <string name="map_child_avatar" formatted="false">ตัวละครของลูกที่เลือกไว้</string>
+    <string name="map_error">โหลดแผนที่ไม่ได้\n%1$s</string>
+    <string name="map_live_active_status">กำลังติดตามสด · ความแม่นราว %1$dm · แบต %2$d%%</string>
+    <string name="map_live_button_connecting" formatted="false">ตำแหน่งสด  กำลังเชื่อมต่อ…</string>
+    <string name="map_live_cancel_description" formatted="false">ตำแหน่งสดกำลังเชื่อมต่อ กดเพื่อยกเลิก</string>
+    <string name="map_live_connecting" formatted="false">กำลังเชื่อมต่อสด…</string>
+    <string name="map_live_start" formatted="false">ตำแหน่งสด  OFF</string>
+    <string name="map_live_start_description" formatted="false">ตำแหน่งสดปิดอยู่ กดเพื่อเปิด</string>
+    <string name="map_live_stop" formatted="false">ตำแหน่งสด  ON</string>
+    <string name="map_live_stop_description" formatted="false">ตำแหน่งสดเปิดอยู่ กดเพื่อปิด</string>
+    <string name="map_live_stopped" formatted="false">จบการดูแบบสดแล้ว บนแผนที่ยังมีตำแหน่งล่าสุดที่ได้รับอยู่</string>
+    <string name="map_live_timeout" formatted="false">จบการดูแบบสดตามขีดจำกัดเพื่อความปลอดภัย 10 นาที</string>
+    <string name="map_live_waiting" formatted="false">กำลังจับตำแหน่งสด กรุณารอสักครู่จนกว่าสัญญาณ GPS จะเข้า</string>
+    <string name="map_locate_no_fix" formatted="false">มือถือของลูกยังจับตำแหน่งไม่ได้ อีกสักครู่ลองกดใหม่</string>
+    <string name="map_locate_now" formatted="false">ดูตำแหน่งตอนนี้</string>
+    <string name="map_locating" formatted="false">กำลังถามมือถือของลูก…</string>
+    <string name="map_no_child" formatted="false">ยังไม่มีมือถือของลูกเชื่อมต่ออยู่</string>
+    <string name="map_status_format">แบต %1$d%%\nณ %2$s</string>
+    <string name="map_status_never" formatted="false">ยังไม่เคยดูตำแหน่งเลย กรุณากด «ดูตำแหน่งตอนนี้»</string>
+    <string name="message_ack" formatted="false">รับทราบแล้ว</string>
+    <string name="message_notification_title" formatted="false">ข้อความจากพ่อแม่</string>
+    <string name="message_title" formatted="false">ข้อความจากพ่อแม่</string>
+    <string name="pairing_child_hint" formatted="false">รหัส 6 หลัก</string>
+    <string name="pairing_child_join" formatted="false">เชื่อมต่อ</string>
+    <string name="pairing_child_name_hint" formatted="false">ชื่อของลูก (เช่น มินจุน)</string>
+    <string name="pairing_child_title" formatted="false">ใส่รหัส 6 หลัก\nที่ขึ้นบนมือถือของพ่อแม่</string>
+    <string name="pairing_code_expiry_format">รหัสนี้จะหมดอายุใน %1$d นาที</string>
+    <string name="pairing_code_placeholder" formatted="false">------</string>
+    <string name="pairing_expired" formatted="false">รหัสหมดอายุแล้ว ขอรหัสใหม่จากมือถือของพ่อแม่</string>
+    <string name="pairing_failed">เชื่อมต่อไม่สำเร็จ\n%1$s</string>
+    <string name="pairing_full" formatted="false">มีมือถือเครื่องอื่นเชื่อมต่ออยู่แล้ว</string>
+    <string name="pairing_guardian_hint" formatted="false">บนมือถือของลูก ให้เปิดแอป\nเลือก «ลูก» แล้วใส่รหัสนี้ก็จะเชื่อมต่อ</string>
+    <string name="pairing_guardian_invite_guardian_hint" formatted="false">บนมือถือของผู้ปกครองอีกคน ให้เปิดแอป\nเลือก «ผู้ปกครอง» → «เข้าร่วมด้วยรหัส» แล้วใส่รหัสนี้</string>
+    <string name="pairing_guardian_invite_guardian_title" formatted="false">ใส่รหัสนี้บนมือถือของผู้ปกครองอีกคน</string>
+    <string name="pairing_guardian_join_title" formatted="false">ใส่รหัส 6 หลัก\nที่ได้รับจากผู้ปกครองในครอบครัว</string>
+    <string name="pairing_guardian_name_hint" formatted="false">ชื่อผู้ปกครอง (เช่น แม่ พ่อ)</string>
+    <string name="pairing_guardian_title" formatted="false">ใส่รหัสนี้บนมือถือของลูก</string>
+    <string name="pairing_new_code_button" formatted="false">ขอรหัสใหม่</string>
+    <string name="pairing_not_found" formatted="false">ไม่มีรหัสนั้น กรุณาตรวจอีกครั้ง</string>
+    <string name="pairing_offline" formatted="false">ต่ออินเทอร์เน็ตไม่ได้ กรุณาตรวจ Wi-Fi หรือเน็ตมือถือ</string>
+    <string name="pairing_reset_role_button" formatted="false">เลือกบทบาทใหม่</string>
+    <string name="pairing_wrong_role" formatted="false">รหัสนี้ไม่ใช่ของบทบาทที่เลือก กรุณาดูว่าอันไหนของลูกและอันไหนของผู้ปกครอง</string>
+    <string name="perm_activity_reason" formatted="false">ถ้ารู้ว่าลูกกำลังเดินหรืออยู่นิ่ง ตอนอยู่นิ่งก็ตรวจตำแหน่งถี่น้อยลงได้ ช่วยประหยัดแบต</string>
+    <string name="perm_activity_title" formatted="false">การตรวจจับการเคลื่อนไหว</string>
+    <string name="perm_background_reason" formatted="false">จะส่งตำแหน่งตอนไม่ได้เปิดแอปต้องเลือก «อนุญาตตลอดเวลา» กรุณาเลือก «อนุญาตตลอดเวลา» ในหน้าตั้งค่า</string>
+    <string name="perm_background_title" formatted="false">ตำแหน่ง «อนุญาตตลอดเวลา»</string>
+    <string name="perm_battery_hint" formatted="false">เมื่อหน้าตั้งค่าเปิดขึ้น ให้หา KidCare ในรายการแล้วเปลี่ยนเป็น «ไม่จำกัด»</string>
+    <string name="perm_battery_reason" formatted="false">ถ้าไม่เปิด เครื่องจะพักแอปแล้วตำแหน่งจะขาดหาย กรุณาเลือก «อนุญาต» ในหน้าตั้งค่า</string>
+    <string name="perm_battery_title" formatted="false">ยกเว้นการประหยัดแบต</string>
+    <string name="perm_denied_permanently" formatted="false">เพิ่งถูกปฏิเสธไป หน้านี้จึงถามอีกไม่ได้ กด «เปิดในตั้งค่า» เพื่อไปที่ตั้งค่าแอป แล้วเปิดสิทธิ์ที่นั่น</string>
+    <string name="perm_dnd_reason" formatted="false">สิทธิ์นี้ทำให้ผู้ปกครองเปลี่ยนเสียงและการสั่นได้ กรุณาหา KidCare ในรายการแล้วเปิด</string>
+    <string name="perm_dnd_title" formatted="false">เปลี่ยนการตั้งค่าเสียง</string>
+    <string name="perm_done" formatted="false">เปิดครบแล้ว เริ่มกันเลย</string>
+    <string name="perm_grant" formatted="false">เปิด</string>
+    <string name="perm_location_reason" formatted="false">จำเป็นเพื่อให้พ่อแม่รู้ว่าตอนนี้หนูอยู่ที่ไหน</string>
+    <string name="perm_location_title" formatted="false">สิทธิ์ตำแหน่ง</string>
+    <string name="perm_notification_reason" formatted="false">จำเป็นเพื่อรับข้อความจากพ่อแม่ และเพื่อแสดงว่ากำลังแชร์ตำแหน่งอยู่</string>
+    <string name="perm_notification_title" formatted="false">การแจ้งเตือน</string>
+    <string name="perm_open_settings" formatted="false">เปิดในตั้งค่า</string>
+    <string name="perm_start" formatted="false">เริ่ม</string>
+    <string name="perm_title" formatted="false">ขอเปิดอีกไม่กี่อย่าง</string>
+    <string name="place_add" formatted="false">เพิ่มสถานที่</string>
+    <string name="place_delete" formatted="false">ลบ</string>
+    <string name="place_delete_cancel" formatted="false">เก็บไว้</string>
+    <string name="place_delete_confirm" formatted="false">ลบ</string>
+    <string name="place_delete_message">%1$s\n\nลบแล้วจะไม่มีแจ้งเตือนตอนมาถึงหรือออกจากที่นี่อีก</string>
+    <string name="place_delete_title" formatted="false">ลบสถานที่นี้ไหม</string>
+    <string name="place_deleting" formatted="false">กำลังลบ…</string>
+    <string name="place_editor_cancel" formatted="false">ยกเลิก</string>
+    <string name="place_editor_map_hint" formatted="false">เลื่อนแผนที่ให้กากบาทตรงกลางตรงกับที่นี่ วงกลมสีฟ้าคือขอบเขตที่แจ้งเตือนจะทำงาน</string>
+    <string name="place_editor_map_label" formatted="false">อยู่ที่ไหน</string>
+    <string name="place_editor_name_hint" formatted="false">โรงเรียน ที่เรียนพิเศษ บ้านคุณยาย…</string>
+    <string name="place_editor_name_label" formatted="false">ชื่อสถานที่</string>
+    <string name="place_editor_name_required" formatted="false">กรุณาใส่ชื่อ เป็นชื่อที่จะขึ้นในแจ้งเตือนว่า «ถึง ○○ แล้ว»</string>
+    <string name="place_editor_no_child_location" formatted="false">ยังไม่รู้ตำแหน่งมือถือของลูก แผนที่จึงเปิดกว้าง กรุณาเลื่อนหาด้วยมือ</string>
+    <string name="place_editor_notify_enter" formatted="false">แจ้งตอนมาถึง</string>
+    <string name="place_editor_notify_exit" formatted="false">แจ้งตอนออกไป</string>
+    <string name="place_editor_notify_label" formatted="false">จะให้แจ้งตอนไหน</string>
+    <string name="place_editor_notify_none_hint" formatted="false">ถ้าปิดทั้งสองอย่าง สถานที่นี้จะไม่แจ้งอะไรเลย แต่สถานที่ยังอยู่</string>
+    <string name="place_editor_radius_label" formatted="false">เข้าใกล้แค่ไหนถึงนับ</string>
+    <string name="place_editor_radius_value">รัศมี %1$dm</string>
+    <string name="place_editor_save" formatted="false">บันทึก</string>
+    <string name="place_editor_title_edit" formatted="false">แก้ไขสถานที่</string>
+    <string name="place_editor_title_new" formatted="false">สถานที่ใหม่</string>
+    <string name="place_empty" formatted="false">ยังไม่มีสถานที่\nกด «เพิ่มสถานที่» ข้างล่าง\nแล้วตั้งที่อย่าง «โรงเรียน» หรือ «ที่เรียนพิเศษ»\nเราจะแจ้งตอนลูกมาถึงหรือออกไป</string>
+    <string name="place_error_format">โหลดสถานที่ไม่ได้\n%1$s</string>
+    <string name="place_header_subtitle" formatted="false">ลงทะเบียนโรงเรียนหรือที่เรียนพิเศษ แล้วเราจะแจ้งตอนมาถึงและออกไป</string>
+    <string name="place_header_title" formatted="false">ที่ที่อุ่นใจ</string>
+    <string name="place_limit_notice">ตั้งสถานที่ได้ถึง %1$d แห่ง ถ้าจะเพิ่มใหม่ให้ลบที่ที่ไม่ใช้แล้วก่อน</string>
+    <string name="place_no_family" formatted="false">ไม่พบข้อมูลครอบครัว กรุณาปิดแอปแล้วเปิดใหม่</string>
+    <string name="place_notify_both" formatted="false">แจ้งทั้งตอนมาถึงและออกไป</string>
+    <string name="place_notify_enter" formatted="false">แจ้งเฉพาะตอนมาถึง</string>
+    <string name="place_notify_exit" formatted="false">แจ้งเฉพาะตอนออกไป</string>
+    <string name="place_notify_none" formatted="false">ปิดการแจ้ง</string>
+    <string name="place_row_detail">%1$s</string>
+    <string name="place_row_title">%1$s · รัศมี %2$dm</string>
+    <string name="place_save_slow" formatted="false">ส่งคำขอบันทึกแล้วแต่เซิร์ฟเวอร์ยังไม่ยืนยัน เมื่อมีอินเทอร์เน็ตจะบันทึกเอง</string>
+    <string name="place_saving" formatted="false">กำลังบันทึก…</string>
+    <string name="place_summary">%1$s (รัศมี %2$dm)</string>
+    <string name="place_sync_failed_format">บันทึกสถานที่แล้วแต่บอกมือถือของลูกไม่สำเร็จ เปิดหน้านี้อีกครั้งแล้วเราจะบอกอีกที\n%1$s</string>
+    <string name="place_sync_no_child" formatted="false">บันทึกสถานที่แล้ว เมื่อมือถือของลูกเชื่อมต่อจะมีผลเอง</string>
+    <string name="place_sync_pending" formatted="false">ยังไม่ถึงมือถือของลูก ตอนนี้ยังแจ้งตามสถานที่เดิมอยู่</string>
+    <string name="place_sync_retry" formatted="false">บอกอีกครั้ง</string>
+    <string name="place_sync_slow" formatted="false">บันทึกสถานที่แล้ว การบอกมือถือของลูกจะเสร็จเมื่อมีอินเทอร์เน็ต</string>
+    <string name="remote_alarm_notification_text" formatted="false">กดเพื่อปิด</string>
+    <string name="remote_alarm_stop" formatted="false">ปิดนาฬิกาปลุก</string>
+    <string name="remote_alarm_title" formatted="false">นี่คือนาฬิกาปลุกที่พ่อแม่ตั้งไว้</string>
+    <string name="role_child" formatted="false">ลูก</string>
+    <string name="role_guardian" formatted="false">ผู้ปกครอง (แม่หรือพ่อ)</string>
+    <string name="role_subtitle" formatted="false">ก่อนเชื่อมต่อยังเลือกใหม่ได้\nเชื่อมต่อแล้วเปลี่ยนไม่ได้</string>
+    <string name="role_title" formatted="false">นี่มือถือของใคร</string>
+    <string name="router_retry" formatted="false">ลองใหม่</string>
+    <string name="schedule_add" formatted="false">เพิ่มกฎ</string>
+    <string name="schedule_allday_cancel" formatted="false">เลือกเวลาใหม่</string>
+    <string name="schedule_allday_confirm" formatted="false">บันทึกเป็นทั้งวัน</string>
+    <string name="schedule_allday_message">เวลาเริ่มกับเวลาจบเป็น %1$s เหมือนกัน\nถ้าบันทึกแบบนี้ วันที่เลือกไว้จะเป็น %2$s ตลอด 24 ชั่วโมง</string>
+    <string name="schedule_allday_title" formatted="false">บันทึกเป็นทั้งวันไหม</string>
+    <string name="schedule_day_fri" formatted="false">ศ</string>
+    <string name="schedule_day_mon" formatted="false">จ</string>
+    <string name="schedule_day_sat" formatted="false">ส</string>
+    <string name="schedule_day_sun" formatted="false">อา</string>
+    <string name="schedule_day_thu" formatted="false">พฤ</string>
+    <string name="schedule_day_tue" formatted="false">อ</string>
+    <string name="schedule_day_wed" formatted="false">พ</string>
+    <string name="schedule_days_everyday" formatted="false">ทุกวัน</string>
+    <string name="schedule_days_none" formatted="false">ยังไม่เลือกวัน</string>
+    <string name="schedule_days_weekday" formatted="false">วันธรรมดา</string>
+    <string name="schedule_days_weekend" formatted="false">สุดสัปดาห์</string>
+    <string name="schedule_delete" formatted="false">ลบ</string>
+    <string name="schedule_delete_cancel" formatted="false">เก็บไว้</string>
+    <string name="schedule_delete_confirm" formatted="false">ลบ</string>
+    <string name="schedule_delete_message">%1$s\n\nลบแล้วเสียงในช่วงเวลานี้จะไม่เปลี่ยนเองอีก</string>
+    <string name="schedule_delete_title" formatted="false">ลบกฎนี้ไหม</string>
+    <string name="schedule_deleting" formatted="false">กำลังลบ…</string>
+    <string name="schedule_editor_cancel" formatted="false">ยกเลิก</string>
+    <string name="schedule_editor_days_label" formatted="false">วันไหนบ้าง</string>
+    <string name="schedule_editor_days_required" formatted="false">กรุณาเลือกอย่างน้อยหนึ่งวัน ถ้าไม่เลือกวันเลย กฎนี้จะไม่ทำงานสักครั้ง</string>
+    <string name="schedule_editor_end_title" formatted="false">เวลาสิ้นสุด</string>
+    <string name="schedule_editor_mode_label" formatted="false">ช่วงนั้นให้มือถือของลูกเป็น</string>
+    <string name="schedule_editor_save" formatted="false">บันทึก</string>
+    <string name="schedule_editor_start_title" formatted="false">เวลาเริ่ม</string>
+    <string name="schedule_editor_time_label" formatted="false">ตั้งแต่กี่โมงถึงกี่โมง</string>
+    <string name="schedule_editor_title_edit" formatted="false">แก้ไขกฎ</string>
+    <string name="schedule_editor_title_new" formatted="false">กฎใหม่</string>
+    <string name="schedule_empty" formatted="false">ยังไม่ได้ตั้งช่วงเวลา\nกด «เพิ่มกฎ» ข้างล่าง\nแล้วลองตั้งกฎอย่าง «กลางคืนวันธรรมดาให้เงียบ»</string>
+    <string name="schedule_error_format">โหลดกฎไม่ได้\n%1$s</string>
+    <string name="schedule_header_subtitle" formatted="false">สลับเสียงเรียกเข้า สั่น และเงียบ ให้เองตามวันและเวลา</string>
+    <string name="schedule_header_title" formatted="false">ตารางเสียงประจำวัน</string>
+    <string name="schedule_holiday_cleared" formatted="false">วันหยุดราชการก็ยังเปลี่ยนตามตาราง</string>
+    <string name="schedule_holiday_date">%1$d/%2$d</string>
+    <string name="schedule_holiday_next">วันหยุดถัดไปคือ %1$s %2$s</string>
+    <string name="schedule_holiday_saved" formatted="false">วันหยุดราชการให้ตารางพัก</string>
+    <string name="schedule_holiday_subtitle" formatted="false">วันหยุดจะไม่เปิดกฎข้างล่างสักข้อ</string>
+    <string name="schedule_holiday_title" formatted="false">วันหยุดราชการให้พัก</string>
+    <string name="schedule_holiday_unknown" formatted="false">เครื่องนี้คำนวณวันหยุดราชการไม่ได้ ถึงเปิดสวิตช์ก็จะทำงานตามวันในสัปดาห์เท่านั้น</string>
+    <string name="schedule_mode_normal" formatted="false">เสียงเรียกเข้า</string>
+    <string name="schedule_mode_silent" formatted="false">เงียบ</string>
+    <string name="schedule_mode_vibrate" formatted="false">สั่น</string>
+    <string name="schedule_no_family" formatted="false">ไม่พบข้อมูลครอบครัว กรุณาปิดแอปแล้วเปิดใหม่</string>
+    <string name="schedule_overlap_cancel" formatted="false">แก้ไข</string>
+    <string name="schedule_overlap_confirm" formatted="false">บันทึกแบบนี้</string>
+    <string name="schedule_overlap_message">ช่วงเวลานี้ทับกับกฎ «%1$s»\nระหว่างที่ทับกัน กฎที่สร้างทีหลังจะชนะ</string>
+    <string name="schedule_overlap_message_more">ช่วงเวลานี้ทับกับ «%1$s» และอีก %2$d กฎ\nระหว่างที่ทับกัน กฎที่สร้างทีหลังจะชนะ</string>
+    <string name="schedule_overlap_title" formatted="false">มีกฎที่ทับกันอยู่</string>
+    <string name="schedule_range">%1$s ~ %2$s</string>
+    <string name="schedule_range_allday">ทั้งวัน (24 ชั่วโมงนับจาก %1$s)</string>
+    <string name="schedule_range_overnight">%1$s ~ %2$s ของวันถัดไป</string>
+    <string name="schedule_range_separator" formatted="false">–</string>
+    <string name="schedule_row_detail">%1$s · %2$s</string>
+    <string name="schedule_row_detail_off">%1$s · %2$s (ปิดอยู่)</string>
+    <string name="schedule_save_slow" formatted="false">ส่งคำขอบันทึกแล้วแต่เซิร์ฟเวอร์ยังไม่ยืนยัน เมื่อมีอินเทอร์เน็ตจะบันทึกเอง</string>
+    <string name="schedule_saving" formatted="false">กำลังบันทึก…</string>
+    <string name="schedule_summary">%1$s · %2$s · %3$s</string>
+    <string name="schedule_sync_failed_format">บันทึกกฎแล้วแต่บอกมือถือของลูกไม่สำเร็จ เปิดหน้านี้อีกครั้งแล้วเราจะบอกอีกที\n%1$s</string>
+    <string name="schedule_sync_no_child" formatted="false">บันทึกกฎแล้ว เมื่อมือถือของลูกเชื่อมต่อจะมีผลเอง</string>
+    <string name="schedule_sync_pending" formatted="false">ยังไม่ถึงมือถือของลูก ตอนนี้ยังทำงานตามกฎเดิมอยู่</string>
+    <string name="schedule_sync_retry" formatted="false">บอกอีกครั้ง</string>
+    <string name="schedule_sync_slow" formatted="false">บันทึกกฎแล้ว การบอกมือถือของลูกจะเสร็จเมื่อมีอินเทอร์เน็ต</string>
+    <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="tab_alert" formatted="false">ข่าว</string>
+    <string name="tab_control" formatted="false">จัดการ</string>
+    <string name="tab_map" formatted="false">แผนที่</string>
+    <string name="tab_place" formatted="false">สถานที่</string>
+    <string name="tab_schedule" formatted="false">ตาราง</string>
+    <string name="timeline_collapse" formatted="false">ย่อบันทึกการเดินทาง</string>
+    <string name="timeline_detail">%1$s\n%2$s</string>
+    <string name="timeline_drag_handle" formatted="false">ลากขึ้นลงเพื่อปรับความสูงของบันทึก</string>
+    <string name="timeline_empty" formatted="false">วันนี้ไม่มีบันทึก</string>
+    <string name="timeline_error">โหลดบันทึกไม่ได้\n%1$s</string>
+    <string name="timeline_expand" formatted="false">ขยายบันทึกการเดินทาง</string>
+    <string name="timeline_hide_all_routes" formatted="false">ซ่อนเส้นทางทั้งหมด</string>
+    <string name="timeline_move_title">เดินทาง %1$s</string>
+    <string name="timeline_route_hidden" formatted="false">ซ่อนอยู่บนแผนที่</string>
+    <string name="timeline_route_visible" formatted="false">แสดงอยู่บนแผนที่</string>
+    <string name="timeline_show_all_routes" formatted="false">แสดงเส้นทางทั้งหมด</string>
+    <string name="timeline_summary_day">วันนี้ %1$s</string>
+    <string name="timeline_summary_empty" formatted="false">บันทึกการเดินทางวันนี้</string>
+    <string name="timeline_summary_routes_hidden">%1$s · ซ่อนเส้นทาง</string>
+    <string name="timeline_summary_routes_partial">%1$s · ซ่อนบางส่วน</string>
+    <string name="timeline_summary_today">วันนี้ %1$s</string>
+    <string name="timeline_unknown_place" formatted="false">ที่ที่แวะอยู่</string>
+    <string name="timeline_view_records" formatted="false">ดูบันทึกการเดินทาง</string>
+    <string name="tracking_notification_text" formatted="false">กำลังบอกพ่อแม่ว่าหนูอยู่ที่ไหน</string>
+    <string name="tracking_notification_title" formatted="false">กำลังแชร์ตำแหน่ง</string>
+    <string name="uid_format">ไอดีเครื่องของฉัน\n%1$s</string>
+</resources>

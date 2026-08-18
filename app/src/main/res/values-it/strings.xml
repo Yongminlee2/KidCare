@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 자동 생성. 고치려면 i18n/it.json 을 고치고 gen.py 를 다시 돌린다. -->
+<resources>
+    <string name="alert_child_line">%1$s · %2$s</string>
+    <string name="alert_command_failed" formatted="false">Una richiesta inviata al telefono di tuo figlio non è riuscita</string>
+    <string name="alert_empty" formatted="false">Ancora nessuna novità.\nSalva la scuola o il corso nella scheda Luoghi\ne gli arrivi compariranno qui.</string>
+    <string name="alert_error_format">Impossibile caricare le novità\n%1$s</string>
+    <string name="alert_header_subtitle" formatted="false">Arrivi, batteria e connessione, in ordine di tempo.</string>
+    <string name="alert_header_title" formatted="false">Novità</string>
+    <string name="alert_low_battery" formatted="false">Il telefono di tuo figlio ha poca batteria</string>
+    <string name="alert_no_family" formatted="false">Famiglia non trovata. Chiudi l\'app e riaprila.</string>
+    <string name="alert_notification_denied" formatted="false">Le notifiche sono spente, quindi non si può attivare. Vai in Impostazioni del telefono → App → KidCare → Notifiche e attivale.</string>
+    <string name="alert_notification_more">e altri %1$d</string>
+    <string name="alert_permission_off" formatted="false">Sul telefono di tuo figlio è stato spento un permesso</string>
+    <string name="alert_place_enter">Arrivato a %1$s</string>
+    <string name="alert_place_exit">Uscito da %1$s</string>
+    <string name="alert_row">%1$s · %2$s</string>
+    <string name="alert_service_hint" formatted="false">Se lo accendi, le novità ti arrivano anche con l\'app chiusa. In cambio resta un piccolo avviso nella barra di stato e consuma un po\' più di batteria. Se lo lasci spento, vedi le novità solo aprendo l\'app.</string>
+    <string name="alert_service_notification_text" formatted="false">Acceso, così le novità ti arrivano subito. Puoi spegnerlo nella scheda Novità.</string>
+    <string name="alert_service_notification_title" formatted="false">In ascolto delle novità</string>
+    <string name="alert_service_switch" formatted="false">Ricevere subito le novità</string>
+    <string name="alert_signal_lost" formatted="false">Il telefono di tuo figlio non risponde da un po\'</string>
+    <string name="alert_unknown" formatted="false">C\'è una novità</string>
+    <string name="app_brand_short" formatted="false">KIDCARE</string>
+    <string name="app_name" formatted="false">KidCare</string>
+    <string name="channel_alert" formatted="false">Novità</string>
+    <string name="channel_alert_service" formatted="false">In ascolto delle novità</string>
+    <string name="channel_find_phone" formatted="false">Trova il telefono</string>
+    <string name="channel_message" formatted="false">Messaggio di un genitore</string>
+    <string name="channel_remote_alarm" formatted="false">Sveglia messa da un genitore</string>
+    <string name="channel_tracking" formatted="false">Posizione condivisa</string>
+    <string name="child_default_name" formatted="false">Bambino</string>
+    <string name="child_family_gone" formatted="false">In questo momento la tua posizione non viene inviata.\nChiedi un nuovo numero sul telefono dei tuoi genitori e collegati di nuovo.</string>
+    <string name="child_go_to_permission" formatted="false">Attiva i permessi</string>
+    <string name="child_home_title" formatted="false">Sei collegato ai tuoi genitori</string>
+    <string name="child_home_title_gone" formatted="false">Non sei più collegato ai tuoi genitori</string>
+    <string name="child_permission_missing">%1$s è spento.\nAttivalo perché la tua posizione possa essere inviata.</string>
+    <string name="child_play_services_fix" formatted="false">Ripara i servizi Google Play</string>
+    <string name="child_play_services_fixable" formatted="false">I servizi Google Play mancano o sono troppo vecchi, quindi la posizione non può essere inviata.\nTocca il pulsante qui sotto per ripararli. (Messaggi e cambi di suono funzionano lo stesso.)</string>
+    <string name="child_play_services_unfixable" formatted="false">Questo telefono non ha i servizi Google Play, quindi la posizione non può essere inviata.\nMostra questa schermata ai tuoi genitori. (Messaggi e cambi di suono funzionano lo stesso.)</string>
+    <string name="child_repair" formatted="false">Collegati di nuovo</string>
+    <string name="child_selector_add_child" formatted="false">＋ Aggiungi un figlio</string>
+    <string name="child_selector_add_guardian" formatted="false">＋ Invita un genitore</string>
+    <string name="child_selector_add_guardian_count">＋ Invita un genitore · ora %1$d</string>
+    <string name="child_selector_empty" formatted="false">Collega un figlio ▾</string>
+    <string name="child_selector_load_failed" formatted="false">Impossibile caricare la famiglia</string>
+    <string name="child_selector_value">Stai guardando %1$s ▾</string>
+    <string name="child_sharing_on" formatted="false">I tuoi genitori possono vedere dove sei adesso.\nCosì ti trovano subito se ti perdi.</string>
+    <string name="connect_failed">Impossibile avviare l\'app\n%1$s</string>
+    <string name="connecting" formatted="false">Connessione…</string>
+    <string name="control_alarm_cancel" formatted="false">Togli la sveglia impostata</string>
+    <string name="control_alarm_hint_detail" formatted="false">Suona una sola volta sul telefono di tuo figlio all\'ora che scegli. Se quell\'ora è già passata, suona alla stessa ora il giorno dopo: se è oggi o domani lo decide l\'orologio del telefono di tuo figlio. Finché una sveglia è impostata, nella sua barra di stato compare un orologio, e dopo 5 minuti si ferma da sola.</string>
+    <string name="control_alarm_label_hint" formatted="false">Nome della sveglia (es. ora del corso)</string>
+    <string name="control_alarm_picker_title" formatted="false">A che ora deve suonare?</string>
+    <string name="control_alarm_set" formatted="false">Imposta la sveglia a quest\'ora</string>
+    <string name="control_alarm_state_confirmed">Sul telefono di tuo figlio c\'è una sveglia per le %1$s</string>
+    <string name="control_alarm_state_labeled">%1$s «%2$s»</string>
+    <string name="control_alarm_state_pending">Sveglia delle %1$s inviata · in attesa della risposta del telefono di tuo figlio</string>
+    <string name="control_alarm_time_format">%1$s</string>
+    <string name="control_command_done" formatted="false">Fatto</string>
+    <string name="control_command_queued" formatted="false">Non è ancora partita. Arriverà al telefono di tuo figlio e verrà eseguita appena c\'è internet: nel frattempo la situazione può essere cambiata.</string>
+    <string name="control_command_sending" formatted="false">Invio…</string>
+    <string name="control_command_timeout" formatted="false">Il telefono di tuo figlio non risponde</string>
+    <string name="control_command_timeout_format">Il telefono di tuo figlio non risponde\n%1$s</string>
+    <string name="control_error_alarm_exact_denied" formatted="false">La sveglia non è stata impostata perché «Sveglie e promemoria» è spento sul telefono di tuo figlio. Vai in Impostazioni → App → KidCare → Sveglie e promemoria su quel telefono e attivalo.</string>
+    <string name="control_error_child_failed" formatted="false">Il telefono di tuo figlio non è riuscito a eseguire questa richiesta.</string>
+    <string name="control_error_message_notification_off" formatted="false">Il messaggio non è stato mostrato perché le notifiche sono spente sul telefono di tuo figlio. Vai in Impostazioni → App → KidCare → Notifiche su quel telefono e attivale.</string>
+    <string name="control_error_ringer_denied" formatted="false">Il permesso per le impostazioni audio è spento sul telefono di tuo figlio. Va attivato lì per poterlo cambiare.</string>
+    <string name="control_find_hint" formatted="false">Suona forte anche in modalità silenziosa. Dopo 5 minuti si ferma da sola.</string>
+    <string name="control_find_phone" formatted="false">Trova il telefono</string>
+    <string name="control_find_stop" formatted="false">Ferma il suono</string>
+    <string name="control_find_stop_hint" formatted="false">Ferma il suono se sta già suonando</string>
+    <string name="control_header_subtitle" formatted="false">Manda suoni, messaggi e sveglie direttamente al telefono di tuo figlio.</string>
+    <string name="control_last_seen_days">%1$d giorni fa</string>
+    <string name="control_last_seen_format">Ultimo segnale %1$s</string>
+    <string name="control_last_seen_hours">%1$d ore fa</string>
+    <string name="control_last_seen_minutes">%1$d minuti fa</string>
+    <string name="control_last_seen_never" formatted="false">Non è ancora arrivato nessun segnale</string>
+    <string name="control_last_seen_now" formatted="false">proprio ora</string>
+    <string name="control_last_seen_skewed_value">%1$s (secondo l\'orologio del telefono di tuo figlio, quindi non è esatto)</string>
+    <string name="control_lock_hint" formatted="false">Se tuo figlio cambia il suono, dopo pochi secondi torna a quello che hai scelto tu.</string>
+    <string name="control_lock_switch" formatted="false">Rimetterlo se mio figlio lo cambia</string>
+    <string name="control_message_chip_call" formatted="false">Chiamami, per favore</string>
+    <string name="control_message_chip_come_home" formatted="false">Torna a casa</string>
+    <string name="control_message_chip_meal" formatted="false">Hai mangiato?</string>
+    <string name="control_message_chip_where" formatted="false">Dove sei adesso?</string>
+    <string name="control_message_empty" formatted="false">Scrivi qualcosa da mandare.</string>
+    <string name="control_message_hint" formatted="false">Cosa dire a tuo figlio</string>
+    <string name="control_message_hint_detail" formatted="false">Compare in grande sullo schermo di tuo figlio. Non fa rumore, solo una vibrazione. Quando tuo figlio tocca «Ho capito», qui diventa «Letto».</string>
+    <string name="control_message_read" formatted="false">Letto</string>
+    <string name="control_message_send" formatted="false">Manda il messaggio</string>
+    <string name="control_message_unread" formatted="false">Arrivato al telefono di tuo figlio · non ancora letto</string>
+    <string name="control_mode_normal" formatted="false">Suoneria</string>
+    <string name="control_mode_silent" formatted="false">Silenzioso</string>
+    <string name="control_mode_vibrate" formatted="false">Vibrazione</string>
+    <string name="control_ringer_refresh" formatted="false">Controlla di nuovo</string>
+    <string name="control_ringer_status_applied">Adesso · %1$s</string>
+    <string name="control_ringer_status_format">Ultimo controllo · %1$s</string>
+    <string name="control_ringer_status_loading" formatted="false">Controllo della modalità audio sul telefono di tuo figlio</string>
+    <string name="control_ringer_status_unknown" formatted="false">L\'ultima modalità audio non è ancora stata controllata</string>
+    <string name="control_section_alarm" formatted="false">Imposta una sveglia</string>
+    <string name="control_section_message" formatted="false">Manda una parola</string>
+    <string name="control_section_ringer" formatted="false">Cambia subito</string>
+    <string name="day_next" formatted="false">Giorno dopo</string>
+    <string name="day_prev" formatted="false">Giorno prima</string>
+    <string name="dialog_cancel" formatted="false">Annulla</string>
+    <string name="error_generic_format">C\'è stato un problema di connessione\n%1$s</string>
+    <string name="error_server_setup" formatted="false">La configurazione del server non è ancora finita. Avvisa chi ti ha installato l\'app.</string>
+    <string name="error_unauthenticated" formatted="false">La sessione è scaduta. Chiudi l\'app e riaprila.</string>
+    <string name="event_detail_battery">resta %1$d%%</string>
+    <string name="event_detail_permission">%1$s — riattivalo sul telefono di tuo figlio</string>
+    <string name="find_phone_notification_text" formatted="false">Tocca per fermare il suono</string>
+    <string name="find_phone_notification_title" formatted="false">Un genitore sta cercando questo telefono</string>
+    <string name="find_phone_stop" formatted="false">Trovato (ferma il suono)</string>
+    <string name="find_phone_title" formatted="false">Un genitore sta cercando questo telefono</string>
+    <string name="guardian_disconnect_banner">Il telefono di tuo figlio non ha ancora risposto alla richiesta inviata %1$s\nApri una volta l\'app KidCare sul suo telefono e si ricollegherà.</string>
+    <string name="guardian_start_join_family" formatted="false">Entra in una famiglia con un codice</string>
+    <string name="guardian_start_new_family" formatted="false">Crea una nuova famiglia</string>
+    <string name="guardian_start_title" formatted="false">Come vuoi iniziare?</string>
+    <string name="holiday_buddha" formatted="false">Nascita di Buddha</string>
+    <string name="holiday_children" formatted="false">Festa dei bambini</string>
+    <string name="holiday_christmas" formatted="false">Natale</string>
+    <string name="holiday_chuseok" formatted="false">Festa di Chuseok</string>
+    <string name="holiday_foundation" formatted="false">Festa della fondazione nazionale</string>
+    <string name="holiday_hangul" formatted="false">Giornata dell\'hangul</string>
+    <string name="holiday_independence" formatted="false">Festa del movimento per l\'indipendenza</string>
+    <string name="holiday_liberation" formatted="false">Festa della liberazione</string>
+    <string name="holiday_memorial" formatted="false">Giorno del ricordo dei caduti</string>
+    <string name="holiday_new_year" formatted="false">Capodanno</string>
+    <string name="holiday_seollal" formatted="false">Festa del capodanno lunare</string>
+    <string name="holiday_substitute" formatted="false">Festivo sostitutivo</string>
+    <string name="language_follow_system" formatted="false">Segui l\'impostazione di sistema</string>
+    <string name="language_picker_title" formatted="false">Lingua</string>
+    <string name="list_loading" formatted="false">Caricamento…</string>
+    <string name="map_battery_info_confirm" formatted="false">OK</string>
+    <string name="map_battery_info_message" formatted="false">Il livello mostrato qui è quello riferito dal telefono di tuo figlio. Android non permette di leggere da un altro telefono quale app ha consumato quanta batteria, quindi va guardato in Impostazioni &gt; Batteria sul suo telefono.</string>
+    <string name="map_battery_info_title" formatted="false">Batteria del telefono di tuo figlio</string>
+    <string name="map_child_avatar" formatted="false">Personaggio del figlio scelto</string>
+    <string name="map_error">Impossibile caricare la mappa\n%1$s</string>
+    <string name="map_live_active_status">Tracciamento dal vivo · precisione di circa %1$dm · batteria %2$d%%</string>
+    <string name="map_live_button_connecting" formatted="false">Posizione dal vivo  connessione…</string>
+    <string name="map_live_cancel_description" formatted="false">Posizione dal vivo in connessione. Tocca per annullare</string>
+    <string name="map_live_connecting" formatted="false">Connessione dal vivo…</string>
+    <string name="map_live_start" formatted="false">Posizione dal vivo  OFF</string>
+    <string name="map_live_start_description" formatted="false">Posizione dal vivo spenta. Tocca per accenderla</string>
+    <string name="map_live_stop" formatted="false">Posizione dal vivo  ON</string>
+    <string name="map_live_stop_description" formatted="false">Posizione dal vivo accesa. Tocca per spegnerla</string>
+    <string name="map_live_stopped" formatted="false">La vista dal vivo è finita. Sulla mappa resta l\'ultima posizione ricevuta.</string>
+    <string name="map_live_timeout" formatted="false">La vista dal vivo è finita per il limite di sicurezza di 10 minuti.</string>
+    <string name="map_live_waiting" formatted="false">Ricerca della posizione dal vivo. Aspetta che arrivi il segnale GPS.</string>
+    <string name="map_locate_no_fix" formatted="false">Il telefono di tuo figlio non ha ancora trovato la sua posizione. Riprova tra poco.</string>
+    <string name="map_locate_now" formatted="false">Vedi la posizione adesso</string>
+    <string name="map_locating" formatted="false">Sto chiedendo al telefono di tuo figlio…</string>
+    <string name="map_no_child" formatted="false">Non è ancora collegato nessun telefono di un figlio.</string>
+    <string name="map_status_format">Batteria %1$d%%\nal %2$s</string>
+    <string name="map_status_never" formatted="false">La posizione non è mai stata controllata. Tocca «Vedi la posizione adesso».</string>
+    <string name="message_ack" formatted="false">Ho capito</string>
+    <string name="message_notification_title" formatted="false">Un messaggio dei tuoi genitori</string>
+    <string name="message_title" formatted="false">Un messaggio dei tuoi genitori</string>
+    <string name="pairing_child_hint" formatted="false">6 cifre</string>
+    <string name="pairing_child_join" formatted="false">Collega</string>
+    <string name="pairing_child_name_hint" formatted="false">Nome del bambino (es. Minjun)</string>
+    <string name="pairing_child_title" formatted="false">Scrivi il codice di 6 cifre\nche compare sul telefono dei tuoi genitori</string>
+    <string name="pairing_code_expiry_format">Questo codice scade tra %1$d minuti</string>
+    <string name="pairing_code_placeholder" formatted="false">------</string>
+    <string name="pairing_expired" formatted="false">Il codice è scaduto. Chiedine uno nuovo sul telefono dei tuoi genitori.</string>
+    <string name="pairing_failed">Collegamento non riuscito\n%1$s</string>
+    <string name="pairing_full" formatted="false">C\'è già un altro telefono collegato.</string>
+    <string name="pairing_guardian_hint" formatted="false">Sul telefono di tuo figlio apri l\'app,\nscegli «Bambino» e scrivi questo codice per collegarlo.</string>
+    <string name="pairing_guardian_invite_guardian_hint" formatted="false">Sul telefono dell\'altro genitore apri l\'app,\nscegli «Genitore» → «Entra con un codice» e scrivi questo codice.</string>
+    <string name="pairing_guardian_invite_guardian_title" formatted="false">Scrivi questo codice sul telefono dell\'altro genitore</string>
+    <string name="pairing_guardian_join_title" formatted="false">Scrivi il codice di 6 cifre\nche ti ha dato un genitore della famiglia</string>
+    <string name="pairing_guardian_name_hint" formatted="false">Nome del genitore (es. Mamma, Papà)</string>
+    <string name="pairing_guardian_title" formatted="false">Scrivi questo codice sul telefono di tuo figlio</string>
+    <string name="pairing_new_code_button" formatted="false">Chiedi un codice nuovo</string>
+    <string name="pairing_not_found" formatted="false">Questo codice non esiste. Controllalo di nuovo.</string>
+    <string name="pairing_offline" formatted="false">Non c\'è connessione a internet. Controlla il Wi-Fi o i dati mobili.</string>
+    <string name="pairing_reset_role_button" formatted="false">Scegli di nuovo il ruolo</string>
+    <string name="pairing_wrong_role" formatted="false">Questo codice non è del ruolo che hai scelto. Controlla qual è quello del bambino e quale quello del genitore.</string>
+    <string name="perm_activity_reason" formatted="false">Sapere se tuo figlio cammina o sta fermo permette di controllare la posizione meno spesso quando sta fermo, e così si risparmia batteria.</string>
+    <string name="perm_activity_title" formatted="false">Rilevamento del movimento</string>
+    <string name="perm_background_reason" formatted="false">Per inviare la posizione con l\'app chiusa serve «Consenti sempre». Scegli «Consenti sempre» nella schermata delle impostazioni.</string>
+    <string name="perm_background_title" formatted="false">Posizione «Consenti sempre»</string>
+    <string name="perm_battery_hint" formatted="false">Quando si apre la schermata delle impostazioni, trova KidCare nell\'elenco e mettilo su «Senza restrizioni».</string>
+    <string name="perm_battery_reason" formatted="false">Senza questo il telefono mette l\'app in pausa e la posizione si interrompe. Scegli «Consenti» nella schermata delle impostazioni.</string>
+    <string name="perm_battery_title" formatted="false">Senza ottimizzazione della batteria</string>
+    <string name="perm_denied_permanently" formatted="false">È appena stato negato, quindi questa schermata non può chiederlo di nuovo. Tocca «Attiva nelle impostazioni» per andare alle impostazioni dell\'app e attiva lì il permesso.</string>
+    <string name="perm_dnd_reason" formatted="false">Questo permesso lascia che un genitore cambi suono e vibrazione. Trova KidCare nell\'elenco e attivalo.</string>
+    <string name="perm_dnd_title" formatted="false">Cambiare le impostazioni audio</string>
+    <string name="perm_done" formatted="false">È tutto attivo. Iniziamo!</string>
+    <string name="perm_grant" formatted="false">Attiva</string>
+    <string name="perm_location_reason" formatted="false">Serve perché i tuoi genitori sappiano dove sei adesso.</string>
+    <string name="perm_location_title" formatted="false">Permesso di posizione</string>
+    <string name="perm_notification_reason" formatted="false">Serve per ricevere i messaggi dei tuoi genitori e per mostrare che la posizione è condivisa.</string>
+    <string name="perm_notification_title" formatted="false">Notifiche</string>
+    <string name="perm_open_settings" formatted="false">Attiva nelle impostazioni</string>
+    <string name="perm_start" formatted="false">Inizia</string>
+    <string name="perm_title" formatted="false">Solo qualche cosa da attivare</string>
+    <string name="place_add" formatted="false">Aggiungi un luogo</string>
+    <string name="place_delete" formatted="false">Elimina</string>
+    <string name="place_delete_cancel" formatted="false">Lascialo</string>
+    <string name="place_delete_confirm" formatted="false">Elimina</string>
+    <string name="place_delete_message">%1$s\n\nUna volta eliminato, arrivare o uscire da qui non manderà più nessun avviso.</string>
+    <string name="place_delete_title" formatted="false">Eliminare questo luogo?</string>
+    <string name="place_deleting" formatted="false">Eliminazione…</string>
+    <string name="place_editor_cancel" formatted="false">Annulla</string>
+    <string name="place_editor_map_hint" formatted="false">Sposta la mappa finché la croce al centro non è su questo luogo. Il cerchio azzurro è la zona in cui scatta l\'avviso.</string>
+    <string name="place_editor_map_label" formatted="false">Dov\'è</string>
+    <string name="place_editor_name_hint" formatted="false">Scuola, corso, casa della nonna…</string>
+    <string name="place_editor_name_label" formatted="false">Nome del luogo</string>
+    <string name="place_editor_name_required" formatted="false">Scrivi un nome. È quello che compare nell\'avviso, come «Arrivato a ○○».</string>
+    <string name="place_editor_no_child_location" formatted="false">La posizione del telefono di tuo figlio non si conosce ancora, quindi la mappa si è aperta larga. Spostala a mano per trovare il posto.</string>
+    <string name="place_editor_notify_enter" formatted="false">Avvisa all\'arrivo</string>
+    <string name="place_editor_notify_exit" formatted="false">Avvisa all\'uscita</string>
+    <string name="place_editor_notify_label" formatted="false">Quando avvisarti</string>
+    <string name="place_editor_notify_none_hint" formatted="false">Con tutti e due spenti questo luogo non manda avvisi. Il luogo resta salvato.</string>
+    <string name="place_editor_radius_label" formatted="false">A che distanza vale</string>
+    <string name="place_editor_radius_value">raggio di %1$dm</string>
+    <string name="place_editor_save" formatted="false">Salva</string>
+    <string name="place_editor_title_edit" formatted="false">Modifica il luogo</string>
+    <string name="place_editor_title_new" formatted="false">Luogo nuovo</string>
+    <string name="place_empty" formatted="false">Ancora nessun luogo.\nTocca «Aggiungi un luogo» qui sotto\ne salva posti come «Scuola» o «Corso».\nTi avviseremo quando tuo figlio arriva o esce.</string>
+    <string name="place_error_format">Impossibile caricare i luoghi\n%1$s</string>
+    <string name="place_header_subtitle" formatted="false">Salva la scuola o il corso e ti avviseremo degli arrivi e delle uscite.</string>
+    <string name="place_header_title" formatted="false">Luoghi sicuri</string>
+    <string name="place_limit_notice">Puoi salvare fino a %1$d luoghi. Per aggiungerne uno nuovo, elimina prima un luogo che non usi più.</string>
+    <string name="place_no_family" formatted="false">Famiglia non trovata. Chiudi l\'app e riaprila.</string>
+    <string name="place_notify_both" formatted="false">Avvisi di arrivo e di uscita</string>
+    <string name="place_notify_enter" formatted="false">Solo avvisi di arrivo</string>
+    <string name="place_notify_exit" formatted="false">Solo avvisi di uscita</string>
+    <string name="place_notify_none" formatted="false">Avvisi spenti</string>
+    <string name="place_row_detail">%1$s</string>
+    <string name="place_row_title">%1$s · raggio di %2$dm</string>
+    <string name="place_save_slow" formatted="false">Il salvataggio è stato inviato ma il server non l\'ha ancora confermato. Si salva da solo appena c\'è internet.</string>
+    <string name="place_saving" formatted="false">Salvataggio…</string>
+    <string name="place_summary">%1$s (raggio di %2$dm)</string>
+    <string name="place_sync_failed_format">Il luogo è stato salvato ma non si è riusciti ad avvisare il telefono di tuo figlio. Riapri questa schermata e ci proveremo di nuovo.\n%1$s</string>
+    <string name="place_sync_no_child" formatted="false">Il luogo è salvato. Vale da solo appena il telefono di tuo figlio si collega.</string>
+    <string name="place_sync_pending" formatted="false">Non è ancora arrivato al telefono di tuo figlio. Usa ancora i luoghi vecchi.</string>
+    <string name="place_sync_retry" formatted="false">Prova ad avvisare di nuovo</string>
+    <string name="place_sync_slow" formatted="false">Il luogo è salvato. Avvisare il telefono di tuo figlio finirà appena c\'è internet.</string>
+    <string name="remote_alarm_notification_text" formatted="false">Tocca per spegnerla</string>
+    <string name="remote_alarm_stop" formatted="false">Ferma la sveglia</string>
+    <string name="remote_alarm_title" formatted="false">Una sveglia messa dai tuoi genitori</string>
+    <string name="role_child" formatted="false">Bambino</string>
+    <string name="role_guardian" formatted="false">Genitore (mamma o papà)</string>
+    <string name="role_subtitle" formatted="false">Puoi scegliere di nuovo prima di collegarti.\nDopo il collegamento non si può più cambiare.</string>
+    <string name="role_title" formatted="false">Di chi è questo telefono?</string>
+    <string name="router_retry" formatted="false">Riprova</string>
+    <string name="schedule_add" formatted="false">Aggiungi una regola</string>
+    <string name="schedule_allday_cancel" formatted="false">Scegli di nuovo gli orari</string>
+    <string name="schedule_allday_confirm" formatted="false">Salva per tutto il giorno</string>
+    <string name="schedule_allday_message">L\'inizio e la fine sono tutti e due %1$s.\nSalvata così, nei giorni scelti resta su %2$s per tutte le 24 ore.</string>
+    <string name="schedule_allday_title" formatted="false">Salvare per tutto il giorno?</string>
+    <string name="schedule_day_fri" formatted="false">Ven</string>
+    <string name="schedule_day_mon" formatted="false">Lun</string>
+    <string name="schedule_day_sat" formatted="false">Sab</string>
+    <string name="schedule_day_sun" formatted="false">Dom</string>
+    <string name="schedule_day_thu" formatted="false">Gio</string>
+    <string name="schedule_day_tue" formatted="false">Mar</string>
+    <string name="schedule_day_wed" formatted="false">Mer</string>
+    <string name="schedule_days_everyday" formatted="false">Tutti i giorni</string>
+    <string name="schedule_days_none" formatted="false">Nessun giorno</string>
+    <string name="schedule_days_weekday" formatted="false">Nei giorni feriali</string>
+    <string name="schedule_days_weekend" formatted="false">Fine settimana</string>
+    <string name="schedule_delete" formatted="false">Elimina</string>
+    <string name="schedule_delete_cancel" formatted="false">Lasciala</string>
+    <string name="schedule_delete_confirm" formatted="false">Elimina</string>
+    <string name="schedule_delete_message">%1$s\n\nUna volta eliminata, in questa fascia il suono non cambierà più da solo.</string>
+    <string name="schedule_delete_title" formatted="false">Eliminare questa regola?</string>
+    <string name="schedule_deleting" formatted="false">Eliminazione…</string>
+    <string name="schedule_editor_cancel" formatted="false">Annulla</string>
+    <string name="schedule_editor_days_label" formatted="false">In quali giorni</string>
+    <string name="schedule_editor_days_required" formatted="false">Scegli almeno un giorno. Senza nessun giorno questa regola non si attiva mai.</string>
+    <string name="schedule_editor_end_title" formatted="false">Ora di fine</string>
+    <string name="schedule_editor_mode_label" formatted="false">Metti il telefono di tuo figlio su</string>
+    <string name="schedule_editor_save" formatted="false">Salva</string>
+    <string name="schedule_editor_start_title" formatted="false">Ora di inizio</string>
+    <string name="schedule_editor_time_label" formatted="false">Da che ora a che ora</string>
+    <string name="schedule_editor_title_edit" formatted="false">Modifica la regola</string>
+    <string name="schedule_editor_title_new" formatted="false">Regola nuova</string>
+    <string name="schedule_empty" formatted="false">Ancora nessuna fascia oraria.\nTocca «Aggiungi una regola» qui sotto\ne prova qualcosa come «Silenzioso nelle sere feriali».</string>
+    <string name="schedule_error_format">Impossibile caricare le regole\n%1$s</string>
+    <string name="schedule_header_subtitle" formatted="false">Passa tra suoneria, vibrazione e silenzioso in base al giorno e all\'ora.</string>
+    <string name="schedule_header_title" formatted="false">Programma dei suoni</string>
+    <string name="schedule_holiday_cleared" formatted="false">Le regole valgono anche nei giorni festivi.</string>
+    <string name="schedule_holiday_date">%1$d/%2$d</string>
+    <string name="schedule_holiday_next">Il prossimo giorno di riposo è il %1$s, %2$s.</string>
+    <string name="schedule_holiday_saved" formatted="false">Nei giorni festivi le regole riposano.</string>
+    <string name="schedule_holiday_subtitle" formatted="false">Nei giorni di riposo non si attiva nessuna delle regole qui sotto.</string>
+    <string name="schedule_holiday_title" formatted="false">Riposare nei giorni festivi</string>
+    <string name="schedule_holiday_unknown" formatted="false">Questo telefono non è riuscito a calcolare le date dei giorni festivi. Anche con l\'interruttore acceso contano solo i giorni della settimana.</string>
+    <string name="schedule_mode_normal" formatted="false">Suoneria</string>
+    <string name="schedule_mode_silent" formatted="false">Silenzioso</string>
+    <string name="schedule_mode_vibrate" formatted="false">Vibrazione</string>
+    <string name="schedule_no_family" formatted="false">Famiglia non trovata. Chiudi l\'app e riaprila.</string>
+    <string name="schedule_overlap_cancel" formatted="false">Modifica</string>
+    <string name="schedule_overlap_confirm" formatted="false">Salva lo stesso</string>
+    <string name="schedule_overlap_message">Questa fascia si sovrappone alla regola «%1$s».\nMentre si sovrappongono vince la regola creata dopo.</string>
+    <string name="schedule_overlap_message_more">Questa fascia si sovrappone a «%1$s» e ad altre %2$d regole.\nMentre si sovrappongono vince la regola creata dopo.</string>
+    <string name="schedule_overlap_title" formatted="false">C\'è un\'altra regola che si sovrappone</string>
+    <string name="schedule_range">%1$s ~ %2$s</string>
+    <string name="schedule_range_allday">Tutto il giorno (24 ore da %1$s)</string>
+    <string name="schedule_range_overnight">%1$s ~ %2$s del giorno dopo</string>
+    <string name="schedule_range_separator" formatted="false">–</string>
+    <string name="schedule_row_detail">%1$s · %2$s</string>
+    <string name="schedule_row_detail_off">%1$s · %2$s (spenta)</string>
+    <string name="schedule_save_slow" formatted="false">Il salvataggio è stato inviato ma il server non l\'ha ancora confermato. Si salva da solo appena c\'è internet.</string>
+    <string name="schedule_saving" formatted="false">Salvataggio…</string>
+    <string name="schedule_summary">%1$s · %2$s · %3$s</string>
+    <string name="schedule_sync_failed_format">La regola è stata salvata ma non si è riusciti ad avvisare il telefono di tuo figlio. Riapri questa schermata e ci proveremo di nuovo.\n%1$s</string>
+    <string name="schedule_sync_no_child" formatted="false">La regola è salvata. Vale da sola appena il telefono di tuo figlio si collega.</string>
+    <string name="schedule_sync_pending" formatted="false">Non è ancora arrivata al telefono di tuo figlio. Funziona ancora con le regole vecchie.</string>
+    <string name="schedule_sync_retry" formatted="false">Prova ad avvisare di nuovo</string>
+    <string name="schedule_sync_slow" formatted="false">La regola è salvata. Avvisare il telefono di tuo figlio finirà appena c\'è internet.</string>
+    <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="tab_alert" formatted="false">Novità</string>
+    <string name="tab_control" formatted="false">Controllo</string>
+    <string name="tab_map" formatted="false">Mappa</string>
+    <string name="tab_place" formatted="false">Luoghi</string>
+    <string name="tab_schedule" formatted="false">Programma</string>
+    <string name="timeline_collapse" formatted="false">Chiudi il diario degli spostamenti</string>
+    <string name="timeline_detail">%1$s\n%2$s</string>
+    <string name="timeline_drag_handle" formatted="false">Trascina su o giù per cambiare l\'altezza del diario</string>
+    <string name="timeline_empty" formatted="false">Per questo giorno non ci sono registrazioni</string>
+    <string name="timeline_error">Impossibile caricare le registrazioni\n%1$s</string>
+    <string name="timeline_expand" formatted="false">Apri il diario degli spostamenti</string>
+    <string name="timeline_hide_all_routes" formatted="false">Nascondi tutti i percorsi</string>
+    <string name="timeline_move_title">Spostamento %1$s</string>
+    <string name="timeline_route_hidden" formatted="false">Nascosto sulla mappa</string>
+    <string name="timeline_route_visible" formatted="false">Visibile sulla mappa</string>
+    <string name="timeline_show_all_routes" formatted="false">Mostra tutti i percorsi</string>
+    <string name="timeline_summary_day">%1$s in questo giorno</string>
+    <string name="timeline_summary_empty" formatted="false">Diario degli spostamenti di oggi</string>
+    <string name="timeline_summary_routes_hidden">%1$s · percorsi nascosti</string>
+    <string name="timeline_summary_routes_partial">%1$s · alcuni nascosti</string>
+    <string name="timeline_summary_today">%1$s oggi</string>
+    <string name="timeline_unknown_place" formatted="false">Dove è rimasto</string>
+    <string name="timeline_view_records" formatted="false">Vedi il diario degli spostamenti</string>
+    <string name="tracking_notification_text" formatted="false">Sto dicendo ai tuoi genitori dove sei</string>
+    <string name="tracking_notification_title" formatted="false">Posizione condivisa</string>
+    <string name="uid_format">ID del mio dispositivo\n%1$s</string>
+</resources>
