@@ -1,0 +1,36 @@
+<!-- 요일 고르기 머리말용. 달력 판에 날짜 점 셋. 공휴일 아이콘(별이 붙은 달력)과
+     달라야 해서 점으로 뒀다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M5.6,5.4h12.8c1.2,0 2.2,1 2.2,2.2v10.6c0,1.2 -1,2.2 -2.2,2.2h-12.8c-1.2,0 -2.2,-1 -2.2,-2.2v-10.6c0,-1.2 1,-2.2 2.2,-2.2z"
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="1.8"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M3.4,10h17.2"
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="1.8" />
+    <path
+        android:pathData="M7.8,3.2v3.2"
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M16.2,3.2v3.2"
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M8.2,13.4m-1.25,0a1.25,1.25 0 1,0 2.5,0a1.25,1.25 0 1,0 -2.5,0z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,13.4m-1.25,0a1.25,1.25 0 1,0 2.5,0a1.25,1.25 0 1,0 -2.5,0z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M15.8,13.4m-1.25,0a1.25,1.25 0 1,0 2.5,0a1.25,1.25 0 1,0 -2.5,0z" />
+</vector>

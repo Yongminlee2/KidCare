@@ -244,11 +244,10 @@
     <string name="schedule_delete">삭제</string>
 
     <!-- 목록 한 줄. 첫 칸이 요일, 둘째 칸이 시간대다. -->
-    <string name="schedule_row_title">%1$s · %2$s</string>
     <!-- 대화상자에서 규칙을 가리킬 때 쓰는 한 줄 이름. 요일 · 시간대 · 모드. -->
     <string name="schedule_summary">%1$s · %2$s · %3$s</string>
-    <string name="schedule_row_detail">%1$s</string>
-    <string name="schedule_row_detail_off">%1$s (꺼둠)</string>
+    <string name="schedule_row_detail">%1$s · %2$s</string>
+    <string name="schedule_row_detail_off">%1$s · %2$s (꺼둠)</string>
 
     <string name="schedule_time_format">%1$02d:%2$02d</string>
     <string name="schedule_range">%1$s ~ %2$s</string>

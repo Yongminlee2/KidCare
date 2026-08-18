@@ -1,0 +1,5 @@
+<!-- 요일 동그라미의 배경. 고른 날만 색이 찬다. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/sky" android:state_checked="true" />
+    <item android:color="@color/paper_card" />
+</selector>

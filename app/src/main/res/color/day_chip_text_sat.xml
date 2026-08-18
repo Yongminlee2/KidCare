@@ -1,0 +1,5 @@
+<!-- 토요일은 달력에서 늘 다른 색이다. 고르면 다른 요일과 똑같이 흰 글자가 된다. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/on_accent" android:state_checked="true" />
+    <item android:color="@color/sky" />
+</selector>

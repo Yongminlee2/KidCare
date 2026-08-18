@@ -229,165 +229,307 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="@string/schedule_editor_days_label"
-                android:textAppearance="?attr/textAppearanceTitleMedium" />
+                android:layout_marginTop="22dp"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <!-- 요일 토글 7개. saveEnabled=false 로 두는 이유: MaterialButton 은 자기
-                 checked 상태를 스스로 저장·복원하는데, 이 화면은 editorDays 필드가
-                 유일한 정답이라 두 복원이 부딪히면 화면과 저장될 값이 어긋난다.
-                 뷰 쪽 복원을 아예 끄고 renderEditor() 한 곳에서만 그린다. -->
-            <com.google.android.material.button.MaterialButtonToggleGroup
+                <FrameLayout
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/bg_sticker_circle"
+                    android:backgroundTint="@color/sky_soft">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_week"
+                        app:tint="@color/sky" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/schedule_editor_days_label"
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+            </LinearLayout>
+
+            <!-- 요일 동그라미 일곱. 칸이 맞닿은 토글 그룹에서 떨어진 동그라미로 바꿨다 —
+                 붙어 있으면 설정 화면의 표처럼 보이고, 지금 고른 날이 몇 개인지도 한눈에
+                 안 들어온다. 토·일 글자색을 달리 둔 것은 종이 달력의 관례를 그대로
+                 가져온 것이다.
+
+                 saveEnabled=false 인 이유는 예전 토글 그룹과 같다: MaterialButton 이
+                 자기 checked 상태를 스스로 복원하는데 이 화면은 editorDays 필드가
+                 유일한 정답이라, 두 복원이 부딪히면 화면과 저장될 값이 어긋난다. -->
+            <LinearLayout
                 android:id="@+id/day_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                app:selectionRequired="false"
-                app:singleSelection="false">
+                android:layout_marginTop="10dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/day_mon"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="52dp"
+                    android:layout_marginHorizontal="2dp"
                     android:layout_weight="1"
+                    android:checkable="true"
                     android:insetLeft="0dp"
+                    android:insetTop="0dp"
                     android:insetRight="0dp"
+                    android:insetBottom="0dp"
                     android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:paddingHorizontal="0dp"
                     android:saveEnabled="false"
-                    android:text="@string/schedule_day_mon" />
-
+                    android:text="@string/schedule_day_mon"
+                    android:textColor="@color/day_chip_text"
+                    android:textSize="15sp"
+                    app:backgroundTint="@color/day_chip_bg"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Pill"
+                    app:strokeColor="@color/day_chip_stroke"
+                    app:strokeWidth="1.5dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/day_tue"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="52dp"
+                    android:layout_marginHorizontal="2dp"
                     android:layout_weight="1"
+                    android:checkable="true"
                     android:insetLeft="0dp"
+                    android:insetTop="0dp"
                     android:insetRight="0dp"
+                    android:insetBottom="0dp"
                     android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:paddingHorizontal="0dp"
                     android:saveEnabled="false"
-                    android:text="@string/schedule_day_tue" />
-
+                    android:text="@string/schedule_day_tue"
+                    android:textColor="@color/day_chip_text"
+                    android:textSize="15sp"
+                    app:backgroundTint="@color/day_chip_bg"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Pill"
+                    app:strokeColor="@color/day_chip_stroke"
+                    app:strokeWidth="1.5dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/day_wed"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="52dp"
+                    android:layout_marginHorizontal="2dp"
                     android:layout_weight="1"
+                    android:checkable="true"
                     android:insetLeft="0dp"
+                    android:insetTop="0dp"
                     android:insetRight="0dp"
+                    android:insetBottom="0dp"
                     android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:paddingHorizontal="0dp"
                     android:saveEnabled="false"
-                    android:text="@string/schedule_day_wed" />
-
+                    android:text="@string/schedule_day_wed"
+                    android:textColor="@color/day_chip_text"
+                    android:textSize="15sp"
+                    app:backgroundTint="@color/day_chip_bg"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Pill"
+                    app:strokeColor="@color/day_chip_stroke"
+                    app:strokeWidth="1.5dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/day_thu"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="52dp"
+                    android:layout_marginHorizontal="2dp"
                     android:layout_weight="1"
+                    android:checkable="true"
                     android:insetLeft="0dp"
+                    android:insetTop="0dp"
                     android:insetRight="0dp"
+                    android:insetBottom="0dp"
                     android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:paddingHorizontal="0dp"
                     android:saveEnabled="false"
-                    android:text="@string/schedule_day_thu" />
-
+                    android:text="@string/schedule_day_thu"
+                    android:textColor="@color/day_chip_text"
+                    android:textSize="15sp"
+                    app:backgroundTint="@color/day_chip_bg"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Pill"
+                    app:strokeColor="@color/day_chip_stroke"
+                    app:strokeWidth="1.5dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/day_fri"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="52dp"
+                    android:layout_marginHorizontal="2dp"
                     android:layout_weight="1"
+                    android:checkable="true"
                     android:insetLeft="0dp"
+                    android:insetTop="0dp"
                     android:insetRight="0dp"
+                    android:insetBottom="0dp"
                     android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:paddingHorizontal="0dp"
                     android:saveEnabled="false"
-                    android:text="@string/schedule_day_fri" />
-
+                    android:text="@string/schedule_day_fri"
+                    android:textColor="@color/day_chip_text"
+                    android:textSize="15sp"
+                    app:backgroundTint="@color/day_chip_bg"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Pill"
+                    app:strokeColor="@color/day_chip_stroke"
+                    app:strokeWidth="1.5dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/day_sat"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="52dp"
+                    android:layout_marginHorizontal="2dp"
                     android:layout_weight="1"
+                    android:checkable="true"
                     android:insetLeft="0dp"
+                    android:insetTop="0dp"
                     android:insetRight="0dp"
+                    android:insetBottom="0dp"
                     android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:paddingHorizontal="0dp"
                     android:saveEnabled="false"
-                    android:text="@string/schedule_day_sat" />
-
+                    android:text="@string/schedule_day_sat"
+                    android:textColor="@color/day_chip_text_sat"
+                    android:textSize="15sp"
+                    app:backgroundTint="@color/day_chip_bg"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Pill"
+                    app:strokeColor="@color/day_chip_stroke"
+                    app:strokeWidth="1.5dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/day_sun"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="52dp"
+                    android:layout_marginHorizontal="2dp"
                     android:layout_weight="1"
+                    android:checkable="true"
                     android:insetLeft="0dp"
+                    android:insetTop="0dp"
                     android:insetRight="0dp"
+                    android:insetBottom="0dp"
                     android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:paddingHorizontal="0dp"
                     android:saveEnabled="false"
-                    android:text="@string/schedule_day_sun" />
-            </com.google.android.material.button.MaterialButtonToggleGroup>
+                    android:text="@string/schedule_day_sun"
+                    android:textColor="@color/day_chip_text_sun"
+                    android:textSize="15sp"
+                    app:backgroundTint="@color/day_chip_bg"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Pill"
+                    app:strokeColor="@color/day_chip_stroke"
+                    app:strokeWidth="1.5dp" />
+            </LinearLayout>
 
             <!-- 요일을 하나도 안 고른 채 저장하려 했을 때만 보인다. -->
             <TextView
                 android:id="@+id/editor_days_error"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="8dp"
                 android:text="@string/schedule_editor_days_required"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorError"
                 android:visibility="gone" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="@string/schedule_editor_time_label"
-                android:textAppearance="?attr/textAppearanceTitleMedium" />
+                android:layout_marginTop="22dp"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/bg_sticker_circle"
+                    android:backgroundTint="@color/apricot_soft">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_clock_soft"
+                        app:tint="@color/apricot" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/schedule_editor_time_label"
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="10dp"
                 android:baselineAligned="false"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/start_time_button"
-                    style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="66dp"
                     android:layout_weight="1"
-                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:textColor="@color/on_apricot_soft"
+                    android:textSize="21sp"
+                    app:backgroundTint="@color/apricot_soft"
+                    app:icon="@drawable/ic_clock_soft"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp"
+                    app:iconSize="21dp"
+                    app:iconTint="@color/apricot"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="10dp"
-                android:text="@string/schedule_range_separator"
-                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+                    android:text="@string/schedule_range_separator"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/end_time_button"
-                    style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="66dp"
                     android:layout_weight="1"
-                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:textColor="@color/on_apricot_soft"
+                    android:textSize="21sp"
+                    app:backgroundTint="@color/apricot_soft"
+                    app:icon="@drawable/ic_clock_soft"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp"
+                    app:iconSize="21dp"
+                    app:iconTint="@color/apricot"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium" />
             </LinearLayout>
 
             <!-- "다음 날 아침까지"·"하루 종일"처럼 시각 두 개만 봐서는 알 수 없는 것을
@@ -396,77 +538,127 @@
                 android:id="@+id/range_hint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="8dp"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="@string/schedule_editor_mode_label"
-                android:textAppearance="?attr/textAppearanceTitleMedium" />
+                android:layout_marginTop="22dp"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButtonToggleGroup
+                <FrameLayout
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/bg_sticker_circle"
+                    android:backgroundTint="@color/berry_soft">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_bell_ring"
+                        app:tint="@color/berry" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/schedule_editor_mode_label"
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+            </LinearLayout>
+
+            <!-- 고른 모드의 색은 목록 줄의 스티커 색과 같다(ScheduleText.modeLook).
+                 고를 때 본 색과 그림이 목록에 그대로 나와야 "내가 정한 그것"으로 읽힌다.
+                 색을 XML 에 박지 않고 renderEditor 에서 입히는 이유도 그 표 하나만
+                 고치면 세 자리가 함께 바뀌게 하려는 것이다. -->
+            <LinearLayout
                 android:id="@+id/mode_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                app:selectionRequired="true"
-                app:singleSelection="true">
+                android:layout_marginTop="10dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/schedule_mode_normal"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="62dp"
+                    android:layout_height="86dp"
+                    android:layout_marginHorizontal="3dp"
                     android:layout_weight="1"
+                    android:checkable="true"
                     android:insetLeft="0dp"
+                    android:insetTop="0dp"
                     android:insetRight="0dp"
+                    android:insetBottom="0dp"
                     android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:paddingHorizontal="2dp"
                     android:saveEnabled="false"
                     android:text="@string/schedule_mode_normal"
-                    app:icon="@drawable/ic_volume_up"
+                    android:textSize="14sp"
+                    app:icon="@drawable/ic_bell_ring"
                     app:iconGravity="top"
-                    app:iconPadding="2dp"
-                    app:iconSize="20dp" />
-
+                    app:iconPadding="4dp"
+                    app:iconSize="27dp"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium"
+                    app:strokeWidth="1.5dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/schedule_mode_vibrate"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="62dp"
+                    android:layout_height="86dp"
+                    android:layout_marginHorizontal="3dp"
                     android:layout_weight="1"
+                    android:checkable="true"
                     android:insetLeft="0dp"
+                    android:insetTop="0dp"
                     android:insetRight="0dp"
+                    android:insetBottom="0dp"
                     android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:paddingHorizontal="2dp"
                     android:saveEnabled="false"
                     android:text="@string/schedule_mode_vibrate"
-                    app:icon="@drawable/ic_vibration"
+                    android:textSize="14sp"
+                    app:icon="@drawable/ic_phone_shake"
                     app:iconGravity="top"
-                    app:iconPadding="2dp"
-                    app:iconSize="20dp" />
-
+                    app:iconPadding="4dp"
+                    app:iconSize="27dp"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium"
+                    app:strokeWidth="1.5dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/schedule_mode_silent"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="62dp"
+                    android:layout_height="86dp"
+                    android:layout_marginHorizontal="3dp"
                     android:layout_weight="1"
+                    android:checkable="true"
                     android:insetLeft="0dp"
+                    android:insetTop="0dp"
                     android:insetRight="0dp"
+                    android:insetBottom="0dp"
                     android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:paddingHorizontal="2dp"
                     android:saveEnabled="false"
                     android:text="@string/schedule_mode_silent"
-                    app:icon="@drawable/ic_volume_off"
+                    android:textSize="14sp"
+                    app:icon="@drawable/ic_bell_off"
                     app:iconGravity="top"
-                    app:iconPadding="2dp"
-                    app:iconSize="20dp" />
-            </com.google.android.material.button.MaterialButtonToggleGroup>
+                    app:iconPadding="4dp"
+                    app:iconSize="27dp"
+                    app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium"
+                    app:strokeWidth="1.5dp" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -495,26 +687,27 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="18dp"
                 android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/editor_cancel_button"
                     style="@style/Widget.KidCare.Button.Text"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="58dp"
                     android:layout_weight="1"
                     android:text="@string/schedule_editor_cancel" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/editor_save_button"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
+                    android:layout_height="58dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1.4"
                     android:text="@string/schedule_editor_save"
                     android:textAppearance="?attr/textAppearanceTitleMedium" />
             </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
 </FrameLayout>

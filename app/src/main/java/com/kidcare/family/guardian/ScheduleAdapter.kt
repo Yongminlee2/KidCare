@@ -39,15 +39,14 @@ class ScheduleAdapter(
 
         fun bind(doc: ScheduleDoc) {
             val context = binding.root.context
-            binding.titleText.text = context.getString(
-                R.string.schedule_row_title,
-                ScheduleText.daysText(context, doc.days),
-                ScheduleText.rangeText(context, doc.startMinute, doc.endMinute),
-            )
-            val mode = ScheduleText.modeText(context, doc.mode)
+            // 요일을 첫 줄에 혼자 둔다. 예전에는 "평일 · 21:00 ~ 다음 날 07:00" 을 한
+            // 줄에 넣었는데 자정을 넘는 규칙에서 늘 두 줄로 접혔다. 부모가 규칙을
+            // 찾을 때 먼저 보는 것도 시각이 아니라 요일이다.
+            binding.titleText.text = ScheduleText.daysText(context, doc.days)
             binding.detailText.text = context.getString(
                 if (doc.enabled) R.string.schedule_row_detail else R.string.schedule_row_detail_off,
-                mode,
+                ScheduleText.rangeText(context, doc.startMinute, doc.endMinute),
+                ScheduleText.modeText(context, doc.mode),
             )
             // 꺼둔 규칙은 지워진 것이 아니라 잠깐 쉬는 것이다. 글자를 흐리게만 해서
             // "있긴 한데 지금은 안 도는 규칙"으로 읽히게 한다.
@@ -217,11 +216,11 @@ object ScheduleText {
      */
     fun modeLook(mode: String): Triple<Int, Int, Int> = when (mode) {
         // 벨소리는 소리가 나는 상태라 팔레트에서 가장 따뜻한 살구빛을 준다.
-        MODE_NORMAL -> Triple(R.drawable.ic_volume_up, R.color.apricot, R.color.apricot_soft)
+        MODE_NORMAL -> Triple(R.drawable.ic_bell_ring, R.color.apricot, R.color.apricot_soft)
         // 진동은 소리와 무음 사이라 중간 성격의 라벤더.
-        MODE_VIBRATE -> Triple(R.drawable.ic_vibration, R.color.sky, R.color.sky_soft)
+        MODE_VIBRATE -> Triple(R.drawable.ic_phone_shake, R.color.sky, R.color.sky_soft)
         // 무음은 조용한 상태라 가장 가라앉은 풀빛.
-        MODE_SILENT -> Triple(R.drawable.ic_volume_off, R.color.grass, R.color.grass_soft)
+        MODE_SILENT -> Triple(R.drawable.ic_bell_off, R.color.grass, R.color.grass_soft)
         // 모르는 값이면 색으로 아는 척하지 않는다(modeText 와 같은 태도).
         else -> Triple(R.drawable.ic_alarm, R.color.ink_soft, R.color.line_soft)
     }

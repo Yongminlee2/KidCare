@@ -1,0 +1,31 @@
+<!-- 진동. 기본 아이콘은 폰이 각지고 떨림 표시가 가늘어 계기판처럼 보였다.
+     모서리를 둥글게 채우고 떨림을 굵은 막대 넷으로 바꿨다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9.4,3h5.2c1.32,0 2.4,1.08 2.4,2.4v13.2c0,1.32 -1.08,2.4 -2.4,2.4h-5.2c-1.32,0 -2.4,-1.08 -2.4,-2.4v-13.2c0,-1.32 1.08,-2.4 2.4,-2.4z" />
+    <path
+        android:pathData="M4.3,9.4v5.2"
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="1.9"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M19.7,9.4v5.2"
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="1.9"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M1.6,10.9v2.2"
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="1.9"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M22.4,10.9v2.2"
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="1.9"
+        android:strokeLineCap="round" />
+</vector>

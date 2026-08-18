@@ -8,7 +8,10 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import android.content.res.ColorStateList
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
@@ -180,9 +183,6 @@ class ScheduleFragment : Fragment() {
     /** 저장/삭제가 진행 중인가. 진행 중에는 저장 버튼을 잠가 같은 쓰기가 두 번 나가지 않게 한다. */
     private var editorBusy = false
 
-    /** [renderEditor] 가 토글 그룹에 값을 대입하는 동안 리스너가 도로 상태를 고치지 못하게 막는다. */
-    private var suppressToggleCallbacks = false
-
     private var backCallback: OnBackPressedCallback? = null
 
     /** 지금 떠 있는 확인 대화상자. 화면이 사라질 때 반드시 닫아야 창이 샌다는 경고가 안 뜬다. */
@@ -232,22 +232,26 @@ class ScheduleFragment : Fragment() {
         b.startTimeButton.setOnClickListener { showTimePicker(TAG_PICK_START) }
         b.endTimeButton.setOnClickListener { showTimePicker(TAG_PICK_END) }
 
-        b.dayGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (suppressToggleCallbacks) return@addOnButtonCheckedListener
-            val day = DAY_BUTTON_IDS.indexOf(checkedId) + 1
-            if (day <= 0) return@addOnButtonCheckedListener
-            if (isChecked) editorDays.add(day) else editorDays.remove(day)
-            // 요일을 하나라도 고른 순간 경고를 거둔다 — 고쳤는데도 빨간 글씨가 남아
-            // 있으면 아직 잘못된 줄 안다.
-            if (editorDays.isNotEmpty()) _binding?.editorDaysError?.visibility = View.GONE
+        // 낱개 버튼이라 **누름(click)** 만 듣는다. checked 변경을 들으면 renderEditor 가
+        // 값을 대입해 그릴 때도 불려서, 방금 그린 값을 리스너가 다시 상태로 되돌려 쓰는
+        // 순환이 생긴다(예전 토글 그룹이 suppressToggleCallbacks 깃발로 막던 문제다).
+        // 체크 가능한 MaterialButton 은 눌리는 순간 스스로 상태를 뒤집고 나서 이 리스너를
+        // 부르므로 isChecked 는 이미 새 값이다.
+        dayButtons(b).forEachIndexed { index, button ->
+            button.setOnClickListener {
+                val day = index + 1
+                if (button.isChecked) editorDays.add(day) else editorDays.remove(day)
+                // 요일을 하나라도 고른 순간 경고를 거둔다 — 고쳤는데도 빨간 글씨가 남아
+                // 있으면 아직 잘못된 줄 안다.
+                if (editorDays.isNotEmpty()) _binding?.editorDaysError?.visibility = View.GONE
+            }
         }
-        b.modeGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (suppressToggleCallbacks || !isChecked) return@addOnButtonCheckedListener
-            editorMode = when (checkedId) {
-                R.id.schedule_mode_normal -> ScheduleText.MODE_NORMAL
-                R.id.schedule_mode_vibrate -> ScheduleText.MODE_VIBRATE
-                R.id.schedule_mode_silent -> ScheduleText.MODE_SILENT
-                else -> editorMode
+        modeButtons(b).forEach { (button, mode) ->
+            button.setOnClickListener {
+                editorMode = mode
+                // 셋 중 하나만 켜져 있어야 한다. 낱개 버튼은 그 규칙을 스스로 모르므로
+                // 다시 그려서 맞춘다.
+                renderEditor()
             }
         }
 
@@ -946,20 +950,10 @@ class ScheduleFragment : Fragment() {
             else R.string.schedule_editor_title_edit
         )
 
-        // 토글 그룹에 값을 대입하면 리스너가 불린다 — 그대로 두면 방금 그린 값을
-        // 리스너가 다시 상태로 되돌려 쓰는 순환이 생긴다. 그리는 동안만 막는다.
-        suppressToggleCallbacks = true
-        DAY_BUTTON_IDS.forEachIndexed { index, id ->
-            if ((index + 1) in editorDays) b.dayGroup.check(id) else b.dayGroup.uncheck(id)
+        dayButtons(b).forEachIndexed { index, button ->
+            button.isChecked = (index + 1) in editorDays
         }
-        b.modeGroup.check(
-            when (editorMode) {
-                ScheduleText.MODE_NORMAL -> R.id.schedule_mode_normal
-                ScheduleText.MODE_SILENT -> R.id.schedule_mode_silent
-                else -> R.id.schedule_mode_vibrate
-            }
-        )
-        suppressToggleCallbacks = false
+        modeButtons(b).forEach { (button, mode) -> styleModeButton(button, mode) }
 
         val ctx = b.root.context
         b.startTimeButton.text = ScheduleText.timeText(ctx, editorStartMinute)
@@ -975,6 +969,41 @@ class ScheduleFragment : Fragment() {
 
         if (editorDays.isNotEmpty()) b.editorDaysError.visibility = View.GONE
         setEditorBusy(editorBusy)
+    }
+
+    private fun dayButtons(b: FragmentScheduleBinding): List<MaterialButton> =
+        listOf(b.dayMon, b.dayTue, b.dayWed, b.dayThu, b.dayFri, b.daySat, b.daySun)
+
+    private fun modeButtons(b: FragmentScheduleBinding): List<Pair<MaterialButton, String>> = listOf(
+        b.scheduleModeNormal to ScheduleText.MODE_NORMAL,
+        b.scheduleModeVibrate to ScheduleText.MODE_VIBRATE,
+        b.scheduleModeSilent to ScheduleText.MODE_SILENT,
+    )
+
+    /**
+     * 소리 모드 버튼 하나를 지금 고른 값에 맞춰 칠한다.
+     *
+     * 고른 것은 그 모드의 색으로 차고, 안 고른 것은 종이색으로 남는다. 색을 XML 의
+     * 상태 목록이 아니라 여기서 입히는 이유는 목록 줄의 스티커와 **같은 표**
+     * ([ScheduleText.modeLook])를 쓰기 위해서다 — 색을 두 곳에 적으면 하나를 바꿀 때
+     * 반드시 하나를 빠뜨린다.
+     */
+    private fun styleModeButton(button: MaterialButton, mode: String) {
+        val ctx = button.context
+        val selected = editorMode == mode
+        val (iconRes, colorRes, softRes) = ScheduleText.modeLook(mode)
+        val strong = ContextCompat.getColor(ctx, colorRes)
+        button.isChecked = selected
+        button.setIconResource(iconRes)
+        button.backgroundTintList = ColorStateList.valueOf(
+            ContextCompat.getColor(ctx, if (selected) softRes else R.color.paper_card)
+        )
+        button.strokeColor = ColorStateList.valueOf(
+            if (selected) strong else ContextCompat.getColor(ctx, R.color.line_soft)
+        )
+        val content = if (selected) strong else ContextCompat.getColor(ctx, R.color.ink_soft)
+        button.iconTint = ColorStateList.valueOf(content)
+        button.setTextColor(content)
     }
 
     /** 취소 버튼도 함께 잠근다 — 이유는 [cancelEditor] 주석. */
@@ -1041,19 +1070,11 @@ class ScheduleFragment : Fragment() {
         activeDialog = null
         backCallback?.remove()
         backCallback = null
-        _binding?.dayGroup?.clearOnButtonCheckedListeners()
-        _binding?.modeGroup?.clearOnButtonCheckedListeners()
         _binding = null
         super.onDestroyView()
     }
 
     private companion object {
-        /** 인덱스 + 1 이 요일값(1=월 … 7=일)이다. ScheduleRule.days 와 같은 규칙. */
-        val DAY_BUTTON_IDS = intArrayOf(
-            R.id.day_mon, R.id.day_tue, R.id.day_wed, R.id.day_thu,
-            R.id.day_fri, R.id.day_sat, R.id.day_sun,
-        )
-
         /** 새 규칙의 기본값: 평일 21:00~07:00 진동. 가장 흔한 요구("밤에는 조용히")에 가깝다. */
         val DEFAULT_DAYS = setOf(1, 2, 3, 4, 5)
         const val DEFAULT_START_MINUTE = 21 * 60
