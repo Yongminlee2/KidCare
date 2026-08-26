@@ -51,7 +51,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="26dp"
             android:text="@string/control_section_network"
-            android:textAppearance="?attr/textAppearanceTitleLarge" />
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/ink"
+            android:textSize="15sp" />
 
         <!-- 보기만 한다. 끄고 켜기는 안드로이드가 서드파티 앱에 허용하지 않는다
              (child/NetworkState 주석). 그 사실을 카드 안에 적어 두는 이유는, 안 적으면
@@ -120,7 +122,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/control_section_ringer"
-            android:textAppearance="?attr/textAppearanceTitleLarge" />
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/ink"
+            android:textSize="15sp" />
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -316,7 +320,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/control_section_message"
-            android:textAppearance="?attr/textAppearanceTitleLarge" />
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/ink"
+            android:textSize="15sp" />
 
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/message_chips"
@@ -413,7 +419,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/control_section_alarm"
-            android:textAppearance="?attr/textAppearanceTitleLarge" />
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/ink"
+            android:textSize="15sp" />
 
         <!-- 걸어 둔 알람이 없으면 GONE. -->
         <TextView

@@ -116,17 +116,39 @@
                 android:paddingTop="4dp"
                 android:paddingBottom="12dp" />
 
-            <TextView
+            <!-- 그림을 위에 얹은 이유는 알림 탭과 같다: 이 탭은 처음 켰을 때 늘
+                 비어 있는데, 글자만 화면 한가운데 떠 있으면 화면의 8할이 빈 종이가
+                 된다. 눈이 먼저 갈 곳이 있어야 "고장인가"가 아니라 "아직 없구나"로
+                 읽힌다. -->
+            <LinearLayout
                 android:id="@+id/place_empty"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:gravity="center"
-                android:padding="24dp"
-                android:text="@string/place_empty"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:visibility="gone" />
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/edge"
+                android:paddingVertical="24dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="104dp"
+                    android:layout_height="104dp"
+                    android:alpha="0.9"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_mascot" />
+
+                <TextView
+                    android:id="@+id/place_empty_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/place_empty"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
         </FrameLayout>
 
         <com.google.android.material.button.MaterialButton

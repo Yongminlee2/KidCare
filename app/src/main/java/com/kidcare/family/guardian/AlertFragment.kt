@@ -271,7 +271,9 @@ class AlertFragment : Fragment() {
         val b = _binding ?: return
         adapter.setUnread(highlight.toSet())
         adapter.submitList(events)
-        b.alertEmpty.renderEmptyState(listLoad, events.isEmpty(), R.string.alert_empty)
+        b.alertEmpty.renderEmptyState(
+            b.alertEmptyText, listLoad, events.isEmpty(), R.string.alert_empty,
+        )
     }
 
     /** 목록 위의 한 줄. null 이면 감춘다. */

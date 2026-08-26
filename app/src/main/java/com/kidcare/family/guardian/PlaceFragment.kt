@@ -791,7 +791,9 @@ class PlaceFragment : Fragment(), OnMapReadyCallback {
     private fun renderList() {
         val b = _binding ?: return
         adapter.submitList(places)
-        b.placeEmpty.renderEmptyState(listLoad, places.isEmpty(), R.string.place_empty)
+        b.placeEmpty.renderEmptyState(
+            b.placeEmptyText, listLoad, places.isEmpty(), R.string.place_empty,
+        )
 
         val full = places.size >= MAX_PLACES
         b.addButton.isEnabled = !full

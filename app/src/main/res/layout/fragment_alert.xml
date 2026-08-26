@@ -67,7 +67,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/alert_service_hint"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -97,17 +97,39 @@
             android:paddingBottom="12dp" />
 
         <!-- 빈 목록을 그냥 비워두면 부모는 "고장인가"를 먼저 의심한다. 알림이 없다는
-             사실과, 알림이 생기려면 무엇을 해야 하는지를 함께 적는다. -->
-        <TextView
+             사실과, 알림이 생기려면 무엇을 해야 하는지를 함께 적는다.
+
+             그림을 위에 얹은 이유: 이 탭은 처음 켰을 때 늘 비어 있는데, 글자만 화면
+             한가운데 떠 있으면 화면의 8할이 빈 종이가 된다. 눈이 먼저 갈 곳이 있어야
+             "고장인가"가 아니라 "아직 없구나"로 읽힌다. -->
+        <LinearLayout
             android:id="@+id/alert_empty"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:gravity="center"
-            android:padding="24dp"
-            android:text="@string/alert_empty"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:visibility="gone" />
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/edge"
+            android:paddingVertical="24dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="104dp"
+                android:layout_height="104dp"
+                android:alpha="0.9"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_mascot" />
+
+            <TextView
+                android:id="@+id/alert_empty_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:lineSpacingExtra="3dp"
+                android:text="@string/alert_empty"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
     </FrameLayout>
 </LinearLayout>

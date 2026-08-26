@@ -71,6 +71,22 @@ internal enum class ListLoad {
  * 한 줄에 이미 있고, 여기에 또 적으면 같은 말이 두 번 나오거나 — 더 나쁘게 —
  * 두 문장이 서로 다른 말을 하게 된다.
  */
+/**
+ * 그림이 함께 있는 빈 화면. 보임/숨김은 묶음(이 뷰)이 맡고 글은 [label] 이 맡는다.
+ *
+ * 글만 있는 자리는 아래 [TextView] 판을 그대로 쓴다(지도 탭의 타임라인). 두 판을
+ * 나눈 이유는 한쪽에 그림이 생겼다고 다른 쪽까지 묶음으로 바꿀 이유가 없어서다.
+ */
+internal fun View.renderEmptyState(
+    label: TextView,
+    state: ListLoad,
+    isEmpty: Boolean,
+    @StringRes emptyText: Int,
+) {
+    visibility = if (isEmpty && state != ListLoad.FAILED) View.VISIBLE else View.GONE
+    label.setText(if (state == ListLoad.LOADED) emptyText else R.string.list_loading)
+}
+
 internal fun TextView.renderEmptyState(
     state: ListLoad,
     isEmpty: Boolean,
