@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">Только о приходе</string>
     <string name="place_notify_exit" formatted="false">Только об уходе</string>
     <string name="place_notify_none" formatted="false">Уведомления выключены</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · радиус %2$dm</string>
+    <string name="place_row_detail">%1$s · радиус %2$dm</string>
     <string name="place_save_slow" formatted="false">Запрос на сохранение ушёл, но сервер ещё не подтвердил. Сохранится само, как только появится интернет.</string>
     <string name="place_saving" formatted="false">Сохраняем…</string>
     <string name="place_summary">%1$s (радиус %2$dm)</string>

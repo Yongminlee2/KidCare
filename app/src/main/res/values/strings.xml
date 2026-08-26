@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">Arrival alerts only</string>
     <string name="place_notify_exit" formatted="false">Departure alerts only</string>
     <string name="place_notify_none" formatted="false">Alerts off</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · %2$dm radius</string>
+    <string name="place_row_detail">%1$s · %2$dm radius</string>
     <string name="place_save_slow" formatted="false">The save was sent but the server has not confirmed it yet. It saves on its own once the internet connects.</string>
     <string name="place_saving" formatted="false">Saving…</string>
     <string name="place_summary">%1$s (%2$dm radius)</string>

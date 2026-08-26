@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">Solo avisos de llegada</string>
     <string name="place_notify_exit" formatted="false">Solo avisos de salida</string>
     <string name="place_notify_none" formatted="false">Avisos apagados</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · radio de %2$dm</string>
+    <string name="place_row_detail">%1$s · radio de %2$dm</string>
     <string name="place_save_slow" formatted="false">Se envió el guardado, pero el servidor todavía no lo ha confirmado. Se guarda solo en cuanto haya internet.</string>
     <string name="place_saving" formatted="false">Guardando…</string>
     <string name="place_summary">%1$s (radio de %2$dm)</string>

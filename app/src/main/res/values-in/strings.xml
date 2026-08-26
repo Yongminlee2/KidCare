@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">Hanya saat sampai</string>
     <string name="place_notify_exit" formatted="false">Hanya saat keluar</string>
     <string name="place_notify_none" formatted="false">Pemberitahuan mati</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · radius %2$dm</string>
+    <string name="place_row_detail">%1$s · radius %2$dm</string>
     <string name="place_save_slow" formatted="false">Permintaan simpan sudah dikirim tapi server belum memastikan. Tersimpan sendiri begitu ada internet.</string>
     <string name="place_saving" formatted="false">Menyimpan…</string>
     <string name="place_summary">%1$s (radius %2$dm)</string>

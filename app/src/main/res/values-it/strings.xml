@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">Solo avvisi di arrivo</string>
     <string name="place_notify_exit" formatted="false">Solo avvisi di uscita</string>
     <string name="place_notify_none" formatted="false">Avvisi spenti</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · raggio di %2$dm</string>
+    <string name="place_row_detail">%1$s · raggio di %2$dm</string>
     <string name="place_save_slow" formatted="false">Il salvataggio è stato inviato ma il server non l\'ha ancora confermato. Si salva da solo appena c\'è internet.</string>
     <string name="place_saving" formatted="false">Salvataggio…</string>
     <string name="place_summary">%1$s (raggio di %2$dm)</string>

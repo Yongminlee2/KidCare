@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">Avis d\'arrivée seulement</string>
     <string name="place_notify_exit" formatted="false">Avis de départ seulement</string>
     <string name="place_notify_none" formatted="false">Avis désactivés</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · rayon de %2$dm</string>
+    <string name="place_row_detail">%1$s · rayon de %2$dm</string>
     <string name="place_save_slow" formatted="false">L\'enregistrement a été envoyé mais le serveur ne l\'a pas encore confirmé. Il s\'enregistre tout seul dès qu\'il y a internet.</string>
     <string name="place_saving" formatted="false">Enregistrement…</string>
     <string name="place_summary">%1$s (rayon de %2$dm)</string>

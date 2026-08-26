@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">Chỉ báo lúc đến</string>
     <string name="place_notify_exit" formatted="false">Chỉ báo lúc rời</string>
     <string name="place_notify_none" formatted="false">Đã tắt báo</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · bán kính %2$dm</string>
+    <string name="place_row_detail">%1$s · bán kính %2$dm</string>
     <string name="place_save_slow" formatted="false">Đã gửi yêu cầu lưu nhưng máy chủ chưa xác nhận. Khi có mạng nó sẽ tự lưu.</string>
     <string name="place_saving" formatted="false">Đang lưu…</string>
     <string name="place_summary">%1$s (bán kính %2$dm)</string>

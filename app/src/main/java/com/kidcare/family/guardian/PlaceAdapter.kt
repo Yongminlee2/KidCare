@@ -3,6 +3,8 @@ package com.kidcare.family.guardian
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.content.res.ColorStateList
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -34,15 +36,16 @@ class PlaceAdapter(
 
         fun bind(doc: PlaceDoc) {
             val context = binding.root.context
-            binding.titleText.text = context.getString(
-                R.string.place_row_title,
-                doc.name,
-                PlaceText.radiusMeters(doc),
-            )
+            // 이름은 첫 줄에 혼자 둔다. 예전에는 "학교 · 반경 200m"를 한 줄에 넣었는데,
+            // 긴 이름에서 반경이 밀려 잘렸다. 예약 줄과 같은 규칙이다 — 부모가 찾을 때
+            // 먼저 보는 것이 이름이다.
+            binding.titleText.text = doc.name
             binding.detailText.text = context.getString(
                 R.string.place_row_detail,
                 PlaceText.notifyText(context, doc),
+                PlaceText.radiusMeters(doc),
             )
+            bindSticker(doc)
             // 알림을 둘 다 꺼둔 장소는 지워진 것이 아니라 잠깐 쉬는 것이다. 꺼둔 예약
             // 규칙과 같은 방식으로 흐리게만 해서 "있긴 한데 지금은 안 우는 장소"로
             // 읽히게 한다.
@@ -51,6 +54,37 @@ class PlaceAdapter(
             binding.rowBody.setOnClickListener { onEdit(doc) }
             binding.deleteButton.setOnClickListener { onDelete(doc) }
         }
+
+        /**
+         * 장소 이름의 첫 글자를 색 동그라미에 넣는다.
+         *
+         * 핀 그림 하나를 다섯 줄에 똑같이 반복하는 것보다 훨씬 빨리 구분된다 —
+         * 목록을 훑는 부모가 찾는 것은 "장소"가 아니라 "학교"다. 색은 문서 ID 로
+         * 정하므로 목록 순서가 바뀌어도 같은 장소는 같은 색을 유지한다. 위치로
+         * 정하면 하나를 지웠을 때 아래 것들의 색이 전부 밀린다.
+         */
+        private fun bindSticker(doc: PlaceDoc) {
+            val context = binding.root.context
+            val letter = doc.name.trim().firstOrNull()?.toString().orEmpty()
+            val key = doc.id.ifEmpty { doc.name }
+            val (strong, soft) = STICKER_COLORS[
+                Math.floorMod(key.hashCode(), STICKER_COLORS.size)
+            ]
+            binding.placeSticker.text = letter
+            binding.placeSticker.setTextColor(ContextCompat.getColor(context, strong))
+            binding.placeSticker.backgroundTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(context, soft))
+        }
+    }
+
+    private companion object {
+        /** (진한 색, 연한 색) 짝. 앱 팔레트에서 서로 잘 구분되는 넷만 골랐다. */
+        val STICKER_COLORS = listOf(
+            R.color.sky to R.color.sky_soft,
+            R.color.apricot to R.color.apricot_soft,
+            R.color.grass to R.color.grass_soft,
+            R.color.berry_ink to R.color.berry_soft,
+        )
     }
 
     private object Diff : DiffUtil.ItemCallback<PlaceDoc>() {

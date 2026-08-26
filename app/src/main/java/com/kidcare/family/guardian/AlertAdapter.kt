@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.content.res.ColorStateList
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -51,6 +52,11 @@ class AlertAdapter : ListAdapter<EventDoc, AlertAdapter.Holder>(Diff) {
             val context = binding.root.context
             binding.titleText.text = AlertText.line(context, doc)
             binding.eventIcon.setImageResource(AlertText.icon(doc))
+            val (strong, soft) = AlertText.color(doc)
+            binding.eventIcon.imageTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(context, strong))
+            binding.eventIcon.backgroundTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(context, soft))
 
             // detail 은 Task 7 이 채우는 자리다(배터리 몇 %, 어떤 권한이 꺼졌는지).
             // 비어 있으면 줄 자체를 없앤다 — 빈 줄이 남으면 줄 높이만 들쭉날쭉해진다.
@@ -106,6 +112,24 @@ object AlertText {
         // 있다. 줄을 통째로 버리지 않는 이유: 뜻은 몰라도 "무슨 일이 언제 있었다"는
         // 사실은 남는데, 버리면 부모 화면에서 그 사건이 아예 없던 일이 된다.
         else -> context.getString(R.string.alert_unknown)
+    }
+
+    /**
+     * 소식 종류별 색 — (진한 색, 연한 색).
+     *
+     * 예전에는 여섯 종류가 전부 같은 하늘색 동그라미였다. 목록을 훑을 때 "도착"과
+     * "권한이 꺼졌어요"를 색으로 가려낼 수 없었고, 그래서 줄마다 글을 읽어야 했다.
+     * 색을 뜻에 맞춘다: 도착은 풀빛(좋은 일), 나섬은 살구빛(움직임), 배터리는
+     * 자두빛(살펴볼 일), 나머지 셋은 오류색(손봐야 할 일).
+     */
+    fun color(doc: EventDoc): Pair<Int, Int> = when (doc.type) {
+        EventType.PLACE_ENTER -> R.color.grass to R.color.grass_soft
+        EventType.PLACE_EXIT -> R.color.apricot to R.color.apricot_soft
+        EventType.LOW_BATTERY -> R.color.berry_ink to R.color.berry_soft
+        EventType.PERMISSION_OFF,
+        EventType.SIGNAL_LOST,
+        EventType.COMMAND_FAILED -> R.color.berry_ink to R.color.berry_soft
+        else -> R.color.sky to R.color.sky_soft
     }
 
     /** UI-only icon mapping; event wording and delivery behavior remain unchanged. */

@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">Nur Meldung bei Ankunft</string>
     <string name="place_notify_exit" formatted="false">Nur Meldung beim Weggehen</string>
     <string name="place_notify_none" formatted="false">Meldungen aus</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · Umkreis %2$dm</string>
+    <string name="place_row_detail">%1$s · Umkreis %2$dm</string>
     <string name="place_save_slow" formatted="false">Das Speichern wurde gesendet, aber der Server hat es noch nicht bestätigt. Es speichert von selbst, sobald Internet da ist.</string>
     <string name="place_saving" formatted="false">Wird gespeichert…</string>
     <string name="place_summary">%1$s (Umkreis %2$dm)</string>

@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">只通知到达</string>
     <string name="place_notify_exit" formatted="false">只通知离开</string>
     <string name="place_notify_none" formatted="false">通知已关</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · 半径%2$dm</string>
+    <string name="place_row_detail">%1$s · 半径%2$dm</string>
     <string name="place_save_slow" formatted="false">保存请求已发出，但服务器还没确认。联网后会自动保存。</string>
     <string name="place_saving" formatted="false">正在保存…</string>
     <string name="place_summary">%1$s（半径%2$dm）</string>

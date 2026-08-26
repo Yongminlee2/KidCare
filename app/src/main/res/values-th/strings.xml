@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">แจ้งเฉพาะตอนมาถึง</string>
     <string name="place_notify_exit" formatted="false">แจ้งเฉพาะตอนออกไป</string>
     <string name="place_notify_none" formatted="false">ปิดการแจ้ง</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · รัศมี %2$dm</string>
+    <string name="place_row_detail">%1$s · รัศมี %2$dm</string>
     <string name="place_save_slow" formatted="false">ส่งคำขอบันทึกแล้วแต่เซิร์ฟเวอร์ยังไม่ยืนยัน เมื่อมีอินเทอร์เน็ตจะบันทึกเอง</string>
     <string name="place_saving" formatted="false">กำลังบันทึก…</string>
     <string name="place_summary">%1$s (รัศมี %2$dm)</string>

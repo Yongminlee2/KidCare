@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="20dp"
+            android:paddingHorizontal="@dimen/edge"
             android:paddingTop="20dp"
             android:paddingBottom="12dp">
 
@@ -48,7 +48,8 @@
             android:id="@+id/place_state"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
+            android:paddingHorizontal="@dimen/edge"
+            android:paddingVertical="16dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:visibility="gone" />
@@ -64,7 +65,7 @@
             android:baselineAligned="false"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp"
+            android:paddingHorizontal="@dimen/edge"
             android:paddingVertical="8dp"
             android:visibility="gone">
 
@@ -96,7 +97,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorSurfaceVariant"
-            android:paddingHorizontal="16dp"
+            android:paddingHorizontal="@dimen/edge"
             android:paddingVertical="10dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant"
@@ -132,7 +133,7 @@
             android:id="@+id/add_button"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginHorizontal="20dp"
+            android:layout_marginHorizontal="@dimen/edge"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="16dp"
             android:text="@string/place_add"

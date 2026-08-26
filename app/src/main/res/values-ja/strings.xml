@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">到着のお知らせだけ</string>
     <string name="place_notify_exit" formatted="false">出発のお知らせだけ</string>
     <string name="place_notify_none" formatted="false">お知らせオフ</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · 半径%2$dm</string>
+    <string name="place_row_detail">%1$s · 半径%2$dm</string>
     <string name="place_save_slow" formatted="false">保存のリクエストは送りましたがサーバーの確認がまだです。インターネットにつながれば自動で保存されます。</string>
     <string name="place_saving" formatted="false">保存しています…</string>
     <string name="place_summary">%1$s（半径%2$dm）</string>

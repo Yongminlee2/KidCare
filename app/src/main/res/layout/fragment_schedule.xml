@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="20dp"
+            android:paddingHorizontal="@dimen/edge"
             android:paddingTop="20dp"
             android:paddingBottom="12dp">
 
@@ -56,7 +56,7 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="14dp"
+            android:layout_marginHorizontal="@dimen/edge"
             android:layout_marginBottom="8dp"
             app:cardBackgroundColor="@color/paper_card"
             app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium"
@@ -191,7 +191,7 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="14dp"
+            android:layout_marginHorizontal="@dimen/edge"
             android:layout_marginBottom="6dp"
             app:cardBackgroundColor="@color/berry_soft"
             app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium"
@@ -253,7 +253,8 @@
             android:id="@+id/schedule_state"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
+            android:paddingHorizontal="@dimen/edge"
+            android:paddingVertical="16dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:visibility="gone" />
@@ -273,7 +274,7 @@
             android:baselineAligned="false"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp"
+            android:paddingHorizontal="@dimen/edge"
             android:paddingVertical="8dp"
             android:visibility="gone">
 
@@ -329,7 +330,7 @@
             android:id="@+id/add_button"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginHorizontal="20dp"
+            android:layout_marginHorizontal="@dimen/edge"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="16dp"
             android:text="@string/schedule_add"
@@ -356,7 +357,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingHorizontal="@dimen/edge"
+            android:paddingVertical="16dp">
 
             <TextView
                 android:id="@+id/editor_title"

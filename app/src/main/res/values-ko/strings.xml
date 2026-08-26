@@ -240,8 +240,7 @@
     <string name="place_notify_enter" formatted="false">도착 알림만</string>
     <string name="place_notify_exit" formatted="false">이탈 알림만</string>
     <string name="place_notify_none" formatted="false">알림 꺼둠</string>
-    <string name="place_row_detail">%1$s</string>
-    <string name="place_row_title">%1$s · 반경 %2$dm</string>
+    <string name="place_row_detail">%1$s · 반경 %2$dm</string>
     <string name="place_save_slow" formatted="false">저장 요청은 보냈지만 아직 서버 확인이 안 됐어요. 인터넷이 연결되면 저절로 저장돼요.</string>
     <string name="place_saving" formatted="false">저장 중…</string>
     <string name="place_summary">%1$s (반경 %2$dm)</string>
