@@ -49,6 +49,76 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:text="@string/control_section_network"
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+        <!-- 보기만 한다. 끄고 켜기는 안드로이드가 서드파티 앱에 허용하지 않는다
+             (child/NetworkState 주석). 그 사실을 카드 안에 적어 두는 이유는, 안 적으면
+             "왜 스위치가 없지"가 계속 질문으로 돌아오기 때문이다. -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@color/sky_soft"
+            app:shapeAppearance="@style/ShapeAppearance.KidCare.Small"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="12dp">
+
+                <ImageView
+                    android:id="@+id/network_icon"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_wifi"
+                    app:tint="@color/sky" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/network_state"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/control_network_unknown"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="@color/ink" />
+
+                    <TextView
+                        android:id="@+id/network_wifi_state"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/control_network_readonly"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:text="@string/control_section_ringer"
             android:textAppearance="?attr/textAppearanceTitleLarge" />
 

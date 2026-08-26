@@ -51,6 +51,7 @@ class ScheduleApplier(private val context: Context) {
             val settings = ScheduleRepository.fetchRingerSettings(familyId, childUid)
             state.lockEnabled = settings.lockEnabled
             state.holidayOff = settings.holidayOff
+            state.defaultMode = settings.defaultMode
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -78,7 +79,13 @@ class ScheduleApplier(private val context: Context) {
 
         // 규칙이 지금 강제하는 모드를 캐시한다 — RingerController.desiredMode 가 즉시
         // 변경이 없을 때 이 값을 읽는다(RingerStateStore.ruleMode 주석 참고).
-        state.ruleMode = resolution.mode
+        //
+        // 걸린 규칙이 없으면 **기본 모드로 돌아간다.** 예전에는 여기가 null 이 되고
+        // desiredMode 도 null 을 돌려줘 아래 적용 분기가 통째로 건너뛰었다 — 그래서
+        // "평일 밤 무음"을 걸면 아침 7시가 지나도 무음인 채로 남았다. 규칙은 언제
+        // 시작하는지만 말할 뿐 끝난 뒤 무엇으로 돌아갈지는 말하지 않기 때문이다.
+        // 돌아갈 자리를 부모가 정해 두면(RingerSettingsDoc.defaultMode) 그리로 돌아간다.
+        state.ruleMode = resolution.mode ?: state.defaultMode.ifEmpty { null }
 
         val current = ringerController.currentMode()
         val rememberedOverride = state.overrideMode

@@ -93,6 +93,14 @@
     <string name="control_mode_normal" formatted="false">響鈴</string>
     <string name="control_mode_silent" formatted="false">靜音</string>
     <string name="control_mode_vibrate" formatted="false">震動</string>
+    <string name="control_network_cell" formatted="false">正透過行動數據連線</string>
+    <string name="control_network_none" formatted="false">沒有連上網路</string>
+    <string name="control_network_off" formatted="false">已關</string>
+    <string name="control_network_on" formatted="false">已開</string>
+    <string name="control_network_readonly" formatted="false">開關這些，Android不允許別的應用程式來做。這裡只顯示狀態。</string>
+    <string name="control_network_unknown" formatted="false">還沒確認到</string>
+    <string name="control_network_wifi" formatted="false">正透過Wi-Fi連線</string>
+    <string name="control_network_wifi_switch">Wi-Fi開關%1$s</string>
     <string name="control_ringer_refresh" formatted="false">重新查看</string>
     <string name="control_ringer_status_applied">目前狀態 · %1$s</string>
     <string name="control_ringer_status_format">最後查看 · %1$s</string>
@@ -100,6 +108,7 @@
     <string name="control_ringer_status_unknown" formatted="false">還沒確認到最近的聲音狀態</string>
     <string name="control_section_alarm" formatted="false">設定鬧鐘</string>
     <string name="control_section_message" formatted="false">說一句話</string>
+    <string name="control_section_network" formatted="false">網路連線</string>
     <string name="control_section_ringer" formatted="false">現在就改</string>
     <string name="day_next" formatted="false">後一天</string>
     <string name="day_prev" formatted="false">前一天</string>
@@ -263,6 +272,11 @@
     <string name="schedule_days_none" formatted="false">未選日子</string>
     <string name="schedule_days_weekday" formatted="false">平日</string>
     <string name="schedule_days_weekend" formatted="false">週末</string>
+    <string name="schedule_default_cleared" formatted="false">規則結束後聲音保持原樣。</string>
+    <string name="schedule_default_hint" formatted="false">規則結束後，孩子手機會回到這裡。</string>
+    <string name="schedule_default_label" formatted="false">沒有規則的時間裡</string>
+    <string name="schedule_default_none" formatted="false">保持原樣</string>
+    <string name="schedule_default_saved">規則結束後會回到%1$s。</string>
     <string name="schedule_delete" formatted="false">刪除</string>
     <string name="schedule_delete_cancel" formatted="false">保留</string>
     <string name="schedule_delete_confirm" formatted="false">刪除</string>

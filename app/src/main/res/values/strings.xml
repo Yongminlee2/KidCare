@@ -93,6 +93,14 @@
     <string name="control_mode_normal" formatted="false">Ring</string>
     <string name="control_mode_silent" formatted="false">Silent</string>
     <string name="control_mode_vibrate" formatted="false">Vibrate</string>
+    <string name="control_network_cell" formatted="false">Connected over mobile data</string>
+    <string name="control_network_none" formatted="false">Not connected to the internet</string>
+    <string name="control_network_off" formatted="false">off</string>
+    <string name="control_network_on" formatted="false">on</string>
+    <string name="control_network_readonly" formatted="false">Android does not let another app switch these on or off. We can only show you the state.</string>
+    <string name="control_network_unknown" formatted="false">Not checked yet</string>
+    <string name="control_network_wifi" formatted="false">Connected over Wi-Fi</string>
+    <string name="control_network_wifi_switch">Wi-Fi switch %1$s</string>
     <string name="control_ringer_refresh" formatted="false">Check again</string>
     <string name="control_ringer_status_applied">Right now · %1$s</string>
     <string name="control_ringer_status_format">Last checked · %1$s</string>
@@ -100,6 +108,7 @@
     <string name="control_ringer_status_unknown" formatted="false">The last sound mode has not been checked yet</string>
     <string name="control_section_alarm" formatted="false">Set an alarm</string>
     <string name="control_section_message" formatted="false">Send a word</string>
+    <string name="control_section_network" formatted="false">Internet connection</string>
     <string name="control_section_ringer" formatted="false">Change it right now</string>
     <string name="day_next" formatted="false">Next day</string>
     <string name="day_prev" formatted="false">Previous day</string>
@@ -263,6 +272,11 @@
     <string name="schedule_days_none" formatted="false">No days</string>
     <string name="schedule_days_weekday" formatted="false">Weekdays</string>
     <string name="schedule_days_weekend" formatted="false">Weekend</string>
+    <string name="schedule_default_cleared" formatted="false">When a rule ends, the sound is left as it is.</string>
+    <string name="schedule_default_hint" formatted="false">When a rule ends, your child\'s phone comes back to this.</string>
+    <string name="schedule_default_label" formatted="false">When no rule is running</string>
+    <string name="schedule_default_none" formatted="false">Leave it be</string>
+    <string name="schedule_default_saved">When a rule ends, it goes back to %1$s.</string>
     <string name="schedule_delete" formatted="false">Delete</string>
     <string name="schedule_delete_cancel" formatted="false">Keep it</string>
     <string name="schedule_delete_confirm" formatted="false">Delete</string>

@@ -93,6 +93,14 @@
     <string name="control_mode_normal" formatted="false">เสียงเรียกเข้า</string>
     <string name="control_mode_silent" formatted="false">เงียบ</string>
     <string name="control_mode_vibrate" formatted="false">สั่น</string>
+    <string name="control_network_cell" formatted="false">เชื่อมต่ออยู่ผ่านเน็ตมือถือ</string>
+    <string name="control_network_none" formatted="false">ไม่ได้เชื่อมต่ออินเทอร์เน็ต</string>
+    <string name="control_network_off" formatted="false">ปิดอยู่</string>
+    <string name="control_network_on" formatted="false">เปิดอยู่</string>
+    <string name="control_network_readonly" formatted="false">การเปิดปิดสิ่งเหล่านี้ แอนดรอยด์ไม่อนุญาตให้แอปอื่นทำ เราแสดงได้แค่สถานะ</string>
+    <string name="control_network_unknown" formatted="false">ยังตรวจไม่ได้</string>
+    <string name="control_network_wifi" formatted="false">เชื่อมต่ออยู่ผ่าน Wi-Fi</string>
+    <string name="control_network_wifi_switch">สวิตช์ Wi-Fi %1$s</string>
     <string name="control_ringer_refresh" formatted="false">ตรวจอีกครั้ง</string>
     <string name="control_ringer_status_applied">ตอนนี้ · %1$s</string>
     <string name="control_ringer_status_format">ตรวจล่าสุด · %1$s</string>
@@ -100,6 +108,7 @@
     <string name="control_ringer_status_unknown" formatted="false">ยังไม่ได้ตรวจโหมดเสียงล่าสุด</string>
     <string name="control_section_alarm" formatted="false">ตั้งนาฬิกาปลุก</string>
     <string name="control_section_message" formatted="false">ฝากสักคำ</string>
+    <string name="control_section_network" formatted="false">การเชื่อมต่ออินเทอร์เน็ต</string>
     <string name="control_section_ringer" formatted="false">เปลี่ยนเดี๋ยวนี้</string>
     <string name="day_next" formatted="false">วันถัดไป</string>
     <string name="day_prev" formatted="false">วันก่อนหน้า</string>
@@ -263,6 +272,11 @@
     <string name="schedule_days_none" formatted="false">ยังไม่เลือกวัน</string>
     <string name="schedule_days_weekday" formatted="false">วันธรรมดา</string>
     <string name="schedule_days_weekend" formatted="false">สุดสัปดาห์</string>
+    <string name="schedule_default_cleared" formatted="false">เมื่อกฎสิ้นสุด เสียงจะถูกปล่อยไว้อย่างเดิม</string>
+    <string name="schedule_default_hint" formatted="false">เมื่อกฎสิ้นสุด มือถือของลูกจะกลับมาเป็นแบบนี้</string>
+    <string name="schedule_default_label" formatted="false">เวลาที่ไม่มีกฎทำงาน</string>
+    <string name="schedule_default_none" formatted="false">ปล่อยไว้อย่างนั้น</string>
+    <string name="schedule_default_saved">เมื่อกฎสิ้นสุดจะกลับไปเป็น%1$s</string>
     <string name="schedule_delete" formatted="false">ลบ</string>
     <string name="schedule_delete_cancel" formatted="false">เก็บไว้</string>
     <string name="schedule_delete_confirm" formatted="false">ลบ</string>

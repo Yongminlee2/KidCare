@@ -38,6 +38,12 @@
          (FindPhoneController)가 있어서, 이게 없으면 그 갈래는 통째로 죽는다. -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- 아이 폰의 와이파이 스위치 상태를 **읽기만** 한다. 끄고 켜는 것은 안드로이드가
+         서드파티 앱에 허용하지 않는다(child/NetworkState 주석). 둘 다 설치할 때 조용히
+         부여되는 등급이라 아이에게 권한 창이 뜨지 않는다. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:name=".KidCareApp"
         android:allowBackup="false"

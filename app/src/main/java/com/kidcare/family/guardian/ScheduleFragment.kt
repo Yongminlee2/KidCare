@@ -196,6 +196,9 @@ class ScheduleFragment : Fragment() {
     private var settingsListener: ListenerRegistration? = null
     private var holidayOff = false
 
+    /** 예약이 없는 시간의 기본 모드. 빈 값이면 "그대로 두기". */
+    private var defaultMode = ""
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -226,6 +229,10 @@ class ScheduleFragment : Fragment() {
         // 쓰기가 나가면 안 된다.
         b.holidaySwitch.setOnClickListener { setHolidayOff(b.holidaySwitch.isChecked) }
         renderHoliday()
+        defaultModeButtons(b).forEach { (button, mode) ->
+            button.setOnClickListener { setDefaultMode(mode) }
+        }
+        renderDefaultMode()
         b.editorCancelButton.setOnClickListener { cancelEditor() }
         b.editorSaveButton.setOnClickListener { onSaveClicked() }
         b.syncRetryButton.setOnClickListener { retryPendingSync() }
@@ -368,13 +375,16 @@ class ScheduleFragment : Fragment() {
             selectedUid,
             onChange = { doc ->
                 holidayOff = doc.holidayOff
+                defaultMode = doc.defaultMode
                 renderHoliday()
+                renderDefaultMode()
             },
             // 이 값을 못 읽는 것은 목록을 못 읽는 것과 다르다 — 규칙은 잘 보이는데
             // 스위치 하나만 모르는 상태다. 목록 위 안내 줄을 이 실패로 덮어쓰면
             // 정작 규칙에 대한 안내가 가려지므로 스위치만 잠근다.
             onError = {
                 _binding?.holidaySwitch?.isEnabled = false
+                _binding?.let { b -> defaultModeButtons(b).forEach { it.first.isEnabled = false } }
             },
         )
 
@@ -652,6 +662,98 @@ class ScheduleFragment : Fragment() {
                 _binding ?: return@launch
                 showState(errorMessage(ctx, e))
             }
+        }
+    }
+
+    private fun defaultModeButtons(b: FragmentScheduleBinding): List<Pair<MaterialButton, String>> =
+        listOf(
+            b.defaultModeNone to "",
+            b.defaultModeNormal to ScheduleText.MODE_NORMAL,
+            b.defaultModeVibrate to ScheduleText.MODE_VIBRATE,
+            b.defaultModeSilent to ScheduleText.MODE_SILENT,
+        )
+
+    /**
+     * 예약이 없는 시간의 기본 모드를 저장하고 아이 폰에 알린다.
+     *
+     * 규칙 저장과 같은 길을 탄다([pendingSync] → [notifyChild]) — 이 값도 결국 자녀 폰의
+     * [ScheduleApplier][com.kidcare.family.child.ScheduleApplier] 가 읽어야 효과가 난다.
+     */
+    private fun setDefaultMode(mode: String) {
+        val fid = familyId
+        val uid = childUid
+        if (fid == null || uid == null) {
+            renderDefaultMode()
+            showState(getString(R.string.schedule_no_family))
+            return
+        }
+        val previous = defaultMode
+        val generation = ++writeGeneration
+        defaultMode = mode
+        renderDefaultMode()
+        showState(null)
+        pendingSync = true
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val done = withTimeoutOrNull(WRITE_TIMEOUT_MILLIS) {
+                    ScheduleRepository.setDefaultMode(fid, uid, mode)
+                }
+                if (generation == writeGeneration) {
+                    val ctx = context
+                    when {
+                        done == null -> showStateRes(R.string.schedule_save_slow)
+                        mode.isEmpty() -> showStateRes(R.string.schedule_default_cleared)
+                        ctx != null -> showState(
+                            getString(
+                                R.string.schedule_default_saved,
+                                ScheduleText.modeText(ctx, mode),
+                            )
+                        )
+                    }
+                }
+                notifyChild(generation)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (generation != writeGeneration) return@launch
+                val ctx = context ?: return@launch
+                _binding ?: return@launch
+                // 서버가 거절했으면 화면도 되돌린다 — 고른 것으로 보이는데 실제로는
+                // 안 바뀐 상태가 이 화면에서 가장 나쁜 거짓말이다.
+                defaultMode = previous
+                renderDefaultMode()
+                showState(errorMessage(ctx, e))
+            }
+        }
+    }
+
+    /** 고른 칸만 그 모드의 색으로 찬다. 색 표는 목록 스티커와 같은 곳에서 온다. */
+    private fun renderDefaultMode() {
+        val b = _binding ?: return
+        val ctx = b.root.context
+        defaultModeButtons(b).forEach { (button, mode) ->
+            val selected = defaultMode == mode
+            button.isChecked = selected
+            val strong = if (mode.isEmpty()) {
+                ContextCompat.getColor(ctx, R.color.ink_soft)
+            } else {
+                ContextCompat.getColor(ctx, ScheduleText.modeLook(mode).second)
+            }
+            val soft = if (mode.isEmpty()) {
+                ContextCompat.getColor(ctx, R.color.line_soft)
+            } else {
+                ContextCompat.getColor(ctx, ScheduleText.modeLook(mode).third)
+            }
+            button.backgroundTintList = ColorStateList.valueOf(
+                if (selected) soft else ContextCompat.getColor(ctx, R.color.paper_card)
+            )
+            button.strokeColor = ColorStateList.valueOf(
+                if (selected) strong else ContextCompat.getColor(ctx, R.color.line_soft)
+            )
+            button.setTextColor(
+                if (selected) strong else ContextCompat.getColor(ctx, R.color.ink_soft)
+            )
         }
     }
 

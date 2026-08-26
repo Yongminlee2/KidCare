@@ -721,6 +721,7 @@ class TrackingService : LifecycleService() {
         reporter.report(
             familyId, childUid, fix, batteryPercent(), isCharging(),
             ringerController.currentMode(),
+            NetworkState.current(this), NetworkState.wifiEnabled(this),
         )
         trailUploader.upload(familyId, childUid)
         lastUploadAt = System.currentTimeMillis()
@@ -804,6 +805,8 @@ class TrackingService : LifecycleService() {
                         batteryPercent(),
                         isCharging(),
                         ringerController.currentMode(),
+                        NetworkState.current(this@TrackingService),
+                        NetworkState.wifiEnabled(this@TrackingService),
                     )
                     lastLiveReportAt = System.currentTimeMillis()
                 }

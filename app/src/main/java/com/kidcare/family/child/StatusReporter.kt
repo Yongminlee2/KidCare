@@ -37,6 +37,8 @@ class StatusReporter {
         battery: Int,
         charging: Boolean,
         ringerMode: String,
+        network: String,
+        wifiOn: Boolean?,
     ) {
         db.collection("families").document(familyId)
             .collection("children").document(childUid)
@@ -49,6 +51,8 @@ class StatusReporter {
                     battery = battery,
                     charging = charging,
                     ringerMode = ringerMode,
+                    network = network,
+                    wifiOn = wifiOn,
                     // 옛 필드는 그대로 계속 쓴다 — 아직 새 버전을 못 깐 보호자 폰이 있을 수
                     // 있고, 이 값 하나가 없으면 그 화면은 "마지막 신호"를 아예 못 만든다.
                     lastSeenAt = System.currentTimeMillis(),

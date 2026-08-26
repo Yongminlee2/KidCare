@@ -93,6 +93,14 @@
     <string name="control_mode_normal" formatted="false">Toque</string>
     <string name="control_mode_silent" formatted="false">Silencioso</string>
     <string name="control_mode_vibrate" formatted="false">Vibração</string>
+    <string name="control_network_cell" formatted="false">Conectado pelos dados móveis</string>
+    <string name="control_network_none" formatted="false">Sem conexão com a internet</string>
+    <string name="control_network_off" formatted="false">desligada</string>
+    <string name="control_network_on" formatted="false">ligada</string>
+    <string name="control_network_readonly" formatted="false">O Android não deixa outro aplicativo ligar ou desligar isso. Só dá para mostrar o estado.</string>
+    <string name="control_network_unknown" formatted="false">Ainda não verificado</string>
+    <string name="control_network_wifi" formatted="false">Conectado pelo Wi-Fi</string>
+    <string name="control_network_wifi_switch">Chave do Wi-Fi %1$s</string>
     <string name="control_ringer_refresh" formatted="false">Ver de novo</string>
     <string name="control_ringer_status_applied">Agora · %1$s</string>
     <string name="control_ringer_status_format">Última verificação · %1$s</string>
@@ -100,6 +108,7 @@
     <string name="control_ringer_status_unknown" formatted="false">O último modo de som ainda não foi verificado</string>
     <string name="control_section_alarm" formatted="false">Pôr um alarme</string>
     <string name="control_section_message" formatted="false">Dizer uma palavra</string>
+    <string name="control_section_network" formatted="false">Conexão com a internet</string>
     <string name="control_section_ringer" formatted="false">Mudar agora mesmo</string>
     <string name="day_next" formatted="false">Dia seguinte</string>
     <string name="day_prev" formatted="false">Dia anterior</string>
@@ -263,6 +272,11 @@
     <string name="schedule_days_none" formatted="false">Nenhum dia</string>
     <string name="schedule_days_weekday" formatted="false">Dias de semana</string>
     <string name="schedule_days_weekend" formatted="false">Fim de semana</string>
+    <string name="schedule_default_cleared" formatted="false">Quando uma regra termina, o som fica como está.</string>
+    <string name="schedule_default_hint" formatted="false">Quando uma regra termina, o celular do seu filho volta para isto.</string>
+    <string name="schedule_default_label" formatted="false">Quando nenhuma regra está valendo</string>
+    <string name="schedule_default_none" formatted="false">Deixar como está</string>
+    <string name="schedule_default_saved">Quando uma regra termina, volta para %1$s.</string>
     <string name="schedule_delete" formatted="false">Excluir</string>
     <string name="schedule_delete_cancel" formatted="false">Deixar assim</string>
     <string name="schedule_delete_confirm" formatted="false">Excluir</string>

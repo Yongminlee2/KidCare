@@ -16,6 +16,7 @@ import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import com.google.firebase.firestore.ListenerRegistration
 import com.kidcare.family.R
+import com.kidcare.family.child.NetworkState
 import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.CommandRepository
 import com.kidcare.family.core.FamilyRepository
@@ -331,6 +332,7 @@ class ControlFragment : Fragment() {
                 currentRingerMode = status?.ringerMode?.takeIf(::isKnownRingerMode)
                 ringerAppliedInSession = confirmedNow
                 renderRingerState()
+                renderNetwork(status?.network, status?.wifiOn)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -779,6 +781,40 @@ class ControlFragment : Fragment() {
      * 우리가 쓴 값이 스냅샷으로 돌아오면(Firestore 는 로컬 쓰기를 즉시 한 번
      * 되돌려준다) 그때 대기 상태를 푼다.
      */
+    /**
+     * 아이 폰의 인터넷 연결 상태. **보여주기만 한다** — 끄고 켜기는 안드로이드가
+     * 서드파티 앱에 허용하지 않는다(child/NetworkState 주석).
+     *
+     * 두 줄로 나눈 이유는 둘이 다른 것을 말하기 때문이다. 와이파이 스위치가 켜져
+     * 있어도 공유기가 인터넷에 못 나가면 첫 줄은 "연결돼 있지 않아요"가 된다.
+     * 부모가 "왜 위치가 안 와요"를 풀 때 필요한 것이 그 구분이다.
+     */
+    private fun renderNetwork(network: String?, wifiOn: Boolean?) {
+        val b = _binding ?: return
+        val ctx = b.root.context
+        val (textRes, iconRes) = when (network) {
+            NetworkState.WIFI -> R.string.control_network_wifi to R.drawable.ic_wifi
+            NetworkState.CELL -> R.string.control_network_cell to R.drawable.ic_signal_cell
+            NetworkState.NONE -> R.string.control_network_none to R.drawable.ic_wifi_off
+            // null 은 아이 폰이 아직 새 버전이 아니거나 한 번도 안 올린 것이다.
+            // 빈 문자열은 아이 폰이 읽어보고 못 읽은 것이다. 둘 다 "모른다"로 말한다.
+            else -> R.string.control_network_unknown to R.drawable.ic_wifi
+        }
+        b.networkState.setText(textRes)
+        b.networkIcon.setImageResource(iconRes)
+        if (wifiOn == null) {
+            b.networkWifiState.visibility = View.GONE
+        } else {
+            b.networkWifiState.visibility = View.VISIBLE
+            b.networkWifiState.text = ctx.getString(
+                R.string.control_network_wifi_switch,
+                ctx.getString(
+                    if (wifiOn) R.string.control_network_on else R.string.control_network_off
+                ),
+            )
+        }
+    }
+
     private fun renderLock(enabled: Boolean) {
         val b = _binding ?: return
         val pending = pendingLockValue

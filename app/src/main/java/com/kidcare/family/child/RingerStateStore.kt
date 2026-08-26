@@ -44,6 +44,14 @@ class RingerStateStore(context: Context) {
      * 경계 계산은 네트워크 없이도 돌아야 하고, [CommandHandler] 의 즉시 변경 해제
      * 시각 계산도 같은 값을 봐야 예약과 어긋나지 않는다.
      */
+    /**
+     * 예약이 없는 시간의 기본 모드(빈 값이면 강제하지 않음). [lockEnabled] 와 같은
+     * 이유로 로컬에 캐시한다 — 되돌리기 판정은 네트워크 없이 즉시 끝나야 한다.
+     */
+    var defaultMode: String
+        get() = prefs.getString(KEY_DEFAULT_MODE, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_DEFAULT_MODE, value).apply()
+
     var holidayOff: Boolean
         get() = prefs.getBoolean(KEY_HOLIDAY_OFF, false)
         set(value) = prefs.edit().putBoolean(KEY_HOLIDAY_OFF, value).apply()
@@ -97,6 +105,7 @@ class RingerStateStore(context: Context) {
         const val KEY_UNTIL = "override_until"
         const val KEY_LOCK = "lock_enabled"
         const val KEY_HOLIDAY_OFF = "holiday_off"
+        const val KEY_DEFAULT_MODE = "default_mode"
         const val KEY_RULE_MODE = "rule_mode"
     }
 }

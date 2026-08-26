@@ -93,6 +93,14 @@
     <string name="control_mode_normal" formatted="false">Berdering</string>
     <string name="control_mode_silent" formatted="false">Senyap</string>
     <string name="control_mode_vibrate" formatted="false">Getar</string>
+    <string name="control_network_cell" formatted="false">Tersambung lewat data seluler</string>
+    <string name="control_network_none" formatted="false">Tidak tersambung ke internet</string>
+    <string name="control_network_off" formatted="false">mati</string>
+    <string name="control_network_on" formatted="false">menyala</string>
+    <string name="control_network_readonly" formatted="false">Android tidak mengizinkan aplikasi lain menyalakan atau mematikan ini. Kami hanya bisa menunjukkan keadaannya.</string>
+    <string name="control_network_unknown" formatted="false">Belum diperiksa</string>
+    <string name="control_network_wifi" formatted="false">Tersambung lewat Wi-Fi</string>
+    <string name="control_network_wifi_switch">Sakelar Wi-Fi %1$s</string>
     <string name="control_ringer_refresh" formatted="false">Periksa lagi</string>
     <string name="control_ringer_status_applied">Sekarang · %1$s</string>
     <string name="control_ringer_status_format">Terakhir diperiksa · %1$s</string>
@@ -100,6 +108,7 @@
     <string name="control_ringer_status_unknown" formatted="false">Mode suara terakhir belum diperiksa</string>
     <string name="control_section_alarm" formatted="false">Pasang alarm</string>
     <string name="control_section_message" formatted="false">Kirim sepatah kata</string>
+    <string name="control_section_network" formatted="false">Koneksi internet</string>
     <string name="control_section_ringer" formatted="false">Ubah sekarang juga</string>
     <string name="day_next" formatted="false">Hari berikutnya</string>
     <string name="day_prev" formatted="false">Hari sebelumnya</string>
@@ -263,6 +272,11 @@
     <string name="schedule_days_none" formatted="false">Tidak ada hari</string>
     <string name="schedule_days_weekday" formatted="false">Hari kerja</string>
     <string name="schedule_days_weekend" formatted="false">Akhir pekan</string>
+    <string name="schedule_default_cleared" formatted="false">Begitu sebuah aturan selesai, suaranya dibiarkan apa adanya.</string>
+    <string name="schedule_default_hint" formatted="false">Begitu sebuah aturan selesai, ponsel anak Anda kembali ke sini.</string>
+    <string name="schedule_default_label" formatted="false">Saat tidak ada aturan yang jalan</string>
+    <string name="schedule_default_none" formatted="false">Biarkan apa adanya</string>
+    <string name="schedule_default_saved">Begitu sebuah aturan selesai, kembali ke %1$s.</string>
     <string name="schedule_delete" formatted="false">Hapus</string>
     <string name="schedule_delete_cancel" formatted="false">Biarkan saja</string>
     <string name="schedule_delete_confirm" formatted="false">Hapus</string>

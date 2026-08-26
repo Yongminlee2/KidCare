@@ -93,6 +93,14 @@
     <string name="control_mode_normal" formatted="false">Chuông</string>
     <string name="control_mode_silent" formatted="false">Im lặng</string>
     <string name="control_mode_vibrate" formatted="false">Rung</string>
+    <string name="control_network_cell" formatted="false">Đang kết nối bằng dữ liệu di động</string>
+    <string name="control_network_none" formatted="false">Không kết nối internet</string>
+    <string name="control_network_off" formatted="false">đang tắt</string>
+    <string name="control_network_on" formatted="false">đang bật</string>
+    <string name="control_network_readonly" formatted="false">Android không cho ứng dụng khác bật tắt những thứ này. Chúng tôi chỉ hiện được trạng thái.</string>
+    <string name="control_network_unknown" formatted="false">Chưa kiểm tra được</string>
+    <string name="control_network_wifi" formatted="false">Đang kết nối bằng Wi-Fi</string>
+    <string name="control_network_wifi_switch">Công tắc Wi-Fi %1$s</string>
     <string name="control_ringer_refresh" formatted="false">Kiểm tra lại</string>
     <string name="control_ringer_status_applied">Hiện tại · %1$s</string>
     <string name="control_ringer_status_format">Kiểm tra lần cuối · %1$s</string>
@@ -100,6 +108,7 @@
     <string name="control_ringer_status_unknown" formatted="false">Chưa kiểm tra được chế độ âm thanh gần nhất</string>
     <string name="control_section_alarm" formatted="false">Đặt báo thức</string>
     <string name="control_section_message" formatted="false">Nhắn một câu</string>
+    <string name="control_section_network" formatted="false">Kết nối internet</string>
     <string name="control_section_ringer" formatted="false">Đổi ngay bây giờ</string>
     <string name="day_next" formatted="false">Ngày sau</string>
     <string name="day_prev" formatted="false">Ngày trước</string>
@@ -263,6 +272,11 @@
     <string name="schedule_days_none" formatted="false">Chưa chọn ngày</string>
     <string name="schedule_days_weekday" formatted="false">Ngày thường</string>
     <string name="schedule_days_weekend" formatted="false">Cuối tuần</string>
+    <string name="schedule_default_cleared" formatted="false">Khi một quy tắc kết thúc, âm thanh được để nguyên.</string>
+    <string name="schedule_default_hint" formatted="false">Khi một quy tắc kết thúc, điện thoại của con quay lại trạng thái này.</string>
+    <string name="schedule_default_label" formatted="false">Khi không có quy tắc nào chạy</string>
+    <string name="schedule_default_none" formatted="false">Cứ để nguyên</string>
+    <string name="schedule_default_saved">Khi một quy tắc kết thúc, máy quay lại %1$s.</string>
     <string name="schedule_delete" formatted="false">Xóa</string>
     <string name="schedule_delete_cancel" formatted="false">Để nguyên</string>
     <string name="schedule_delete_confirm" formatted="false">Xóa</string>

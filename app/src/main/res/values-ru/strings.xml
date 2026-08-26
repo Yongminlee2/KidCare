@@ -93,6 +93,14 @@
     <string name="control_mode_normal" formatted="false">Звонок</string>
     <string name="control_mode_silent" formatted="false">Без звука</string>
     <string name="control_mode_vibrate" formatted="false">Вибрация</string>
+    <string name="control_network_cell" formatted="false">Подключён по мобильным данным</string>
+    <string name="control_network_none" formatted="false">Нет подключения к интернету</string>
+    <string name="control_network_off" formatted="false">выключен</string>
+    <string name="control_network_on" formatted="false">включён</string>
+    <string name="control_network_readonly" formatted="false">Android не даёт другому приложению включать и выключать это. Мы можем только показать состояние.</string>
+    <string name="control_network_unknown" formatted="false">Ещё не проверено</string>
+    <string name="control_network_wifi" formatted="false">Подключён по Wi-Fi</string>
+    <string name="control_network_wifi_switch">Переключатель Wi-Fi %1$s</string>
     <string name="control_ringer_refresh" formatted="false">Проверить снова</string>
     <string name="control_ringer_status_applied">Сейчас · %1$s</string>
     <string name="control_ringer_status_format">Последняя проверка · %1$s</string>
@@ -100,6 +108,7 @@
     <string name="control_ringer_status_unknown" formatted="false">Последний режим звука ещё не проверен</string>
     <string name="control_section_alarm" formatted="false">Поставить будильник</string>
     <string name="control_section_message" formatted="false">Сказать словечко</string>
+    <string name="control_section_network" formatted="false">Подключение к интернету</string>
     <string name="control_section_ringer" formatted="false">Поменять прямо сейчас</string>
     <string name="day_next" formatted="false">Следующий день</string>
     <string name="day_prev" formatted="false">Предыдущий день</string>
@@ -263,6 +272,11 @@
     <string name="schedule_days_none" formatted="false">Дни не выбраны</string>
     <string name="schedule_days_weekday" formatted="false">Будни</string>
     <string name="schedule_days_weekend" formatted="false">Выходные</string>
+    <string name="schedule_default_cleared" formatted="false">Когда правило заканчивается, звук остаётся как есть.</string>
+    <string name="schedule_default_hint" formatted="false">Когда правило заканчивается, телефон ребёнка возвращается сюда.</string>
+    <string name="schedule_default_label" formatted="false">Когда ни одно правило не работает</string>
+    <string name="schedule_default_none" formatted="false">Оставить как есть</string>
+    <string name="schedule_default_saved">Когда правило заканчивается, вернётся к режиму %1$s.</string>
     <string name="schedule_delete" formatted="false">Удалить</string>
     <string name="schedule_delete_cancel" formatted="false">Оставить</string>
     <string name="schedule_delete_confirm" formatted="false">Удалить</string>

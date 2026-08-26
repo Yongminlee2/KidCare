@@ -95,6 +95,12 @@ object ScheduleRepository {
             .set(mapOf("lockEnabled" to enabled), SetOptions.merge()).await()
     }
 
+    /** 빈 문자열이면 "규칙이 없는 시간에는 아무것도 강제하지 않는다"는 뜻이다. */
+    suspend fun setDefaultMode(familyId: String, childUid: String, mode: String) {
+        ringerSettingsRef(familyId, childUid)
+            .set(mapOf("defaultMode" to mode), SetOptions.merge()).await()
+    }
+
     suspend fun setHolidayOff(familyId: String, childUid: String, enabled: Boolean) {
         ringerSettingsRef(familyId, childUid)
             .set(mapOf("holidayOff" to enabled), SetOptions.merge()).await()

@@ -43,6 +43,141 @@
                 android:textColor="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
 
+        <!-- 예약이 없는 시간의 기본값.
+
+             이게 없던 시절에는 규칙이 끝나도 마지막 모드가 그대로 남았다 — "평일 밤
+             무음"을 걸면 아침이 와도 무음인 채였다. 규칙은 **언제 시작하는지만** 말할
+             뿐 끝난 뒤 무엇으로 돌아갈지는 말하지 않기 때문이다. 돌아갈 자리를 여기
+             한 곳에 둔다.
+
+             공휴일 카드보다 위에 두는 이유: 이건 "예약이 없을 때"를 정하는 것이라
+             모든 규칙의 바탕이고, 공휴일 스위치는 그 바탕 위에서 규칙을 쉬게 하는
+             것이다. 바탕이 먼저 읽혀야 한다. -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="14dp"
+            android:layout_marginBottom="8dp"
+            app:cardBackgroundColor="@color/paper_card"
+            app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium"
+            app:strokeColor="@color/line_soft"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/schedule_default_label"
+                    android:textColor="@color/ink"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/default_mode_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/schedule_default_hint"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <LinearLayout
+                    android:id="@+id/default_mode_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/default_mode_none"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="46dp"
+                        android:layout_marginStart="0dp"
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:insetLeft="0dp"
+                        android:insetTop="0dp"
+                        android:insetRight="0dp"
+                        android:insetBottom="0dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="1dp"
+                        android:saveEnabled="false"
+                        android:text="@string/schedule_default_none"
+                        android:textSize="12sp"
+                        app:shapeAppearance="@style/ShapeAppearance.KidCare.Small"
+                        app:strokeWidth="1.5dp" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/default_mode_normal"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="46dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:insetLeft="0dp"
+                        android:insetTop="0dp"
+                        android:insetRight="0dp"
+                        android:insetBottom="0dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="1dp"
+                        android:saveEnabled="false"
+                        android:text="@string/schedule_mode_normal"
+                        android:textSize="12sp"
+                        app:shapeAppearance="@style/ShapeAppearance.KidCare.Small"
+                        app:strokeWidth="1.5dp" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/default_mode_vibrate"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="46dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:insetLeft="0dp"
+                        android:insetTop="0dp"
+                        android:insetRight="0dp"
+                        android:insetBottom="0dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="1dp"
+                        android:saveEnabled="false"
+                        android:text="@string/schedule_mode_vibrate"
+                        android:textSize="12sp"
+                        app:shapeAppearance="@style/ShapeAppearance.KidCare.Small"
+                        app:strokeWidth="1.5dp" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/default_mode_silent"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp"
+                        android:layout_height="46dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:insetLeft="0dp"
+                        android:insetTop="0dp"
+                        android:insetRight="0dp"
+                        android:insetBottom="0dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="1dp"
+                        android:saveEnabled="false"
+                        android:text="@string/schedule_mode_silent"
+                        android:textSize="12sp"
+                        app:shapeAppearance="@style/ShapeAppearance.KidCare.Small"
+                        app:strokeWidth="1.5dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- 공휴일 스위치.
 
              규칙 목록 안이 아니라 목록 **위**에 둔 이유: 이건 규칙이 아니라 아래
@@ -229,50 +364,25 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:baselineAligned="false"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="10dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/schedule_editor_days_label"
+                android:textColor="@color/ink"
+                android:textSize="15sp" />
+            <!-- 요일 일곱. 여백은 칸 **사이**에만 준다 — 낱개마다 좌우 여백을 주면
+                 첫 칸이 안으로 밀려 아래 줄들과 왼쪽 선이 어긋난다.
 
-                <FrameLayout
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="10dp"
-                    android:background="@drawable/bg_sticker_circle"
-                    android:backgroundTint="@color/sky_soft">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_gravity="center"
-                        android:importantForAccessibility="no"
-                        android:src="@drawable/ic_week"
-                        app:tint="@color/sky" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/schedule_editor_days_label"
-                    android:textAppearance="?attr/textAppearanceTitleMedium" />
-            </LinearLayout>
-
-            <!-- 요일 동그라미 일곱. 칸이 맞닿은 토글 그룹에서 떨어진 동그라미로 바꿨다 —
-                 붙어 있으면 설정 화면의 표처럼 보이고, 지금 고른 날이 몇 개인지도 한눈에
-                 안 들어온다. 토·일 글자색을 달리 둔 것은 종이 달력의 관례를 그대로
-                 가져온 것이다.
-
-                 saveEnabled=false 인 이유는 예전 토글 그룹과 같다: MaterialButton 이
-                 자기 checked 상태를 스스로 복원하는데 이 화면은 editorDays 필드가
-                 유일한 정답이라, 두 복원이 부딪히면 화면과 저장될 값이 어긋난다. -->
+                 saveEnabled=false 인 이유: MaterialButton 이 자기 checked 상태를 스스로
+                 복원하는데 이 화면은 editorDays 필드가 유일한 정답이라, 두 복원이
+                 부딪히면 화면과 저장될 값이 어긋난다. -->
             <LinearLayout
                 android:id="@+id/day_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
                 android:baselineAligned="false"
                 android:orientation="horizontal">
 
@@ -280,8 +390,8 @@
                     android:id="@+id/day_mon"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_marginHorizontal="2dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="0dp"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:insetLeft="0dp"
@@ -303,8 +413,8 @@
                     android:id="@+id/day_tue"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_marginHorizontal="2dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="6dp"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:insetLeft="0dp"
@@ -326,8 +436,8 @@
                     android:id="@+id/day_wed"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_marginHorizontal="2dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="6dp"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:insetLeft="0dp"
@@ -349,8 +459,8 @@
                     android:id="@+id/day_thu"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_marginHorizontal="2dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="6dp"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:insetLeft="0dp"
@@ -372,8 +482,8 @@
                     android:id="@+id/day_fri"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_marginHorizontal="2dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="6dp"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:insetLeft="0dp"
@@ -395,8 +505,8 @@
                     android:id="@+id/day_sat"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_marginHorizontal="2dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="6dp"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:insetLeft="0dp"
@@ -418,8 +528,8 @@
                     android:id="@+id/day_sun"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_marginHorizontal="2dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="6dp"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:insetLeft="0dp"
@@ -450,41 +560,22 @@
                 android:textColor="?attr/colorError"
                 android:visibility="gone" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="10dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/schedule_editor_time_label"
+                android:textColor="@color/ink"
+                android:textSize="15sp" />
+            <!-- 시각 두 칸. 버튼 안의 시계 그림을 뺐다 — 바로 위 머리말이 이미
+                 "몇 시부터 몇 시까지"라고 말하고 있어서 같은 뜻이 두 번 나왔고,
+                 그림+글자 뭉치가 가운데 정렬되는 바람에 두 칸의 숫자가 서로 다른
+                 자리에서 시작했다. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:baselineAligned="false"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <FrameLayout
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="10dp"
-                    android:background="@drawable/bg_sticker_circle"
-                    android:backgroundTint="@color/apricot_soft">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_gravity="center"
-                        android:importantForAccessibility="no"
-                        android:src="@drawable/ic_clock_soft"
-                        app:tint="@color/apricot" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/schedule_editor_time_label"
-                    android:textAppearance="?attr/textAppearanceTitleMedium" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
                 android:baselineAligned="false"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
@@ -492,43 +583,39 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/start_time_button"
                     android:layout_width="0dp"
-                    android:layout_height="66dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="0dp"
                     android:layout_weight="1"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:textColor="@color/on_apricot_soft"
-                    android:textSize="21sp"
+                    android:textSize="18sp"
                     app:backgroundTint="@color/apricot_soft"
-                    app:icon="@drawable/ic_clock_soft"
-                    app:iconGravity="textStart"
-                    app:iconPadding="8dp"
-                    app:iconSize="21dp"
-                    app:iconTint="@color/apricot"
                     app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingHorizontal="10dp"
+                    android:paddingHorizontal="12dp"
                     android:text="@string/schedule_range_separator"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:textColor="@color/ink_soft"
+                    android:textSize="18sp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/end_time_button"
                     android:layout_width="0dp"
-                    android:layout_height="66dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="0dp"
                     android:layout_weight="1"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
                     android:textColor="@color/on_apricot_soft"
-                    android:textSize="21sp"
+                    android:textSize="18sp"
                     app:backgroundTint="@color/apricot_soft"
-                    app:icon="@drawable/ic_clock_soft"
-                    app:iconGravity="textStart"
-                    app:iconPadding="8dp"
-                    app:iconSize="21dp"
-                    app:iconTint="@color/apricot"
                     app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium" />
             </LinearLayout>
 
@@ -539,50 +626,25 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:baselineAligned="false"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <FrameLayout
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="10dp"
-                    android:background="@drawable/bg_sticker_circle"
-                    android:backgroundTint="@color/berry_soft">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_gravity="center"
-                        android:importantForAccessibility="no"
-                        android:src="@drawable/ic_bell_ring"
-                        app:tint="@color/berry" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/schedule_editor_mode_label"
-                    android:textAppearance="?attr/textAppearanceTitleMedium" />
-            </LinearLayout>
-
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="10dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/schedule_editor_mode_label"
+                android:textColor="@color/ink"
+                android:textSize="15sp" />
             <!-- 고른 모드의 색은 목록 줄의 스티커 색과 같다(ScheduleText.modeLook).
-                 고를 때 본 색과 그림이 목록에 그대로 나와야 "내가 정한 그것"으로 읽힌다.
-                 색을 XML 에 박지 않고 renderEditor 에서 입히는 이유도 그 표 하나만
-                 고치면 세 자리가 함께 바뀌게 하려는 것이다. -->
+                 고를 때 본 색과 그림이 목록에 그대로 나와야 "내가 정한 그것"으로 읽힌다. -->
             <LinearLayout
                 android:id="@+id/mode_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
                 android:baselineAligned="false"
                 android:orientation="horizontal">
 
@@ -590,8 +652,8 @@
                     android:id="@+id/schedule_mode_normal"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="86dp"
-                    android:layout_marginHorizontal="3dp"
+                    android:layout_height="72dp"
+                    android:layout_marginStart="0dp"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:insetLeft="0dp"
@@ -603,19 +665,19 @@
                     android:paddingHorizontal="2dp"
                     android:saveEnabled="false"
                     android:text="@string/schedule_mode_normal"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     app:icon="@drawable/ic_bell_ring"
                     app:iconGravity="top"
-                    app:iconPadding="4dp"
-                    app:iconSize="27dp"
+                    app:iconPadding="3dp"
+                    app:iconSize="22dp"
                     app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium"
                     app:strokeWidth="1.5dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/schedule_mode_vibrate"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="86dp"
-                    android:layout_marginHorizontal="3dp"
+                    android:layout_height="72dp"
+                    android:layout_marginStart="8dp"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:insetLeft="0dp"
@@ -627,19 +689,19 @@
                     android:paddingHorizontal="2dp"
                     android:saveEnabled="false"
                     android:text="@string/schedule_mode_vibrate"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     app:icon="@drawable/ic_phone_shake"
                     app:iconGravity="top"
-                    app:iconPadding="4dp"
-                    app:iconSize="27dp"
+                    app:iconPadding="3dp"
+                    app:iconSize="22dp"
                     app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium"
                     app:strokeWidth="1.5dp" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/schedule_mode_silent"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="86dp"
-                    android:layout_marginHorizontal="3dp"
+                    android:layout_height="72dp"
+                    android:layout_marginStart="8dp"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:insetLeft="0dp"
@@ -651,11 +713,11 @@
                     android:paddingHorizontal="2dp"
                     android:saveEnabled="false"
                     android:text="@string/schedule_mode_silent"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     app:icon="@drawable/ic_bell_off"
                     app:iconGravity="top"
-                    app:iconPadding="4dp"
-                    app:iconSize="27dp"
+                    app:iconPadding="3dp"
+                    app:iconSize="22dp"
                     app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium"
                     app:strokeWidth="1.5dp" />
             </LinearLayout>
@@ -670,8 +732,8 @@
                 <ProgressBar
                     android:id="@+id/editor_progress"
                     style="?android:attr/progressBarStyleSmall"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:layout_marginEnd="10dp"
                     android:visibility="gone" />
 
@@ -680,32 +742,44 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
                     android:visibility="gone" />
             </LinearLayout>
 
+            <!-- 취소는 글자 버튼이라 자기 왼쪽 여백만큼 안으로 들어가 있었다(214px).
+                 외곽선 버튼으로 바꿔 두 칸이 같은 격자에 앉게 했다. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="24dp"
                 android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/editor_cancel_button"
-                    style="@style/Widget.KidCare.Button.Text"
+                    style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
-                    android:layout_height="58dp"
+                    android:layout_height="52dp"
                     android:layout_weight="1"
-                    android:text="@string/schedule_editor_cancel" />
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="0dp"
+                    android:text="@string/schedule_editor_cancel"
+                    android:textColor="@color/ink_soft"
+                    android:textSize="16sp"
+                    app:strokeColor="@color/line_soft"
+                    app:strokeWidth="1.5dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/editor_save_button"
                     android:layout_width="0dp"
-                    android:layout_height="58dp"
+                    android:layout_height="52dp"
                     android:layout_marginStart="10dp"
-                    android:layout_weight="1.4"
+                    android:layout_weight="1"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="0dp"
                     android:text="@string/schedule_editor_save"
-                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+                    android:textSize="16sp" />
             </LinearLayout>
 
         </LinearLayout>

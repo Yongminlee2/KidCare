@@ -93,6 +93,14 @@
     <string name="control_mode_normal" formatted="false">着信音</string>
     <string name="control_mode_silent" formatted="false">マナー</string>
     <string name="control_mode_vibrate" formatted="false">バイブ</string>
+    <string name="control_network_cell" formatted="false">モバイルデータでつながっています</string>
+    <string name="control_network_none" formatted="false">インターネットにつながっていません</string>
+    <string name="control_network_off" formatted="false">オフ</string>
+    <string name="control_network_on" formatted="false">オン</string>
+    <string name="control_network_readonly" formatted="false">オン・オフの切り替えはAndroidがほかのアプリに許していません。状態だけをお見せします。</string>
+    <string name="control_network_unknown" formatted="false">まだ確認できていません</string>
+    <string name="control_network_wifi" formatted="false">Wi-Fiでつながっています</string>
+    <string name="control_network_wifi_switch">Wi-Fiスイッチ%1$s</string>
     <string name="control_ringer_refresh" formatted="false">確認し直す</string>
     <string name="control_ringer_status_applied">現在の状態 · %1$s</string>
     <string name="control_ringer_status_format">最後の確認 · %1$s</string>
@@ -100,6 +108,7 @@
     <string name="control_ringer_status_unknown" formatted="false">音の状態をまだ確認できていません</string>
     <string name="control_section_alarm" formatted="false">アラームを設定</string>
     <string name="control_section_message" formatted="false">ひとこと送る</string>
+    <string name="control_section_network" formatted="false">インターネット接続</string>
     <string name="control_section_ringer" formatted="false">いますぐ変える</string>
     <string name="day_next" formatted="false">次の日</string>
     <string name="day_prev" formatted="false">前の日</string>
@@ -263,6 +272,11 @@
     <string name="schedule_days_none" formatted="false">曜日なし</string>
     <string name="schedule_days_weekday" formatted="false">平日</string>
     <string name="schedule_days_weekend" formatted="false">週末</string>
+    <string name="schedule_default_cleared" formatted="false">ルールが終わっても音はそのままにします。</string>
+    <string name="schedule_default_hint" formatted="false">ルールが終わるとお子さんの端末はここに戻ります。</string>
+    <string name="schedule_default_label" formatted="false">予約がない時間は</string>
+    <string name="schedule_default_none" formatted="false">そのままにする</string>
+    <string name="schedule_default_saved">ルールが終わると%1$sに戻ります。</string>
     <string name="schedule_delete" formatted="false">削除</string>
     <string name="schedule_delete_cancel" formatted="false">そのままにする</string>
     <string name="schedule_delete_confirm" formatted="false">削除する</string>

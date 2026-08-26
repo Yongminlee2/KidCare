@@ -93,6 +93,14 @@ data class ChildStatusDoc(
     val battery: Int = -1,
     val charging: Boolean = false,
     val ringerMode: String = "normal",
+    /**
+     * 지금 무엇으로 인터넷에 붙어 있는가 — `wifi` · `cell` · `none`, 못 읽었으면 빈 값.
+     * 값 목록은 [com.kidcare.family.child.NetworkState] 가 갖고 있다.
+     */
+    val network: String = "",
+    /** 와이파이 스위치가 켜져 있는가. **옛 문서에는 이 칸이 없어 null 로 읽힌다** —
+     *  그래서 Boolean? 이다. false(꺼짐)와 null(모름)은 다른 말이다. */
+    val wifiOn: Boolean? = null,
     val lastSeenAt: Long = 0L,
     // 사용처 지정(@get:)이 필요하다: 이 애노테이션은 자바 애노테이션이라 코틀린
     // 프로퍼티에는 못 붙고, 아무것도 안 적으면 private 백킹 필드로 간다. Firestore 가
@@ -450,6 +458,15 @@ object EventType {
  */
 data class RingerSettingsDoc(
     val lockEnabled: Boolean = false,
+    /**
+     * 예약 규칙이 **하나도 걸려 있지 않은 시간**에 아이 폰이 있어야 할 모드.
+     *
+     * 빈 값이면 아무것도 강제하지 않는다(예전 동작). 이것이 없던 시절에는 규칙이
+     * 끝나도 마지막 모드가 그대로 남았다 — "평일 밤 무음"을 걸면 아침이 와도 무음인
+     * 채였다. 규칙은 시작만 말할 뿐 끝난 뒤 무엇으로 돌아갈지는 말하지 않기 때문이다.
+     * 돌아갈 자리를 여기 한 곳에 둔다.
+     */
+    val defaultMode: String = "",
     /**
      * 공휴일에는 예약 규칙을 전부 쉬게 할지. 기본값 false 는 예전과 같은 동작이다 —
      * 이 필드가 없는 옛 문서를 읽어도 예약이 갑자기 안 도는 일이 없어야 한다.

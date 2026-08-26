@@ -93,6 +93,14 @@
     <string name="control_mode_normal" formatted="false">Sonnerie</string>
     <string name="control_mode_silent" formatted="false">Silencieux</string>
     <string name="control_mode_vibrate" formatted="false">Vibreur</string>
+    <string name="control_network_cell" formatted="false">Connecté en données mobiles</string>
+    <string name="control_network_none" formatted="false">Pas connecté à internet</string>
+    <string name="control_network_off" formatted="false">désactivé</string>
+    <string name="control_network_on" formatted="false">activé</string>
+    <string name="control_network_readonly" formatted="false">Android ne laisse pas une autre application activer ou désactiver cela. Nous pouvons seulement montrer l\'état.</string>
+    <string name="control_network_unknown" formatted="false">Pas encore vérifié</string>
+    <string name="control_network_wifi" formatted="false">Connecté en Wi-Fi</string>
+    <string name="control_network_wifi_switch">Interrupteur Wi-Fi %1$s</string>
     <string name="control_ringer_refresh" formatted="false">Revérifier</string>
     <string name="control_ringer_status_applied">En ce moment · %1$s</string>
     <string name="control_ringer_status_format">Dernière vérification · %1$s</string>
@@ -100,6 +108,7 @@
     <string name="control_ringer_status_unknown" formatted="false">Le dernier mode sonore n\'a pas encore été vérifié</string>
     <string name="control_section_alarm" formatted="false">Poser une alarme</string>
     <string name="control_section_message" formatted="false">Dire un mot</string>
+    <string name="control_section_network" formatted="false">Connexion internet</string>
     <string name="control_section_ringer" formatted="false">Changer tout de suite</string>
     <string name="day_next" formatted="false">Jour suivant</string>
     <string name="day_prev" formatted="false">Jour précédent</string>
@@ -263,6 +272,11 @@
     <string name="schedule_days_none" formatted="false">Aucun jour</string>
     <string name="schedule_days_weekday" formatted="false">En semaine</string>
     <string name="schedule_days_weekend" formatted="false">Week-end</string>
+    <string name="schedule_default_cleared" formatted="false">Quand une règle se termine, le son reste tel quel.</string>
+    <string name="schedule_default_hint" formatted="false">Quand une règle se termine, le téléphone de votre enfant revient à ceci.</string>
+    <string name="schedule_default_label" formatted="false">Quand aucune règle ne tourne</string>
+    <string name="schedule_default_none" formatted="false">Laisser tel quel</string>
+    <string name="schedule_default_saved">Quand une règle se termine, cela revient à %1$s.</string>
     <string name="schedule_delete" formatted="false">Supprimer</string>
     <string name="schedule_delete_cancel" formatted="false">La garder</string>
     <string name="schedule_delete_confirm" formatted="false">Supprimer</string>
