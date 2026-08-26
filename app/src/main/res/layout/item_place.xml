@@ -23,7 +23,7 @@
         android:orientation="horizontal"
         android:paddingStart="@dimen/card_pad"
         android:paddingEnd="6dp"
-        android:paddingVertical="10dp">
+        android:paddingVertical="8dp">
 
         <LinearLayout
             android:id="@+id/row_body"

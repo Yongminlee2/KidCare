@@ -318,8 +318,7 @@
     <string name="schedule_range_allday">하루 종일 (%1$s부터 24시간)</string>
     <string name="schedule_range_overnight">%1$s ~ 다음 날 %2$s</string>
     <string name="schedule_range_separator" formatted="false">–</string>
-    <string name="schedule_row_detail">%1$s · %2$s</string>
-    <string name="schedule_row_detail_off">%1$s · %2$s (꺼둠)</string>
+    <string name="schedule_row_off">%1$s (꺼둠)</string>
     <string name="schedule_save_slow" formatted="false">저장 요청은 보냈지만 아직 서버 확인이 안 됐어요. 인터넷이 연결되면 저절로 저장돼요.</string>
     <string name="schedule_saving" formatted="false">저장 중…</string>
     <string name="schedule_summary">%1$s · %2$s · %3$s</string>

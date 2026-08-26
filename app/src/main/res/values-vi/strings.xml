@@ -318,8 +318,7 @@
     <string name="schedule_range_allday">Cả ngày (24 giờ tính từ %1$s)</string>
     <string name="schedule_range_overnight">%1$s ~ %2$s hôm sau</string>
     <string name="schedule_range_separator" formatted="false">–</string>
-    <string name="schedule_row_detail">%1$s · %2$s</string>
-    <string name="schedule_row_detail_off">%1$s · %2$s (đang tắt)</string>
+    <string name="schedule_row_off">%1$s (đang tắt)</string>
     <string name="schedule_save_slow" formatted="false">Đã gửi yêu cầu lưu nhưng máy chủ chưa xác nhận. Khi có mạng nó sẽ tự lưu.</string>
     <string name="schedule_saving" formatted="false">Đang lưu…</string>
     <string name="schedule_summary">%1$s · %2$s · %3$s</string>

@@ -25,14 +25,6 @@
             android:layout_height="wrap_content"
             android:text="@string/alert_header_title"
             android:textAppearance="?attr/textAppearanceHeadlineSmall" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/alert_header_subtitle"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
 
     <!-- 상시 수신 스위치와 그 대가. saveEnabled=false 인 이유는 fragment_place.xml 의
@@ -118,7 +110,7 @@
                 android:layout_height="104dp"
                 android:alpha="0.9"
                 android:importantForAccessibility="no"
-                android:src="@drawable/ic_mascot" />
+                android:src="@drawable/mascot_3d" />
 
             <TextView
                 android:id="@+id/alert_empty_text"

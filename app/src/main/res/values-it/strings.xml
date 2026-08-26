@@ -318,8 +318,7 @@
     <string name="schedule_range_allday">Tutto il giorno (24 ore da %1$s)</string>
     <string name="schedule_range_overnight">%1$s ~ %2$s del giorno dopo</string>
     <string name="schedule_range_separator" formatted="false">–</string>
-    <string name="schedule_row_detail">%1$s · %2$s</string>
-    <string name="schedule_row_detail_off">%1$s · %2$s (spenta)</string>
+    <string name="schedule_row_off">%1$s (spenta)</string>
     <string name="schedule_save_slow" formatted="false">Il salvataggio è stato inviato ma il server non l\'ha ancora confermato. Si salva da solo appena c\'è internet.</string>
     <string name="schedule_saving" formatted="false">Salvataggio…</string>
     <string name="schedule_summary">%1$s · %2$s · %3$s</string>

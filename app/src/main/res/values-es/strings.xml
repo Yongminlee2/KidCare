@@ -318,8 +318,7 @@
     <string name="schedule_range_allday">Todo el día (24 horas desde las %1$s)</string>
     <string name="schedule_range_overnight">%1$s ~ %2$s del día siguiente</string>
     <string name="schedule_range_separator" formatted="false">–</string>
-    <string name="schedule_row_detail">%1$s · %2$s</string>
-    <string name="schedule_row_detail_off">%1$s · %2$s (apagada)</string>
+    <string name="schedule_row_off">%1$s (apagada)</string>
     <string name="schedule_save_slow" formatted="false">Se envió el guardado, pero el servidor todavía no lo ha confirmado. Se guarda solo en cuanto haya internet.</string>
     <string name="schedule_saving" formatted="false">Guardando…</string>
     <string name="schedule_summary">%1$s · %2$s · %3$s</string>

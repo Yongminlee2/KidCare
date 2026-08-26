@@ -318,8 +318,7 @@
     <string name="schedule_range_allday">Весь день (24 часа с %1$s)</string>
     <string name="schedule_range_overnight">%1$s ~ %2$s следующего дня</string>
     <string name="schedule_range_separator" formatted="false">–</string>
-    <string name="schedule_row_detail">%1$s · %2$s</string>
-    <string name="schedule_row_detail_off">%1$s · %2$s (выключено)</string>
+    <string name="schedule_row_off">%1$s (выключено)</string>
     <string name="schedule_save_slow" formatted="false">Запрос на сохранение ушёл, но сервер ещё не подтвердил. Сохранится само, как только появится интернет.</string>
     <string name="schedule_saving" formatted="false">Сохраняем…</string>
     <string name="schedule_summary">%1$s · %2$s · %3$s</string>

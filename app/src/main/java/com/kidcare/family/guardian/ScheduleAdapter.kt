@@ -43,11 +43,16 @@ class ScheduleAdapter(
             // 줄에 넣었는데 자정을 넘는 규칙에서 늘 두 줄로 접혔다. 부모가 규칙을
             // 찾을 때 먼저 보는 것도 시각이 아니라 요일이다.
             binding.titleText.text = ScheduleText.daysText(context, doc.days)
-            binding.detailText.text = context.getString(
-                if (doc.enabled) R.string.schedule_row_detail else R.string.schedule_row_detail_off,
-                ScheduleText.rangeText(context, doc.startMinute, doc.endMinute),
-                ScheduleText.modeText(context, doc.mode),
-            )
+            // 모드 이름을 글로 쓰지 않는다 — 왼쪽 스티커가 그림과 색으로 이미 말한다.
+            // 같은 말을 두 번 하면서 줄만 길어졌고, 긴 요일 조합에서 두 줄로 접혔다.
+            binding.detailText.text = if (doc.enabled) {
+                ScheduleText.rangeText(context, doc.startMinute, doc.endMinute)
+            } else {
+                context.getString(
+                    R.string.schedule_row_off,
+                    ScheduleText.rangeText(context, doc.startMinute, doc.endMinute),
+                )
+            }
             // 꺼둔 규칙은 지워진 것이 아니라 잠깐 쉬는 것이다. 글자를 흐리게만 해서
             // "있긴 한데 지금은 안 도는 규칙"으로 읽히게 한다.
             binding.rowBody.alpha = if (doc.enabled) 1f else 0.5f

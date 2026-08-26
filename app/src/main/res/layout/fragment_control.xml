@@ -27,15 +27,6 @@
             android:text="@string/tab_control"
             android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="20dp"
-            android:text="@string/control_header_subtitle"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
-
         <!-- 아이 폰이 아직 안 붙었거나 상태를 못 읽을 때만 보인다. 평소에는 GONE. -->
         <TextView
             android:id="@+id/child_state"
