@@ -101,6 +101,8 @@
     <string name="control_network_unknown" formatted="false">還沒確認到</string>
     <string name="control_network_wifi" formatted="false">正透過Wi-Fi連線</string>
     <string name="control_network_wifi_switch">Wi-Fi開關%1$s</string>
+    <string name="control_ringer_dnd" formatted="false">勿擾模式</string>
+    <string name="control_ringer_dnd_note" formatted="false">開著勿擾模式時，即使設成響鈴，Android也會回報成靜音。所以上面的聲音狀態可能不準。</string>
     <string name="control_ringer_refresh" formatted="false">重新查看</string>
     <string name="control_ringer_status_applied">目前狀態 · %1$s</string>
     <string name="control_ringer_status_format">最後查看 · %1$s</string>

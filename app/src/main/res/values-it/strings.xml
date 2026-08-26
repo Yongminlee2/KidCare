@@ -101,6 +101,8 @@
     <string name="control_network_unknown" formatted="false">Non ancora controllato</string>
     <string name="control_network_wifi" formatted="false">Connesso via Wi-Fi</string>
     <string name="control_network_wifi_switch">Interruttore Wi-Fi %1$s</string>
+    <string name="control_ringer_dnd" formatted="false">Modalità Non disturbare</string>
+    <string name="control_ringer_dnd_note" formatted="false">Con Non disturbare attivo, Android segnala silenzioso anche se è impostata la suoneria. Per questo lo stato del suono sopra può non essere esatto.</string>
     <string name="control_ringer_refresh" formatted="false">Controlla di nuovo</string>
     <string name="control_ringer_status_applied">Adesso · %1$s</string>
     <string name="control_ringer_status_format">Ultimo controllo · %1$s</string>

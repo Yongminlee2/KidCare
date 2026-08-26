@@ -101,6 +101,8 @@
     <string name="control_network_unknown" formatted="false">Pas encore vérifié</string>
     <string name="control_network_wifi" formatted="false">Connecté en Wi-Fi</string>
     <string name="control_network_wifi_switch">Interrupteur Wi-Fi %1$s</string>
+    <string name="control_ringer_dnd" formatted="false">Mode Ne pas déranger</string>
+    <string name="control_ringer_dnd_note" formatted="false">Quand Ne pas déranger est activé, Android indique silencieux même si la sonnerie est réglée. C\'est pourquoi l\'état du son ci-dessus peut être inexact.</string>
     <string name="control_ringer_refresh" formatted="false">Revérifier</string>
     <string name="control_ringer_status_applied">En ce moment · %1$s</string>
     <string name="control_ringer_status_format">Dernière vérification · %1$s</string>

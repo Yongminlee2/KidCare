@@ -94,6 +94,13 @@ data class ChildStatusDoc(
     val charging: Boolean = false,
     val ringerMode: String = "normal",
     /**
+     * 방해 금지 상태([com.kidcare.family.child.Dnd]). 빈 값이면 못 읽었거나 옛 문서다.
+     *
+     * [ringerMode] 와 **따로** 두는 이유: 방해 금지가 켜지면 안드로이드가 벨소리 모드를
+     * 무조건 '무음'으로 보고한다. 두 값을 함께 봐야 화면이 거짓말을 하지 않는다.
+     */
+    val dnd: String = "",
+    /**
      * 지금 무엇으로 인터넷에 붙어 있는가 — `wifi` · `cell` · `none`, 못 읽었으면 빈 값.
      * 값 목록은 [com.kidcare.family.child.NetworkState] 가 갖고 있다.
      */

@@ -101,6 +101,8 @@
     <string name="control_network_unknown" formatted="false">Ainda não verificado</string>
     <string name="control_network_wifi" formatted="false">Conectado pelo Wi-Fi</string>
     <string name="control_network_wifi_switch">Chave do Wi-Fi %1$s</string>
+    <string name="control_ringer_dnd" formatted="false">Modo Não perturbe</string>
+    <string name="control_ringer_dnd_note" formatted="false">Com Não perturbe ligado, o Android informa silencioso mesmo com o toque ativado. Por isso o estado do som acima pode não ser exato.</string>
     <string name="control_ringer_refresh" formatted="false">Ver de novo</string>
     <string name="control_ringer_status_applied">Agora · %1$s</string>
     <string name="control_ringer_status_format">Última verificação · %1$s</string>

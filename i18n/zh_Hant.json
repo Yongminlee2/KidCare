@@ -99,6 +99,8 @@
   "control_network_unknown": "還沒確認到",
   "control_network_wifi": "正透過Wi-Fi連線",
   "control_network_wifi_switch": "Wi-Fi開關%1$s",
+  "control_ringer_dnd": "勿擾模式",
+  "control_ringer_dnd_note": "開著勿擾模式時，即使設成響鈴，Android也會回報成靜音。所以上面的聲音狀態可能不準。",
   "control_ringer_refresh": "重新查看",
   "control_ringer_status_applied": "目前狀態 · %1$s",
   "control_ringer_status_format": "最後查看 · %1$s",

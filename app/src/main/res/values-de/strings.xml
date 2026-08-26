@@ -101,6 +101,8 @@
     <string name="control_network_unknown" formatted="false">Noch nicht geprüft</string>
     <string name="control_network_wifi" formatted="false">Über WLAN verbunden</string>
     <string name="control_network_wifi_switch">WLAN-Schalter %1$s</string>
+    <string name="control_ringer_dnd" formatted="false">Bitte nicht stören</string>
+    <string name="control_ringer_dnd_note" formatted="false">Solange Bitte nicht stören an ist, meldet Android lautlos, auch wenn das Klingeln eingestellt ist. Deshalb kann der Tonzustand oben ungenau sein.</string>
     <string name="control_ringer_refresh" formatted="false">Neu prüfen</string>
     <string name="control_ringer_status_applied">Gerade jetzt · %1$s</string>
     <string name="control_ringer_status_format">Zuletzt geprüft · %1$s</string>

@@ -101,6 +101,8 @@
     <string name="control_network_unknown" formatted="false">Chưa kiểm tra được</string>
     <string name="control_network_wifi" formatted="false">Đang kết nối bằng Wi-Fi</string>
     <string name="control_network_wifi_switch">Công tắc Wi-Fi %1$s</string>
+    <string name="control_ringer_dnd" formatted="false">Chế độ Không làm phiền</string>
+    <string name="control_ringer_dnd_note" formatted="false">Khi chế độ Không làm phiền đang bật, Android báo là im lặng dù máy đang để chuông. Vì vậy trạng thái âm thanh ở trên có thể không chính xác.</string>
     <string name="control_ringer_refresh" formatted="false">Kiểm tra lại</string>
     <string name="control_ringer_status_applied">Hiện tại · %1$s</string>
     <string name="control_ringer_status_format">Kiểm tra lần cuối · %1$s</string>

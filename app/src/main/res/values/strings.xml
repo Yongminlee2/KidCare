@@ -101,6 +101,8 @@
     <string name="control_network_unknown" formatted="false">Not checked yet</string>
     <string name="control_network_wifi" formatted="false">Connected over Wi-Fi</string>
     <string name="control_network_wifi_switch">Wi-Fi switch %1$s</string>
+    <string name="control_ringer_dnd" formatted="false">Do Not Disturb</string>
+    <string name="control_ringer_dnd_note" formatted="false">While Do Not Disturb is on, Android reports silent even if the ringer is set to ring. That is why the sound state above may not be exact.</string>
     <string name="control_ringer_refresh" formatted="false">Check again</string>
     <string name="control_ringer_status_applied">Right now · %1$s</string>
     <string name="control_ringer_status_format">Last checked · %1$s</string>

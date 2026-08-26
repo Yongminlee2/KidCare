@@ -99,6 +99,8 @@
   "control_network_unknown": "Chưa kiểm tra được",
   "control_network_wifi": "Đang kết nối bằng Wi-Fi",
   "control_network_wifi_switch": "Công tắc Wi-Fi %1$s",
+  "control_ringer_dnd": "Chế độ Không làm phiền",
+  "control_ringer_dnd_note": "Khi chế độ Không làm phiền đang bật, Android báo là im lặng dù máy đang để chuông. Vì vậy trạng thái âm thanh ở trên có thể không chính xác.",
   "control_ringer_refresh": "Kiểm tra lại",
   "control_ringer_status_applied": "Hiện tại · %1$s",
   "control_ringer_status_format": "Kiểm tra lần cuối · %1$s",

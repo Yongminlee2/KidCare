@@ -99,6 +99,8 @@
   "control_network_unknown": "Pas encore vérifié",
   "control_network_wifi": "Connecté en Wi-Fi",
   "control_network_wifi_switch": "Interrupteur Wi-Fi %1$s",
+  "control_ringer_dnd": "Mode Ne pas déranger",
+  "control_ringer_dnd_note": "Quand Ne pas déranger est activé, Android indique silencieux même si la sonnerie est réglée. C'est pourquoi l'état du son ci-dessus peut être inexact.",
   "control_ringer_refresh": "Revérifier",
   "control_ringer_status_applied": "En ce moment · %1$s",
   "control_ringer_status_format": "Dernière vérification · %1$s",

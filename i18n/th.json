@@ -99,6 +99,8 @@
   "control_network_unknown": "ยังตรวจไม่ได้",
   "control_network_wifi": "เชื่อมต่ออยู่ผ่าน Wi-Fi",
   "control_network_wifi_switch": "สวิตช์ Wi-Fi %1$s",
+  "control_ringer_dnd": "โหมดห้ามรบกวน",
+  "control_ringer_dnd_note": "ขณะเปิดโหมดห้ามรบกวน แอนดรอยด์จะรายงานว่าเงียบแม้ตั้งเสียงเรียกเข้าไว้ สถานะเสียงด้านบนจึงอาจไม่ตรง",
   "control_ringer_refresh": "ตรวจอีกครั้ง",
   "control_ringer_status_applied": "ตอนนี้ · %1$s",
   "control_ringer_status_format": "ตรวจล่าสุด · %1$s",

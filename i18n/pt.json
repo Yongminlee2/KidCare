@@ -99,6 +99,8 @@
   "control_network_unknown": "Ainda não verificado",
   "control_network_wifi": "Conectado pelo Wi-Fi",
   "control_network_wifi_switch": "Chave do Wi-Fi %1$s",
+  "control_ringer_dnd": "Modo Não perturbe",
+  "control_ringer_dnd_note": "Com Não perturbe ligado, o Android informa silencioso mesmo com o toque ativado. Por isso o estado do som acima pode não ser exato.",
   "control_ringer_refresh": "Ver de novo",
   "control_ringer_status_applied": "Agora · %1$s",
   "control_ringer_status_format": "Última verificação · %1$s",

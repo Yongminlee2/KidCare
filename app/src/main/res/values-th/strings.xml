@@ -101,6 +101,8 @@
     <string name="control_network_unknown" formatted="false">ยังตรวจไม่ได้</string>
     <string name="control_network_wifi" formatted="false">เชื่อมต่ออยู่ผ่าน Wi-Fi</string>
     <string name="control_network_wifi_switch">สวิตช์ Wi-Fi %1$s</string>
+    <string name="control_ringer_dnd" formatted="false">โหมดห้ามรบกวน</string>
+    <string name="control_ringer_dnd_note" formatted="false">ขณะเปิดโหมดห้ามรบกวน แอนดรอยด์จะรายงานว่าเงียบแม้ตั้งเสียงเรียกเข้าไว้ สถานะเสียงด้านบนจึงอาจไม่ตรง</string>
     <string name="control_ringer_refresh" formatted="false">ตรวจอีกครั้ง</string>
     <string name="control_ringer_status_applied">ตอนนี้ · %1$s</string>
     <string name="control_ringer_status_format">ตรวจล่าสุด · %1$s</string>

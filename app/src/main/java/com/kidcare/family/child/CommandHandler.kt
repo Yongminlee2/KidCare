@@ -144,7 +144,7 @@ class CommandHandler(
                     // 모드 적용 자체는 이미 성공했다. 상태 동기화가 실패해도 명령을
                     // 실패로 뒤집지는 않고, 다음 위치 확인/안전 업로드가 다시 맞춘다.
                     try {
-                        StatusReporter().reportRingerMode(familyId, childUid, mode)
+                        StatusReporter().reportRingerMode(familyId, childUid, mode, ringer.dndState())
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
@@ -157,7 +157,7 @@ class CommandHandler(
                 // 내려가야 보호자 폰이 갱신된 값을 읽고 "현재 상태"라고 말할 수 있다.
                 CommandType.QUERY_RINGER -> {
                     val currentMode = ringer.currentMode()
-                    StatusReporter().reportRingerMode(familyId, childUid, currentMode)
+                    StatusReporter().reportRingerMode(familyId, childUid, currentMode, ringer.dndState())
                     Log.i(TAG, "실제 소리 모드 조회 완료: $currentMode")
                 }
                 CommandType.FIND_PHONE -> FindPhoneController.start(context)

@@ -101,6 +101,8 @@
     <string name="control_network_unknown" formatted="false">Todavía sin comprobar</string>
     <string name="control_network_wifi" formatted="false">Conectado por wifi</string>
     <string name="control_network_wifi_switch">Interruptor del wifi %1$s</string>
+    <string name="control_ringer_dnd" formatted="false">Modo No molestar</string>
+    <string name="control_ringer_dnd_note" formatted="false">Con No molestar activado, Android informa silencio aunque el tono esté puesto. Por eso el estado de sonido de arriba puede no ser exacto.</string>
     <string name="control_ringer_refresh" formatted="false">Comprobar otra vez</string>
     <string name="control_ringer_status_applied">Ahora mismo · %1$s</string>
     <string name="control_ringer_status_format">Última comprobación · %1$s</string>

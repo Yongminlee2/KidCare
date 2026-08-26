@@ -99,6 +99,8 @@
   "control_network_unknown": "Non ancora controllato",
   "control_network_wifi": "Connesso via Wi-Fi",
   "control_network_wifi_switch": "Interruttore Wi-Fi %1$s",
+  "control_ringer_dnd": "Modalità Non disturbare",
+  "control_ringer_dnd_note": "Con Non disturbare attivo, Android segnala silenzioso anche se è impostata la suoneria. Per questo lo stato del suono sopra può non essere esatto.",
   "control_ringer_refresh": "Controlla di nuovo",
   "control_ringer_status_applied": "Adesso · %1$s",
   "control_ringer_status_format": "Ultimo controllo · %1$s",

@@ -2,6 +2,22 @@ package com.kidcare.family.child
 
 import android.content.Context
 
+/**
+ * 방해 금지 상태값. 화면 문구는 strings.xml 에 있으므로 여기서는 무슨 상태인지만 말한다.
+ * 자녀 폰이 올리고([StatusReporter]) 보호자 화면이 읽는다.
+ */
+object Dnd {
+    const val OFF = "off"
+    const val PRIORITY = "priority"
+    const val ALARMS = "alarms"
+    const val NONE = "none"
+    /** 못 읽었다. 넘겨짚느니 모른다고 말한다. */
+    const val UNKNOWN = ""
+
+    /** 꺼짐도 아니고 모름도 아니면 켜져 있는 것이다. */
+    fun isOn(value: String?): Boolean = value == PRIORITY || value == ALARMS || value == NONE
+}
+
 object RingerMode {
     const val NORMAL = "normal"
     const val VIBRATE = "vibrate"

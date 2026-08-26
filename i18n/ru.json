@@ -99,6 +99,8 @@
   "control_network_unknown": "Ещё не проверено",
   "control_network_wifi": "Подключён по Wi-Fi",
   "control_network_wifi_switch": "Переключатель Wi-Fi %1$s",
+  "control_ringer_dnd": "Режим «Не беспокоить»",
+  "control_ringer_dnd_note": "Пока включён режим «Не беспокоить», Android сообщает беззвучный режим, даже если стоит звонок. Поэтому состояние звука выше может быть неточным.",
   "control_ringer_refresh": "Проверить снова",
   "control_ringer_status_applied": "Сейчас · %1$s",
   "control_ringer_status_format": "Последняя проверка · %1$s",

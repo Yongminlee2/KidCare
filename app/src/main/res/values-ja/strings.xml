@@ -101,6 +101,8 @@
     <string name="control_network_unknown" formatted="false">まだ確認できていません</string>
     <string name="control_network_wifi" formatted="false">Wi-Fiでつながっています</string>
     <string name="control_network_wifi_switch">Wi-Fiスイッチ%1$s</string>
+    <string name="control_ringer_dnd" formatted="false">サイレントモード</string>
+    <string name="control_ringer_dnd_note" formatted="false">サイレントモードが入っていると、着信音に設定していてもAndroidはマナーだと伝えてきます。上の音の状態はそのため正確でないことがあります。</string>
     <string name="control_ringer_refresh" formatted="false">確認し直す</string>
     <string name="control_ringer_status_applied">現在の状態 · %1$s</string>
     <string name="control_ringer_status_format">最後の確認 · %1$s</string>

@@ -39,6 +39,7 @@ class StatusReporter {
         ringerMode: String,
         network: String,
         wifiOn: Boolean?,
+        dnd: String,
     ) {
         db.collection("families").document(familyId)
             .collection("children").document(childUid)
@@ -53,6 +54,7 @@ class StatusReporter {
                     ringerMode = ringerMode,
                     network = network,
                     wifiOn = wifiOn,
+                    dnd = dnd,
                     // 옛 필드는 그대로 계속 쓴다 — 아직 새 버전을 못 깐 보호자 폰이 있을 수
                     // 있고, 이 값 하나가 없으면 그 화면은 "마지막 신호"를 아예 못 만든다.
                     lastSeenAt = System.currentTimeMillis(),
@@ -70,13 +72,20 @@ class StatusReporter {
      * 갱신한다. 명령 한 번당 쓰기 한 번이며, 부모가 관리 탭을 다시 열어도 마지막으로
      * 실제 적용된 모드를 확인할 수 있게 한다.
      */
-    suspend fun reportRingerMode(familyId: String, childUid: String, ringerMode: String) {
+    suspend fun reportRingerMode(
+        familyId: String,
+        childUid: String,
+        ringerMode: String,
+        dnd: String = Dnd.UNKNOWN,
+    ) {
         db.collection("families").document(familyId)
             .collection("children").document(childUid)
             // 위치를 아직 한 번도 올리지 않아 status 문서가 없어도 소리 상태는
             // 확인할 수 있어야 한다. merge set은 문서가 있으면 이 필드만 바꾸고,
             // 없으면 최소 상태 문서를 만든다.
-            .set(mapOf("ringerMode" to ringerMode), SetOptions.merge())
+            // 방해 금지도 함께 갱신한다. 소리 모드만 바꾸면 부모 화면이 옛 방해 금지
+            // 값으로 새 소리 모드를 해석해 또 어긋난다.
+            .set(mapOf("ringerMode" to ringerMode, "dnd" to dnd), SetOptions.merge())
             .await()
     }
 }

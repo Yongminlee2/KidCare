@@ -101,6 +101,8 @@
     <string name="control_network_unknown" formatted="false">Ещё не проверено</string>
     <string name="control_network_wifi" formatted="false">Подключён по Wi-Fi</string>
     <string name="control_network_wifi_switch">Переключатель Wi-Fi %1$s</string>
+    <string name="control_ringer_dnd" formatted="false">Режим «Не беспокоить»</string>
+    <string name="control_ringer_dnd_note" formatted="false">Пока включён режим «Не беспокоить», Android сообщает беззвучный режим, даже если стоит звонок. Поэтому состояние звука выше может быть неточным.</string>
     <string name="control_ringer_refresh" formatted="false">Проверить снова</string>
     <string name="control_ringer_status_applied">Сейчас · %1$s</string>
     <string name="control_ringer_status_format">Последняя проверка · %1$s</string>

@@ -3,6 +3,7 @@ package com.kidcare.family.child
 import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioManager
+import android.provider.Settings
 import android.util.Log
 
 /**
@@ -20,6 +21,46 @@ class RingerController(private val context: Context) {
 
     fun hasDndAccess(): Boolean =
         context.getSystemService(NotificationManager::class.java).isNotificationPolicyAccessGranted
+
+    /**
+     * 방해 금지(DND) 상태.
+     *
+     * **이 값이 없으면 화면이 거짓말을 한다.** 방해 금지가 켜지면 안드로이드는
+     * [AudioManager.getRingerMode] 로 **무조건 SILENT 를 돌려준다** — 아이가 벨소리로
+     * 맞춰 놨어도 그렇다. 그래서 [currentMode] 만 올리면 부모 화면에 "무음"이 뜨고,
+     * 부모는 소리 설정이 바뀐 줄 안다. 실제로는 방해 금지가 덮고 있을 뿐이다.
+     *
+     * 두 갈래로 읽는다. 먼저 공개 API 를 쓰고([NotificationManager.getCurrentInterruptionFilter],
+     * 이 앱은 소리 변경 때문에 이미 방해 금지 접근 권한을 받아 둔다), 그것이 UNKNOWN
+     * 이면 시스템 설정값을 직접 읽는다 — 권한 없이도 읽히는 자리라 권한을 아직 안 준
+     * 폰에서도 답이 나온다.
+     */
+    fun dndState(): String = try {
+        val manager = context.getSystemService(NotificationManager::class.java)
+        when (manager?.currentInterruptionFilter) {
+            NotificationManager.INTERRUPTION_FILTER_ALL -> Dnd.OFF
+            NotificationManager.INTERRUPTION_FILTER_PRIORITY -> Dnd.PRIORITY
+            NotificationManager.INTERRUPTION_FILTER_ALARMS -> Dnd.ALARMS
+            NotificationManager.INTERRUPTION_FILTER_NONE -> Dnd.NONE
+            else -> zenModeFallback()
+        }
+    } catch (e: Exception) {
+        Log.w(TAG, "방해 금지 상태를 못 읽었다", e)
+        Dnd.UNKNOWN
+    }
+
+    /** `zen_mode`: 0=꺼짐, 1=중요 알림만, 2=완전 차단, 3=알람만. */
+    private fun zenModeFallback(): String = try {
+        when (Settings.Global.getInt(context.contentResolver, "zen_mode", 0)) {
+            0 -> Dnd.OFF
+            1 -> Dnd.PRIORITY
+            2 -> Dnd.NONE
+            3 -> Dnd.ALARMS
+            else -> Dnd.UNKNOWN
+        }
+    } catch (e: Exception) {
+        Dnd.UNKNOWN
+    }
 
     fun currentMode(): String = when (audio.ringerMode) {
         AudioManager.RINGER_MODE_SILENT -> RingerMode.SILENT

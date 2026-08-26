@@ -99,6 +99,8 @@
   "control_network_unknown": "まだ確認できていません",
   "control_network_wifi": "Wi-Fiでつながっています",
   "control_network_wifi_switch": "Wi-Fiスイッチ%1$s",
+  "control_ringer_dnd": "サイレントモード",
+  "control_ringer_dnd_note": "サイレントモードが入っていると、着信音に設定していてもAndroidはマナーだと伝えてきます。上の音の状態はそのため正確でないことがあります。",
   "control_ringer_refresh": "確認し直す",
   "control_ringer_status_applied": "現在の状態 · %1$s",
   "control_ringer_status_format": "最後の確認 · %1$s",

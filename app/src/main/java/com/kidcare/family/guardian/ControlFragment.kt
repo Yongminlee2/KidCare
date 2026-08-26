@@ -16,6 +16,7 @@ import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import com.google.firebase.firestore.ListenerRegistration
 import com.kidcare.family.R
+import com.kidcare.family.child.Dnd
 import com.kidcare.family.child.NetworkState
 import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.CommandRepository
@@ -331,6 +332,7 @@ class ControlFragment : Fragment() {
                 lastSignal = status?.lastSignal()
                 currentRingerMode = status?.ringerMode?.takeIf(::isKnownRingerMode)
                 ringerAppliedInSession = confirmedNow
+                childDnd = status?.dnd
                 renderRingerState()
                 renderNetwork(status?.network, status?.wifiOn)
             } catch (e: CancellationException) {
@@ -994,6 +996,11 @@ class ControlFragment : Fragment() {
         val ctx = context ?: return
         val busy = loading || ringerQueryInFlight
         val mode = currentRingerMode
+        // 방해 금지가 켜져 있으면 안드로이드가 벨소리 모드를 무조건 '무음'으로
+        // 보고한다. 그 값을 그대로 "무음"이라고 적으면 화면이 거짓말을 한다 —
+        // 무슨 상태인지 있는 그대로 말하고, 왜 그런지는 아래 한 줄이 설명한다.
+        val dndOn = Dnd.isOn(childDnd)
+        b.ringerDndNote.visibility = if (dndOn && !busy) View.VISIBLE else View.GONE
         val label = when (mode) {
             MODE_NORMAL -> getString(R.string.control_mode_normal)
             MODE_VIBRATE -> getString(R.string.control_mode_vibrate)
@@ -1002,6 +1009,10 @@ class ControlFragment : Fragment() {
         }
         b.ringerState.text = when {
             busy -> getString(R.string.control_ringer_status_loading)
+            dndOn -> getString(
+                R.string.control_ringer_status_format,
+                getString(R.string.control_ringer_dnd),
+            )
             label == null -> getString(R.string.control_ringer_status_unknown)
             ringerAppliedInSession -> getString(R.string.control_ringer_status_applied, label)
             else -> getString(R.string.control_ringer_status_format, label)
@@ -1032,6 +1043,9 @@ class ControlFragment : Fragment() {
             button.iconTint = ColorStateList.valueOf(foreground)
         }
     }
+
+    /** 아이 폰이 마지막으로 올린 방해 금지 상태. null 이면 아직 모른다. */
+    private var childDnd: String? = null
 
     private fun isKnownRingerMode(mode: String): Boolean =
         mode == MODE_NORMAL || mode == MODE_VIBRATE || mode == MODE_SILENT
