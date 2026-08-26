@@ -5,8 +5,6 @@
     <string name="alert_command_failed" formatted="false">お子さんの端末に送ったリクエストが失敗しました</string>
     <string name="alert_empty" formatted="false">まだお知らせはありません。\n「場所」タブで学校や塾を登録すると\n到着や出発がここに集まります。</string>
     <string name="alert_error_format">お知らせを読み込めませんでした\n%1$s</string>
-    <string name="alert_header_subtitle" formatted="false">到着、バッテリー、接続の状態を時間順にまとめます。</string>
-    <string name="alert_header_title" formatted="false">お子さんの様子</string>
     <string name="alert_low_battery" formatted="false">お子さんの端末のバッテリーが残りわずかです</string>
     <string name="alert_no_family" formatted="false">家族の情報が見つかりませんでした。アプリを閉じてもう一度開いてください。</string>
     <string name="alert_notification_denied" formatted="false">通知がオフになっているため有効にできません。端末の設定→アプリ→KidCare→通知でオンにしてください。</string>
@@ -70,7 +68,6 @@
     <string name="control_find_phone" formatted="false">端末を探す</string>
     <string name="control_find_stop" formatted="false">音を止める</string>
     <string name="control_find_stop_hint" formatted="false">すでに鳴っているなら音を止める</string>
-    <string name="control_header_subtitle" formatted="false">音、メッセージ、アラームをお子さんの端末へすぐ送れます。</string>
     <string name="control_last_seen_days">%1$d日前</string>
     <string name="control_last_seen_format">最後の信号 %1$s</string>
     <string name="control_last_seen_hours">%1$d時間前</string>
@@ -232,8 +229,6 @@
     <string name="place_editor_title_new" formatted="false">新しい場所</string>
     <string name="place_empty" formatted="false">まだ登録した場所がありません。\n下の「場所を追加」を押して\n「学校」「塾」などを登録してみてください。\nお子さんが到着したり出発したらお知らせします。</string>
     <string name="place_error_format">場所を読み込めませんでした\n%1$s</string>
-    <string name="place_header_subtitle" formatted="false">学校や塾を登録すると到着と出発をお知らせします。</string>
-    <string name="place_header_title" formatted="false">安心の場所</string>
     <string name="place_limit_notice">場所は%1$d件まで登録できます。新しく作るには使っていない場所を先に削除してください。</string>
     <string name="place_no_family" formatted="false">家族の情報が見つかりませんでした。アプリを閉じてもう一度開いてください。</string>
     <string name="place_notify_both" formatted="false">到着と出発のお知らせ</string>
@@ -296,8 +291,6 @@
     <string name="schedule_editor_title_new" formatted="false">新しいルール</string>
     <string name="schedule_empty" formatted="false">まだ決めた時間帯がありません。\n下の「ルールを追加」を押して\n「平日の夜はマナー」のようなルールを作ってみてください。</string>
     <string name="schedule_error_format">ルールを読み込めませんでした\n%1$s</string>
-    <string name="schedule_header_subtitle" formatted="false">曜日と時間に合わせて着信音・バイブ・マナーを自動で切り替えます。</string>
-    <string name="schedule_header_title" formatted="false">毎日の音の予約</string>
     <string name="schedule_holiday_cleared" formatted="false">祝日も予約どおりに切り替えます。</string>
     <string name="schedule_holiday_date">%1$d月%2$d日</string>
     <string name="schedule_holiday_next">次の休みは%1$sの%2$sです。</string>

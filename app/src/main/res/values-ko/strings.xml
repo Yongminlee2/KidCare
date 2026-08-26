@@ -5,8 +5,6 @@
     <string name="alert_command_failed" formatted="false">애기폰에 보낸 요청이 실패했어요</string>
     <string name="alert_empty" formatted="false">아직 온 알림이 없어요.\n\'장소\' 탭에서 학교나 학원을 정해두면\n아이가 도착하거나 나설 때 여기에 쌓여요.</string>
     <string name="alert_error_format">알림을 불러오지 못했어요\n%1$s</string>
-    <string name="alert_header_subtitle" formatted="false">도착, 배터리, 연결 상태를 시간순으로 모아봐요.</string>
-    <string name="alert_header_title" formatted="false">아이 소식</string>
     <string name="alert_low_battery" formatted="false">애기폰 배터리가 얼마 안 남았어요</string>
     <string name="alert_no_family" formatted="false">가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요.</string>
     <string name="alert_notification_denied" formatted="false">알림 권한이 꺼져 있어서 켤 수 없어요. 폰 설정 → 앱 → \'우리아이 지킴이\' → 알림에서 켜주세요.</string>
@@ -70,7 +68,6 @@
     <string name="control_find_phone" formatted="false">핸드폰 찾기</string>
     <string name="control_find_stop" formatted="false">소리 끄기</string>
     <string name="control_find_stop_hint" formatted="false">이미 울리고 있다면 소리 끄기</string>
-    <string name="control_header_subtitle" formatted="false">소리, 메시지, 알람을 아이 폰으로 바로 보내세요.</string>
     <string name="control_last_seen_days">%1$d일 전</string>
     <string name="control_last_seen_format">마지막 신호 %1$s</string>
     <string name="control_last_seen_hours">%1$d시간 전</string>
@@ -232,8 +229,6 @@
     <string name="place_editor_title_new" formatted="false">새 장소</string>
     <string name="place_empty" formatted="false">아직 정해둔 장소가 없어요.\n아래 \'장소 추가\'를 눌러\n\'학교\', \'학원\' 같은 곳을 정해 보세요.\n아이가 도착하거나 나서면 알려드릴게요.</string>
     <string name="place_error_format">장소를 불러오지 못했어요\n%1$s</string>
-    <string name="place_header_subtitle" formatted="false">학교나 학원을 등록하면 도착과 출발을 알려드려요.</string>
-    <string name="place_header_title" formatted="false">안심 장소</string>
     <string name="place_limit_notice">장소는 %1$d개까지 정할 수 있어요. 새로 만들려면 안 쓰는 장소를 먼저 지워주세요.</string>
     <string name="place_no_family" formatted="false">가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요.</string>
     <string name="place_notify_both" formatted="false">도착·이탈 알림</string>
@@ -296,8 +291,6 @@
     <string name="schedule_editor_title_new" formatted="false">새 규칙</string>
     <string name="schedule_empty" formatted="false">아직 정해둔 시간대가 없어요.\n아래 \'규칙 추가\'를 눌러\n\'평일 밤에는 무음\' 같은 규칙을 만들어 보세요.</string>
     <string name="schedule_error_format">규칙을 불러오지 못했어요\n%1$s</string>
-    <string name="schedule_header_subtitle" formatted="false">요일과 시간에 맞춰 벨소리·진동·무음을 자동으로 바꿔요.</string>
-    <string name="schedule_header_title" formatted="false">생활 소리 예약</string>
     <string name="schedule_holiday_cleared" formatted="false">공휴일에도 예약대로 바꿔요.</string>
     <string name="schedule_holiday_date">%1$d월 %2$d일</string>
     <string name="schedule_holiday_next">다음 쉬는 날은 %1$s %2$s이에요.</string>

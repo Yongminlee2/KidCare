@@ -5,8 +5,6 @@
     <string name="alert_command_failed" formatted="false">傳送到孩子手機的要求失敗了</string>
     <string name="alert_empty" formatted="false">還沒有通知。\n在「地點」分頁設定學校或補習班，\n孩子抵達或離開時就會出現在這裡。</string>
     <string name="alert_error_format">無法載入通知\n%1$s</string>
-    <string name="alert_header_subtitle" formatted="false">依時間順序整理抵達、電量和連線狀態。</string>
-    <string name="alert_header_title" formatted="false">孩子的動態</string>
     <string name="alert_low_battery" formatted="false">孩子手機的電量不多了</string>
     <string name="alert_no_family" formatted="false">找不到家庭資訊。請關閉應用程式後重新開啟。</string>
     <string name="alert_notification_denied" formatted="false">通知已關閉，無法開啟。請到手機設定→應用程式→KidCare→通知裡打開。</string>
@@ -70,7 +68,6 @@
     <string name="control_find_phone" formatted="false">尋找手機</string>
     <string name="control_find_stop" formatted="false">停止鈴聲</string>
     <string name="control_find_stop_hint" formatted="false">如果已經在響，就停止它</string>
-    <string name="control_header_subtitle" formatted="false">把聲音、留言和鬧鐘直接送到孩子手機。</string>
     <string name="control_last_seen_days">%1$d天前</string>
     <string name="control_last_seen_format">最後訊號 %1$s</string>
     <string name="control_last_seen_hours">%1$d小時前</string>
@@ -232,8 +229,6 @@
     <string name="place_editor_title_new" formatted="false">新地點</string>
     <string name="place_empty" formatted="false">還沒有設定地點。\n按下面的「新增地點」，\n設定「學校」「補習班」這樣的地方吧。\n孩子抵達或離開時會通知您。</string>
     <string name="place_error_format">無法載入地點\n%1$s</string>
-    <string name="place_header_subtitle" formatted="false">登記學校或補習班後，會通知您孩子的抵達和離開。</string>
-    <string name="place_header_title" formatted="false">安心地點</string>
     <string name="place_limit_notice">最多可以設定%1$d個地點。要新增，請先刪除不用的地點。</string>
     <string name="place_no_family" formatted="false">找不到家庭資訊。請關閉應用程式後重新開啟。</string>
     <string name="place_notify_both" formatted="false">抵達和離開都通知</string>
@@ -296,8 +291,6 @@
     <string name="schedule_editor_title_new" formatted="false">新規則</string>
     <string name="schedule_empty" formatted="false">還沒有設定時段。\n按下面的「新增規則」，\n試著做一條「平日晚上靜音」這樣的規則吧。</string>
     <string name="schedule_error_format">無法載入規則\n%1$s</string>
-    <string name="schedule_header_subtitle" formatted="false">依星期和時間自動切換響鈴、震動和靜音。</string>
-    <string name="schedule_header_title" formatted="false">日常聲音預約</string>
     <string name="schedule_holiday_cleared" formatted="false">國定假日也照預約切換。</string>
     <string name="schedule_holiday_date">%1$d月%2$d日</string>
     <string name="schedule_holiday_next">下一個休息日是%1$s的%2$s。</string>

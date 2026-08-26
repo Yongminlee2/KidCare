@@ -5,8 +5,6 @@
     <string name="alert_command_failed" formatted="false">Permintaan ke ponsel anak Anda gagal</string>
     <string name="alert_empty" formatted="false">Belum ada kabar.\nSimpan sekolah atau tempat les di tab Tempat,\nlalu kedatangan akan muncul di sini.</string>
     <string name="alert_error_format">Tidak bisa memuat kabar\n%1$s</string>
-    <string name="alert_header_subtitle" formatted="false">Kedatangan, baterai, dan koneksi, berurutan menurut waktu.</string>
-    <string name="alert_header_title" formatted="false">Kabar anak</string>
     <string name="alert_low_battery" formatted="false">Baterai ponsel anak Anda tinggal sedikit</string>
     <string name="alert_no_family" formatted="false">Keluarga tidak ditemukan. Tutup aplikasi lalu buka lagi.</string>
     <string name="alert_notification_denied" formatted="false">Notifikasi sedang mati, jadi ini tidak bisa dinyalakan. Buka Setelan ponsel → Aplikasi → KidCare → Notifikasi lalu nyalakan.</string>
@@ -70,7 +68,6 @@
     <string name="control_find_phone" formatted="false">Cari ponsel</string>
     <string name="control_find_stop" formatted="false">Hentikan suaranya</string>
     <string name="control_find_stop_hint" formatted="false">Hentikan suaranya kalau sudah berbunyi</string>
-    <string name="control_header_subtitle" formatted="false">Kirim suara, pesan, dan alarm langsung ke ponsel anak Anda.</string>
     <string name="control_last_seen_days">%1$d hari lalu</string>
     <string name="control_last_seen_format">Sinyal terakhir %1$s</string>
     <string name="control_last_seen_hours">%1$d jam lalu</string>
@@ -232,8 +229,6 @@
     <string name="place_editor_title_new" formatted="false">Tempat baru</string>
     <string name="place_empty" formatted="false">Belum ada tempat.\nKetuk «Tambah tempat» di bawah\nlalu simpan tempat seperti «Sekolah» atau «Les».\nKami beri tahu saat anak Anda sampai atau keluar.</string>
     <string name="place_error_format">Tidak bisa memuat tempat\n%1$s</string>
-    <string name="place_header_subtitle" formatted="false">Simpan sekolah atau tempat les, lalu kami beri tahu kedatangan dan kepergiannya.</string>
-    <string name="place_header_title" formatted="false">Tempat aman</string>
     <string name="place_limit_notice">Anda bisa menyimpan sampai %1$d tempat. Untuk menambah yang baru, hapus dulu tempat yang tidak dipakai lagi.</string>
     <string name="place_no_family" formatted="false">Keluarga tidak ditemukan. Tutup aplikasi lalu buka lagi.</string>
     <string name="place_notify_both" formatted="false">Beri tahu saat sampai dan keluar</string>
@@ -296,8 +291,6 @@
     <string name="schedule_editor_title_new" formatted="false">Aturan baru</string>
     <string name="schedule_empty" formatted="false">Belum ada jam yang diatur.\nKetuk «Tambah aturan» di bawah\nlalu coba aturan seperti «Senyap tiap malam hari kerja».</string>
     <string name="schedule_error_format">Tidak bisa memuat aturan\n%1$s</string>
-    <string name="schedule_header_subtitle" formatted="false">Berganti antara berdering, getar, dan senyap menurut hari dan jam.</string>
-    <string name="schedule_header_title" formatted="false">Jadwal suara harian</string>
     <string name="schedule_holiday_cleared" formatted="false">Pada hari libur aturannya tetap jalan.</string>
     <string name="schedule_holiday_date">%1$d/%2$d</string>
     <string name="schedule_holiday_next">Hari libur berikutnya %1$s, %2$s.</string>

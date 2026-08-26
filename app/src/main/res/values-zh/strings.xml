@@ -5,8 +5,6 @@
     <string name="alert_command_failed" formatted="false">发送到孩子手机的请求失败了</string>
     <string name="alert_empty" formatted="false">还没有消息。\n在“地点”标签里设置学校或补习班，\n孩子到达或离开时就会出现在这里。</string>
     <string name="alert_error_format">无法加载消息\n%1$s</string>
-    <string name="alert_header_subtitle" formatted="false">按时间顺序汇总到达、电量和连接状态。</string>
-    <string name="alert_header_title" formatted="false">孩子的消息</string>
     <string name="alert_low_battery" formatted="false">孩子手机的电量不多了</string>
     <string name="alert_no_family" formatted="false">找不到家庭信息。请关闭应用后重新打开。</string>
     <string name="alert_notification_denied" formatted="false">通知已关闭，无法开启。请到手机设置→应用→KidCare→通知里打开。</string>
@@ -70,7 +68,6 @@
     <string name="control_find_phone" formatted="false">查找手机</string>
     <string name="control_find_stop" formatted="false">停止响铃</string>
     <string name="control_find_stop_hint" formatted="false">如果已经在响，就停止它</string>
-    <string name="control_header_subtitle" formatted="false">把声音、留言和闹钟直接送到孩子手机上。</string>
     <string name="control_last_seen_days">%1$d天前</string>
     <string name="control_last_seen_format">最后信号 %1$s</string>
     <string name="control_last_seen_hours">%1$d小时前</string>
@@ -232,8 +229,6 @@
     <string name="place_editor_title_new" formatted="false">新地点</string>
     <string name="place_empty" formatted="false">还没有设置地点。\n按下面的“添加地点”，\n设置“学校”“补习班”这样的地方吧。\n孩子到达或离开时会通知您。</string>
     <string name="place_error_format">无法加载地点\n%1$s</string>
-    <string name="place_header_subtitle" formatted="false">登记学校或补习班后，会通知您孩子的到达和离开。</string>
-    <string name="place_header_title" formatted="false">安心地点</string>
     <string name="place_limit_notice">最多可以设置%1$d个地点。要新建，请先删除不用的地点。</string>
     <string name="place_no_family" formatted="false">找不到家庭信息。请关闭应用后重新打开。</string>
     <string name="place_notify_both" formatted="false">到达和离开都通知</string>
@@ -296,8 +291,6 @@
     <string name="schedule_editor_title_new" formatted="false">新规则</string>
     <string name="schedule_empty" formatted="false">还没有设置时段。\n按下面的“添加规则”，\n试着做一条“工作日晚上静音”这样的规则吧。</string>
     <string name="schedule_error_format">无法加载规则\n%1$s</string>
-    <string name="schedule_header_subtitle" formatted="false">按星期和时间自动切换响铃、震动和静音。</string>
-    <string name="schedule_header_title" formatted="false">日常声音预约</string>
     <string name="schedule_holiday_cleared" formatted="false">公休日也按预约切换。</string>
     <string name="schedule_holiday_date">%1$d月%2$d日</string>
     <string name="schedule_holiday_next">下一个休息日是%1$s的%2$s。</string>

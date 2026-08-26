@@ -12,21 +12,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingHorizontal="@dimen/edge"
-        android:paddingTop="20dp"
-        android:paddingBottom="12dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/alert_header_title"
-            android:textAppearance="?attr/textAppearanceHeadlineSmall" />
-    </LinearLayout>
-
     <!-- 상시 수신 스위치와 그 대가. saveEnabled=false 인 이유는 fragment_place.xml 의
          스위치들과 같다 — 켜짐/꺼짐의 정답은 저장된 값이고 뷰는 그걸 비추기만 한다.
          뷰가 스스로 상태를 복원하면 서비스가 실제로 도는지와 어긋난다. -->
@@ -34,7 +19,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="@dimen/edge"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="6dp"
         app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
         app:shapeAppearance="@style/ShapeAppearance.KidCare.Medium"
         app:strokeWidth="0dp">

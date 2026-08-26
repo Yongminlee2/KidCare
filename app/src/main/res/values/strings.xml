@@ -5,8 +5,6 @@
     <string name="alert_command_failed" formatted="false">A request to your child\'s phone failed</string>
     <string name="alert_empty" formatted="false">No updates yet.\nPick a school or academy on the Places tab\nand arrivals will show up here.</string>
     <string name="alert_error_format">Could not load updates\n%1$s</string>
-    <string name="alert_header_subtitle" formatted="false">Arrivals, battery and connection, in order of time.</string>
-    <string name="alert_header_title" formatted="false">Updates</string>
     <string name="alert_low_battery" formatted="false">Your child\'s phone is low on battery</string>
     <string name="alert_no_family" formatted="false">Could not find your family. Please close the app and open it again.</string>
     <string name="alert_notification_denied" formatted="false">Notifications are turned off, so this cannot be enabled. Go to phone Settings → Apps → KidCare → Notifications and turn them on.</string>
@@ -70,7 +68,6 @@
     <string name="control_find_phone" formatted="false">Find the phone</string>
     <string name="control_find_stop" formatted="false">Stop the sound</string>
     <string name="control_find_stop_hint" formatted="false">Stop the sound if it is already ringing</string>
-    <string name="control_header_subtitle" formatted="false">Send sounds, messages and alarms straight to your child\'s phone.</string>
     <string name="control_last_seen_days">%1$d days ago</string>
     <string name="control_last_seen_format">Last signal %1$s</string>
     <string name="control_last_seen_hours">%1$d hours ago</string>
@@ -232,8 +229,6 @@
     <string name="place_editor_title_new" formatted="false">New place</string>
     <string name="place_empty" formatted="false">No places yet.\nTap \'Add a place\' below\nand pick somewhere like \'School\' or \'Academy\'.\nWe will tell you when your child arrives or leaves.</string>
     <string name="place_error_format">Could not load places\n%1$s</string>
-    <string name="place_header_subtitle" formatted="false">Save a school or academy and we will tell you about arrivals and departures.</string>
-    <string name="place_header_title" formatted="false">Safe places</string>
     <string name="place_limit_notice">You can save up to %1$d places. To add a new one, delete a place you no longer use.</string>
     <string name="place_no_family" formatted="false">Could not find your family. Please close the app and open it again.</string>
     <string name="place_notify_both" formatted="false">Arrival and departure alerts</string>
@@ -296,8 +291,6 @@
     <string name="schedule_editor_title_new" formatted="false">New rule</string>
     <string name="schedule_empty" formatted="false">No times set yet.\nTap \'Add a rule\' below\nand try something like \'Silent on weekday nights\'.</string>
     <string name="schedule_error_format">Could not load the rules\n%1$s</string>
-    <string name="schedule_header_subtitle" formatted="false">Switches between ring, vibrate and silent by day and time.</string>
-    <string name="schedule_header_title" formatted="false">Daily sound schedule</string>
     <string name="schedule_holiday_cleared" formatted="false">Rules run on public holidays too.</string>
     <string name="schedule_holiday_date">%1$d/%2$d</string>
     <string name="schedule_holiday_next">The next day off is %1$s, %2$s.</string>

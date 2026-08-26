@@ -5,8 +5,6 @@
     <string name="alert_command_failed" formatted="false">คำสั่งที่ส่งไปยังมือถือของลูกล้มเหลว</string>
     <string name="alert_empty" formatted="false">ยังไม่มีข่าวคราว\nตั้งโรงเรียนหรือที่เรียนพิเศษในแท็บสถานที่\nแล้วการมาถึงจะมาปรากฏตรงนี้</string>
     <string name="alert_error_format">โหลดข่าวคราวไม่ได้\n%1$s</string>
-    <string name="alert_header_subtitle" formatted="false">การมาถึง แบตเตอรี่ และการเชื่อมต่อ เรียงตามเวลา</string>
-    <string name="alert_header_title" formatted="false">ข่าวของลูก</string>
     <string name="alert_low_battery" formatted="false">มือถือของลูกแบตเตอรี่เหลือน้อย</string>
     <string name="alert_no_family" formatted="false">ไม่พบข้อมูลครอบครัว กรุณาปิดแอปแล้วเปิดใหม่</string>
     <string name="alert_notification_denied" formatted="false">การแจ้งเตือนปิดอยู่จึงเปิดไม่ได้ ไปที่ตั้งค่าเครื่อง → แอป → KidCare → การแจ้งเตือน แล้วเปิด</string>
@@ -70,7 +68,6 @@
     <string name="control_find_phone" formatted="false">หามือถือ</string>
     <string name="control_find_stop" formatted="false">หยุดเสียง</string>
     <string name="control_find_stop_hint" formatted="false">หยุดเสียงถ้ากำลังดังอยู่แล้ว</string>
-    <string name="control_header_subtitle" formatted="false">ส่งเสียง ข้อความ และนาฬิกาปลุกไปที่มือถือของลูกได้เลย</string>
     <string name="control_last_seen_days">%1$d วันก่อน</string>
     <string name="control_last_seen_format">สัญญาณล่าสุด %1$s</string>
     <string name="control_last_seen_hours">%1$d ชั่วโมงก่อน</string>
@@ -232,8 +229,6 @@
     <string name="place_editor_title_new" formatted="false">สถานที่ใหม่</string>
     <string name="place_empty" formatted="false">ยังไม่มีสถานที่\nกด «เพิ่มสถานที่» ข้างล่าง\nแล้วตั้งที่อย่าง «โรงเรียน» หรือ «ที่เรียนพิเศษ»\nเราจะแจ้งตอนลูกมาถึงหรือออกไป</string>
     <string name="place_error_format">โหลดสถานที่ไม่ได้\n%1$s</string>
-    <string name="place_header_subtitle" formatted="false">ลงทะเบียนโรงเรียนหรือที่เรียนพิเศษ แล้วเราจะแจ้งตอนมาถึงและออกไป</string>
-    <string name="place_header_title" formatted="false">ที่ที่อุ่นใจ</string>
     <string name="place_limit_notice">ตั้งสถานที่ได้ถึง %1$d แห่ง ถ้าจะเพิ่มใหม่ให้ลบที่ที่ไม่ใช้แล้วก่อน</string>
     <string name="place_no_family" formatted="false">ไม่พบข้อมูลครอบครัว กรุณาปิดแอปแล้วเปิดใหม่</string>
     <string name="place_notify_both" formatted="false">แจ้งทั้งตอนมาถึงและออกไป</string>
@@ -296,8 +291,6 @@
     <string name="schedule_editor_title_new" formatted="false">กฎใหม่</string>
     <string name="schedule_empty" formatted="false">ยังไม่ได้ตั้งช่วงเวลา\nกด «เพิ่มกฎ» ข้างล่าง\nแล้วลองตั้งกฎอย่าง «กลางคืนวันธรรมดาให้เงียบ»</string>
     <string name="schedule_error_format">โหลดกฎไม่ได้\n%1$s</string>
-    <string name="schedule_header_subtitle" formatted="false">สลับเสียงเรียกเข้า สั่น และเงียบ ให้เองตามวันและเวลา</string>
-    <string name="schedule_header_title" formatted="false">ตารางเสียงประจำวัน</string>
     <string name="schedule_holiday_cleared" formatted="false">วันหยุดราชการก็ยังเปลี่ยนตามตาราง</string>
     <string name="schedule_holiday_date">%1$d/%2$d</string>
     <string name="schedule_holiday_next">วันหยุดถัดไปคือ %1$s %2$s</string>

@@ -5,8 +5,6 @@
     <string name="alert_command_failed" formatted="false">Une demande envoyée au téléphone de votre enfant a échoué</string>
     <string name="alert_empty" formatted="false">Pas encore de nouvelles.\nEnregistrez l\'école ou le cours dans l\'onglet Lieux\net les arrivées apparaîtront ici.</string>
     <string name="alert_error_format">Impossible de charger les nouvelles\n%1$s</string>
-    <string name="alert_header_subtitle" formatted="false">Arrivées, batterie et connexion, dans l\'ordre du temps.</string>
-    <string name="alert_header_title" formatted="false">Nouvelles</string>
     <string name="alert_low_battery" formatted="false">Le téléphone de votre enfant a peu de batterie</string>
     <string name="alert_no_family" formatted="false">Votre famille est introuvable. Fermez l\'application et rouvrez-la.</string>
     <string name="alert_notification_denied" formatted="false">Les notifications sont désactivées, impossible d\'activer ceci. Allez dans Paramètres du téléphone → Applications → KidCare → Notifications et activez-les.</string>
@@ -70,7 +68,6 @@
     <string name="control_find_phone" formatted="false">Trouver le téléphone</string>
     <string name="control_find_stop" formatted="false">Arrêter le son</string>
     <string name="control_find_stop_hint" formatted="false">Arrêtez le son s\'il sonne déjà</string>
-    <string name="control_header_subtitle" formatted="false">Envoyez des sons, des messages et des alarmes directement sur le téléphone de votre enfant.</string>
     <string name="control_last_seen_days">il y a %1$d jours</string>
     <string name="control_last_seen_format">Dernier signal %1$s</string>
     <string name="control_last_seen_hours">il y a %1$d heures</string>
@@ -232,8 +229,6 @@
     <string name="place_editor_title_new" formatted="false">Nouveau lieu</string>
     <string name="place_empty" formatted="false">Pas encore de lieux.\nAppuyez sur « Ajouter un lieu » ci-dessous\net enregistrez des endroits comme « École » ou « Cours ».\nNous vous préviendrons quand votre enfant arrive ou part.</string>
     <string name="place_error_format">Impossible de charger les lieux\n%1$s</string>
-    <string name="place_header_subtitle" formatted="false">Enregistrez l\'école ou le cours et nous vous préviendrons des arrivées et des départs.</string>
-    <string name="place_header_title" formatted="false">Lieux sûrs</string>
     <string name="place_limit_notice">Vous pouvez enregistrer jusqu\'à %1$d lieux. Pour en ajouter un, supprimez d\'abord un lieu que vous n\'utilisez plus.</string>
     <string name="place_no_family" formatted="false">Votre famille est introuvable. Fermez l\'application et rouvrez-la.</string>
     <string name="place_notify_both" formatted="false">Avis d\'arrivée et de départ</string>
@@ -296,8 +291,6 @@
     <string name="schedule_editor_title_new" formatted="false">Nouvelle règle</string>
     <string name="schedule_empty" formatted="false">Pas encore de créneaux définis.\nAppuyez sur « Ajouter une règle » ci-dessous\net essayez quelque chose comme « Silencieux les soirs de semaine ».</string>
     <string name="schedule_error_format">Impossible de charger les règles\n%1$s</string>
-    <string name="schedule_header_subtitle" formatted="false">Passe entre sonnerie, vibreur et silencieux selon le jour et l\'heure.</string>
-    <string name="schedule_header_title" formatted="false">Programme sonore</string>
     <string name="schedule_holiday_cleared" formatted="false">Les règles fonctionnent aussi les jours fériés.</string>
     <string name="schedule_holiday_date">%1$d/%2$d</string>
     <string name="schedule_holiday_next">Le prochain jour de repos est le %1$s, %2$s.</string>

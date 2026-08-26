@@ -19,12 +19,12 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="@dimen/card_pad"
-        android:paddingVertical="9dp">
+        android:paddingVertical="7dp">
 
         <ImageView
             android:id="@+id/event_icon"
-            android:layout_width="@dimen/sticker"
-            android:layout_height="@dimen/sticker"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="@drawable/bg_icon_soft"
             android:importantForAccessibility="no"
             android:padding="9dp"

@@ -5,8 +5,6 @@
     <string name="alert_command_failed" formatted="false">Запрос на телефон ребёнка не прошёл</string>
     <string name="alert_empty" formatted="false">Пока новостей нет.\nУкажите школу или кружок на вкладке «Места»,\nи приходы будут появляться здесь.</string>
     <string name="alert_error_format">Не удалось загрузить новости\n%1$s</string>
-    <string name="alert_header_subtitle" formatted="false">Приходы, батарея и связь — по порядку времени.</string>
-    <string name="alert_header_title" formatted="false">Новости о ребёнке</string>
     <string name="alert_low_battery" formatted="false">На телефоне ребёнка мало заряда</string>
     <string name="alert_no_family" formatted="false">Семья не найдена. Закройте приложение и откройте снова.</string>
     <string name="alert_notification_denied" formatted="false">Уведомления выключены, поэтому включить не получится. Откройте Настройки телефона → Приложения → KidCare → Уведомления и включите их.</string>
@@ -70,7 +68,6 @@
     <string name="control_find_phone" formatted="false">Найти телефон</string>
     <string name="control_find_stop" formatted="false">Остановить звук</string>
     <string name="control_find_stop_hint" formatted="false">Остановить звук, если он уже звонит</string>
-    <string name="control_header_subtitle" formatted="false">Отправляйте звук, сообщения и будильники прямо на телефон ребёнка.</string>
     <string name="control_last_seen_days">%1$d дн. назад</string>
     <string name="control_last_seen_format">Последний сигнал %1$s</string>
     <string name="control_last_seen_hours">%1$d ч. назад</string>
@@ -232,8 +229,6 @@
     <string name="place_editor_title_new" formatted="false">Новое место</string>
     <string name="place_empty" formatted="false">Мест пока нет.\nНажмите «Добавить место» внизу\nи укажите, например, «Школа» или «Кружок».\nМы сообщим, когда ребёнок придёт или уйдёт.</string>
     <string name="place_error_format">Не удалось загрузить места\n%1$s</string>
-    <string name="place_header_subtitle" formatted="false">Укажите школу или кружок, и мы сообщим о приходе и уходе.</string>
-    <string name="place_header_title" formatted="false">Спокойные места</string>
     <string name="place_limit_notice">Можно сохранить до %1$d мест. Чтобы добавить новое, удалите место, которым больше не пользуетесь.</string>
     <string name="place_no_family" formatted="false">Семья не найдена. Закройте приложение и откройте снова.</string>
     <string name="place_notify_both" formatted="false">Уведомления о приходе и уходе</string>
@@ -296,8 +291,6 @@
     <string name="schedule_editor_title_new" formatted="false">Новое правило</string>
     <string name="schedule_empty" formatted="false">Промежутки ещё не заданы.\nНажмите «Добавить правило» внизу\nи попробуйте, например, «Будни ночью — без звука».</string>
     <string name="schedule_error_format">Не удалось загрузить правила\n%1$s</string>
-    <string name="schedule_header_subtitle" formatted="false">Переключает звонок, вибрацию и беззвучный режим по дню и времени.</string>
-    <string name="schedule_header_title" formatted="false">Расписание звука</string>
     <string name="schedule_holiday_cleared" formatted="false">В праздники правила тоже работают.</string>
     <string name="schedule_holiday_date">%1$d.%2$d</string>
     <string name="schedule_holiday_next">Ближайший выходной — %1$s, %2$s.</string>

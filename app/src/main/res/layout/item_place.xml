@@ -23,7 +23,7 @@
         android:orientation="horizontal"
         android:paddingStart="@dimen/card_pad"
         android:paddingEnd="6dp"
-        android:paddingVertical="8dp">
+        android:paddingVertical="6dp">
 
         <LinearLayout
             android:id="@+id/row_body"
@@ -40,9 +40,9 @@
 
             <TextView
                 android:id="@+id/place_sticker"
-                android:layout_width="@dimen/sticker"
-                android:layout_height="@dimen/sticker"
-                android:layout_marginEnd="12dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="11dp"
                 android:background="@drawable/bg_sticker_circle"
                 android:fontFamily="sans-serif-medium"
                 android:gravity="center"

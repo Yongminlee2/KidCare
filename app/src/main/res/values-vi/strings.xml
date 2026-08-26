@@ -5,8 +5,6 @@
     <string name="alert_command_failed" formatted="false">Một yêu cầu gửi tới điện thoại của con đã thất bại</string>
     <string name="alert_empty" formatted="false">Chưa có tin nào.\nHãy lưu trường học hay lớp học thêm ở thẻ Địa điểm,\nrồi các lần con đến sẽ hiện ở đây.</string>
     <string name="alert_error_format">Không tải được tin\n%1$s</string>
-    <string name="alert_header_subtitle" formatted="false">Lần đến, pin và kết nối, xếp theo thời gian.</string>
-    <string name="alert_header_title" formatted="false">Tin về con</string>
     <string name="alert_low_battery" formatted="false">Điện thoại của con sắp hết pin</string>
     <string name="alert_no_family" formatted="false">Không tìm thấy gia đình. Hãy đóng ứng dụng rồi mở lại.</string>
     <string name="alert_notification_denied" formatted="false">Thông báo đang tắt nên không bật được. Vào Cài đặt điện thoại → Ứng dụng → KidCare → Thông báo rồi bật lên.</string>
@@ -70,7 +68,6 @@
     <string name="control_find_phone" formatted="false">Tìm điện thoại</string>
     <string name="control_find_stop" formatted="false">Tắt tiếng</string>
     <string name="control_find_stop_hint" formatted="false">Tắt tiếng nếu máy đang kêu</string>
-    <string name="control_header_subtitle" formatted="false">Gửi âm thanh, lời nhắn và báo thức thẳng tới điện thoại của con.</string>
     <string name="control_last_seen_days">%1$d ngày trước</string>
     <string name="control_last_seen_format">Tín hiệu cuối %1$s</string>
     <string name="control_last_seen_hours">%1$d giờ trước</string>
@@ -232,8 +229,6 @@
     <string name="place_editor_title_new" formatted="false">Địa điểm mới</string>
     <string name="place_empty" formatted="false">Chưa có địa điểm nào.\nHãy bấm «Thêm địa điểm» bên dưới\nrồi lưu những chỗ như «Trường» hay «Lớp học thêm».\nChúng tôi sẽ báo khi con đến hoặc rời đi.</string>
     <string name="place_error_format">Không tải được địa điểm\n%1$s</string>
-    <string name="place_header_subtitle" formatted="false">Lưu trường hay lớp học thêm, chúng tôi sẽ báo lúc con đến và lúc con đi.</string>
-    <string name="place_header_title" formatted="false">Nơi an tâm</string>
     <string name="place_limit_notice">Bạn lưu được tối đa %1$d địa điểm. Muốn thêm chỗ mới, hãy xóa bớt chỗ không dùng nữa.</string>
     <string name="place_no_family" formatted="false">Không tìm thấy gia đình. Hãy đóng ứng dụng rồi mở lại.</string>
     <string name="place_notify_both" formatted="false">Báo cả lúc đến và lúc rời</string>
@@ -296,8 +291,6 @@
     <string name="schedule_editor_title_new" formatted="false">Quy tắc mới</string>
     <string name="schedule_empty" formatted="false">Chưa đặt khung giờ nào.\nHãy bấm «Thêm quy tắc» bên dưới\nrồi thử một quy tắc kiểu «Đêm ngày thường thì im lặng».</string>
     <string name="schedule_error_format">Không tải được quy tắc\n%1$s</string>
-    <string name="schedule_header_subtitle" formatted="false">Tự đổi giữa chuông, rung và im lặng theo ngày và giờ.</string>
-    <string name="schedule_header_title" formatted="false">Lịch âm thanh hằng ngày</string>
     <string name="schedule_holiday_cleared" formatted="false">Ngày lễ vẫn đổi theo lịch.</string>
     <string name="schedule_holiday_date">%1$d/%2$d</string>
     <string name="schedule_holiday_next">Ngày nghỉ tới là %1$s, %2$s.</string>

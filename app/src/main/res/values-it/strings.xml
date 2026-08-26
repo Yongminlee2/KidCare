@@ -5,8 +5,6 @@
     <string name="alert_command_failed" formatted="false">Una richiesta inviata al telefono di tuo figlio non è riuscita</string>
     <string name="alert_empty" formatted="false">Ancora nessuna novità.\nSalva la scuola o il corso nella scheda Luoghi\ne gli arrivi compariranno qui.</string>
     <string name="alert_error_format">Impossibile caricare le novità\n%1$s</string>
-    <string name="alert_header_subtitle" formatted="false">Arrivi, batteria e connessione, in ordine di tempo.</string>
-    <string name="alert_header_title" formatted="false">Novità</string>
     <string name="alert_low_battery" formatted="false">Il telefono di tuo figlio ha poca batteria</string>
     <string name="alert_no_family" formatted="false">Famiglia non trovata. Chiudi l\'app e riaprila.</string>
     <string name="alert_notification_denied" formatted="false">Le notifiche sono spente, quindi non si può attivare. Vai in Impostazioni del telefono → App → KidCare → Notifiche e attivale.</string>
@@ -70,7 +68,6 @@
     <string name="control_find_phone" formatted="false">Trova il telefono</string>
     <string name="control_find_stop" formatted="false">Ferma il suono</string>
     <string name="control_find_stop_hint" formatted="false">Ferma il suono se sta già suonando</string>
-    <string name="control_header_subtitle" formatted="false">Manda suoni, messaggi e sveglie direttamente al telefono di tuo figlio.</string>
     <string name="control_last_seen_days">%1$d giorni fa</string>
     <string name="control_last_seen_format">Ultimo segnale %1$s</string>
     <string name="control_last_seen_hours">%1$d ore fa</string>
@@ -232,8 +229,6 @@
     <string name="place_editor_title_new" formatted="false">Luogo nuovo</string>
     <string name="place_empty" formatted="false">Ancora nessun luogo.\nTocca «Aggiungi un luogo» qui sotto\ne salva posti come «Scuola» o «Corso».\nTi avviseremo quando tuo figlio arriva o esce.</string>
     <string name="place_error_format">Impossibile caricare i luoghi\n%1$s</string>
-    <string name="place_header_subtitle" formatted="false">Salva la scuola o il corso e ti avviseremo degli arrivi e delle uscite.</string>
-    <string name="place_header_title" formatted="false">Luoghi sicuri</string>
     <string name="place_limit_notice">Puoi salvare fino a %1$d luoghi. Per aggiungerne uno nuovo, elimina prima un luogo che non usi più.</string>
     <string name="place_no_family" formatted="false">Famiglia non trovata. Chiudi l\'app e riaprila.</string>
     <string name="place_notify_both" formatted="false">Avvisi di arrivo e di uscita</string>
@@ -296,8 +291,6 @@
     <string name="schedule_editor_title_new" formatted="false">Regola nuova</string>
     <string name="schedule_empty" formatted="false">Ancora nessuna fascia oraria.\nTocca «Aggiungi una regola» qui sotto\ne prova qualcosa come «Silenzioso nelle sere feriali».</string>
     <string name="schedule_error_format">Impossibile caricare le regole\n%1$s</string>
-    <string name="schedule_header_subtitle" formatted="false">Passa tra suoneria, vibrazione e silenzioso in base al giorno e all\'ora.</string>
-    <string name="schedule_header_title" formatted="false">Programma dei suoni</string>
     <string name="schedule_holiday_cleared" formatted="false">Le regole valgono anche nei giorni festivi.</string>
     <string name="schedule_holiday_date">%1$d/%2$d</string>
     <string name="schedule_holiday_next">Il prossimo giorno di riposo è il %1$s, %2$s.</string>

@@ -20,21 +20,6 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="@dimen/edge"
-            android:paddingTop="20dp"
-            android:paddingBottom="12dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/place_header_title"
-                android:textAppearance="?attr/textAppearanceHeadlineSmall" />
-        </LinearLayout>
-
         <!-- 오류·저장 결과 한 줄. 평소에는 GONE. -->
         <TextView
             android:id="@+id/place_state"
@@ -105,7 +90,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingTop="4dp"
+                android:paddingTop="12dp"
                 android:paddingBottom="12dp" />
 
             <!-- 그림을 위에 얹은 이유는 알림 탭과 같다: 이 탭은 처음 켰을 때 늘

@@ -29,7 +29,7 @@
         android:orientation="horizontal"
         android:paddingStart="@dimen/card_pad"
         android:paddingEnd="4dp"
-        android:paddingVertical="6dp">
+        android:paddingVertical="5dp">
 
         <LinearLayout
             android:id="@+id/row_body"
@@ -52,7 +52,7 @@
                 android:id="@+id/mode_sticker"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_marginEnd="12dp"
+                android:layout_marginEnd="11dp"
                 android:background="@drawable/bg_sticker_circle">
 
                 <ImageView
@@ -89,8 +89,8 @@
                 <LinearLayout
                     android:id="@+id/day_ribbon"
                     android:layout_width="match_parent"
-                    android:layout_height="5dp"
-                    android:layout_marginTop="5dp"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="4dp"
                     android:background="@drawable/bg_ribbon_track"
                     android:orientation="horizontal">
 

@@ -21,12 +21,6 @@
         android:paddingTop="20dp"
         android:paddingBottom="28dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/tab_control"
-            android:textAppearance="?attr/textAppearanceHeadlineSmall" />
-
         <!-- 아이 폰이 아직 안 붙었거나 상태를 못 읽을 때만 보인다. 평소에는 GONE. -->
         <TextView
             android:id="@+id/child_state"
@@ -40,7 +34,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
+            android:layout_marginTop="4dp"
             android:text="@string/control_section_network"
             android:fontFamily="sans-serif-medium"
             android:textColor="@color/ink"
@@ -64,7 +58,7 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingHorizontal="14dp"
-                android:paddingVertical="12dp">
+                android:paddingVertical="10dp">
 
                 <ImageView
                     android:id="@+id/network_icon"
