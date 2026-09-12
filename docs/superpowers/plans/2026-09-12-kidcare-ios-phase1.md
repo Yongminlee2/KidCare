@@ -204,6 +204,13 @@ configFiles:
   Debug: Config/Base.xcconfig
   Release: Config/Base.xcconfig
 
+# 프로젝트 전체에 건다. 타깃마다 적으면 언젠가 한 타깃이 빠지고, 그 타깃만 XcodeGen
+# 기본값(Swift 5)으로 조용히 떨어진다 — 테스트 타깃이 그렇게 빠지면 엄격 동시성 검사를
+# 안 받는 코드가 생기는데, 이 앱의 테스트는 actor 와 Firestore 리스너를 다룬다.
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+
 packages:
   Firebase:
     url: https://github.com/firebase/firebase-ios-sdk
@@ -224,7 +231,6 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kidcare.family
         GENERATE_INFOPLIST_FILE: "NO"
-        SWIFT_VERSION: "6.0"
         TARGETED_DEVICE_FAMILY: "1"
     info:
       path: KidCare/Info.plist
@@ -248,6 +254,10 @@ targets:
     platform: iOS
     sources:
       - path: KidCareTests
+    settings:
+      base:
+        # 테스트 번들은 Info.plist 를 커밋하지 않고 빌드할 때 만들게 둔다.
+        GENERATE_INFOPLIST_FILE: "YES"
     dependencies:
       - target: KidCare
 
