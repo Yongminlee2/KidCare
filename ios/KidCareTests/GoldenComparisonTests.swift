@@ -30,16 +30,34 @@ struct GoldenComparisonTests {
         return try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
     }
 
-    /// golden/ 폴더 자체가 번들에 실려 있는지 — 하나도 못 읽으면 그 자체가 배선 실패다.
-    /// (요구사항의 "파일이 하나도 없이 조용히 통과하는 테스트는 테스트가 없느니만 못하다"
-    /// 를 코드로 못박는다.)
-    @Test("golden 리소스 다섯 개가 테스트 번들에 실제로 들어 있다")
+    /// golden/ 폴더 자체가 번들에 실려 있는지, 그리고 그 안의 각 파일이 **스윕이라고
+    /// 부를 만큼 케이스를 담고 있는지**를 확인한다.
+    ///
+    /// `size > 0` 만으로는 부족하다 — `[]` 도 2바이트라, 번들 안의 `scheduleResolver.json`
+    /// 을 통째로 `[]` 로 바꿔치기해도 이 검사와 나머지 여섯 테스트가 전부 통과해 버린다
+    /// (138개짜리 스윕이 조용히 증발해도 CI 는 초록이다 — 리뷰가 실제로 이 방법으로
+    /// 재현했다). 그래서 각 파일을 실제로 디코드해서 케이스 수를 세고, 지금 개수보다
+    /// 살짝 낮춘 하한과 비교한다 — 하나라도 없어지면 잡되, 생성기가 케이스를 한둘
+    /// 더 보태는 정상적인 변화에는 안 흔들리게.
+    @Test("golden 파일 다섯 개가 번들에 있고 스윕이라 부를 만큼 케이스를 담고 있다")
     func 골든_리소스가_번들에_있다() throws {
-        for name in ["scheduleResolver", "routePathRefiner", "koreanHolidays", "segmentSummarizer", "routeWindows"] {
-            let url = try goldenURL(name)
-            let size = try #require(try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int)
-            #expect(size > 0, "golden/\(name).json 이 비어 있다")
-        }
+        let scheduleResolver = try readObject("scheduleResolver")
+        #expect((scheduleResolver["resolve"] as? [[String: Any]])?.count ?? 0 >= 100, "scheduleResolver.resolve 케이스가 너무 적다")
+        #expect((scheduleResolver["overlaps"] as? [[String: Any]])?.count ?? 0 >= 5, "scheduleResolver.overlaps 케이스가 너무 적다")
+
+        let routePathRefiner = try readArray("routePathRefiner")
+        #expect(routePathRefiner.count >= 30, "routePathRefiner 케이스가 너무 적다")
+
+        let koreanHolidays = try readArray("koreanHolidays")
+        #expect(koreanHolidays.count >= 6, "koreanHolidays 케이스가 너무 적다 (2025~2030년 전부가 있어야 한다)")
+
+        let segmentSummarizer = try readObject("segmentSummarizer")
+        #expect((segmentSummarizer["durations"] as? [[String: Any]])?.count ?? 0 >= 40, "segmentSummarizer.durations 케이스가 너무 적다")
+        #expect((segmentSummarizer["distances"] as? [[String: Any]])?.count ?? 0 >= 50, "segmentSummarizer.distances 케이스가 너무 적다")
+        #expect((segmentSummarizer["timeRanges"] as? [[String: Any]])?.count ?? 0 >= 20, "segmentSummarizer.timeRanges 케이스가 너무 적다")
+
+        let routeWindows = try readArray("routeWindows")
+        #expect(routeWindows.count >= 15, "routeWindows 케이스가 너무 적다")
     }
 
     // MARK: - 공통 파싱
@@ -101,21 +119,23 @@ struct GoldenComparisonTests {
     // 2. ScheduleResolver — 자정 넘김·겹침·우선순위·공휴일·여러 시간대
     // ==================================================================
 
+    private func parseRule(_ r: [String: Any]) -> ScheduleRule {
+        ScheduleRule(
+            id: string(r["id"]),
+            days: Set((r["days"] as! [Any]).map { int($0) }),
+            startMinute: int(r["startMinute"]),
+            endMinute: int(r["endMinute"]),
+            mode: string(r["mode"]),
+            enabled: bool(r["enabled"]),
+            priority: int(r["priority"])
+        )
+    }
+
     @Test("예약 판정이 안드로이드와 같다 (자정 넘김·겹침·우선순위·공휴일·여러 시간대)")
     func 예약_판정_대조() throws {
-        for 사례 in try readArray("scheduleResolver") {
-            let rulesJson = try #require(사례["rules"] as? [[String: Any]])
-            let rules = rulesJson.map { r -> ScheduleRule in
-                ScheduleRule(
-                    id: string(r["id"]),
-                    days: Set((r["days"] as! [Any]).map { int($0) }),
-                    startMinute: int(r["startMinute"]),
-                    endMinute: int(r["endMinute"]),
-                    mode: string(r["mode"]),
-                    enabled: bool(r["enabled"]),
-                    priority: int(r["priority"])
-                )
-            }
+        let root = try readObject("scheduleResolver")
+        for 사례 in try #require(root["resolve"] as? [[String: Any]]) {
+            let rules = (사례["rules"] as! [[String: Any]]).map(parseRule)
             let atMillis = int64(사례["atMillis"])
             let zone = try #require(TimeZone(identifier: string(사례["zone"])))
             let holidays = Set((사례["holidays"] as! [String]).map(parseDate))
@@ -126,6 +146,22 @@ struct GoldenComparisonTests {
             let context = "atMillis=\(atMillis) zone=\(zone.identifier) rules=\(rules.map(\.id))"
             #expect(resolution.mode == expectedMode, "\(context)")
             #expect(resolution.nextBoundaryMillis == expectedNextBoundary, "\(context)")
+        }
+    }
+
+    /// `overlapsOf` — 저장 전 겹침 경고. `resolveAt` 과 같은 파일의 공개 함수인데 처음
+    /// 리뷰 전에는 대조가 없었다.
+    @Test("예약 규칙 겹침 경고가 안드로이드와 같다 (맞닿음·부분·포함·자정 넘김·중복 id·꺼진 규칙)")
+    func 예약_규칙_겹침_대조() throws {
+        let root = try readObject("scheduleResolver")
+        for 사례 in try #require(root["overlaps"] as? [[String: Any]]) {
+            let name = string(사례["name"])
+            let rules = (사례["rules"] as! [[String: Any]]).map(parseRule)
+            let candidate = parseRule(사례["candidate"] as! [String: Any])
+            let expectedIds = try #require(사례["overlappingIds"] as? [String]).sorted()
+
+            let actual = ScheduleResolver.overlaps(rules: rules, candidate: candidate).map(\.id).sorted()
+            #expect(actual == expectedIds, "\(name)")
         }
     }
 

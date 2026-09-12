@@ -83,7 +83,11 @@ class GoldenFileWriterTest {
 
     @Test
     fun `골든 - ScheduleResolver`() {
-        writeIfChanged(goldenFile("scheduleResolver"), toJson(generateScheduleResolver()))
+        val payload = linkedMapOf(
+            "resolve" to generateScheduleResolver(),
+            "overlaps" to generateScheduleResolverOverlaps(),
+        )
+        writeIfChanged(goldenFile("scheduleResolver"), toJson(payload))
     }
 
     private fun generateScheduleResolver(): List<Map<String, Any?>> {
@@ -220,6 +224,92 @@ class GoldenFileWriterTest {
         return cases
     }
 
+    /**
+     * `overlapsOf` — 저장 전 겹침 경고. `resolveAt` 과 같은 파일(같은 대상)의 다른 공개
+     * 함수인데도 대조가 없었다: 맞닿음(겹침 아님)·부분 겹침·완전 포함(양방향)·자정을
+     * 넘는 후보가 다음날 규칙과 겹치는 경우·같은 id 를 가진 목록 항목(제외돼야 함)·
+     * 꺼진 규칙(후보 자신이든 비교 대상이든)을 스윕한다.
+     */
+    private fun generateScheduleResolverOverlaps(): List<Map<String, Any?>> {
+        val cases = mutableListOf<Map<String, Any?>>()
+
+        fun ruleJson(r: ScheduleRule): Map<String, Any?> = linkedMapOf(
+            "id" to r.id,
+            "days" to r.days.sorted(),
+            "startMinute" to r.startMinute,
+            "endMinute" to r.endMinute,
+            "mode" to r.mode,
+            "enabled" to r.enabled,
+            "priority" to r.priority,
+        )
+
+        fun addCase(name: String, rules: List<ScheduleRule>, candidate: ScheduleRule) {
+            val overlapping = ScheduleResolver.overlapsOf(rules, candidate)
+            cases += linkedMapOf(
+                "name" to name,
+                "rules" to rules.map(::ruleJson),
+                "candidate" to ruleJson(candidate),
+                "overlappingIds" to overlapping.map { it.id }.sorted(),
+            )
+        }
+
+        // --- 맞닿음은 겹침이 아니다(양쪽 모두). ---
+        run {
+            val candidate = ScheduleRule("cand", setOf(1), 480, 720, "SILENT", true, 1) // 08:00~12:00 월
+            val abutAfter = ScheduleRule("abut-after", setOf(1), 720, 900, "SILENT", true, 1) // 12:00~15:00
+            val abutBefore = ScheduleRule("abut-before", setOf(1), 300, 480, "SILENT", true, 1) // 05:00~08:00
+            addCase("abutting_both_sides_no_overlap", listOf(abutAfter, abutBefore), candidate)
+        }
+
+        // --- 부분 겹침 / 완전 포함(양방향) / 다른 요일(겹침 아님)을 한 번에. ---
+        run {
+            val candidate = ScheduleRule("cand", setOf(1), 480, 720, "SILENT", true, 1) // 08:00~12:00 월
+            val partial = ScheduleRule("partial", setOf(1), 600, 800, "SILENT", true, 1) // 10:00~13:20, 부분 겹침
+            val containsCandidate = ScheduleRule("contains-candidate", setOf(1), 0, 1439, "SILENT", true, 1) // 후보를 통째로 포함
+            val containedByCandidate = ScheduleRule("contained-by-candidate", setOf(1), 600, 650, "SILENT", true, 1) // 후보 안에 통째로 포함됨
+            val differentDay = ScheduleRule("different-day", setOf(2), 480, 720, "SILENT", true, 1) // 시간은 같지만 화요일
+            addCase(
+                "partial_contains_contained_differentday",
+                listOf(partial, containsCandidate, containedByCandidate, differentDay),
+                candidate,
+            )
+        }
+
+        // --- 같은 id 를 가진 목록 항목은 기하적으로 겹쳐도 제외된다(자기 자신이므로). ---
+        run {
+            val candidate = ScheduleRule("dup", setOf(1), 480, 720, "SILENT", true, 1)
+            val sameIdOverlapping = ScheduleRule("dup", setOf(1), 500, 600, "SILENT", true, 1) // 겹치지만 id 가 후보와 같다
+            val genuineOverlap = ScheduleRule("other", setOf(1), 500, 600, "SILENT", true, 1) // 겹치고 id 도 다르다
+            addCase("same_id_excluded", listOf(sameIdOverlapping, genuineOverlap), candidate)
+        }
+
+        // --- 꺼진 규칙은 목록 쪽이면 기하적으로 겹쳐도 후보에서 빠진다. 후보 자신의
+        // enabled 는 결과에 영향이 없어야 한다(늘 켜진 것으로 취급됨 — 저장 전 경고이므로). ---
+        run {
+            val disabledCandidate = ScheduleRule("cand-off", setOf(1), 480, 720, "SILENT", false, 1)
+            val disabledOther = ScheduleRule("other-off", setOf(1), 500, 600, "SILENT", false, 1) // 겹치지만 꺼져 있다
+            val enabledOther = ScheduleRule("other-on", setOf(1), 500, 600, "SILENT", true, 1) // 겹치고 켜져 있다
+            addCase("disabled_candidate_and_disabled_other", listOf(disabledOther, enabledOther), disabledCandidate)
+        }
+
+        // --- 자정을 넘는 후보가 다음날 규칙과 겹친다. ---
+        run {
+            val candidate = ScheduleRule("night", setOf(1), 1320, 420, "SILENT", true, 1) // 월 22:00~화 07:00
+            val nextDayMorning = ScheduleRule("tue-morning", setOf(2), 360, 540, "SILENT", true, 1) // 화 06:00~09:00, 겹침
+            val nextDayNoOverlap = ScheduleRule("tue-late", setOf(2), 600, 700, "SILENT", true, 1) // 화 10:00~11:40, 안 겹침
+            addCase("candidate_crosses_midnight_into_next_day", listOf(nextDayMorning, nextDayNoOverlap), candidate)
+        }
+
+        // --- 겹침이 전혀 없는 통제 사례. ---
+        run {
+            val candidate = ScheduleRule("lonely", setOf(1), 480, 720, "SILENT", true, 1)
+            val farAway = ScheduleRule("far", setOf(1), 1000, 1100, "SILENT", true, 1)
+            addCase("no_overlap_control", listOf(farAway), candidate)
+        }
+
+        return cases
+    }
+
     // ==================================================================
     // 2. RoutePathRefiner — 튐 제거·평활·문턱값 경계
     // ==================================================================
@@ -241,15 +331,60 @@ class GoldenFileWriterTest {
         return (base.first + dLat) to (base.second + dLng)
     }
 
-    /** A-B-C 세 변 길이(firstArm, secondArm, bridge)를 만족하는 평면 삼각형. C 는 A 의 정동쪽. */
+    /**
+     * A-B-C 세 변 길이(firstArm, secondArm, bridge)를 만족하는 평면 삼각형. C 는 A 의 정동쪽.
+     *
+     * 세 변이 삼각형 부등식을 어기면(가장 긴 변이 나머지 둘의 합보다 크거나 같으면) 실수
+     * 해가 없다. `coerceAtLeast(0.0)` 로 조용히 0에 묶으면 "요청한 변 길이"가 아니라
+     * **완전히 다른(대개 훨씬 긴) 변을 가진 일직선 배치**가 만들어지는데, 호출한 쪽은
+     * 자기가 원한 경계값을 그대로 테스트하고 있다고 착각한다 — 실제로 팔 길이 25m 를
+     * 요청했는데 95~100m 짜리 일직선이 나온 채 "25m 경계 테스트"라는 이름을 달고 있던
+     * 회귀가 있었다. `parseDurationText`/`parseDistanceText`가 모르는 형식에 `error()`
+     * 로 죽는 것과 같은 판단이다 — 불가능한 모양을 조용히 다른 모양으로 바꿔치기하지
+     * 않는다.
+     */
     private fun triangle(firstArm: Double, secondArm: Double, bridge: Double): Triple<Pair<Double, Double>, Pair<Double, Double>, Pair<Double, Double>> {
         val a = baseLat to baseLng
         val c = offsetLatLng(a, bridge, 0.0)
         val x = (firstArm * firstArm - secondArm * secondArm + bridge * bridge) / (2 * bridge)
-        val ySquared = (firstArm * firstArm - x * x).coerceAtLeast(0.0)
+        val ySquared = firstArm * firstArm - x * x
+        if (ySquared < 0.0) {
+            error(
+                "triangle($firstArm, $secondArm, $bridge) 는 삼각형 부등식을 어긴다 " +
+                    "(가장 긴 변이 나머지 둘의 합 이상이다) — 실수 해가 없는 모양을 요청했다.",
+            )
+        }
         val y = kotlin.math.sqrt(ySquared)
         val b = offsetLatLng(a, x, y)
         return Triple(a, b, c)
+    }
+
+    /**
+     * "이름_boundary_값" 꼴 형제 케이스들이 정말 경계를 스윕하는지 마지막에 한 번
+     * 못박는다. 같은 그룹(예: "spike_arm_boundary") 의 형제 케이스 두 개 이상이 있는데
+     * 그 legs 출력이 전부 같다면, 그 그룹은 입력 기하가 잘못돼 경계 양쪽을 실제로는
+     * 건드리지 못하는(그런데 이름은 경계 테스트인 척하는) 죽은 케이스다 — 지금 이
+     * 파일에서 실제로 그런 사례(spike_arm_boundary, spike_ratio_boundary)가 있었다.
+     * 조용히 통과하는 대신 생성 자체를 실패시킨다.
+     */
+    private fun validateBoundaryGroupsSweepSomething(cases: List<Map<String, Any?>>) {
+        val boundaryNamePattern = Regex("^(.*_boundary)_[^_]+$")
+        val groups = cases
+            .mapNotNull { case ->
+                val name = case["name"] as? String ?: return@mapNotNull null
+                val group = boundaryNamePattern.find(name)?.groupValues?.get(1) ?: return@mapNotNull null
+                group to case
+            }
+            .groupBy({ it.first }, { it.second })
+
+        groups.forEach { (group, members) ->
+            if (members.size < 2) return@forEach
+            val distinctOutputs = members.map { toJson(it["legs"]) }.distinct()
+            check(distinctOutputs.size >= 2) {
+                "\"$group\" 형제 케이스 ${members.size}개가 전부 같은 결과를 낸다 " +
+                    "— 경계를 못 건드리는 죽은 스윕이다. 입력 기하(삼각형 변 길이 등)를 다시 본다."
+            }
+        }
     }
 
     private fun fixJson(f: Fix): Map<String, Any?> = linkedMapOf(
@@ -320,9 +455,13 @@ class GoldenFileWriterTest {
                 val p2 = Fix(c.first, c.second, 10f, t0 + span)
                 addCase("spike_span_boundary_$span", listOf(p0, p1, p2))
             }
-            // 팔 길이(25m) 경계. secondArm=40(안전), 다리=5(안전), 시간폭=5000(안전).
+            // 팔 길이(25m) 경계. 두 팔을 같이 스윕한다(값을 하나만 바꾸면서 secondArm=40 을
+            // 고정하면 firstArm≈25, secondArm=40, bridge<=15 가 삼각형 부등식을 어겨(25+15<40)
+            // triangle() 이 죽는다 — 40 을 고정한 채로는 애초에 이 경계를 만들 수 없다).
+            // 두 팔이 같으면 다리=5(안전, 15 이하), 시간폭=5000(안전)로 우회비는 항상
+            // 2*arm/5 ≈ 10 이상이라 팔 길이만이 결과를 가른다.
             listOf(24.9, 25.0, 25.1).forEach { arm ->
-                val (a, b, c) = triangle(arm, 40.0, 5.0)
+                val (a, b, c) = triangle(arm, arm, 5.0)
                 val p0 = Fix(a.first, a.second, 10f, t0)
                 val p1 = Fix(b.first, b.second, 10f, t0 + 2_500)
                 val p2 = Fix(c.first, c.second, 10f, t0 + 5_000)
@@ -336,9 +475,14 @@ class GoldenFileWriterTest {
                 val p2 = Fix(c.first, c.second, 10f, t0 + 5_000)
                 addCase("spike_bridge_boundary_$bridge", listOf(p0, p1, p2))
             }
-            // 우회비(4.0) 경계. 다리=15(자기 한계에 걸쳐 있음), 팔은 균등하게 조절.
-            listOf(29.25, 30.0, 30.75).forEach { arm ->
-                val (a, b, c) = triangle(arm, arm, 15.0)
+            // 우회비(4.0) 경계. 다리를 15(다리 문턱 자체)에 두면 그 문턱에서 이미 막혀
+            // (bridge>15 면 거부, 15는 통과) ratio 비교까지 못 간다 — 옆의
+            // spike_bridge_boundary_15.0 케이스가 "15.0 은 통과"를 이미 증명하고 있으니
+            // 다리는 문턱에서 안전하게 떨어진 13(<=15, 넉넉히 안쪽)으로 두고 팔만
+            // 조절해 비율만으로 갈리게 한다. ratio = 2*arm/13: 25.5→3.92, 26.0→4.00,
+            // 26.5→4.08 — 팔은 셋 다 25 이상(안전)이라 팔 길이 문턱은 안 걸린다.
+            listOf(25.5, 26.0, 26.5).forEach { arm ->
+                val (a, b, c) = triangle(arm, arm, 13.0)
                 val p0 = Fix(a.first, a.second, 10f, t0)
                 val p1 = Fix(b.first, b.second, 10f, t0 + 2_500)
                 val p2 = Fix(c.first, c.second, 10f, t0 + 5_000)
@@ -408,9 +552,48 @@ class GoldenFileWriterTest {
             addCase("two_legs_with_gap", listOf(p0, p1, p2, p3))
         }
 
+        // --- 과정 잡음 바닥(4.0 m/s) 경계. speed<=4.0 이면 과정 속도가 늘 4.0 으로 눌려
+        // (3.9 와 4.0 은 결과가 같아야 정상이다) speed>4.0 부터 실제 speed 를 따라가야
+        // 한다(4.1). Task 8 의 "speed 가 항상 0" 회귀가 되돌아오면 셋 다 같아진다. ---
+        run {
+            listOf(3.9f, 4.0f, 4.1f).forEach { speed ->
+                val p0 = Fix(baseLat, baseLng, 20f, t0, speed = 0f)
+                val far = offsetLatLng(baseLat to baseLng, 30.0, 0.0)
+                val p1 = Fix(far.first, far.second, 20f, t0 + 10_000, speed = speed)
+                addCase("process_speed_floor_boundary_$speed", listOf(p0, p1))
+            }
+        }
+
+        // --- 한 다리 안에서 정확도가 문턱(50m) 위아래를 여러 번 오간다. accuracy_boundary_50
+        // 은 경계 하나만 보지만, 실제 데이터는 한 다리 안에서 정확도가 계속 출렁인다 —
+        // 필터링된 점 뒤에도 남은 점들의 평활이 이어지는지를 본다. ---
+        run {
+            val accuracies = listOf(30f, 60f, 45f, 70f, 20f, 55f, 10f)
+            val points = accuracies.mapIndexed { index, accuracy ->
+                val offset = offsetLatLng(baseLat to baseLng, index * 10.0, 0.0)
+                Fix(offset.first, offset.second, accuracy, t0 + index * 15_000L)
+            }
+            addCase("accuracy_mixed_sequence", points)
+        }
+
+        // --- 튐 제거와 다리 나누기(gap)가 같은 궤적 안에서 만난다. 튐 제거는 정렬된 전체
+        // 목록에서 먼저 끝나야 하고, 그 직후 큰 공백으로 다리가 갈려도 새 다리의 첫
+        // 점(평활 시드)은 영향을 안 받아야 한다. ---
+        run {
+            val (spikeA, spikeB, spikeC) = triangle(40.0, 40.0, 5.0) // 뚜렷한 튐(우회비 큼) — 제거돼야 함
+            val p0 = Fix(spikeA.first, spikeA.second, 10f, t0)
+            val p1 = Fix(spikeB.first, spikeB.second, 10f, t0 + 5_000)
+            val p2 = Fix(spikeC.first, spikeC.second, 10f, t0 + 10_000)
+            val far = offsetLatLng(spikeC, 500.0, 0.0)
+            val p3 = Fix(far.first, far.second, 10f, t0 + 10_000 + 900_000L) // 15분·500m 공백 → 끊김
+            val p4 = offsetLatLng(far, 20.0, 0.0).let { Fix(it.first, it.second, 10f, t0 + 10_000 + 900_000L + 20_000) }
+            addCase("spike_then_gap_split", listOf(p0, p1, p2, p3, p4))
+        }
+
         // --- 빈 입력. ---
         addCase("empty", emptyList())
 
+        validateBoundaryGroupsSweepSomething(cases)
         return cases
     }
 
