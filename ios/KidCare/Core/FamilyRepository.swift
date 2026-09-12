@@ -20,23 +20,44 @@ enum PairingError: Error, Equatable {
     case wrongRole
 }
 
-/// 체크 continuation 을 딱 한 번만 resume 하게 지키는 최소 actor.
+/// 체크 continuation 을 딱 한 번만 resume 하게 지키는 actor.
 ///
-/// `measureWithTimeout` 이 측정 태스크와 시간 제한 태스크를 경주시키는데, 두 태스크
-/// 모두 자기가 끝나면 resume 을 시도한다 — 이긴 쪽만 실제로 continuation 을
-/// 건드려야 하고 진 쪽의 시도는 조용히 버려야 한다(continuation 을 두 번 resume
-/// 하면 그 자체가 런타임 크래시다). actor 격리 하나로 그 경합을 막는다.
+/// `measureWithTimeout` 은 continuation 하나를 두고 세 갈래(측정 성공/실패, 시간
+/// 초과, 부모 취소)가 경주한다. 셋 다 자기가 이기면 resume 을 시도하므로, 실제로
+/// 이긴 단 하나만 continuation 을 건드리고 나머지는 조용히 버려야 한다(같은
+/// continuation 을 두 번 resume 하면 그 자체가 런타임 크래시다). actor 격리
+/// 하나로 그 경합을 막는다.
+///
+/// continuation 을 생성자가 아니라 `attach` 로 나중에 받는 이유: 취소를 관측하는
+/// `withTaskCancellationHandler` 의 onCancel 은 **이미 취소된 채로 들어오면
+/// continuation 을 만드는 코드(operation)보다 먼저, 다른 스레드에서 동시에** 실행될
+/// 수 있다 — 그 순간엔 아직 continuation 이 없다. 그래서 "취소가 먼저 왔다"는
+/// 사실만 `pendingResult` 에 적어두고, continuation 이 나중에 붙으면 그 자리에서
+/// 바로 그 결과로 끝낸다. 반대로 continuation 이 먼저 오면 평범하게 결과를
+/// 기다린다. 어느 쪽이 먼저 와도 딱 한 번만 resume 된다.
 private actor ResumeOnce<T: Sendable> {
     private var continuation: CheckedContinuation<T, Error>?
+    private var pendingResult: Result<T, Error>?
+    private var settled = false
 
-    init(_ continuation: CheckedContinuation<T, Error>) {
-        self.continuation = continuation
+    func attach(_ continuation: CheckedContinuation<T, Error>) {
+        guard !settled else { return }
+        if let pendingResult {
+            settled = true
+            continuation.resume(with: pendingResult)
+        } else {
+            self.continuation = continuation
+        }
     }
 
     func resume(_ result: Result<T, Error>) {
-        guard let continuation else { return }
-        self.continuation = nil
-        continuation.resume(with: result)
+        guard !settled else { return }
+        if let continuation {
+            settled = true
+            continuation.resume(with: result)
+        } else {
+            pendingResult = result
+        }
     }
 }
 
@@ -84,7 +105,12 @@ enum FamilyRepository {
     /// 유효한 시각을 내놓고, 뒤이은 코드 충돌 루프와 `setData` 가 그대로 실행되어
     /// 아무도 볼 일 없는 `inviteCodes/{code}` 문서가 10분 TTL을 꽉 채우고서야
     /// 사라지는 결과로 이어졌다. `try Task.checkCancellation()` 을 맨 앞에 둬서,
-    /// 이미 취소된 채로 불린 호출은 서버를 다녀오지도 않고 곧바로 던진다.
+    /// 이미 취소된 채로 불린 호출은 서버를 다녀오지도 않고 곧바로 던진다 — 다만
+    /// 이건 캐시가 있어 서버를 안 다녀오는 경로, 혹은 호출 시점에 이미 취소된
+    /// 경우만 잡는다. 오프셋이 아직 캐시되지 않은 **첫 호출**은 반드시
+    /// `measureWithTimeout` 의 서버 왕복을 기다리는데, 그 왕복 도중에 떨어지는
+    /// 취소는 이 앞머리 체크로는 못 잡는다 — `measureWithTimeout` 자신이
+    /// `withTaskCancellationHandler` 로 그 창을 막는다(아래 주석).
     static func serverNow(familyId: String?, uid: String?) async throws -> Int64 {
         try Task.checkCancellation()
         if let offset = serverOffsetLock.withLock({ $0 }) { return deviceNow() + offset }
@@ -126,21 +152,48 @@ enum FamilyRepository {
     /// resume 한다. 진 태스크(대개 오프라인 상태로 영원히 매달린 Firestore 쓰기)는
     /// 버려두고 계속 돌게 둔다 — 결과는 버린다. Firestore 쪽에 취소를 강제할
     /// 방법이 없는 한 이게 유일한 탈출구다.
-    private static func measureWithTimeout(familyId: String?, uid: String?) async throws -> Int64 {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int64, Error>) in
-            let resumeOnce = ResumeOnce(continuation)
-            Task {
-                do {
-                    let value = try await measureServerOffset(familyId: familyId, uid: uid)
-                    await resumeOnce.resume(.success(value))
-                } catch {
-                    await resumeOnce.resume(.failure(error))
+    ///
+    /// **부모의 취소도 이 경주에 세 번째 선수로 넣는다.** 비구조적 `Task` 둘은 부모의
+    /// 취소를 물려받지 않고, `CheckedContinuation` 자체도 취소를 모른다 — 그래서
+    /// `withTaskCancellationHandler` 로 **이 함수 자신의(=측정 태스크가 아니라
+    /// `measureWithTimeout` 을 부른 구조적 태스크의)** 취소를 관측해 continuation 을
+    /// `CancellationError` 로 재개한다. 측정 태스크는 멈추지 않고 계속 돌게 둔다 —
+    /// 결과만 버린다. onCancel 이 트리거되면 `resumeOnce`(위 두 태스크와 같은
+    /// instance)로 재개하므로 셋 중 이긴 하나만 실제로 continuation 을 건드린다.
+    ///
+    /// **`measure` 를 주입받는 이유(`private` 이 아닌 이유도 같다):** 로컬 에뮬레이터
+    /// 왕복은 연결이 데워지면 1ms 아래로 떨어진다(실측 확인 — 취소를 고정 지연
+    /// 뒤에 걸거나 방금 잰 실제 왕복 시간의 절반 뒤에 걸어도, 스위트를 통째로
+    /// 돌리는 순간 매번 취소가 이미 끝난 응답을 뒤쫓아가 실패했다). 그래서
+    /// "서버 왕복 도중" 을 실제 네트워크 타이밍으로 흉내 내는 테스트는 이 환경에서
+    /// 근본적으로 결정적일 수 없다. `measure` 자리에 테스트가 직접 제어하는(=끝나는
+    /// 시점을 정확히 아는) 가짜 측정을 꽂으면, 실제 왕복이 몇 ms 가 걸리든과 무관하게
+    /// "아직 안 끝났을 때" 취소를 걸 수 있다. 기본값은 프로덕션이 그대로 쓰는
+    /// `measureServerOffset` 이라 호출부(`serverNow`) 동작은 안 바뀐다.
+    static func measureWithTimeout(
+        familyId: String?,
+        uid: String?,
+        measure: @escaping @Sendable (String?, String?) async throws -> Int64 = measureServerOffset
+    ) async throws -> Int64 {
+        let resumeOnce = ResumeOnce<Int64>()
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int64, Error>) in
+                Task { await resumeOnce.attach(continuation) }
+                Task {
+                    do {
+                        let value = try await measure(familyId, uid)
+                        await resumeOnce.resume(.success(value))
+                    } catch {
+                        await resumeOnce.resume(.failure(error))
+                    }
+                }
+                Task {
+                    try? await Task.sleep(nanoseconds: measureTimeoutNanos)
+                    await resumeOnce.resume(.failure(PairingError.offline))
                 }
             }
-            Task {
-                try? await Task.sleep(nanoseconds: measureTimeoutNanos)
-                await resumeOnce.resume(.failure(PairingError.offline))
-            }
+        } onCancel: {
+            Task { await resumeOnce.resume(.failure(CancellationError())) }
         }
     }
 
