@@ -1,6 +1,39 @@
 {
   "sourceLanguage" : "ko",
   "strings" : {
+    "day_header_date" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d월 %2$d일 (%3$@)"
+          }
+        }
+      }
+    },
+    "day_header_today" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오늘"
+          }
+        }
+      }
+    },
+    "day_header_yesterday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "어제"
+          }
+        }
+      }
+    },
     "dialog_cancel" : {
       "extractionState" : "manual",
       "localizations" : {
