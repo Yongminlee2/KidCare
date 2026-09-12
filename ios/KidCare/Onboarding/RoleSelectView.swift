@@ -27,7 +27,7 @@ struct RoleSelectView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 16) {
-                Text("role_select_title").font(.title2).bold()
+                Text("role_title").font(.title2).bold()
 
                 Button("role_guardian") { 보호자_갈래를_묻는다 = true }
                     .buttonStyle(.borderedProminent)
@@ -54,7 +54,12 @@ struct RoleSelectView: View {
                 Button("dialog_cancel", role: .cancel) {}
             }
             .alert("ios_child_unsupported_title", isPresented: $아이는_안된다고_알린다) {
-                Button("dialog_ok", role: .cancel) {}
+                // "확인" 버튼 자체는 안드로이드에 이 용도로 공용화된 키가 없다 —
+                // 배터리 설명 다이얼로그의 확인 버튼(map_battery_info_confirm)을
+                // 빌려 쓴다. 문구가 우연히 같을 뿐 그 다이얼로그 전용 키이니, 훗날
+                // 그 문구가 배터리 맥락에 맞춰 바뀌면 여기도 같이 바뀐다는 점을
+                // 알고 쓴다.
+                Button("map_battery_info_confirm", role: .cancel) {}
             } message: {
                 Text("ios_child_unsupported_body")
             }

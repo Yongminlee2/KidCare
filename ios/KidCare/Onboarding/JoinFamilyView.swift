@@ -21,8 +21,8 @@ struct JoinFamilyView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("join_family_hint")
-            TextField("join_family_code_placeholder", text: $입력)
+            Text("pairing_guardian_join_title")
+            TextField("pairing_code_placeholder", text: $입력)
                 .textInputAutocapitalization(.characters)
                 .autocorrectionDisabled()
                 .multilineTextAlignment(.center)
@@ -31,7 +31,7 @@ struct JoinFamilyView: View {
 
             if let 오류 { Text(오류).foregroundStyle(.red) }
 
-            Button("join_family_submit") { Task { await 합류한다() } }
+            Button("pairing_child_join") { Task { await 합류한다() } }
                 .buttonStyle(.borderedProminent)
                 .disabled(!보낼_수_있나)
         }
@@ -74,10 +74,10 @@ struct JoinFamilyView: View {
     /// 3단계에서 공용 `errorMessage(_:)` 로 옮긴다(Phase 3 Task 3 예정 — 그때까지는 이 화면에만 둔다).
     private func 문구키(_ e: PairingError) -> String.LocalizationValue {
         switch e {
-        case .notFound: "pairing_error_not_found"
-        case .offline: "pairing_error_offline"
-        case .expired: "pairing_error_expired"
-        case .wrongRole: "pairing_error_wrong_role"
+        case .notFound: "pairing_not_found"
+        case .offline: "pairing_offline"
+        case .expired: "pairing_expired"
+        case .wrongRole: "pairing_wrong_role"
         }
     }
 }

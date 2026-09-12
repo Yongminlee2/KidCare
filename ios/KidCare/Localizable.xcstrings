@@ -12,17 +12,6 @@
         }
       }
     },
-    "dialog_ok" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "확인"
-          }
-        }
-      }
-    },
     "error_unknown" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -89,17 +78,6 @@
         }
       }
     },
-    "invite_code_hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 코드를 상대 폰에 넣어 주세요. 10분 동안 쓸 수 있어요."
-          }
-        }
-      }
-    },
     "ios_child_unsupported_body" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -122,35 +100,13 @@
         }
       }
     },
-    "join_family_code_placeholder" : {
+    "map_battery_info_confirm" : {
       "extractionState" : "manual",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ABC234"
-          }
-        }
-      }
-    },
-    "join_family_hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "다른 폰에 뜬 6자리 코드를 넣어 주세요"
-          }
-        }
-      }
-    },
-    "join_family_submit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "합류하기"
+            "value" : "확인"
           }
         }
       }
@@ -177,57 +133,101 @@
         }
       }
     },
-    "pairing_error_expired" : {
+    "pairing_code_placeholder" : {
       "extractionState" : "manual",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "코드가 만료됐어요. 새 코드를 받아 주세요."
+            "value" : "------"
           }
         }
       }
     },
-    "pairing_error_not_found" : {
+    "pairing_child_join" : {
       "extractionState" : "manual",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "그런 코드가 없어요. 다시 확인해 주세요."
+            "value" : "연결하기"
           }
         }
       }
     },
-    "pairing_error_offline" : {
+    "pairing_expired" : {
       "extractionState" : "manual",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "인터넷에 연결되어 있지 않아요."
+            "value" : "번호가 만료됐어요. 엄마 폰에서 새 번호를 받아주세요."
           }
         }
       }
     },
-    "pairing_error_wrong_role" : {
+    "pairing_guardian_hint" : {
       "extractionState" : "manual",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이 코드는 다른 역할용이에요."
+            "value" : "아이 폰에서 앱을 켜고\n'아이'를 고른 뒤 이 번호를 넣으면 연결됩니다."
           }
         }
       }
     },
-    "pairing_reset" : {
+    "pairing_guardian_join_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가족 보호자에게 받은\n6자리 번호를 넣어주세요"
+          }
+        }
+      }
+    },
+    "pairing_not_found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "그런 번호가 없어요. 다시 확인해 주세요."
+          }
+        }
+      }
+    },
+    "pairing_offline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인터넷에 연결할 수 없어요. 와이파이나 데이터 연결 상태를 확인해 주세요."
+          }
+        }
+      }
+    },
+    "pairing_reset_role_button" : {
       "extractionState" : "manual",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "역할 다시 고르기"
+          }
+        }
+      }
+    },
+    "pairing_wrong_role" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 번호는 선택한 역할의 초대 번호가 아니에요. 아이용과 보호자용 번호를 확인해주세요."
           }
         }
       }
@@ -254,13 +254,13 @@
         }
       }
     },
-    "role_select_title" : {
+    "role_title" : {
       "extractionState" : "manual",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이 폰은 누구의 폰인가요?"
+            "value" : "누구의 폰인가요?"
           }
         }
       }

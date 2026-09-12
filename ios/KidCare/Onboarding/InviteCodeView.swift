@@ -8,12 +8,12 @@ struct InviteCodeView: View {
         /// 가족을 새로 만들고 자녀용 코드를 낸다. 이 판을 소유하는 `NewFamilySession`
         /// 을 함께 받는다 — 왜 이 화면 자신이 소유하지 않는지는 `NewFamilySession`
         /// 타입 주석 참고.
+        ///
+        /// 이미 있는 가족에 아이나 다른 보호자를 부르는 갈래(`.invite`)는 아직
+        /// 아무도 안 만들어서 뺐다(YAGNI) — Phase 3가 실제 호출부를 달 때, 그때
+        /// 가서야 알 수 있는 소유 구조(`.newFamily` 처럼 `NavigationStack` 재진입
+        /// 경합을 겪을지, 로컬 상태로 충분할지)에 맞춰 다시 추가한다.
         case newFamily(session: NewFamilySession)
-        /// 이미 있는 가족에 이 역할을 부른다. 아직 아무도 안 쓴다(Task 8 이 실제
-        /// 호출부를 달 때 이 갈래의 소유 구조도 그때 다시 설계한다) — `.newFamily`
-        /// 와 달리 `NavigationStack` 재진입 경합을 겪을 자리가 없어 로컬 상태로
-        /// 충분하다.
-        case invite(familyId: String, role: MemberRole)
     }
 
     let mode: Mode
@@ -29,10 +29,6 @@ struct InviteCodeView: View {
     let onReset: () -> Void
 
     @Environment(\.dismiss) private var dismiss
-
-    @State private var 초대_코드: String?
-    @State private var 초대_진행중 = true
-    @State private var 초대_오류: String?
 
     var body: some View {
         switch mode {
@@ -51,9 +47,6 @@ struct InviteCodeView: View {
                     session.듣기를_시작한다()
                 }
                 .onDisappear { session.듣기를_멈춘다() }
-        case let .invite(familyId, role):
-            내용(코드: 초대_코드, 진행중: 초대_진행중, 오류: 초대_오류)
-                .task { await 초대_코드를_발급한다(familyId: familyId, role: role) }
         }
     }
 
@@ -63,7 +56,12 @@ struct InviteCodeView: View {
             if 진행중 {
                 ProgressView()
             } else if let 코드 {
-                Text("invite_code_hint")
+                // 이 모드는 늘 자녀용 코드다(NewFamilySession 이 role: .child 로만
+                // 발급) — 안드로이드가 같은 화면(보호자가 아이 폰에 입력할 번호를
+                // 보여줌)에 쓰는 pairing_guardian_hint 를 그대로 쓴다. 10분 만료
+                // 안내는 안드로이드도 이 문구에 안 넣고 따로 보여준다(설계 §7.3 —
+                // 없는 개념을 지어내지 않고 있는 그대로 빌린다).
+                Text("pairing_guardian_hint")
                 Text(코드)
                     .font(.system(size: 44, weight: .bold, design: .monospaced))
                     .textSelection(.enabled)
@@ -77,7 +75,7 @@ struct InviteCodeView: View {
                 // 막다른 골목이 될 수 있다. 안드로이드 GuardianPairingActivity 의
                 // 되돌리기(resetRoleButton)와 같은 탈출구 — 저장소를 지우고
                 // 역할 선택으로 돌려보낸다.
-                Button("pairing_reset") { 역할을_다시_고른다() }
+                Button("pairing_reset_role_button") { 역할을_다시_고른다() }
                     .buttonStyle(.bordered)
             }
         }
@@ -91,23 +89,5 @@ struct InviteCodeView: View {
         RoleStore.shared.clear()
         onReset()
         dismiss()
-    }
-
-    private func 초대_코드를_발급한다(familyId: String, role: MemberRole) async {
-        초대_진행중 = true
-        초대_오류 = nil
-        defer { 초대_진행중 = false }
-        do {
-            // 로그인만 확인해둔다 — createInvite 자체는 uid 를 안 받지만
-            // 규칙이 인증된 호출만 허용한다.
-            _ = try await AuthGateway.uid()
-            초대_코드 = try await FamilyRepository.createInvite(
-                familyId: familyId, role: role, previousCode: nil
-            ).code
-        } catch is CancellationError {
-            return
-        } catch {
-            초대_오류 = String(localized: "error_unknown")
-        }
     }
 }
