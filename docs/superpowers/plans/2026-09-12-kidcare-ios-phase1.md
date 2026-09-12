@@ -458,10 +458,15 @@ enum FirebaseBootstrap {
         Auth.auth().useEmulator(withHost: "127.0.0.1", port: 9099)
         Firestore.firestore().useEmulator(withHost: "127.0.0.1", port: 8080)
 
-        // 캐시를 메모리로 둔다. 디스크 캐시가 남으면 다음 테스트가 앞 테스트의
-        // 문서를 "서버에 있는 것"으로 착각한다. useEmulator 뒤에 설정을 바꿔야
-        // 한다 — 순서가 바뀌면 Firestore 가 "이미 시작됐다"며 막는다.
+        // **`useEmulator` 만으로는 부족하다.** iOS SDK 의 그 메서드는 host 만 세우고
+        // SSL 은 건드리지 않는다(FIRFirestore.mm 의 useEmulatorWithHost:port:). 기본값이
+        // SSL 켜짐이라, 평문으로 뜬 에뮬레이터에 TLS 핸드셰이크를 무한 재시도하며
+        // **오류도 없이 영영 멈춘다.** 안드로이드 SDK 와 다른 자리다.
+        //
+        // 캐시를 메모리로 두는 이유는 따로다. 디스크 캐시가 남으면 다음 테스트가 앞
+        // 테스트의 문서를 "서버에 있는 것"으로 착각한다.
         let settings = Firestore.firestore().settings
+        settings.isSSLEnabled = false
         settings.cacheSettings = MemoryCacheSettings()
         Firestore.firestore().settings = settings
 
