@@ -1179,7 +1179,9 @@ import Testing
 @Suite(.serialized)
 struct GuardianJoinTests {
 
-    init() { EmulatorHarness.start() }
+    // `init() async` 여야 한다. 3단계에서 `FirebaseBootstrap` 이 @MainActor 가 되면서
+    // `EmulatorHarness.start()` 도 @MainActor 로 올라갔다 — 동기 init 에서는 부를 수 없다.
+    init() async { await EmulatorHarness.start() }
 
     @Test("보호자가 가족을 만들면 자기 멤버 문서가 생긴다")
     func 가족_생성() async throws {
@@ -1521,7 +1523,15 @@ Expected: `observeChildStatus`·`fetchChildStatus` 가 쓰는 경로가 위 Swif
 - [ ] **Step 6: 에뮬레이터를 띄운 채 테스트를 돌린다**
 
 Run: Step 2 와 같은 명령
-Expected: `TEST SUCCEEDED`, 6개 전부 통과. 특히 `★ 두 번째 보호자가 보호자 코드로 같은 가족에 합류한다` 가 초록이어야 한다.
+Expected: `TEST SUCCEEDED`, 6개 전부 통과.
+
+**그다음 전체 suite 를 세 번 연속 돌린다.** `AuthGatewayTests` 와 `GuardianJoinTests` 는
+둘 다 `Auth.auth()` 라는 **하나뿐인 전역 세션**을 갈아탄다. `.serialized` 는 suite *안*만
+직렬화하므로 두 suite 가 서로 겹쳐 돌면 한쪽의 `signOut()` 이 다른 쪽 테스트 한가운데에
+떨어질 수 있다. 세 번 다 초록이면 그대로 두고, 한 번이라도 빨간 줄이 나오면 두 suite 를
+`.serialized` 가 걸린 부모 suite 안에 중첩해 넣는다(중첩 suite 는 부모의 trait 를
+물려받는다). 미리 만들지 않는 이유는 안 터질 수도 있는 문제에 구조를 먼저 세우지
+않기 위해서다. 특히 `★ 두 번째 보호자가 보호자 코드로 같은 가족에 합류한다` 가 초록이어야 한다.
 
 **여기서 `PERMISSION_DENIED` 가 나면 그것이 1단계가 찾아내려던 바로 그 문제다.** 규칙을 고쳐야 할 수 있고, 그건 안드로이드에도 영향이 가는 변경이므로 **멈추고 사용자에게 알린다.** 혼자 `firestore.rules` 를 고치지 않는다.
 
