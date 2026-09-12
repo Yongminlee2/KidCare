@@ -21,6 +21,7 @@
 - 화면 문구는 **하드코딩하지 않는다.** 1단계에서는 `String(localized:)` 키만 쓰고, 키 정의는 6단계(다국어)에서 `i18n` 원본에서 생성한다. 1단계 동안은 `Localizable.xcstrings` 에 한국어만 직접 넣어 둔다.
 - **커밋 메시지는 한국어, author `Yongminlee2 <dydals5678@gmail.com>`, 도구·AI 흔적 금지.** 기존 113개 커밋과 같은 결을 지킨다.
 - **비밀은 커밋하지 않는다.** `GoogleService-Info.plist` 와 `ios/Config/Secrets.xcconfig` 는 `.gitignore` 에 넣는다. 안드로이드가 `local.properties` 를 쓰는 것과 같은 대우다.
+- **`.xcodeproj` 를 커밋하지 않는다.** `project.yml` 이 정본이고 `xcodegen generate` 로 만든다.
 - **`Task.checkCancellation()` / `CancellationError` 는 다른 어떤 일반 `catch` 보다 먼저 다시 던진다.** 안드로이드의 `CancellationException` 규칙과 같은 이유다.
 
 ## 이 단계에서 다루지 않는 것
@@ -47,11 +48,12 @@
 ```
 ios/
 ├─ .gitignore                            빌드 산출물·비밀 파일
+├─ project.yml                           XcodeGen 정의. **프로젝트의 정본**
 ├─ Config/
 │  ├─ Base.xcconfig                      커밋됨. Secrets 를 포함하고 Info.plist 로 넘긴다
 │  └─ Secrets.xcconfig.example           커밋됨. 빈 템플릿
 │  └─ Secrets.xcconfig                   gitignore. 실제 NCP Key ID
-├─ KidCare.xcodeproj/
+├─ KidCare.xcodeproj/                    생성물 — 커밋하지 않는다
 ├─ KidCare/
 │  ├─ KidCareApp.swift                   진입점. Firebase 구성 + 지도 인증 한 자리
 │  ├─ RouterView.swift                   첫 화면 분기 (역할·가족 유무)
@@ -101,10 +103,14 @@ ios/
 
 설치가 끝나면 화면이 안내하는 `eval "$(/opt/homebrew/bin/brew shellenv)"` 줄을 `~/.zprofile` 에 넣으라는 지시까지 따라간다.
 
-- [ ] **Step 2: Java 와 Node 설치**
+- [ ] **Step 2: Java · Node · XcodeGen 설치**
+
+Java 는 Firestore 에뮬레이터가, Node 는 firebase-tools 가 쓴다. XcodeGen 은 `.xcodeproj` 를
+`project.yml` 에서 만들어 준다 — **이게 없으면 프로젝트 생성과 패키지 추가가 전부 Xcode
+GUI 조작이 되어 자동화가 끊긴다.**
 
 ```bash
-brew install openjdk@21 node
+brew install openjdk@21 node xcodegen
 ```
 
 - [ ] **Step 3: Java 를 시스템이 찾을 수 있게 연결 — 사용자가 직접 실행한다**
@@ -153,43 +159,111 @@ Expected: `firestore.rules` 가 로드됐다는 줄이 있다. 없으면 `fireba
 
 ---
 
-### Task 2: Xcode 프로젝트 뼈대와 비밀 주입
+### Task 2: 프로젝트 뼈대와 비밀 주입
 
 **Files:**
 - Create: `ios/.gitignore`
+- Create: `ios/project.yml` (XcodeGen 정의 — 이것이 프로젝트의 정본이다)
 - Create: `ios/Config/Base.xcconfig`, `ios/Config/Secrets.xcconfig.example`
-- Create: `ios/KidCare.xcodeproj` (Xcode 로 생성)
-- Create: `ios/KidCare/KidCareApp.swift`, `ios/KidCare/Info.plist`
+- Create: `ios/KidCare/KidCareApp.swift`, `ios/KidCare/RouterView.swift`
 - Create: `ios/KidCareTests/SmokeTests.swift`
 - Modify: `.gitignore` (루트 — iOS 비밀 파일 추가)
 
 **Interfaces:**
-- Consumes: 없음
-- Produces: `xcodebuild -project ios/KidCare.xcodeproj -scheme KidCare` 로 빌드·테스트가 도는 프로젝트. Info.plist 의 `NMFNcpKeyId` 가 빌드 설정 `NAVER_MAP_NCP_KEY_ID` 에서 채워진다.
+- Consumes: Task 1 의 `xcodegen`
+- Produces: `xcodegen generate` 로 만들어지는 `ios/KidCare.xcodeproj`, 그 위에서 도는 `xcodebuild test`. Info.plist 의 `NMFNcpKeyId` 가 빌드 설정 `NAVER_MAP_NCP_KEY_ID` 에서 채워진다.
 
-- [ ] **Step 1: Xcode 로 프로젝트를 만든다**
+> **`.xcodeproj` 를 커밋하지 않고 `project.yml` 을 커밋한다.** `project.pbxproj` 는 파일을
+> 하나 더할 때마다 바뀌어서 병합 충돌의 상설 무대가 되고, 사람이 읽고 고칠 수 있는 형식도
+> 아니다. `project.yml` 한 장이면 타깃·의존성·빌드 설정이 전부 한눈에 보이고, 프로젝트는
+> 언제든 다시 만들 수 있다.
 
-Xcode → File → New → Project → iOS → App.
-- Product Name: `KidCare`
-- Organization Identifier: `com.kidcare` (Bundle Identifier 가 `com.kidcare.family` 가 되도록)
-- Interface: SwiftUI, Language: Swift, Storage: None
-- **Include Tests 체크**
-- 저장 위치: `/Users/com/work/KidCare/ios`
-
-만든 뒤 프로젝트 설정에서 **Minimum Deployments 를 iOS 17.0** 으로 내린다.
-
-- [ ] **Step 2: 소스 폴더를 동기화 폴더 그룹으로 만든다**
-
-Xcode 26 이 기본으로 만드는 `KidCare` 그룹이 이미 동기화 폴더다(파일을 디스크에 넣으면 자동으로 잡힌다). Finder 에서 `ios/KidCare/` 안에 `Logic`, `Core`, `Onboarding`, `Guardian` 폴더를 만들어 둔다. **이렇게 하는 이유는 취향이 아니다** — 파일을 추가할 때마다 `.xcodeproj/project.pbxproj` 가 바뀌면 두 사람이 동시에 작업할 때 매번 병합 충돌이 난다.
+- [ ] **Step 1: 폴더를 만든다**
 
 ```bash
-mkdir -p /Users/com/work/KidCare/ios/KidCare/{Logic,Core,Onboarding,Guardian}
+mkdir -p /Users/com/work/KidCare/ios/{Config,KidCare/{Logic,Core,Onboarding,Guardian},KidCareTests}
 ```
 
-- [ ] **Step 3: `ios/.gitignore` 를 만든다**
+- [ ] **Step 2: `ios/project.yml` 을 쓴다**
+
+```yaml
+name: KidCare
+
+options:
+  bundleIdPrefix: com.kidcare
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: 12.0.0
+  # 안드로이드가 쓰는 버전과 정확히 같은 값이다(gradle/libs.versions.toml 의 naverMap).
+  # 버전이 갈리면 타일과 좌표계 차이로 두 폰이 같은 자리를 다르게 그리는 날이 온다.
+  NMapsMap:
+    url: https://github.com/navermaps/SPM-NMapsMap
+    exactVersion: 3.23.3
+
+targets:
+  KidCare:
+    type: application
+    platform: iOS
+    sources:
+      - path: KidCare
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kidcare.family
+        GENERATE_INFOPLIST_FILE: "NO"
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: KidCare/Info.plist
+      properties:
+        CFBundleDisplayName: 우리아이 지킴이
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        # 네이버 SDK 가 이 이름 그대로 읽는다. 값은 Base.xcconfig → Secrets.xcconfig 에서 온다.
+        NMFNcpKeyId: $(NAVER_MAP_NCP_KEY_ID)
+    dependencies:
+      - package: Firebase
+        product: FirebaseAuth
+      - package: Firebase
+        product: FirebaseFirestore
+      - package: NMapsMap
+        product: NMapsMap
+
+  KidCareTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: KidCareTests
+    dependencies:
+      - target: KidCare
+
+schemes:
+  KidCare:
+    build:
+      targets:
+        KidCare: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - KidCareTests
+```
+
+- [ ] **Step 3: `ios/.gitignore` 를 쓴다**
 
 ```gitignore
-# 빌드 산출물
+# 생성물. project.yml 이 정본이라 .xcodeproj 는 커밋하지 않는다.
+KidCare.xcodeproj/
 build/
 DerivedData/
 *.xcuserstate
@@ -202,21 +276,12 @@ KidCare/GoogleService-Info.plist
 .DS_Store
 ```
 
-- [ ] **Step 4: 루트 `.gitignore` 에도 한 줄 더한다**
+- [ ] **Step 4: 루트 `.gitignore` 에도 두 줄 더한다**
 
-`google-services.json` 바로 아래에 넣는다. 루트에서 실수로 `git add -A` 를 해도 막히게 하려는 것이다.
+루트에서 실수로 `git add -A` 를 해도 막히게 하려는 것이다. `google-services.json` 줄 바로 아래에 `GoogleService-Info.plist` 와 `Secrets.xcconfig` 를 넣는다.
 
-```bash
-cd /Users/com/work/KidCare && python3 - <<'PY'
-import pathlib
-p = pathlib.Path(".gitignore")
-s = p.read_text()
-old = "google-services.json\n"
-new = "google-services.json\nGoogleService-Info.plist\nSecrets.xcconfig\n"
-assert s.count(old) == 1
-p.write_text(s.replace(old, new))
-PY
-```
+Run: `grep -n "GoogleService-Info.plist" /Users/com/work/KidCare/.gitignore`
+Expected: 한 줄이 나온다.
 
 - [ ] **Step 5: xcconfig 두 벌을 만든다**
 
@@ -233,22 +298,37 @@ NAVER_MAP_NCP_KEY_ID =
 
 ```
 // Secrets.xcconfig 가 없어도 빌드는 되게 한다 — 키스토어가 없는 기계에서 안드로이드
-// assembleDebug 가 도는 것과 같은 이유다. 대신 키가 비면 지도 화면이 시작할 때
-// 크게 실패한다(KidCareApp 의 검사). 조용히 빈 지도를 보여주는 것이 최악이다.
+// assembleDebug 가 도는 것과 같은 이유다. 대신 키가 비면 지도를 켜는 순간 크게
+// 실패한다(KidCareApp 의 검사). 조용히 빈 지도를 보여주는 것이 최악이다.
 #include? "Secrets.xcconfig"
 
 NAVER_MAP_NCP_KEY_ID = $(inherited)
 ```
 
-프로젝트 설정 → Info → Configurations 에서 Debug·Release 둘 다 `Base` 를 고른다.
+- [ ] **Step 6: 앱 진입점과 임시 RouterView 를 쓴다**
 
-- [ ] **Step 6: Info.plist 에 지도 키 자리를 만든다**
+`ios/KidCare/KidCareApp.swift`:
 
-Info.plist 에 키 하나를 더한다. 철자가 정확해야 한다 — 네이버 SDK 가 이 이름 그대로 읽는다.
+```swift
+import SwiftUI
 
-```xml
-<key>NMFNcpKeyId</key>
-<string>$(NAVER_MAP_NCP_KEY_ID)</string>
+@main
+struct KidCareApp: App {
+    var body: some Scene {
+        WindowGroup { RouterView() }
+    }
+}
+```
+
+`ios/KidCare/RouterView.swift`:
+
+```swift
+import SwiftUI
+
+/// Task 7 에서 본체로 바뀐다. 지금은 앱이 뜨는지만 본다.
+struct RouterView: View {
+    var body: some View { Text(verbatim: "KidCare") }
+}
 ```
 
 - [ ] **Step 7: 연기 테스트를 쓴다**
@@ -268,7 +348,17 @@ struct SmokeTests {
 }
 ```
 
-- [ ] **Step 8: 빌드와 테스트를 돌린다**
+- [ ] **Step 8: 프로젝트를 생성한다**
+
+```bash
+cd /Users/com/work/KidCare/ios && xcodegen generate
+```
+
+Expected: `Created project at .../ios/KidCare.xcodeproj`
+
+- [ ] **Step 9: 빌드와 테스트를 돌린다**
+
+첫 실행은 Firebase 와 네이버 지도 패키지를 내려받느라 몇 분 걸린다.
 
 ```bash
 cd /Users/com/work/KidCare/ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17' 2>&1 | tail -20
@@ -276,21 +366,15 @@ cd /Users/com/work/KidCare/ios && xcodebuild test -project KidCare.xcodeproj -sc
 
 Expected: `TEST SUCCEEDED`. 시뮬레이터 이름이 다르면 `xcrun simctl list devices available` 로 확인해 바꾼다.
 
-- [ ] **Step 9: 커밋**
+- [ ] **Step 10: 커밋**
+
+커밋 메시지는 한국어로, 도구·AI 흔적 없이. 담을 내용: project.yml 을 정본으로 두고
+.xcodeproj 를 커밋하지 않는 이유(pbxproj 가 병합 충돌의 상설 무대가 된다), 지도 키를
+Secrets.xcconfig 에서만 읽는 이유(안드로이드 local.properties 와 같은 대우), 네이버 지도를
+안드로이드와 같은 3.23.3 에 못 박는 이유(버전이 갈리면 두 폰이 같은 자리를 다르게 그린다).
 
 ```bash
-cd /Users/com/work/KidCare && git add ios .gitignore && git commit -F - <<'MSG'
-아이폰 앱 뼈대를 세운다
-
-지도 키는 Secrets.xcconfig 에서만 읽어 Info.plist 로 넘긴다. 안드로이드가
-local.properties 를 쓰는 것과 같은 대우다 — 저장소에는 키가 남지 않는다.
-Base.xcconfig 가 Secrets 를 #include? 로 무르게 부르는 이유는 키가 없는
-기계에서도 빌드와 테스트는 돌아야 하기 때문이다. 키가 비었을 때의 실패는
-지도를 켜는 순간으로 미룬다.
-
-소스 폴더를 동기화 폴더 그룹으로 둔다. 파일을 더할 때마다 project.pbxproj 가
-바뀌면 그 파일이 병합 충돌의 상설 무대가 된다.
-MSG
+cd /Users/com/work/KidCare && git add ios .gitignore && git commit
 ```
 
 ---
@@ -312,11 +396,14 @@ MSG
   - `AuthGateway.signIn() async throws -> String`
   - `EmulatorHarness.start()` / `EmulatorHarness.freshUser() async throws -> String`
 
-- [ ] **Step 1: Firebase SDK 를 SPM 으로 더한다**
+- [ ] **Step 1: Firebase 의존성이 이미 들어와 있는지 확인한다**
 
-Xcode → File → Add Package Dependencies → `https://github.com/firebase/firebase-ios-sdk`
-- Dependency Rule: Up to Next Major, 12.0.0
-- 제품은 **`FirebaseAuth` 와 `FirebaseFirestore` 둘만** 고른다. Analytics 는 고르지 않는다 — 이 앱은 아무것도 수집하지 않고, 수집 SDK 가 들어가면 나중에 App Store 개인정보 라벨에 적을 것이 생긴다.
+Task 2 의 `project.yml` 이 `FirebaseAuth` 와 `FirebaseFirestore` 를 이미 선언한다. **둘만
+쓰고 Analytics 는 넣지 않는다** — 이 앱은 아무것도 수집하지 않고, 수집 SDK 가 들어가면
+나중에 App Store 개인정보 라벨에 적을 것이 생긴다.
+
+Run: `grep -n "FirebaseAuth\|FirebaseFirestore\|FirebaseAnalytics" /Users/com/work/KidCare/ios/project.yml`
+Expected: `FirebaseAuth` 와 `FirebaseFirestore` 가 각각 한 번씩 나오고 `FirebaseAnalytics` 는 안 나온다.
 
 - [ ] **Step 2: `FirebaseBootstrap.swift` 를 쓴다**
 
@@ -1864,12 +1951,17 @@ MSG
 - Consumes: `FamilyRepository.observeChildStatus`, `ChildStatusDoc`, `RoleStore`
 - Produces: `NaverMapView(center: (lat: Double, lng: Double)?, markerAt: (lat: Double, lng: Double)?)`, `ChildMapView(familyId: String, childUid: String?)`
 
-- [ ] **Step 1: 네이버 지도 SDK 를 SPM 으로 더한다**
+- [ ] **Step 1: 네이버 지도 의존성이 이미 들어와 있는지 확인한다**
 
-Xcode → File → Add Package Dependencies → `https://github.com/navermaps/SPM-NMapsMap`
-- Dependency Rule: Exact Version, **`3.23.3`**
+Task 2 의 `project.yml` 이 `exactVersion: 3.23.3` 으로 이미 못 박아 두었다. 안드로이드가
+쓰는 버전과 **정확히 같은 값**이다(`gradle/libs.versions.toml` 의 `naverMap = "3.23.3"`).
 
-안드로이드가 쓰는 버전과 **정확히 같은 값**이다(`gradle/libs.versions.toml` 의 `naverMap = "3.23.3"`). 양쪽을 같은 버전에 묶어 두면 타일·좌표계 차이로 두 폰 화면이 달라지는 일이 안 생긴다.
+Run: `grep -n -A2 "NMapsMap:" /Users/com/work/KidCare/ios/project.yml`
+Expected: `exactVersion: 3.23.3` 이 보인다.
+
+> **좌표 타입은 다른 모듈에 있다.** `NMGLatLng` 는 `NMapsMap` 이 의존하는 `NMapsGeometry`
+> 패키지의 타입이라, `import NMapsMap` 만으로 안 잡히면 `import NMapsGeometry` 를 함께
+> 적는다. 이 한 줄 때문에 Task 8 이 컴파일 안 되는 일이 잦다.
 
 - [ ] **Step 2: 앱 시작 때 지도 인증을 건다**
 
