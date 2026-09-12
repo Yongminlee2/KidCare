@@ -21,6 +21,7 @@
 - 화면 문구는 **하드코딩하지 않는다.** 1단계에서는 `String(localized:)` 키만 쓰고, 키 정의는 6단계(다국어)에서 `i18n` 원본에서 생성한다. 1단계 동안은 `Localizable.xcstrings` 에 한국어만 직접 넣어 둔다.
 - **커밋 메시지는 한국어, author `Yongminlee2 <dydals5678@gmail.com>`, 도구·AI 흔적 금지.** 기존 113개 커밋과 같은 결을 지킨다.
 - **비밀은 커밋하지 않는다.** `GoogleService-Info.plist` 와 `ios/Config/Secrets.xcconfig` 는 `.gitignore` 에 넣는다. 안드로이드가 `local.properties` 를 쓰는 것과 같은 대우다.
+- **brew · node · java · xcodegen 은 PATH 에 없다.** 이 계획서의 명령은 앞에 이 줄을 붙여 쓴다: `export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH"`
 - **`.xcodeproj` 를 커밋하지 않는다.** `project.yml` 이 정본이고 `xcodegen generate` 로 만든다.
 - **`Task.checkCancellation()` / `CancellationError` 는 다른 어떤 일반 `catch` 보다 먼저 다시 던진다.** 안드로이드의 `CancellationException` 규칙과 같은 이유다.
 
@@ -85,7 +86,7 @@ ios/
 
 ### Task 1: 개발 도구 설치와 에뮬레이터 기동
 
-이 맥에는 Xcode 말고 아무것도 없다(Homebrew·Node·Java 전부 없음). Firestore 에뮬레이터는 Java 로 돌고 firebase-tools 는 Node 로 돈다. 뒤 Task 들의 테스트가 전부 에뮬레이터를 상대하므로 이것이 맨 앞이다.
+이 맥에는 Xcode 와 Homebrew 뿐이다 — Node·Java·XcodeGen 이 없고, Homebrew 조차 PATH 에 없다. Firestore 에뮬레이터는 Java 로 돌고 firebase-tools 는 Node 로 돈다. 뒤 Task 들의 테스트가 전부 에뮬레이터를 상대하므로 이것이 맨 앞이다.
 
 **Files:** 없음 (환경 구성)
 
@@ -93,15 +94,17 @@ ios/
 - Consumes: 저장소 루트의 `firebase.json`(이미 있다 — auth 9099, firestore 8080), `firestore.rules`
 - Produces: `firebase emulators:start` 로 뜨는 로컬 Auth(9099)·Firestore(8080)
 
-- [ ] **Step 1: Homebrew 설치 — 사용자가 직접 실행한다**
+- [ ] **Step 1: Homebrew 를 확인한다**
 
-관리자 비밀번호를 묻기 때문에 사람이 직접 돌려야 한다.
+이 맥에는 이미 `/opt/homebrew` 에 설치돼 있다. **다만 셸 PATH 에는 없다** — 그래서 이
+계획서의 모든 brew 명령 앞에 PATH 를 붙인다.
 
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+export PATH="/opt/homebrew/bin:$PATH" && brew --version
 ```
 
-설치가 끝나면 화면이 안내하는 `eval "$(/opt/homebrew/bin/brew shellenv)"` 줄을 `~/.zprofile` 에 넣으라는 지시까지 따라간다.
+Expected: `Homebrew 6.x` 가 나온다. `brew: command not found` 가 나오면 그때만 공식
+설치 스크립트가 필요하고, 그건 관리자 비밀번호를 묻기 때문에 사람이 직접 돌려야 한다.
 
 - [ ] **Step 2: Java · Node · XcodeGen 설치**
 
@@ -113,34 +116,36 @@ GUI 조작이 되어 자동화가 끊긴다.**
 brew install openjdk@21 node xcodegen
 ```
 
-- [ ] **Step 3: Java 를 시스템이 찾을 수 있게 연결 — 사용자가 직접 실행한다**
+- [ ] **Step 3: Java 가 보이는지 확인**
 
-`/Library/Java/JavaVirtualMachines` 는 sudo 가 필요하다.
+**`/Library/Java/JavaVirtualMachines` 에 심볼릭 링크를 걸지 않는다.** 그건 sudo 가 필요한데,
+필요하지도 않다 — 에뮬레이터는 PATH 에 있는 `java` 를 찾을 뿐이다. 관리자 권한 없이
+끝나는 길이 있으면 그 길로 간다.
 
 ```bash
-sudo ln -sfn /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-21.jdk
+export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH" && java -version
 ```
 
-- [ ] **Step 4: Java 가 보이는지 확인**
+Expected: `openjdk version "21...` 이 출력된다.
 
-Run: `java -version`
-Expected: `openjdk version "21...` 이 출력된다. `Unable to locate a Java Runtime` 이 나오면 Step 3 이 안 끝난 것이다.
-
-- [ ] **Step 5: firebase-tools 설치**
+- [ ] **Step 4: firebase-tools 설치**
 
 ```bash
-npm install -g firebase-tools
+export PATH="/opt/homebrew/bin:$PATH" && npm install -g firebase-tools
 ```
 
-- [ ] **Step 6: 에뮬레이터를 띄운다**
+- [ ] **Step 5: 에뮬레이터를 띄운다**
+
+**PATH 에 Java 와 brew 를 둘 다 넣어야 한다** — 안 그러면 Firestore 에뮬레이터가 Java 를
+못 찾아 조용히 안 뜬다.
 
 ```bash
-cd /Users/com/work/KidCare && firebase emulators:start --only auth,firestore --project kidcare-emulator
+export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH" && cd /Users/com/work/KidCare && firebase emulators:start --only auth,firestore --project kidcare-emulator
 ```
 
 처음 실행이면 Firestore 에뮬레이터 jar 를 내려받느라 1~2분 걸린다. 뜬 채로 둔다 — 뒤 Task 들이 이걸 쓴다.
 
-- [ ] **Step 7: 두 포트가 실제로 응답하는지 확인**
+- [ ] **Step 6: 두 포트가 실제로 응답하는지 확인**
 
 다른 터미널에서:
 
@@ -150,7 +155,7 @@ curl -s -o /dev/null -w "firestore=%{http_code}\n" http://127.0.0.1:8080/ && cur
 
 Expected: 둘 다 200. 연결 거부가 나오면 에뮬레이터가 안 뜬 것이다.
 
-- [ ] **Step 8: 규칙이 실제로 실린 프로젝트인지 확인**
+- [ ] **Step 7: 규칙이 실제로 실린 프로젝트인지 확인**
 
 Run: 에뮬레이터를 띄운 터미널의 출력에서 `firestore: Rules updated` 또는 rules 파일 경로가 보이는지 확인한다.
 Expected: `firestore.rules` 가 로드됐다는 줄이 있다. 없으면 `firebase.json` 이 있는 디렉터리에서 실행하지 않은 것이다.
