@@ -1,13 +1,21 @@
 import SwiftUI
+import os
 
 /// 초대 코드를 입력해 가족에 합류한다. 아이폰 보호자의 주된 입구다.
 struct JoinFamilyView: View {
 
     let expectedRole: MemberRole
 
+    /// 합류가 성공했을 때 `RouterView` 에 알린다. 자세한 이유는 `RouterView` 주석
+    /// 참고 — 이 화면이 직접 `RoleStore` 를 써도 `RouterView` 가 저절로 알아채지
+    /// 않는다, 알아채면 오히려 문제였다.
+    let onJoined: () -> Void
+
     @State private var 입력 = ""
     @State private var 진행중 = false
     @State private var 오류: String?
+
+    private static let logger = Logger(subsystem: "com.kidcare.family", category: "JoinFamilyView")
 
     private var 보낼_수_있나: Bool { InviteCode.isValid(입력) && !진행중 }
 
@@ -45,10 +53,20 @@ struct JoinFamilyView: View {
             RoleStore.shared.childUid = try await FamilyRepository.findChildUid(
                 familyId: result.familyId, preferred: nil
             )
+            onJoined()
+        } catch is CancellationError {
+            // 화면이 사라지며 정상 취소된 것이다 — 이미 사라지는 화면에 오류를
+            // 적어봐야 아무도 못 보고, 다음에 이 화면이 다시 뜰 때 "오류"로
+            // 시작하는 것도 사실과 다르다. `FamilyRepository.serverNow` 와 같은
+            // 규율이다.
+            return
         } catch let e as PairingError {
             오류 = String(localized: 문구키(e))
         } catch {
-            오류 = error.localizedDescription
+            // Firestore/네트워크 원문은 영어라 그대로 보여주면 로캘라이즈 규칙을
+            // 어긴다. 화면에는 공용 문구만 보여주고, 실제 원인은 로그로만 남긴다.
+            Self.logger.error("가족 합류 실패: \(String(describing: error), privacy: .public)")
+            오류 = String(localized: "error_unknown")
         }
     }
 

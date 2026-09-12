@@ -23,6 +23,17 @@
         }
       }
     },
+    "error_unknown" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "문제가 생겼어요. 잠시 뒤 다시 시도해 주세요."
+          }
+        }
+      }
+    },
     "family_default_name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -63,6 +74,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "어떻게 시작할까요?"
+          }
+        }
+      }
+    },
+    "invite_code_done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "완료"
           }
         }
       }

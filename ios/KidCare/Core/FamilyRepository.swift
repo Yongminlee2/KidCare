@@ -287,7 +287,16 @@ enum FamilyRepository {
             guard let member = MemberDoc(doc.data()) else { return nil }
             return (doc.documentID, member)
         }
+        return selectChildUid(from: children, preferred: preferred)
+    }
 
+    /// `findChildUid` 와 `observeChildJoined` 가 같이 쓰는 선택 규칙. 한 번 조회할
+    /// 때와 실시간으로 지켜볼 때가 서로 다른 정렬을 쓰면, 코드가 뜬 순간 고른 아이와
+    /// 리스너가 나중에 고른 아이가 갈릴 수 있다 — 그래서 로직을 한 곳에 둔다.
+    private static func selectChildUid(
+        from children: [(uid: String, member: MemberDoc)],
+        preferred: String?
+    ) -> String? {
         if let preferred, children.contains(where: { $0.uid == preferred }) { return preferred }
 
         return children.min { a, b in
@@ -297,6 +306,35 @@ enum FamilyRepository {
             if a.member.displayName != b.member.displayName { return a.member.displayName < b.member.displayName }
             return a.uid < b.uid
         }?.uid
+    }
+
+    /// 자녀가 members 에 들어오는 순간을 감시한다. 정본은 안드로이드
+    /// `FamilyRepository.observeChildJoined` 다.
+    ///
+    /// 보호자가 초대 코드를 띄운 화면은 "코드를 보여줬다"가 아니라 "아이가 실제로
+    /// 들어왔다"가 끝이다 — 그 순간을 화면이 스스로 알아야 폴링 없이 다음으로
+    /// 넘어갈 수 있다. `onError` 없이 에러를 삼키면 권한 거부나 리스너 끊김이 나도
+    /// 화면은 계속 코드만 보여주고 아무 데도 단서가 안 남는다(안드로이드 쪽 같은
+    /// 함수의 주석과 같은 이유). 붙인 리스너는 호출부가 화면이 사라질 때 반드시
+    /// remove 해야 한다 — 안 그러면 화면을 나간 뒤에도 Firestore 읽기 비용이 계속
+    /// 나간다.
+    static func observeChildJoined(
+        familyId: String,
+        preferredChildUid: String?,
+        onJoined: @escaping (String) -> Void,
+        onError: @escaping (Error) -> Void
+    ) -> ListenerRegistration {
+        db.collection("families").document(familyId)
+            .collection("members").whereField("role", isEqualTo: MemberRole.child.rawValue)
+            .addSnapshotListener { snapshot, error in
+                if let error { onError(error); return }
+                let children: [(uid: String, member: MemberDoc)] = snapshot?.documents.compactMap { doc in
+                    guard let member = MemberDoc(doc.data()) else { return nil }
+                    return (doc.documentID, member)
+                } ?? []
+                guard let uid = selectChildUid(from: children, preferred: preferredChildUid) else { return }
+                onJoined(uid)
+            }
     }
 
     /// 아이 상태 문서를 구독한다. 돌려받은 등록은 화면이 사라질 때 반드시 remove 한다.

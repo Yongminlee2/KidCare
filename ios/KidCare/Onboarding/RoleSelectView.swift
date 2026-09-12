@@ -6,6 +6,11 @@ import SwiftUI
 /// 나중에 붙일 자리를 되살려야 하고, 흐리게만 두면 왜 안 되는지를 말해주지 못한다.
 struct RoleSelectView: View {
 
+    /// 보호자가 (합류든 새 가족이든) 준비를 끝냈다고 스스로 알려올 때 부른다.
+    /// `RouterView` 가 이 신호로만 본 화면으로 넘어간다 — 자세한 이유는
+    /// `RouterView` 주석 참고.
+    let onGuardianReady: () -> Void
+
     @State private var 보호자_갈래를_묻는다 = false
     @State private var 아이는_안된다고_알린다 = false
     @State private var 합류로_간다 = false
@@ -34,10 +39,10 @@ struct RoleSelectView: View {
                 Text("ios_child_unsupported_body")
             }
             .navigationDestination(isPresented: $합류로_간다) {
-                JoinFamilyView(expectedRole: .guardian)
+                JoinFamilyView(expectedRole: .guardian, onJoined: onGuardianReady)
             }
             .navigationDestination(isPresented: $발급으로_간다) {
-                InviteCodeView(mode: .newFamily)
+                InviteCodeView(mode: .newFamily, onDone: onGuardianReady)
             }
         }
     }
