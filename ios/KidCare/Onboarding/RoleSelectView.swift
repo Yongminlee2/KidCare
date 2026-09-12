@@ -16,6 +16,14 @@ struct RoleSelectView: View {
     @State private var 합류로_간다 = false
     @State private var 발급으로_간다 = false
 
+    /// "새 가족 만들기" 한 판을 소유한다. `InviteCodeView` 가 아니라 여기 두는
+    /// 이유는 `NewFamilySession` 타입 주석 참고 — 요약하면, `InviteCodeView` 는
+    /// `NavigationStack` 의 push 대상이라 SwiftUI 가 그 인스턴스를 다시
+    /// 마운트하는 경우가 실측으로 확인됐지만, `RoleSelectView` 자신은 그 문제를
+    /// 겪지 않는다(겪는 건 오직 push 된 목적지뿐이었다) — `RouterView` 가 본
+    /// 화면으로 넘어갈 때만 사라지는, 이 화면 전체에서 하나뿐인 안정된 자리다.
+    @State private var 새_가족_세션: NewFamilySession?
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 16) {
@@ -29,7 +37,19 @@ struct RoleSelectView: View {
             }
             .padding()
             .confirmationDialog("guardian_start_title", isPresented: $보호자_갈래를_묻는다) {
-                Button("guardian_start_new_family") { 발급으로_간다 = true }
+                Button("guardian_start_new_family") {
+                    // 세션은 여기, 버튼 액션에서 만든다 — `.navigationDestination`
+                    // 의 내용 클로저 안에서 만들면 안 된다. 실측으로 확인했다:
+                    // SwiftUI 가 그 클로저를 한 번의 네비게이션에도 여러 번
+                    // 불러서(레이아웃/전환 계산 등), `@State` 를 그 안에서 막
+                    // 쓰면 매번 nil 을 보고 새 세션을 만드는 것처럼 동작했다
+                    // (한 번의 탭에서 서로 다른 세션 인스턴스가 네 개나 찍힘).
+                    // 뷰 빌더 클로저는 상태를 읽기만 해야 하는 순수 함수 자리다.
+                    if 새_가족_세션 == nil {
+                        새_가족_세션 = NewFamilySession(onDone: onGuardianReady)
+                    }
+                    발급으로_간다 = true
+                }
                 Button("guardian_start_join_family") { 합류로_간다 = true }
                 Button("dialog_cancel", role: .cancel) {}
             }
@@ -42,8 +62,24 @@ struct RoleSelectView: View {
                 JoinFamilyView(expectedRole: .guardian, onJoined: onGuardianReady)
             }
             .navigationDestination(isPresented: $발급으로_간다) {
-                InviteCodeView(mode: .newFamily, onDone: onGuardianReady)
+                // 여기서는 이미 있는 세션을 읽기만 한다(만들지 않는다) — 위
+                // 버튼 액션 주석 참고. `발급으로_간다` 가 true 가 될 때는 항상
+                // 그 액션이 먼저 세션을 만들어 둔 뒤이므로 `새_가족_세션` 은
+                // 이 시점에 이미 채워져 있다.
+                if let 세션 = 새_가족_세션 {
+                    InviteCodeView(
+                        mode: .newFamily(session: 세션),
+                        onDone: onGuardianReady,
+                        onReset: { 새_가족_세션 = nil }
+                    )
+                }
             }
+        }
+        .onDisappear {
+            // RoleSelectView 자체가 사라지는 건 온보딩이 끝났다는 뜻이다
+            // (RouterView 가 ChildMapView 로 넘어갈 때만 일어난다) — 세션이
+            // 들고 있던 작업/리스너를 마저 정리한다.
+            새_가족_세션?.invalidate()
         }
     }
 }
