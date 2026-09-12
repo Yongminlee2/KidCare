@@ -297,6 +297,94 @@
           }
         }
       }
+    },
+    "segment_distance_kilometers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$.1fkm"
+          }
+        }
+      }
+    },
+    "segment_distance_meters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$dm"
+          }
+        }
+      }
+    },
+    "segment_distance_under_ten_meters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10m 미만"
+          }
+        }
+      }
+    },
+    "segment_duration_hours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d시간"
+          }
+        }
+      }
+    },
+    "segment_duration_hours_minutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d시간 %2$d분"
+          }
+        }
+      }
+    },
+    "segment_duration_minutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d분"
+          }
+        }
+      }
+    },
+    "segment_duration_under_minute" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1분 미만"
+          }
+        }
+      }
+    },
+    "segment_time_range_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$02d:%2$02d~%3$02d:%4$02d"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
