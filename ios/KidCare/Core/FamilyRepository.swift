@@ -338,13 +338,12 @@ enum FamilyRepository {
 
     /// 가족의 자녀 uid 하나를 고른다. `preferred` 가 아직 멤버면 그것을 유지한다.
     ///
-    /// 정렬 규칙은 안드로이드 `logic/ChildSelector.kt` 와 반드시 같아야 한다 — 같은
-    /// 가족, 같은 저장된 선호값인데 두 폰이 서로 다른 자녀를 고르면 Phase 3 지도가
-    /// 보호자마다 다른 아이를 보여준다. `ChildSelector` 는 가입 시각 오름차순 →
-    /// 표시 이름 → uid 순으로 고르고, 가입 시각이 0(옛 문서 등, "모름")이면
-    /// 가장 늦은 값으로 취급해 뒤로 보낸다. Phase 2 가 이 함수를 포팅된
-    /// `ChildSelector` 호출로 통째로 바꾸는데, 그때도 이 정렬은 그대로 유지해야
-    /// 한다 — 정렬 기준 자체가 두 플랫폼이 맞춰야 하는 계약이다.
+    /// 정렬은 포팅된 `ChildSelector.select` 가 한다(정본은 안드로이드
+    /// `logic/ChildSelector.kt`) — 같은 가족, 같은 저장된 선호값인데 두 폰이 서로
+    /// 다른 자녀를 고르면 Phase 3 지도가 보호자마다 다른 아이를 보여준다. Phase 1
+    /// 은 이 정렬을 여기 인라인으로 흉내내 뒀었다(가입 시각 오름차순 → 표시 이름 →
+    /// uid, 가입 시각 0 은 "모름"으로 보고 가장 늦은 값으로 취급); Phase 2 가 그
+    /// 인라인을 지우고 실제 포트를 부르는 것으로 바꿨다.
     static func findChildUid(familyId: String, preferred: String?) async throws -> String? {
         let snap = try await db.collection("families").document(familyId)
             .collection("members").whereField("role", isEqualTo: MemberRole.child.rawValue).getDocuments()
@@ -358,20 +357,16 @@ enum FamilyRepository {
 
     /// `findChildUid` 와 `observeChildJoined` 가 같이 쓰는 선택 규칙. 한 번 조회할
     /// 때와 실시간으로 지켜볼 때가 서로 다른 정렬을 쓰면, 코드가 뜬 순간 고른 아이와
-    /// 리스너가 나중에 고른 아이가 갈릴 수 있다 — 그래서 로직을 한 곳에 둔다.
+    /// 리스너가 나중에 고른 아이가 갈릴 수 있다 — 그래서 로직을 한 곳에 두고, 그
+    /// 로직 자체는 `ChildSelector.select` 에 맡긴다.
     private static func selectChildUid(
         from children: [(uid: String, member: MemberDoc)],
         preferred: String?
     ) -> String? {
-        if let preferred, children.contains(where: { $0.uid == preferred }) { return preferred }
-
-        return children.min { a, b in
-            let aJoined = a.member.joinedAt > 0 ? a.member.joinedAt : Int64.max
-            let bJoined = b.member.joinedAt > 0 ? b.member.joinedAt : Int64.max
-            if aJoined != bJoined { return aJoined < bJoined }
-            if a.member.displayName != b.member.displayName { return a.member.displayName < b.member.displayName }
-            return a.uid < b.uid
-        }?.uid
+        let selectable = children.map {
+            SelectableChild(uid: $0.uid, displayName: $0.member.displayName, joinedAt: $0.member.joinedAt)
+        }
+        return ChildSelector.select(children: selectable, preferredUid: preferred)?.uid
     }
 
     /// 자녀가 members 에 들어오는 순간을 감시한다. 정본은 안드로이드
