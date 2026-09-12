@@ -490,6 +490,89 @@ Expected: PASS.
 
 ---
 
+### Task 11: 앱 아이콘
+
+지금 아이폰 홈 화면에 빈 아이콘으로 나온다. 원래 7단계 항목이지만 눈에 바로 보이고 소재가 이미 있어 앞으로 당긴다.
+
+**Files:**
+- Create: `ios/KidCare/Assets.xcassets/Contents.json`
+- Create: `ios/KidCare/Assets.xcassets/AppIcon.appiconset/Contents.json`
+- Create: `ios/KidCare/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`
+- Modify: `ios/project.yml` (에셋 카탈로그를 리소스로 싣고 `ASSETCATALOG_COMPILER_APPICON_NAME` 설정)
+
+**Interfaces:**
+- Consumes: `app/src/main/res/drawable-nodpi/ic_launcher_artwork.png` (768×768 RGBA), `app/src/main/res/values/colors.xml` 의 `mascot_bg` = `#CFEDE7`
+- Produces: 홈 화면에 뜨는 앱 아이콘
+
+**안드로이드와 같은 그림을 쓴다.** 새로 그리지 않는다 — 같은 앱이니 아이콘도 같아야 한다. 안드로이드는 적응형 아이콘이라 배경(민트 `#CFEDE7`)과 앞그림(마스코트)이 분리돼 있고, 런처가 마스크로 잘라낸다. iOS는 그런 구조가 없으므로 **둘을 하나로 합친 정사각형 PNG 한 장**을 만든다.
+
+**iOS 아이콘의 제약 셋:**
+- 정확히 **1024×1024**
+- **알파 채널이 없어야 한다.** 투명도가 남아 있으면 App Store 업로드가 거부된다. 원본이 RGBA 이므로 반드시 불투명 배경 위에 합성해 알파를 없앤다.
+- 모서리는 시스템이 둥글게 깎는다. 그림이 가장자리에 붙어 있으면 잘린다.
+
+- [ ] **Step 1: 합성 스크립트를 쓴다**
+
+`tools/make-ios-icon.swift` 를 만든다. 의존성을 더하지 않기 위해 CoreGraphics 로 직접 그린다(ImageMagick 같은 것을 새로 깔지 않는다).
+
+하는 일: 1024×1024 불투명 비트맵을 `#CFEDE7` 로 채우고, 원본 PNG 를 가운데에 **가로세로 80%** 크기로 그린 뒤 PNG 로 쓴다. 80% 인 이유는 iOS 가 모서리를 깎고 홈 화면에서 아이콘끼리 붙어 보이지 않게 여백이 필요하기 때문이다. 안드로이드 적응형 아이콘이 108dp 중 72dp 만 보여주는 것과 같은 취지다.
+
+- [ ] **Step 2: 아이콘을 만든다**
+
+```bash
+cd /Users/com/work/KidCare && swift tools/make-ios-icon.swift \
+  app/src/main/res/drawable-nodpi/ic_launcher_artwork.png \
+  ios/KidCare/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+```
+
+Expected: 1024×1024 PNG 가 생긴다.
+
+- [ ] **Step 3: 알파가 없는지 확인한다**
+
+```bash
+file ios/KidCare/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+```
+
+Expected: `1024 x 1024, 8-bit/color RGB` — **RGBA 가 아니어야 한다.** RGBA 로 나오면 Step 1 의 비트맵 컨텍스트가 알파를 쓰고 있다는 뜻이니 고친다.
+
+- [ ] **Step 4: 에셋 카탈로그를 만든다**
+
+`AppIcon.appiconset/Contents.json` 은 단일 1024 항목만 둔다(iOS 17+ 는 나머지 크기를 시스템이 만든다):
+
+```json
+{
+  "images" : [
+    { "filename" : "AppIcon-1024.png", "idiom" : "universal", "platform" : "ios", "size" : "1024x1024" }
+  ],
+  "info" : { "author" : "xcode", "version" : 1 }
+}
+```
+
+`Assets.xcassets/Contents.json` 은 `{ "info" : { "author" : "xcode", "version" : 1 } }` 하나면 된다.
+
+- [ ] **Step 5: `project.yml` 에 싣는다**
+
+`KidCare` 타깃의 `sources` 에 `Assets.xcassets` 를 더하고, `settings.base` 에 `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon` 을 넣는다. 그 뒤 `xcodegen generate`.
+
+- [ ] **Step 6: 빌드하고 실기기에 넣어 눈으로 본다**
+
+```bash
+export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH"
+cd ios && xcodebuild -project KidCare.xcodeproj -scheme KidCare \
+  -destination 'id=6C5120C8-779D-5250-AB4C-B152B9A648A2' \
+  -derivedDataPath /tmp/kidcare-device -allowProvisioningUpdates build
+xcrun devicectl device install app --device 6C5120C8-779D-5250-AB4C-B152B9A648A2 \
+  /tmp/kidcare-device/Build/Products/Debug-iphoneos/KidCare.app
+```
+
+그다음 홈 화면을 확인한다. **실기기 화면은 직접 볼 수 없으므로**, `KidCareUITests` 로 앱을 띄워 스크린샷을 찍어도 홈 화면은 안 나온다 — 아이콘 확인은 사람이 해야 한다. 대신 **시뮬레이터에서는 확인할 수 있다**: 시뮬레이터에 설치한 뒤 홈 버튼(`xcrun simctl ui <udid> ...` 로는 안 되므로) 대신 `xcrun simctl get_app_container` 로 설치를 확인하고, `.app/AppIcon60x60@2x.png` 같은 생성물이 번들에 들어갔는지로 검증한다.
+
+- [ ] **Step 7: 전체 테스트가 여전히 초록인지 확인하고 커밋**
+
+아이콘은 테스트가 없지만, 에셋 카탈로그를 추가하면서 빌드 설정이 깨지지 않았는지는 확인해야 한다.
+
+---
+
 ## 2단계 완료 기준
 
 - [ ] `xcodebuild test` 가 초록이고, 안드로이드 테스트 8벌이 XCTest 로 전부 옮겨졌다
@@ -498,4 +581,5 @@ Expected: PASS.
 - [ ] `DayPicker`·`SegmentSummarizer` 가 문장이 아니라 구조를 돌려주고, 화면 문구는 `Localizable.xcstrings` 에만 있다
 - [ ] `FamilyRepository.findChildUid` 가 `ChildSelector.select` 를 쓴다
 - [ ] `serverNow` 가 취소를 전파한다 (1단계 이월 항목 종결)
+- [ ] 아이폰 홈 화면에 안드로이드와 같은 앱 아이콘이 뜬다
 - [ ] `git diff --stat main..HEAD -- app/src/main/` 이 비어 있다 (`app/src/test/` 의 생성기만 예외)
