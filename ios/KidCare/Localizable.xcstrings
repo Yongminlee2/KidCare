@@ -89,6 +89,17 @@
         }
       }
     },
+    "ios_child_unsupported_confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확인"
+          }
+        }
+      }
+    },
     "ios_child_unsupported_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -96,17 +107,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "아이 폰은 안드로이드만 지원해요"
-          }
-        }
-      }
-    },
-    "map_battery_info_confirm" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "확인"
           }
         }
       }

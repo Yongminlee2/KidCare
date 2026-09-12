@@ -139,6 +139,7 @@
   "holiday_substitute": "Substitute holiday",
   "invite_code_done": "Done",
   "ios_child_unsupported_body": "The sound switching and phone finder your child's phone needs can't be built on iPhone. Please install the Android app on your child's phone.",
+  "ios_child_unsupported_confirm": "OK",
   "ios_child_unsupported_title": "Your child's phone must be Android",
   "language_follow_system": "Follow the system setting",
   "language_picker_title": "Language",

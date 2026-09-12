@@ -54,12 +54,11 @@ struct RoleSelectView: View {
                 Button("dialog_cancel", role: .cancel) {}
             }
             .alert("ios_child_unsupported_title", isPresented: $아이는_안된다고_알린다) {
-                // "확인" 버튼 자체는 안드로이드에 이 용도로 공용화된 키가 없다 —
-                // 배터리 설명 다이얼로그의 확인 버튼(map_battery_info_confirm)을
-                // 빌려 쓴다. 문구가 우연히 같을 뿐 그 다이얼로그 전용 키이니, 훗날
-                // 그 문구가 배터리 맥락에 맞춰 바뀌면 여기도 같이 바뀐다는 점을
-                // 알고 쓴다.
-                Button("map_battery_info_confirm", role: .cancel) {}
+                // 이 알림은 iOS 전용(설계서 §4①④)이라 제목·본문처럼 버튼도
+                // 전용 키를 쓴다 — 지도 화면의 배터리 안내 다이얼로그는 무관한
+                // 화면이라 그 확인 버튼 키를 빌려 쓰지 않는다(문구가 우연히 같을
+                // 뿐이라 그쪽이 나중에 바뀌면 여기까지 말없이 따라 바뀔 뻔했다).
+                Button("ios_child_unsupported_confirm", role: .cancel) {}
             } message: {
                 Text("ios_child_unsupported_body")
             }

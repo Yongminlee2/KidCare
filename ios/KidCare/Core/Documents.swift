@@ -5,10 +5,13 @@ import Foundation
 /// `core/model/Documents.kt` 다 — 필드 이름이 하나라도 어긋나면 안드로이드가
 /// 쓴 문서를 못 읽는다.
 ///
-/// **Codable 을 쓰지 않는다.** `firestore.rules` 의 hasOnly() 는 create 가 아니라
-/// **update** 자리에서 "바뀐 필드 집합"을 검사한다(members·families·commands·events
+/// **Codable 을 쓰지 않는다.** `firestore.rules` 의 hasOnly() 는 대부분 create 가
+/// 아니라 **update** 자리에서 "바뀐 필드 집합"을 검사한다(members·families·commands·events
 /// update — 예: members/{uid} update 의 `.hasOnly(['displayName', 'fcmToken',
-/// 'appVersion', 'updatedAt'])`). 이 앱의 create 경로들은 그 검사를 직접 맞을 일이
+/// 'appVersion', 'updatedAt'])`). 예외가 하나 있다 — inviteCodes create 의 레거시
+/// 2필드 갈래(`familyId`, `expiresAt`)에도 hasOnly() 가 있지만, 이 앱이 쓰는
+/// `InviteCodeDoc` create 는 항상 `role`·`createdByUid` 까지 4필드를 채워 그 갈래를
+/// 타지 않는다. 이 앱의 create 경로들은 그 검사를 직접 맞을 일이
 /// 없지만, Codable 인코더는 그 경계를 몰라서 옵셔널 필드를 하나 더 내보내면(nil 을
 /// 생략하지 않고 넣거나, 스키마가 바뀌는 순간) 나중에 update 경로가 말없이
 /// hasOnly() 에 걸려 거부될 수 있다. 손으로 맵을 적으면 무엇이 나가는지 눈으로
