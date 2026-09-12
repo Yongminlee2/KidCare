@@ -350,7 +350,28 @@ enum FamilyRepository {
             }
     }
 
+    /// 자녀의 마지막 상태(children/{childUid} 문서, 별도 status 하위 문서가 아니다)를
+    /// **한 번** 읽는다. 문서가 아직 없으면(자녀 폰이 한 번도 안 올렸으면) nil.
+    ///
+    /// 정본은 안드로이드 `FamilyRepository.fetchChildStatus` 다. 옛 상시 구독
+    /// (`observeChildStatus`)을 이 화면(`ChildMapView`)에서 걷어낸 이유가 안드로이드와
+    /// 같다: 아이 폰이 더 이상 주기적으로 위치를 올리지 않아 이 문서가 거의 안
+    /// 바뀌는데(부모가 '지금 위치 확인'을 누르거나 하루 한 번), 화면이 떠 있는 내내
+    /// 리스너를 붙들고 있으면 Spark 무료 읽기 한도만 축낸다.
+    static func fetchChildStatus(familyId: String, childUid: String) async throws -> ChildStatusDoc? {
+        let snap = try await db.collection("families").document(familyId)
+            .collection("children").document(childUid).getDocument()
+        guard let data = snap.data() else { return nil }
+        return ChildStatusDoc(data)
+    }
+
     /// 아이 상태 문서를 구독한다. 돌려받은 등록은 화면이 사라질 때 반드시 remove 한다.
+    ///
+    /// **1단계 지도(`ChildMapView`)는 이제 이 함수를 쓰지 않는다** — 위
+    /// `fetchChildStatus` 로 바뀌었다(이유는 그 함수 주석). 이 함수 자체는 지우지
+    /// 않고 남겨둔다: Phase 3의 '지금 위치 확인' 라이브 추적 세션이 화면에 떠
+    /// 있는 짧은 시간 동안만 진짜 실시간 구독이 필요하고, 그때 이 함수를 다시
+    /// 쓴다.
     ///
     /// onError 없이 에러를 삼키면 권한 거부나 리스너 끊김이 나도 화면은 계속 비어
     /// 있기만 하고 아무 데도 단서가 안 남는다 — 이 앱에서 가장 흔한 실패 유형인데
