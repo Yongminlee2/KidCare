@@ -1,12 +1,19 @@
+import FirebaseFirestore
 import Foundation
 
 /// Firestore 문서와 1:1 로 대응하는 구조체들. 정본은 안드로이드
 /// `core/model/Documents.kt` 다 — 필드 이름이 하나라도 어긋나면 안드로이드가
 /// 쓴 문서를 못 읽는다.
 ///
-/// **Codable 을 쓰지 않는다.** 규칙이 hasOnly() 로 필드 집합을 검사하는 자리가
-/// 있어서, 인코더가 옵셔널 필드를 하나 더 내보내는 순간 쓰기가 통째로 거부된다.
-/// 무엇이 나가는지를 눈으로 볼 수 있어야 한다.
+/// **Codable 을 쓰지 않는다.** `firestore.rules` 의 hasOnly() 는 create 가 아니라
+/// **update** 자리에서 "바뀐 필드 집합"을 검사한다(members·families·commands·events
+/// update — 예: members/{uid} update 의 `.hasOnly(['displayName', 'fcmToken',
+/// 'appVersion', 'updatedAt'])`). 이 앱의 create 경로들은 그 검사를 직접 맞을 일이
+/// 없지만, Codable 인코더는 그 경계를 몰라서 옵셔널 필드를 하나 더 내보내면(nil 을
+/// 생략하지 않고 넣거나, 스키마가 바뀌는 순간) 나중에 update 경로가 말없이
+/// hasOnly() 에 걸려 거부될 수 있다. 손으로 맵을 적으면 무엇이 나가는지 눈으로
+/// 보이고, `firestoreData` 가 곧 그 계약의 증거다(DocumentsTests 가 필드 집합을
+/// 못 박는 이유).
 ///
 /// 시각은 전부 UTC 밀리초다.
 
