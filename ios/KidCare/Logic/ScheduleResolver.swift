@@ -52,19 +52,13 @@ enum ScheduleResolver {
     private static let minutesPerDay = 24 * 60
     private static let minuteMillis: Int64 = 60_000
 
-    /// 로케일·달력 설정에 날짜 계산이 흔들리지 않도록 항상 그레고리력 + 고정 로케일로
-    /// 계산한다(`DayPicker` 와 같은 이유 — 기기가 일본 연호력·불기력이어도 답은 같아야 한다).
-    private static func calendar(zone: TimeZone) -> Calendar {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.locale = Locale(identifier: "en_US_POSIX")
-        calendar.timeZone = zone
-        return calendar
-    }
+    /// 날짜 계산 자체(그레고리력·고정 로케일·YMD·자정 변환)는 `CalendarMath` 가 맡는다
+    /// (`DayPicker` 와 같은 이유로 로케일을 고정한다 — 기기가 일본 연호력·불기력이어도
+    /// 답은 같아야 한다) — 여러 `Logic/` 파일이 각자 복사해 갖고 있던 것을 한 곳으로 모은 것이다.
+    private typealias YMD = CalendarMath.YMD
 
-    private struct YMD: Equatable {
-        let year: Int
-        let month: Int
-        let day: Int
+    private static func calendar(zone: TimeZone) -> Calendar {
+        CalendarMath.calendar(zone: zone)
     }
 
     /// 규칙 하나가 특정 날짜에 시작할 때 만드는 [시작, 끝) 구간. 자정을 넘으면 끝이 다음 날.
@@ -75,19 +69,11 @@ enum ScheduleResolver {
     }
 
     private static func ymd(of date: Date, zone: TimeZone) -> YMD {
-        let comps = calendar(zone: zone).dateComponents([.year, .month, .day], from: date)
-        return YMD(year: comps.year!, month: comps.month!, day: comps.day!)
+        CalendarMath.ymd(of: date, zone: zone)
     }
 
     private static func dateAtMidnight(_ value: YMD, zone: TimeZone) -> Date {
-        var comps = DateComponents()
-        comps.year = value.year
-        comps.month = value.month
-        comps.day = value.day
-        comps.hour = 0
-        comps.minute = 0
-        comps.second = 0
-        return calendar(zone: zone).date(from: comps)!
+        CalendarMath.dateAtMidnight(value, zone: zone)
     }
 
     private static func millis(_ date: Date) -> Int64 {
@@ -101,10 +87,9 @@ enum ScheduleResolver {
     }
 
     /// Foundation 의 weekday 컴포넌트는 일=1…토=7 이라, 코틀린 DayOfWeek.value(월=1…일=7)
-    /// 로 바꾼다(`DayPicker.header` 와 같은 변환).
+    /// 로 바꾼다(`CalendarMath.weekday` — `DayPicker.header` 와 같은 변환을 한 곳에서 쓴다).
     private static func weekday(_ value: YMD, zone: TimeZone) -> Int {
-        let foundationWeekday = calendar(zone: zone).component(.weekday, from: dateAtMidnight(value, zone: zone))
-        return foundationWeekday == 1 ? 7 : foundationWeekday - 1
+        CalendarMath.weekday(value, zone: zone)
     }
 
     /// 연·월·일만 담은 "맨몸" DateComponents — `KoreanHolidays`/`HolidayCalendar` 가

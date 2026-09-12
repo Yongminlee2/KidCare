@@ -48,9 +48,9 @@ enum SegmentSummarizer {
 
     /// 시각 범위의 시·분만 담는다. 날짜는 화면의 날짜 헤더가 담당한다.
     static func timeRange(_ segment: Segment, zone: TimeZone) -> TimeRange {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.locale = Locale(identifier: "en_US_POSIX")
-        calendar.timeZone = zone
+        // 로케일 고정 그레고리력은 `CalendarMath` 가 맡는다(`DayPicker`·`ScheduleResolver`
+        // 와 같은 이유·같은 구현을 공유한다).
+        let calendar = CalendarMath.calendar(zone: zone)
 
         let start = calendar.dateComponents(
             [.hour, .minute],

@@ -129,11 +129,11 @@ enum KoreanHolidays {
     // 기기와 아이 기기가 서로 다른 날을 공휴일로 판정할 수 있다 — 그래서 어떤 기기에서
     // 돌든 같은 답이 나오도록 UTC 그레고리력을 직접 골라 쓴다.
 
-    private static let calendar: Calendar = {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC")!
-        return calendar
-    }()
+    // 그레고리력 팩토리는 `CalendarMath` 가 맡는다(`DayPicker`·`ScheduleResolver`·
+    // `SegmentSummarizer` 와 같은 구현을 공유한다) — 로케일을 추가로 고정하는 점은
+    // 다르지만(en_US_POSIX), 그레고리력에서 연·월·일·요일 계산은 로케일과 무관해
+    // 이 파일이 전에 기대하던 동작과 같다.
+    private static let calendar: Calendar = CalendarMath.calendar(zone: TimeZone(identifier: "UTC")!)
 
     private static func isSunday(_ date: DateComponents) -> Bool {
         weekday(of: date) == 1

@@ -28,20 +28,12 @@ enum DayPicker {
 
     private static let utc = TimeZone(identifier: "UTC")!
 
-    /// 로케일에 따라 날짜 계산이 흔들리지 않도록(자릿수 표기·달력 종류 등) 항상 그레고리력 +
-    /// 고정 로케일로 계산한다. `DateFormatter`를 쓰지 않는 것도 같은 이유다 — 코틀린이
-    /// `LocalDate`로 얻는 "로케일 무관" 성질을 여기서는 이렇게 지킨다.
-    private static func calendar(zone: TimeZone) -> Calendar {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.locale = Locale(identifier: "en_US_POSIX")
-        calendar.timeZone = zone
-        return calendar
-    }
+    /// 날짜 계산 자체(그레고리력·고정 로케일·YMD·자정 변환)는 `CalendarMath` 가 맡는다
+    /// — 여러 `Logic/` 파일이 각자 복사해 갖고 있던 것을 한 곳으로 모은 것이다.
+    private typealias YMD = CalendarMath.YMD
 
-    private struct YMD: Equatable {
-        let year: Int
-        let month: Int
-        let day: Int
+    private static func calendar(zone: TimeZone) -> Calendar {
+        CalendarMath.calendar(zone: zone)
     }
 
     private static func pad(_ n: Int, _ width: Int) -> String {
@@ -59,19 +51,11 @@ enum DayPicker {
     }
 
     private static func dateAtMidnight(_ ymd: YMD, zone: TimeZone) -> Date {
-        var comps = DateComponents()
-        comps.year = ymd.year
-        comps.month = ymd.month
-        comps.day = ymd.day
-        comps.hour = 0
-        comps.minute = 0
-        comps.second = 0
-        return calendar(zone: zone).date(from: comps)!
+        CalendarMath.dateAtMidnight(ymd, zone: zone)
     }
 
     private static func ymd(of date: Date, zone: TimeZone) -> YMD {
-        let comps = calendar(zone: zone).dateComponents([.year, .month, .day], from: date)
-        return YMD(year: comps.year!, month: comps.month!, day: comps.day!)
+        CalendarMath.ymd(of: date, zone: zone)
     }
 
     static func todayKey(zone: TimeZone, nowMillis: Int64) -> String {
@@ -106,9 +90,9 @@ enum DayPicker {
         if target == today { return .today }
         let yesterday = ymd(of: calendar(zone: zone).date(byAdding: .day, value: -1, to: dateAtMidnight(today, zone: zone))!, zone: zone)
         if target == yesterday { return .yesterday }
-        // Foundation 의 weekday 컴포넌트는 일=1…토=7 이라 코틀린 DayOfWeek.value(월=1…일=7)로 바꾼다.
-        let foundationWeekday = calendar(zone: zone).component(.weekday, from: dateAtMidnight(target, zone: zone))
-        let weekday = foundationWeekday == 1 ? 7 : foundationWeekday - 1
+        // Foundation 의 weekday 컴포넌트는 일=1…토=7 이라 코틀린 DayOfWeek.value(월=1…일=7)로 바꾼다
+        // (`CalendarMath.weekday` — 이 변환 자체는 `CalendarMathTests` 가 7일 전부를 못박는다).
+        let weekday = CalendarMath.weekday(target, zone: zone)
         return .date(month: target.month, day: target.day, weekday: weekday)
     }
 
