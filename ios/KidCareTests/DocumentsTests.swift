@@ -48,4 +48,24 @@ struct DocumentsTests {
         #expect(doc.role == .child)
         #expect(doc.createdByUid == "")
     }
+
+    // MemberDoc 만 이 스타일로 못 박혀 있었다 — FamilyDoc 과 InviteCodeDoc 도
+    // 똑같이 Firestore 에 쓰이는데 필드 집합이 하나도 테스트로 안 잠겨 있었다.
+    // hasOnly() 를 쓰는 update 규칙들과 직접 맞물리는 건 아니지만(finding 11 —
+    // 이 두 문서의 create 경로 자체가 그 검사를 맞지 않는다), "무엇이 나가는가"를
+    // 손으로 확인할 수 있어야 한다는 Documents.swift 의 이유는 세 구조체 모두에
+    // 똑같이 적용된다.
+    @Test("FamilyDoc 쓰기는 선언한 필드만 내보낸다")
+    func 가족문서_쓰기는_필드를_안_늘린다() {
+        let doc = FamilyDoc(name: "우리 가족", createdAt: 1, ownerUid: "U1", schemaVersion: 2)
+        let keys = Set(doc.firestoreData.keys)
+        #expect(keys == ["name", "createdAt", "inviteCode", "inviteExpiresAt", "ownerUid", "schemaVersion", "primaryChildUid"])
+    }
+
+    @Test("InviteCodeDoc 쓰기는 선언한 필드만 내보낸다")
+    func 초대코드문서_쓰기는_필드를_안_늘린다() {
+        let doc = InviteCodeDoc(familyId: "F1", expiresAt: 1, role: .child, createdByUid: "U1")
+        let keys = Set(doc.firestoreData.keys)
+        #expect(keys == ["familyId", "expiresAt", "role", "createdByUid"])
+    }
 }
