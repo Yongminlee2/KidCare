@@ -51,9 +51,18 @@ enum RoutePathRefiner {
     /// 합친다. 이동 속도가 빠를 때는 필터가 즉시 따라가도록 과정 잡음을 높여 자동차나
     /// 급회전 경로가 둥글게 잘려 나가지 않게 한다.
     static func refine(points: [Fix]) -> [Leg] {
+        // `sorted(by:)` 는 안정 정렬을 보장하지 않는다(코틀린 `sortedBy` 는 보장한다).
+        // 같은 시각(at)의 콜백이 실제로 들어온다(:70 참고) — 원래 순서를 인덱스로
+        // 함께 정렬해 동률일 때도 입력 순서가 그대로 유지되도록 계약으로 못박는다.
         let sorted = points
             .filter(isUsable)
-            .sorted { $0.at < $1.at }
+            .enumerated()
+            .sorted { lhs, rhs in
+                lhs.element.at != rhs.element.at
+                    ? lhs.element.at < rhs.element.at
+                    : lhs.offset < rhs.offset
+            }
+            .map(\.element)
         if sorted.isEmpty { return [] }
         let cleaned = removeIsolatedSpikes(sorted)
 

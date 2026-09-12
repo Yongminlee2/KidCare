@@ -41,7 +41,17 @@ enum RouteWindows {
     /// 데이터) 창끼리는 겹치지 않게 잘라, 한 점이 두 선에 이중으로 그려지는 일은 없다.
     static func partition(moves: [Range<Int64>]) -> [Range<Int64>] {
         guard !moves.isEmpty else { return [] }
-        let sorted = moves.sorted { $0.lowerBound < $1.lowerBound }
+        // `sorted(by:)` 는 안정 정렬을 보장하지 않는다(코틀린 `sortedBy` 는 보장한다).
+        // 겹치는 입력(비정상 데이터)은 lowerBound 가 같을 수 있으므로, 원래 순서를
+        // 인덱스로 함께 정렬해 동률일 때도 입력 순서가 그대로 유지되도록 계약으로 못박는다.
+        let sorted = moves
+            .enumerated()
+            .sorted { lhs, rhs in
+                lhs.element.lowerBound != rhs.element.lowerBound
+                    ? lhs.element.lowerBound < rhs.element.lowerBound
+                    : lhs.offset < rhs.offset
+            }
+            .map(\.element)
         return sorted.indices.map { index in
             let lo: Int64
             if index == sorted.startIndex {

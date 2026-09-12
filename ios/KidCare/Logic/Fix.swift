@@ -5,8 +5,12 @@ import Foundation
 /// 정본은 안드로이드 `logic/LocationFilter.kt` 의 `Fix` 다. 이 타입을 담는
 /// `LocationFilter`·`SegmentBuilder` 자체는 아이 폰(안드로이드) 전용이라 옮기지
 /// 않는다 — 여기서는 두 로직이 주고받는 값 모양만 가져온다. 그래서 `accuracy` 는
-/// 코틀린의 `Float` 대신 스위프트 쪽 표준인 `Double` 로, `speedAccuracy` 는 아예
-/// 없다 — 둘 다 `LocationFilter` 의 판정 로직에서만 쓰이는데 그 로직이 여기 없다.
+/// 코틀린의 `Float` 대신 스위프트 쪽 표준인 `Double` 로 넓힌다. `speedAccuracy` 는
+/// 아예 없다 — `LocationFilter` 의 판정 로직에서만 쓰이는데 그 로직이 여기 없어서다.
+/// `accuracy` 는 사정이 다르다: `RoutePathRefiner.swift` 가 50m 게이트(:111)·12m
+/// 종점 게이트(:133)·칼만 측정 분산(:171, 제곱해서 쓴다) 세 곳에서 그대로 쓰므로
+/// 여기 있어야 한다 — 다만 그 계산들도 `Float` 정밀도로 갈릴 값이 아니라서 `Double`
+/// 로 넓혀도 안전하다.
 struct Fix {
     let lat: Double
     let lng: Double
