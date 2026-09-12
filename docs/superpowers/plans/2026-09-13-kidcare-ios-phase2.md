@@ -568,11 +568,13 @@ Expected: `1024 x 1024, 8-bit/color RGB` — **RGBA 가 아니어야 한다.** R
 ```bash
 export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH"
 cd ios && xcodebuild -project KidCare.xcodeproj -scheme KidCare \
-  -destination 'id=6C5120C8-779D-5250-AB4C-B152B9A648A2' \
+  -destination 'id=<DEVICE_UDID>' \
   -derivedDataPath /tmp/kidcare-device -allowProvisioningUpdates build
-xcrun devicectl device install app --device 6C5120C8-779D-5250-AB4C-B152B9A648A2 \
+xcrun devicectl device install app --device <DEVICE_UDID> \
   /tmp/kidcare-device/Build/Products/Debug-iphoneos/KidCare.app
 ```
+
+`<DEVICE_UDID>` 는 실기기 고유 식별자다 — 붙여 넣지 말고 `xcrun devicectl list devices` 로 매번 직접 찾는다.
 
 그다음 홈 화면을 확인한다. **실기기 화면은 직접 볼 수 없으므로**, `KidCareUITests` 로 앱을 띄워 스크린샷을 찍어도 홈 화면은 안 나온다 — 아이콘 확인은 사람이 해야 한다. 대신 **시뮬레이터에서는 확인할 수 있다**: 시뮬레이터에 설치한 뒤 홈 버튼(`xcrun simctl ui <udid> ...` 로는 안 되므로) 대신 `xcrun simctl get_app_container` 로 설치를 확인하고, `.app/AppIcon60x60@2x.png` 같은 생성물이 번들에 들어갔는지로 검증한다.
 
