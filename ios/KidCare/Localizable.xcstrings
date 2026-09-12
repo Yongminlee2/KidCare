@@ -199,6 +199,17 @@
         }
       }
     },
+    "pairing_reset" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "역할 다시 고르기"
+          }
+        }
+      }
+    },
     "role_child" : {
       "extractionState" : "manual",
       "localizations" : {
