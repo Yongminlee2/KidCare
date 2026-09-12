@@ -162,7 +162,9 @@ enum RoutePathRefiner {
             lng += gain * (fix.lng - lng)
             variance *= 1.0 - gain
             at = fix.at
-            return Fix(lat: lat, lng: lng, accuracy: fix.accuracy, at: fix.at)
+            // 코틀린의 `fix.copy(lat = lat, lng = lng)` 와 같다 — 좌표만 평활하고
+            // speed 를 포함한 나머지 필드는 원본 그대로 들고 간다.
+            return Fix(lat: lat, lng: lng, accuracy: fix.accuracy, at: fix.at, speed: fix.speed)
         }
 
         private func normalizedAccuracy(_ fix: Fix) -> Double {

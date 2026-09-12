@@ -10,6 +10,19 @@ struct LogicTypesTests {
         #expect(f.speed == 0)
     }
 
+    @Test("Fix 의 speed 는 값을 그대로 담는다")
+    func fix_속도_설정() {
+        // 회귀 테스트: `let speed: Double = 0` 처럼 선언부에 기본값을 준 저장
+        // 프로퍼티는 스위프트가 memberwise 초기화 목록에서 통째로 빼버려(직접
+        // 확인함 — `Fix(..., speed: 5)` 가 "extra argument" 컴파일 에러였다)
+        // speed 가 절대 설정되지 않는 결함이 있었다. "필드가 있다"만 확인하는
+        // 테스트는 이런 결함을 못 잡으므로, 여기서는 넣은 값이 그대로 나오는지
+        // 값 자체를 확인한다 — `RoutePathRefiner.kt:137` 이 이 값으로 평활 필터의
+        // 과정 잡음을 키우므로, 설정이 안 되면 안드로이드와 다른 경로선이 그려진다.
+        let f = Fix(lat: 37.5, lng: 127.0, accuracy: 12, at: 1_757_000_000_000, speed: 7.5)
+        #expect(f.speed == 7.5)
+    }
+
     @Test("Segment 는 머무름과 이동을 구분한다")
     func segment_종류() {
         let s = Segment(type: .stay, startAt: 1, endAt: 2, lat: 37.5, lng: 127.0,

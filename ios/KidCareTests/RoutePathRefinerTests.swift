@@ -12,20 +12,22 @@ struct RoutePathRefinerTests {
 
     private let coordinateTolerance = 1e-9
 
-    // `Fix.speed` 는 이 타입의 표준 초기화 구문(memberwise init)에서 늘 0 으로
-    // 고정된다 — 상수 기본값이 있는 `let` 저장 프로퍼티는 스위프트가 초기화 목록에
-    // 아예 넣어주지 않는다(직접 확인: `Fix(lat:lng:accuracy:at:speed:)` 는 컴파일
-    // 에러다). 코틀린 테스트도 매 케이스 speed 기본값이 1.2 인데, 평활기의
-    // processSpeed 는 `max(BASE_PROCESS_SPEED_MPS=4.0, speed)` 라서 1.2 는 4.0 에
-    // 묻혀 어차피 결과에 영향을 주지 못한다 — 즉 0 과 1.2 는 이 테스트들에서 관측
-    // 가능한 차이가 없다. 그래서 speed 파라미터 없이 옮겨도 코틀린과 같은 결과가
-    // 나온다.
-    private func fix(at: Int64, east: Double, accuracy: Double = 10) -> Fix {
+    // 코틀린 테스트의 기본 speed(1.2)를 그대로 옮긴다. `Fix.init` 의 `speed` 기본
+    // 인자로 실제로 설정 가능하다(예전에는 `let speed: Double = 0` 선언부 기본값
+    // 때문에 스위프트가 memberwise 초기화 목록에서 이 필드를 통째로 빼버려 항상
+    // 0으로 고정돼 있었다 — `Fix.swift` 의 "반드시 설정 가능해야 하는 이유" 주석
+    // 참고). 대부분의 케이스에서 1.2 는 `BASE_PROCESS_SPEED_MPS`(4.0) 보다 작아
+    // `max(4.0, speed)` 에 묻히므로 관측 가능한 차이가 없다 — 그래서 대다수 케이스는
+    // 코틀린과 동일한 결과를 낸다. speed 차이가 실제로 드러나는 경우는 아래
+    // `평활 필터는 속도가 빠를수록 원시 좌표를 더 강하게 따라간다` 케이스에서 따로
+    // BASE_PROCESS_SPEED_MPS 를 넘는 speed 를 명시적으로 준다.
+    private func fix(at: Int64, east: Double, accuracy: Double = 10, speed: Double = 1.2) -> Fix {
         Fix(
             lat: 37.5665,
             lng: 126.9780 + east / 88_800.0,
             accuracy: accuracy,
-            at: at
+            at: at,
+            speed: speed
         )
     }
 
@@ -88,5 +90,37 @@ struct RoutePathRefinerTests {
         ).first?.points ?? []
 
         #expect(refined.count == 3)
+    }
+
+    // 코틀린 원본에는 없는, 이 포팅 과정에서 실제로 터진 결함을 고정하는 회귀
+    // 테스트다: `Fix.speed` 가 한동안 memberwise 초기화 목록에서 빠져 있어 항상
+    // 0으로 고정됐었다(자세한 경위는 `Fix.swift`, git 커밋 로그 참고). 위 6개
+    // 케이스는 전부 speed 기본값(1.2)이 `BASE_PROCESS_SPEED_MPS`(4.0) 문턱 아래라
+    // 그 결함이 있어도 통과했다 — 즉 "포팅한 테스트가 전부 통과한다"는 이 결함을
+    // 못 잡는다. 여기서는 문턱을 넘는 speed 를 줘서 `RoutePathRefiner.kt:137` 의
+    // `processSpeed = max(BASE_PROCESS_SPEED_MPS, fix.speed)` 가 실제로 평활 결과에
+    // 반영되는지를 직접 확인한다.
+    @Test("평활 필터는 속도가 빠를수록 원시 좌표를 더 강하게 따라간다")
+    func 평활_필터는_속도가_빠를수록_원시_좌표를_더_강하게_따라간다() {
+        // 좌표·시각·정확도는 두 시퀀스가 완전히 같고 p1 의 speed 만 다르다 — 다른
+        // 경로가 아니라 같은 경로를 다른 속도로 지나갈 때의 차이만 보려는 것이다.
+        func points(speedAtSecondPoint: Double) -> [Fix] {
+            [
+                fix(at: 1_000, east: 0.0, accuracy: 20, speed: 0),
+                fix(at: 6_000, east: 20.0, accuracy: 20, speed: speedAtSecondPoint),
+                fix(at: 11_000, east: 5.0, accuracy: 20, speed: 0),
+                fix(at: 16_000, east: 25.0, accuracy: 20, speed: 0),
+            ]
+        }
+
+        let slow = RoutePathRefiner.refine(points: points(speedAtSecondPoint: 0)).first?.points ?? []
+        let fast = RoutePathRefiner.refine(points: points(speedAtSecondPoint: 30)).first?.points ?? []
+
+        #expect(slow.count == 4)
+        #expect(fast.count == 4)
+        // p1 은 첫 점(그대로 유지)도, 정확한 마지막 점(그대로 유지되는 경우)도
+        // 아니라서 두 시퀀스의 speed 차이가 그대로 평활 결과 차이로 드러나야 한다.
+        // speed 가 무시된다면(과거의 결함처럼) 이 값은 완전히 같아진다.
+        #expect(abs(slow[1].lng - fast[1].lng) > coordinateTolerance)
     }
 }
