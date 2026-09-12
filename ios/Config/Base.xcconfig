@@ -1,0 +1,6 @@
+// Secrets.xcconfig 가 없어도 빌드는 되게 한다 — 키스토어가 없는 기계에서 안드로이드
+// assembleDebug 가 도는 것과 같은 이유다. 대신 키가 비면 지도를 켜는 순간 크게
+// 실패한다(KidCareApp 의 검사). 조용히 빈 지도를 보여주는 것이 최악이다.
+#include? "Secrets.xcconfig"
+
+NAVER_MAP_NCP_KEY_ID = $(inherited)

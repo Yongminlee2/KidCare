@@ -6,6 +6,8 @@ keystore.properties
 *.jks
 *.keystore
 google-services.json
+GoogleService-Info.plist
+Secrets.xcconfig
 .gradle/
 build/
 .kotlin/

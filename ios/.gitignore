@@ -1,0 +1,12 @@
+# 생성물. project.yml 이 정본이라 .xcodeproj 는 커밋하지 않는다.
+KidCare.xcodeproj/
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# 비밀. 안드로이드의 local.properties 와 같은 대우다 — 저장소에는 키도 값도 남지 않는다.
+Config/Secrets.xcconfig
+KidCare/GoogleService-Info.plist
+
+.DS_Store

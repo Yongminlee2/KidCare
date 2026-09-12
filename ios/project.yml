@@ -1,0 +1,76 @@
+name: KidCare
+
+options:
+  bundleIdPrefix: com.kidcare
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: 12.0.0
+  # 안드로이드가 쓰는 버전과 정확히 같은 값이다(gradle/libs.versions.toml 의 naverMap).
+  # 버전이 갈리면 타일과 좌표계 차이로 두 폰이 같은 자리를 다르게 그리는 날이 온다.
+  NMapsMap:
+    url: https://github.com/navermaps/SPM-NMapsMap
+    exactVersion: 3.23.3
+
+targets:
+  KidCare:
+    type: application
+    platform: iOS
+    sources:
+      - path: KidCare
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kidcare.family
+        GENERATE_INFOPLIST_FILE: "NO"
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: KidCare/Info.plist
+      properties:
+        CFBundleDisplayName: 우리아이 지킴이
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        # 네이버 SDK 가 이 이름 그대로 읽는다. 값은 Base.xcconfig → Secrets.xcconfig 에서 온다.
+        NMFNcpKeyId: $(NAVER_MAP_NCP_KEY_ID)
+    dependencies:
+      - package: Firebase
+        product: FirebaseAuth
+      - package: Firebase
+        product: FirebaseFirestore
+      - package: NMapsMap
+        product: NMapsMap
+
+  KidCareTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: KidCareTests
+    settings:
+      base:
+        # 테스트 타깃용 Info.plist 파일을 따로 두지 않는다. XcodeGen 2.46.0 은
+        # info.path 가 없어도 이 값을 자동으로 YES 로 채우지 않아, 이 줄이 없으면
+        # 코드 서명 단계에서 "Info.plist 가 없다"는 에러로 빌드가 멈춘다.
+        GENERATE_INFOPLIST_FILE: "YES"
+    dependencies:
+      - target: KidCare
+
+schemes:
+  KidCare:
+    build:
+      targets:
+        KidCare: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - KidCareTests
