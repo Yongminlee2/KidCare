@@ -60,21 +60,46 @@ class GoldenFileWriterTest {
         else -> error("골든 JSON 라이터가 ${value::class} 를 모른다")
     }
 
-    private fun repoRoot(): File {
+    /**
+     * `ios/` 가 없으면(희소 체크아웃, ios 를 뺀 아카이브, 읽기전용 CI 마운트 등)
+     * `null` 을 돌려준다 — 더 이상 여기서 죽지 않는다. 예전에는 이 함수가 없으면
+     * `error()` 로 죽었는데, 그 호출이 `writeIfChanged(goldenFile(...), toJson(generate...()))`
+     * 처럼 인자로 얽혀 있어서 `generate*()`(그 안의 `check()` 자체 검증 포함)가 아예
+     * 실행되지 못한 채 안드로이드 전용 실행 환경이 죽는 원인이 됐다 — 지금은 각
+     * `@Test` 가 `generate*()` 결과를 먼저 지역 변수로 평가한 다음에만 이 함수를
+     * 부르므로, 생성·검증은 `ios/` 유무와 무관하게 항상 실행된다.
+     */
+    private fun repoRoot(): File? {
         var dir = File(System.getProperty("user.dir") ?: ".").absoluteFile
         while (true) {
             if (File(dir, "settings.gradle.kts").exists() && File(dir, "ios").isDirectory) return dir
-            dir = dir.parentFile ?: error("저장소 루트를 못 찾았다 (settings.gradle.kts 와 ios/ 가 있는 폴더가 없다)")
+            dir = dir.parentFile ?: return null
         }
     }
-
-    private fun goldenFile(name: String): File = File(repoRoot(), "ios/KidCareTests/golden/$name.json")
 
     /** 내용이 이미 같으면 다시 쓰지 않는다 — git diff 를 매 실행마다 더럽히지 않으려고. */
     private fun writeIfChanged(file: File, content: String) {
         file.parentFile?.mkdirs()
         if (file.exists() && file.readText() == content) return
         file.writeText(content)
+    }
+
+    /**
+     * `content` 는 이미 다 계산된 값이어야 한다(호출부에서 `generate*()` 를 먼저 지역
+     * 변수로 평가해 두는 이유). `ios/` 를 못 찾으면 파일 쓰기만 건너뛰고 로그를 남긴다 —
+     * 생성·자체 검증은 이 함수 호출 전에 이미 끝나 있으므로 여기서는 안 죽는다.
+     */
+    private fun writeGoldenIfPresent(name: String, content: String) {
+        val root = repoRoot()
+        if (root == null) {
+            println(
+                "[GoldenFileWriterTest] ios/ 디렉터리를 못 찾아 golden/$name.json 쓰기를 건너뛴다" +
+                    " (희소 체크아웃 · ios 를 뺀 아카이브 · 읽기전용 CI 마운트 등을 가정한다)." +
+                    " 생성과 자체 검증(check)은 이미 정상적으로 끝났다.",
+            )
+            return
+        }
+        writeIfChanged(File(root, "ios/KidCareTests/golden/$name.json"), content)
     }
 
     // ==================================================================
@@ -87,7 +112,7 @@ class GoldenFileWriterTest {
             "resolve" to generateScheduleResolver(),
             "overlaps" to generateScheduleResolverOverlaps(),
         )
-        writeIfChanged(goldenFile("scheduleResolver"), toJson(payload))
+        writeGoldenIfPresent("scheduleResolver", toJson(payload))
     }
 
     private fun generateScheduleResolver(): List<Map<String, Any?>> {
@@ -316,7 +341,8 @@ class GoldenFileWriterTest {
 
     @Test
     fun `골든 - RoutePathRefiner`() {
-        writeIfChanged(goldenFile("routePathRefiner"), toJson(generateRoutePathRefiner()))
+        val payload = generateRoutePathRefiner()
+        writeGoldenIfPresent("routePathRefiner", toJson(payload))
     }
 
     private val baseLat = 37.5665
@@ -603,7 +629,8 @@ class GoldenFileWriterTest {
 
     @Test
     fun `골든 - KoreanHolidays`() {
-        writeIfChanged(goldenFile("koreanHolidays"), toJson(generateKoreanHolidays()))
+        val payload = generateKoreanHolidays()
+        writeGoldenIfPresent("koreanHolidays", toJson(payload))
     }
 
     /**
@@ -650,7 +677,8 @@ class GoldenFileWriterTest {
 
     @Test
     fun `골든 - SegmentSummarizer`() {
-        writeIfChanged(goldenFile("segmentSummarizer"), toJson(generateSegmentSummarizer()))
+        val payload = generateSegmentSummarizer()
+        writeGoldenIfPresent("segmentSummarizer", toJson(payload))
     }
 
     private fun parseDurationText(text: String): Map<String, Any?> {
@@ -756,7 +784,8 @@ class GoldenFileWriterTest {
 
     @Test
     fun `골든 - RouteWindows`() {
-        writeIfChanged(goldenFile("routeWindows"), toJson(generateRouteWindows()))
+        val payload = generateRouteWindows()
+        writeGoldenIfPresent("routeWindows", toJson(payload))
     }
 
     private fun generateRouteWindows(): List<Map<String, Any?>> {
