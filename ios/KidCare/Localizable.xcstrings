@@ -1,0 +1,39 @@
+{
+  "sourceLanguage" : "ko",
+  "strings" : {
+    "family_default_name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "우리 가족"
+          }
+        }
+      }
+    },
+    "role_child" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아이"
+          }
+        }
+      }
+    },
+    "role_guardian" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보호자"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -54,8 +54,17 @@ enum FirebaseBootstrap {
         // 캐시를 메모리로 둔다. 디스크 캐시가 남으면 다음 테스트가 앞 테스트의
         // 문서를 "서버에 있는 것"으로 착각한다. useEmulator 뒤에 설정을 바꿔야
         // 한다 — 순서가 바뀌면 Firestore 가 "이미 시작됐다"며 막는다.
+        //
+        // **isSSLEnabled 를 직접 꺼야 한다.** useEmulator(withHost:port:) 는 host 만
+        // 바꾸고 SSL 기본값(켜짐)은 그대로 둔다(Firebase iOS SDK 12.19.0 소스로 확인:
+        // FIRFirestore.mm 의 useEmulatorWithHost:port: 는 host 필드만 손댄다).
+        // 에뮬레이터는 평문 gRPC 라서, 이 줄이 없으면 클라이언트가 TLS 핸드셰이크를
+        // 시도하다 실패하고 백오프하며 영원히 재시도한다 — 크래시도, 에러 로그도
+        // 눈에 띄게 뜨지 않아서(같은 메시지가 로그에 조용히 반복될 뿐) 테스트가
+        // "멈춘 것"과 구분이 안 된다.
         let settings = Firestore.firestore().settings
         settings.cacheSettings = MemoryCacheSettings()
+        settings.isSSLEnabled = false
         Firestore.firestore().settings = settings
 
         configured = true
