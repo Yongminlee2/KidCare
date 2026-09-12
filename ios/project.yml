@@ -23,9 +23,17 @@ settings:
     DEVELOPMENT_LANGUAGE: ko
 
 packages:
+  # 떠 있는 from: 12.0.0 이면 새로 클론한 사람은 그날 나온 최신 12.x 를 받는다.
+  # FirebaseBootstrap.swift 의 에뮬레이터 전환(isSSLEnabled 를 직접 꺼야 하는 것,
+  # useEmulator 가 host 만 바꾸는 것)은 Firebase iOS SDK 12.19.x 소스를 읽고 확인한
+  # 동작이다 — 13.x 로 조용히 올라가면 그 확인이 더 이상 맞다는 보장이 없고, 깨지는
+  # 방식이 "에뮬레이터로 TLS 핸드셰이크를 시도하다 조용히 재시도만 반복"이라 원인을
+  # 찾는 데 20분이 그대로 걸렸다(실제로 겪은 일). NMapsMap 처럼 정확한 버전을 못
+  # 박는다 — Package.resolved(이 파일은 .xcodeproj 안에 있어 gitignore 로 커밋되지
+  # 않는다)에 실제로 잡혀 있던 값 그대로다.
   Firebase:
     url: https://github.com/firebase/firebase-ios-sdk
-    from: 12.0.0
+    exactVersion: 12.19.1
   # 안드로이드가 쓰는 버전과 정확히 같은 값이다(gradle/libs.versions.toml 의 naverMap).
   # 버전이 갈리면 타일과 좌표계 차이로 두 폰이 같은 자리를 다르게 그리는 날이 온다.
   NMapsMap:
