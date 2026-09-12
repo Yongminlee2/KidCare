@@ -422,10 +422,17 @@ struct LogicTypesTests {
 
 - [ ] **Step 2: 생성기를 돌려 파일을 만든다**
 
-Run: `cd /Users/com/work/KidCare && ./gradlew :app:testDebugUnitTest --tests '*GoldenFileWriterTest'`
+```bash
+export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH"
+export JAVA_HOME="/opt/homebrew/opt/openjdk@21"
+cd /Users/com/work/KidCare && ./gradlew :app:testDebugUnitTest -x processDebugGoogleServices --tests '*GoldenFileWriterTest'
+```
+
 Expected: `ios/KidCareTests/golden/` 에 JSON 다섯 개가 생긴다.
 
-> 이 기계에는 Android SDK 가 없어 `local.properties` 의 `sdk.dir` 이 필요할 수 있다. 안 되면 **멈추고 보고한다** — 임의로 SDK를 설치하지 않는다.
+> **`-x processDebugGoogleServices` 를 반드시 붙인다.** 이 클론에는 `app/google-services.json` 이 없고(gitignore 대상), 그게 없으면 Google Services 플러그인이 빌드를 세운다. 순수 JVM 단위 테스트는 그 파일이 필요 없으므로 그 태스크만 건너뛴다. **더미 `google-services.json` 을 만들지 않는다** — 나중에 그 파일로 APK 를 만들면 Firebase 에 연결되지 않는 앱이 조용히 나온다.
+>
+> Android SDK 는 이미 설치돼 있고 `local.properties` 에 `sdk.dir` 이 적혀 있다(gitignore 대상). 그래도 안 되면 **멈추고 보고한다**.
 
 - [ ] **Step 3: Swift 대조 테스트를 쓴다**
 
