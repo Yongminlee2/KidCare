@@ -1,6 +1,28 @@
 {
   "sourceLanguage" : "ko",
   "strings" : {
+    "dialog_cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "취소"
+          }
+        }
+      }
+    },
+    "dialog_ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확인"
+          }
+        }
+      }
+    },
     "family_default_name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8,6 +30,149 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "우리 가족"
+          }
+        }
+      }
+    },
+    "guardian_start_join_family" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가족에 합류하기"
+          }
+        }
+      }
+    },
+    "guardian_start_new_family" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 가족 만들기"
+          }
+        }
+      }
+    },
+    "guardian_start_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "어떻게 시작할까요?"
+          }
+        }
+      }
+    },
+    "invite_code_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 코드를 상대 폰에 넣어 주세요. 10분 동안 쓸 수 있어요."
+          }
+        }
+      }
+    },
+    "ios_child_unsupported_body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아이 폰에 필요한 소리 전환과 핸드폰 찾기는 아이폰에서 만들 수 없어요. 아이 폰에는 안드로이드용 앱을 설치해 주세요."
+          }
+        }
+      }
+    },
+    "ios_child_unsupported_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아이 폰은 안드로이드만 지원해요"
+          }
+        }
+      }
+    },
+    "join_family_code_placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ABC234"
+          }
+        }
+      }
+    },
+    "join_family_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다른 폰에 뜬 6자리 코드를 넣어 주세요"
+          }
+        }
+      }
+    },
+    "join_family_submit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "합류하기"
+          }
+        }
+      }
+    },
+    "pairing_error_expired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "코드가 만료됐어요. 새 코드를 받아 주세요."
+          }
+        }
+      }
+    },
+    "pairing_error_not_found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "그런 코드가 없어요. 다시 확인해 주세요."
+          }
+        }
+      }
+    },
+    "pairing_error_offline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인터넷에 연결되어 있지 않아요."
+          }
+        }
+      }
+    },
+    "pairing_error_wrong_role" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 코드는 다른 역할용이에요."
           }
         }
       }
@@ -30,6 +195,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "보호자"
+          }
+        }
+      }
+    },
+    "role_select_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 폰은 누구의 폰인가요?"
           }
         }
       }
