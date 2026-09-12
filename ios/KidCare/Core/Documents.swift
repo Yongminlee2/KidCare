@@ -164,7 +164,18 @@ struct ChildStatusDoc {
     var network: String
     /// **false(꺼짐)와 nil(모름)은 다른 말이다.** 옛 문서에는 이 칸이 아예 없다.
     var wifiOn: Bool?
+    /// **아이 폰 자기 시계**로 적은 마지막 신호 시각. 안드로이드 `Documents.kt`
+    /// 의 같은 필드 주석 참고 — 아이 폰 시계가 앞서 있으면 보호자 화면의
+    /// "지금 - lastSeenAt" 이 음수가 되어 "마지막 신호 -3분 전" 같은 문구가 뜬다.
     var lastSeenAt: Int64
+    /// 같은 순간을 **서버 시계**로 적은 값. `@ServerTimestamp`(안드로이드)가 쓰는
+    /// 값이라 아이 폰이 직접 쓰지 않는다 — 그래서 [lastSeenAt] 과 **단위가 다르다**
+    /// (여긴 Firestore `Timestamp`, 저긴 UTC 밀리초 `Int64`). 보호자 쪽
+    /// `FamilyRepository.serverNow` 도 서버 시각이라 이 필드와 빼면 스큐가 근본에서
+    /// 사라진다. 1단계 지도는 아직 이 필드를 안 쓴다 — 3단계 상태 카드가 "마지막
+    /// 신호 N분 전"을 계산할 때부터 쓴다. 옛 문서·옛 아이 폰에는 이 칸이 없을 수
+    /// 있어 옵셔널이다.
+    var lastSeenServerAt: Timestamp?
 
     init?(_ data: [String: Any]) {
         guard let lat = double(data["lat"]), let lng = double(data["lng"]) else { return nil }
@@ -179,5 +190,6 @@ struct ChildStatusDoc {
         network = data["network"] as? String ?? ""
         wifiOn = data["wifiOn"] as? Bool
         lastSeenAt = millis(data["lastSeenAt"]) ?? 0
+        lastSeenServerAt = data["lastSeenServerAt"] as? Timestamp
     }
 }
