@@ -17,4 +17,16 @@ struct LogicTypesTests {
         #expect(s.type == .stay)
         #expect(s.distanceMeters == 0)
     }
+
+    @Test("Segment 의 필드 집합은 nameLat/nameLng 없이 고정된다")
+    func segment_필드집합() {
+        // DocumentsTests 가 firestoreData.keys 로 내보내는 필드를 못박듯, 여기서는
+        // Segment 가 값 타입 자체에 어떤 필드를 갖는지 못박는다. nameLat/nameLng 를
+        // 도로 넣는 것은(코드 리뷰가 지적했듯 SegmentDoc 에 없는 값을 지어내게 되므로)
+        // 실수로 일어나면 안 되고, 넣는다면 이 테스트를 고치는 의식적인 행위여야 한다.
+        let s = Segment(type: .move, startAt: 1, endAt: 2, lat: 37.5, lng: 127.0,
+                        distanceMeters: 10, pointCount: 2)
+        let fields = Set(Mirror(reflecting: s).children.compactMap(\.label))
+        #expect(fields == ["type", "startAt", "endAt", "lat", "lng", "distanceMeters", "pointCount"])
+    }
 }
