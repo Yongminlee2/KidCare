@@ -88,7 +88,13 @@ final class NewFamilySession {
                 RoleStore.shared.familyId = familyId
             }
 
-            let now = Int64(Date().timeIntervalSince1970 * 1000)
+            // 만료 비교는 반드시 serverNow(서버 보정 시계)로 한다. 들고 있는
+            // `만료시각` 자체가 `FamilyRepository.createInvite` 안에서 serverNow
+            // 로 계산돼 나온 값이다 — 여기서 기기 시계로 비교하면, 폰 시계가
+            // 느린 만큼 이미 죽은 코드를 "아직 살아있다"고 오판한다. 그건
+            // serverNow 가 애초에 막으려던 것과 같은 실패(known-issues 2번,
+            // "만들자마자 죽은 코드")를 만료 쪽에서 다시 재현하는 셈이다.
+            let now = try await FamilyRepository.serverNow(familyId: familyId, uid: uid)
             if let 만료시각, 만료시각 > now {
                 // 들고 있는 코드가 아직 안 죽었다 — 다시 받을 필요 없다.
                 // 뒤로 나갔다 돌아온 것만으로 매번 새 코드를 발급하면, 이미

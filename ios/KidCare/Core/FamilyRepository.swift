@@ -75,15 +75,28 @@ enum FamilyRepository {
     /// 폰 시계가 15분 느리면 **만들자마자 죽은 코드**가 되고, 재발급해도 같은 시계를
     /// 쓰므로 영원히 죽은 코드만 나온다 — 화면에는 "만료됨"만 뜨고 원인은 아무 데도
     /// 안 남는다.
-    static func serverNow(familyId: String?, uid: String?) async -> Int64 {
+    ///
+    /// **반드시 취소를 완성시킨다.** 안드로이드 `FamilyRepository.serverNow` 의 같은
+    /// 이름 규율과 동일하다 — 시간 초과는 기기 시계로 물러나 값을 돌려주지만, 취소는
+    /// 값을 만들어 돌려주지 않고 다시 던진다. 이 함수가 `throws` 가 아니던 시절에는
+    /// 취소된 뒤에도 항상 정상값을 돌려줬다: `NewFamilySession.invalidate()` 가
+    /// `준비_작업` 을 취소해도 `createInvite` 안의 `await serverNow(...)` 가 그냥
+    /// 유효한 시각을 내놓고, 뒤이은 코드 충돌 루프와 `setData` 가 그대로 실행되어
+    /// 아무도 볼 일 없는 `inviteCodes/{code}` 문서가 10분 TTL을 꽉 채우고서야
+    /// 사라지는 결과로 이어졌다. `try Task.checkCancellation()` 을 맨 앞에 둬서,
+    /// 이미 취소된 채로 불린 호출은 서버를 다녀오지도 않고 곧바로 던진다.
+    static func serverNow(familyId: String?, uid: String?) async throws -> Int64 {
+        try Task.checkCancellation()
         if let offset = serverOffsetLock.withLock({ $0 }) { return deviceNow() + offset }
 
         let measured: Int64?
         do {
             measured = try await measureWithTimeout(familyId: familyId, uid: uid)
         } catch is CancellationError {
-            // 부른 쪽이 취소된 정상 종료다. 값을 캐시하지 않고 기기 시계를 준다.
-            return deviceNow()
+            // 부른 쪽이 취소된 정상 종료다 — 값을 캐시하지도, 기기 시계로 물러나
+            // 돌려주지도 않는다. 그대로 다시 던져 호출부(`createInvite`/`joinFamily`)
+            // 가 뒤이은 쓰기를 실행하지 못하게 막는다.
+            throw CancellationError()
         } catch {
             measured = nil
         }
@@ -181,7 +194,7 @@ enum FamilyRepository {
         previousCode: String?
     ) async throws -> InviteCodeInfo {
         let creatorUid = try await AuthGateway.uid()
-        let now = await serverNow(familyId: familyId, uid: creatorUid)
+        let now = try await serverNow(familyId: familyId, uid: creatorUid)
         let expiresAt = now + inviteTtlMillis
 
         // 6자리 충돌은 드물지만 다른 가족의 살아있는 코드를 덮어쓰면 안 된다.
@@ -230,7 +243,7 @@ enum FamilyRepository {
         guard let doc = InviteCodeDoc(codeDoc.data() ?? [:]) else { throw PairingError.notFound }
         guard doc.role == expectedRole else { throw PairingError.wrongRole }
 
-        let now = await serverNow(familyId: doc.familyId, uid: uid)
+        let now = try await serverNow(familyId: doc.familyId, uid: uid)
         guard doc.expiresAt > now else { throw PairingError.expired }
 
         let familyRef = db.collection("families").document(doc.familyId)
