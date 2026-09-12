@@ -4,3 +4,7 @@
 #include? "Secrets.xcconfig"
 
 NAVER_MAP_NCP_KEY_ID = $(inherited)
+
+// 실기기 설치용. 팀 ID 는 Secrets.xcconfig 에서만 읽는다 — 개인 계정 식별자라
+// 저장소에 남기지 않는다. 시뮬레이터 빌드는 서명이 필요 없어서 이 값이 비어도 된다.
+CODE_SIGN_STYLE = Automatic

@@ -82,6 +82,22 @@ targets:
     dependencies:
       - target: KidCare
 
+  # 실기기 전용 자동화. 기본 KidCare 스킴의 test 액션에 **넣지 않는다** —
+  # 시뮬레이터에서 돌 이유가 없고, 운영 Firebase 를 건드리므로 사람이 의도해서
+  # 별도 스킴으로 돌려야 한다.
+  KidCareUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: KidCareUITests
+    settings:
+      base:
+        # 테스트 번들은 Info.plist 를 커밋하지 않고 빌드할 때 만들게 둔다
+        # (KidCareTests 와 같은 이유).
+        GENERATE_INFOPLIST_FILE: "YES"
+    dependencies:
+      - target: KidCare
+
 schemes:
   KidCare:
     build:
@@ -93,3 +109,14 @@ schemes:
       config: Debug
       targets:
         - KidCareTests
+
+  # 실기기에서 사람 대신 화면을 눌러보는 스킴.
+  KidCareUITests:
+    build:
+      targets:
+        KidCare: all
+        KidCareUITests: [test]
+    test:
+      config: Debug
+      targets:
+        - KidCareUITests
