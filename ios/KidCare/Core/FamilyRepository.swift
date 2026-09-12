@@ -1,5 +1,6 @@
 import FirebaseFirestore
 import Foundation
+import os
 
 struct InviteCodeInfo {
     let code: String
@@ -19,17 +20,50 @@ enum PairingError: Error, Equatable {
     case wrongRole
 }
 
+/// 체크 continuation 을 딱 한 번만 resume 하게 지키는 최소 actor.
+///
+/// `measureWithTimeout` 이 측정 태스크와 시간 제한 태스크를 경주시키는데, 두 태스크
+/// 모두 자기가 끝나면 resume 을 시도한다 — 이긴 쪽만 실제로 continuation 을
+/// 건드려야 하고 진 쪽의 시도는 조용히 버려야 한다(continuation 을 두 번 resume
+/// 하면 그 자체가 런타임 크래시다). actor 격리 하나로 그 경합을 막는다.
+private actor ResumeOnce<T: Sendable> {
+    private var continuation: CheckedContinuation<T, Error>?
+
+    init(_ continuation: CheckedContinuation<T, Error>) {
+        self.continuation = continuation
+    }
+
+    func resume(_ result: Result<T, Error>) {
+        guard let continuation else { return }
+        self.continuation = nil
+        continuation.resume(with: result)
+    }
+}
+
 /// 가족 문서와 멤버·초대 코드를 다룬다. 정본은 안드로이드 `core/FamilyRepository.kt` 다.
 enum FamilyRepository {
 
     private static var db: Firestore { Firestore.firestore() }
 
     private static let inviteTtlMillis: Int64 = 10 * 60 * 1000
+    /// 서버 시각 보정을 포기하기까지. 안드로이드 예약 화면의 쓰기 제한시간
+    /// (`ScheduleFragment.WRITE_TIMEOUT_MILLIS`)과 일부러 같은 숫자다 — 둘 다
+    /// "오프라인이면 서버 확인이 영영 안 온다"는 같은 사실을 막는 장치라 서로 다른
+    /// 값을 쓸 이유가 없다. 근거 있는 값은 아니다(안드로이드 쪽과 같은
+    /// known-issues 항목).
     private static let measureTimeoutNanos: UInt64 = 15_000_000_000
 
     /// 기기 시계와 서버 시계의 차이(밀리초). 서버가 앞서면 양수다.
     /// 프로세스당 한 번만 재고 캐시한다.
-    nonisolated(unsafe) private static var serverOffsetMillis: Int64?
+    ///
+    /// **`nonisolated(unsafe)` 를 쓰지 않는다.** `Int64?` 는 원자적으로 읽고 쓸 수
+    /// 있는 크기가 아니다 — 페어링 태스크가 값을 쓰는 동안 지도 화면 태스크가
+    /// 읽으면 절반만 쓰인 값을 볼 수 있고, 그러면 `deviceNow() + 쓰레기` 가
+    /// `createInvite` 로 흘러가 규칙이 이유도 없이 거부하는 `expiresAt` 을 만든다.
+    /// 안드로이드는 `@Volatile` 로 이걸 막는다. 배포 대상이 iOS 17 이라 Swift 6 의
+    /// `Mutex`(iOS 18+)는 쓸 수 없어 `OSAllocatedUnfairLock`(iOS 16+)으로 같은
+    /// 보장을 준다.
+    private static let serverOffsetLock = OSAllocatedUnfairLock<Int64?>(initialState: nil)
 
     private static func deviceNow() -> Int64 {
         Int64(Date().timeIntervalSince1970 * 1000)
@@ -42,20 +76,11 @@ enum FamilyRepository {
     /// 쓰므로 영원히 죽은 코드만 나온다 — 화면에는 "만료됨"만 뜨고 원인은 아무 데도
     /// 안 남는다.
     static func serverNow(familyId: String?, uid: String?) async -> Int64 {
-        if let offset = serverOffsetMillis { return deviceNow() + offset }
+        if let offset = serverOffsetLock.withLock({ $0 }) { return deviceNow() + offset }
 
         let measured: Int64?
         do {
-            measured = try await withThrowingTaskGroup(of: Int64.self) { group in
-                group.addTask { try await measureServerOffset(familyId: familyId, uid: uid) }
-                group.addTask {
-                    try await Task.sleep(nanoseconds: measureTimeoutNanos)
-                    throw PairingError.offline
-                }
-                let first = try await group.next()!
-                group.cancelAll()
-                return first
-            }
+            measured = try await measureWithTimeout(familyId: familyId, uid: uid)
         } catch is CancellationError {
             // 부른 쪽이 취소된 정상 종료다. 값을 캐시하지 않고 기기 시계를 준다.
             return deviceNow()
@@ -64,12 +89,46 @@ enum FamilyRepository {
         }
 
         guard let offset = measured else {
-            // 시간 초과는 **캐시하지 않는다.** 0 을 굳히면 그 뒤 초대 코드 만료가
-            // 전부 기기 시계로 계산돼 "만들자마자 죽은 코드"가 되살아난다.
+            // 시간 초과든 진짜 실패든 **캐시하지 않는다** — 안드로이드와 의도적으로
+            // 다른 지점이다. 안드로이드(FamilyRepository.kt)는 시간 초과는 안 캐시하지만
+            // 진짜 실패(주로 "아직 멤버가 아니라 잴 문서가 없다")는 0 으로 캐시한다.
+            // 그런데 이 실패는 가입 전 첫 호출에서 거의 항상 일어나는 경우라, 0 을
+            // 굳히면 그 프로세스가 살아있는 내내 이후의 모든 초대·가입이 기기
+            // 시계로 계산된다 — 오프셋이 막아야 할 "만들자마자 죽은 코드"를 오프셋
+            // 자신이 다시 만드는 셈이다. 그래서 여기서는 두 경우 다 캐시하지 않고
+            // 다음 호출이 다시 잰다.
             return deviceNow()
         }
-        serverOffsetMillis = offset
+        serverOffsetLock.withLock { $0 = offset }
         return deviceNow() + offset
+    }
+
+    /// `measureServerOffset` 을 `withThrowingTaskGroup` 으로 시간 제한 하면 안 된다.
+    /// 구조적 동시성의 스코프 규칙상, 진 쪽(시간 초과 태스크)이 먼저 던지면 그룹은
+    /// 이긴 쪽(측정 태스크)을 취소한 **뒤 그 태스크가 끝나기를 기다렸다가** 다시
+    /// 던진다. 그런데 Firestore 의 async 브리지는 취소를 지원하지 않는 자리가 있어
+    /// (`updateData` 가 대표적) 오프라인에서는 그 태스크가 영영 안 끝난다 — 그러면
+    /// 그룹이 거기서 막혀 15초 시간 제한이 장식으로 전락한다. 그래서 비구조적
+    /// `Task` 둘을 직접 만들어 경주시키고, 먼저 끝난 쪽만 continuation 을 한 번
+    /// resume 한다. 진 태스크(대개 오프라인 상태로 영원히 매달린 Firestore 쓰기)는
+    /// 버려두고 계속 돌게 둔다 — 결과는 버린다. Firestore 쪽에 취소를 강제할
+    /// 방법이 없는 한 이게 유일한 탈출구다.
+    private static func measureWithTimeout(familyId: String?, uid: String?) async throws -> Int64 {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int64, Error>) in
+            let resumeOnce = ResumeOnce(continuation)
+            Task {
+                do {
+                    let value = try await measureServerOffset(familyId: familyId, uid: uid)
+                    await resumeOnce.resume(.success(value))
+                } catch {
+                    await resumeOnce.resume(.failure(error))
+                }
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: measureTimeoutNanos)
+                await resumeOnce.resume(.failure(PairingError.offline))
+            }
+        }
     }
 
     /// members/{uid} 의 updatedAt 에 서버 타임스탬프를 쓰고 **서버에서** 다시 읽는다.
@@ -181,21 +240,63 @@ enum FamilyRepository {
             : String(localized: "role_child")
         let name = trimmed.isEmpty ? fallback : String(trimmed.prefix(20))
 
-        try await familyRef.collection("members").document(uid).setData(
-            MemberDoc(role: doc.role, displayName: name, updatedAt: now, joinCode: normalized, joinedAt: now).firestoreData
-        )
+        do {
+            try await familyRef.collection("members").document(uid).setData(
+                MemberDoc(role: doc.role, displayName: name, updatedAt: now, joinCode: normalized, joinedAt: now).firestoreData
+            )
+        } catch {
+            let ns = error as NSError
+            guard ns.domain == FirestoreErrorDomain, ns.code == FirestoreErrorCode.permissionDenied.rawValue else {
+                throw error
+            }
+            // PERMISSION_DENIED 하나만으로는 "다른 사람이 이 코드를 먼저 썼다"와
+            // "운영 규칙이 아직 구버전이다"를 구분할 수 없다. 코드를 서버에서 다시
+            // 읽어 같은 가족·역할로 여전히 살아 있으면 만료가 아니라 규칙 게시
+            // 오류이므로 원래 에러를 그대로 다시 던진다 — 그래야 호출부가 "만료됨"
+            // 이라는 거짓 안내를 내보내지 않는다. 가입 첫 시도는 아직 멤버가
+            // 아니라 measureServerOffset 이 반드시 실패해 serverNow() 가 기기
+            // 시계로 물러나므로, 폰 시계가 조금만 빨라도 위의 클라이언트 쪽 만료
+            // 검사는 통과하고 규칙만 거부하는 경우가 실제로 흔하다 — 가정이 아니다.
+            let latestSnap = try? await codeRef.getDocument(source: .server)
+            let latestDoc = latestSnap.flatMap { InviteCodeDoc($0.data() ?? [:]) }
+            let stillValid = latestSnap?.exists == true
+                && latestDoc?.familyId == doc.familyId
+                && latestDoc?.role == expectedRole
+                && (latestDoc?.expiresAt ?? 0) > now
+            throw stillValid ? error : PairingError.expired
+        }
 
         try? await codeRef.delete()
         return JoinResult(familyId: doc.familyId, role: doc.role)
     }
 
     /// 가족의 자녀 uid 하나를 고른다. `preferred` 가 아직 멤버면 그것을 유지한다.
+    ///
+    /// 정렬 규칙은 안드로이드 `logic/ChildSelector.kt` 와 반드시 같아야 한다 — 같은
+    /// 가족, 같은 저장된 선호값인데 두 폰이 서로 다른 자녀를 고르면 Phase 3 지도가
+    /// 보호자마다 다른 아이를 보여준다. `ChildSelector` 는 가입 시각 오름차순 →
+    /// 표시 이름 → uid 순으로 고르고, 가입 시각이 0(옛 문서 등, "모름")이면
+    /// 가장 늦은 값으로 취급해 뒤로 보낸다. Phase 2 가 이 함수를 포팅된
+    /// `ChildSelector` 호출로 통째로 바꾸는데, 그때도 이 정렬은 그대로 유지해야
+    /// 한다 — 정렬 기준 자체가 두 플랫폼이 맞춰야 하는 계약이다.
     static func findChildUid(familyId: String, preferred: String?) async throws -> String? {
         let snap = try await db.collection("families").document(familyId)
             .collection("members").whereField("role", isEqualTo: MemberRole.child.rawValue).getDocuments()
-        let uids = snap.documents.map(\.documentID).sorted()
-        if let preferred, uids.contains(preferred) { return preferred }
-        return uids.first
+
+        let children: [(uid: String, member: MemberDoc)] = snap.documents.compactMap { doc in
+            guard let member = MemberDoc(doc.data()) else { return nil }
+            return (doc.documentID, member)
+        }
+
+        if let preferred, children.contains(where: { $0.uid == preferred }) { return preferred }
+
+        return children.min { a, b in
+            let aJoined = a.member.joinedAt > 0 ? a.member.joinedAt : Int64.max
+            let bJoined = b.member.joinedAt > 0 ? b.member.joinedAt : Int64.max
+            if aJoined != bJoined { return aJoined < bJoined }
+            if a.member.displayName != b.member.displayName { return a.member.displayName < b.member.displayName }
+            return a.uid < b.uid
+        }?.uid
     }
 
     /// 아이 상태 문서를 구독한다. 돌려받은 등록은 화면이 사라질 때 반드시 remove 한다.
