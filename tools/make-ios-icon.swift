@@ -71,9 +71,41 @@ guard let context = CGContext(
 
 // 안드로이드의 mascot_bg(#CFEDE7, 민트) 로 배경을 채운다 — 같은 앱이므로 아이콘도
 // 같은 배경색을 써야 한다.
-let backgroundColor = CGColor(red: 0xCF.cgFloatValue, green: 0xED.cgFloatValue, blue: 0xE7.cgFloatValue, alpha: 1.0)
+//
+// CGColor(red:green:blue:alpha:) 편의 생성자를 쓰면 안 된다 — 이 생성자는 감마 1.8
+// "제네릭" RGB 색공간에서 색을 만드는데, 우리가 그리는 컨텍스트(58행 colorSpace,
+// CGColorSpaceCreateDeviceRGB())는 디바이스 RGB다. 그리는 순간 감마 변환이 끼어들어
+// 요청한 (0xCF,0xED,0xE7) 대신 더 밝은 (215,240,236)=#D7F0EC 가 픽셀에 그대로 남는다
+// (실제로 그렇게 나왔던 회귀다). 컨텍스트와 같은 colorSpace 로 CGColor 를 만들어야
+// 성분 값이 그대로(색공간 변환 없이) 픽셀에 찍힌다.
+let backgroundColor = CGColor(
+    colorSpace: colorSpace,
+    components: [0xCF.cgFloatValue, 0xED.cgFloatValue, 0xE7.cgFloatValue, 1.0]
+)!
 context.setFillColor(backgroundColor)
 context.fill(CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize))
+
+// 배경색이 실제로 요청한 성분 그대로 픽셀에 박혔는지, 그린 직후 바로 읽어 확인한다.
+// 색공간이 조용히 바뀌는 회귀(위 74행 주석 참고)는 file 로도 sips 로도 안 보이고
+// 빌드도 안 걸린다 — 렌더링 직후 픽셀을 직접 읽는 것만이 잡아낸다. 마스코트를 그리기
+// 전, 배경만 채운 상태에서 확인해야 마스코트 색이 섞여 들어오지 않는다.
+func verifyBackgroundPixel(context: CGContext, x: Int, y: Int, expected: (UInt8, UInt8, UInt8)) {
+    guard let data = context.data else {
+        FileHandle.standardError.write("컨텍스트 픽셀 버퍼를 못 읽었습니다\n".data(using: .utf8)!)
+        exit(1)
+    }
+    let bytesPerPixel = context.bitsPerPixel / 8
+    let offset = (y * context.bytesPerRow) + (x * bytesPerPixel)
+    let pointer = data.assumingMemoryBound(to: UInt8.self)
+    let actual = (pointer[offset], pointer[offset + 1], pointer[offset + 2])
+    guard actual == expected else {
+        let message = "배경색이 요청한 값과 다릅니다: 실제=\(actual) 기대=\(expected) "
+            + "— CGColor 가 컨텍스트와 다른 색공간에서 만들어졌을 수 있다\n"
+        FileHandle.standardError.write(message.data(using: .utf8)!)
+        exit(1)
+    }
+}
+verifyBackgroundPixel(context: context, x: 0, y: 0, expected: (0xCF, 0xED, 0xE7))
 
 // 마스코트를 가운데, 80% 크기로 그린다.
 let artworkSide = CGFloat(canvasSize) * inset
