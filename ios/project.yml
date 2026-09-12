@@ -75,7 +75,18 @@ targets:
     type: bundle.unit-test
     platform: iOS
     sources:
+      # Swift 소스 글롭만으로는 golden/*.json 이 번들에 안 실린다 — 별도 리소스 빌드
+      # 페이즈로 명시해야 GoldenComparisonTests 가 런타임에 그 파일을 찾을 수 있다.
       - path: KidCareTests
+        excludes:
+          - "golden/**"
+      # type: folder 로 "폴더 참조"(파란 폴더)를 만든다 — 그래야 번들 안에서도
+      # golden/ 하위 디렉터리 구조가 그대로 유지된다. 기본값(그룹)으로 두면 파일들이
+      # 낱개로 번들 최상위에 펼쳐져 실려, Bundle.url(forResource:subdirectory:"golden")
+      # 가 못 찾는다.
+      - path: KidCareTests/golden
+        type: folder
+        buildPhase: resources
     settings:
       base:
         # 테스트 타깃용 Info.plist 파일을 따로 두지 않는다. XcodeGen 2.46.0 은
