@@ -10,6 +10,9 @@ import SwiftUI
 struct GuardianRootView: View {
 
     @State private var mapViewModel: MapViewModel
+    /// 관리 탭 뷰모델. 지도와 같은 이유로 탭 전환보다 오래 산다 — 안드로이드 관리 프래그먼트도
+    /// show/hide 로만 오가며 `settings/ringer` 리스너를 붙든 채 둔다(계획서 판정 기록 2).
+    @State private var controlViewModel: ControlViewModel
     /// 무응답 배너의 유일한 주인(안드로이드 `GuardianMainActivity` :53-56).
     @State private var banner: DisconnectBanner
     @Environment(\.scenePhase) private var scenePhase
@@ -24,6 +27,10 @@ struct GuardianRootView: View {
         map.대답이_기록되면 = { [weak banner] in banner?.다시_판정한다() }
         _mapViewModel = State(initialValue: map)
         _banner = State(initialValue: banner)
+        let control = ControlViewModel(familyId: familyId, childUid: childUid)
+        // 관리 탭의 대답도 배너를 곧바로 다시 판정하게 한다(ControlFragment.kt:747-750).
+        control.대답이_기록되면 = { [weak banner] in banner?.다시_판정한다() }
+        _controlViewModel = State(initialValue: control)
     }
 
     var body: some View {
@@ -40,7 +47,10 @@ struct GuardianRootView: View {
                 TabPlaceholderView(tab: .alert)
                     .tabItem { Label(GuardianTab.alert.title, systemImage: GuardianTab.alert.systemImage) }
                     .tag(GuardianTab.alert)
-                TabPlaceholderView(tab: .control)
+                ControlView(viewModel: controlViewModel)
+                    // 안드로이드는 관리 탭을 처음 보여줄 때 프래그먼트를 만들고 subscribe 한다
+                    // (showTab 의 tx.add :339-341). 두 번째부터는 뷰모델이 무시한다.
+                    .onAppear { controlViewModel.시작한다() }
                     .tabItem { Label(GuardianTab.control.title, systemImage: GuardianTab.control.systemImage) }
                     .tag(GuardianTab.control)
                 TabPlaceholderView(tab: .schedule)
@@ -65,6 +75,7 @@ struct GuardianRootView: View {
         .onDisappear {
             mapViewModel.명령_추적을_정리한다()
             mapViewModel.실시간_추적을_정리한다()
+            controlViewModel.정리한다()
         }
     }
 }
