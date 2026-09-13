@@ -443,6 +443,9 @@ enum CommandType {
     static let payloadAtMinuteOfDay = "atMinuteOfDay"
     static let payloadLabel = "label"
     static let errorAlarmExactDenied = "alarm_exact_denied"
+    /// 예약·장소를 바꾼 뒤 보낸다. 자녀 폰이 받으면 규칙과 장소를 **둘 다** 다시 읽고 알람·지오펜스를
+    /// 다시 건다(child/CommandHandler.kt:174-177). 정본은 `Documents.kt:222`.
+    static let syncRules = "sync_rules"
 }
 
 /// [CommandDoc.state] 값들. 정본은 안드로이드 `CommandState` 오브젝트.
@@ -493,5 +496,115 @@ struct RingerSettingsDoc {
         lockEnabled = data["lockEnabled"] as? Bool ?? false
         defaultMode = data["defaultMode"] as? String ?? ""
         holidayOff = data["holidayOff"] as? Bool ?? false
+    }
+}
+
+/// children/{childUid}/schedules/{id} — 시간대 규칙 하나. 정본은 안드로이드 `ScheduleDoc`
+/// (Documents.kt:348-369). 필드 이름·기본값이 그대로다. 필드가 빠진 옛 문서는 코틀린
+/// `toObject` 처럼 기본값으로 읽는다 — 특히 `enabled` 의 기본값은 true 다.
+///
+/// [id] 는 문서 ID 다. 본문의 `id` 필드는 읽지 않는다(안드로이드도 `copy(id = doc.id)` 로 덮는다).
+struct ScheduleDoc: Equatable {
+    var id: String
+    /// 1=월 … 7=일(`ScheduleRule.days` 와 같은 규칙). Firestore 는 배열을 목록으로 주므로 Set 이 아니다.
+    var days: [Int]
+    var startMinute: Int
+    var endMinute: Int
+    var mode: String
+    var enabled: Bool
+    /// 만든 순서대로 자동 부여한다. 화면에 절대 내보이지 않는다(ScheduleFragment.kt:75-79).
+    var priority: Int
+
+    init(id: String = "", days: [Int] = [], startMinute: Int = 0, endMinute: Int = 0,
+         mode: String = "", enabled: Bool = true, priority: Int = 0) {
+        self.id = id
+        self.days = days
+        self.startMinute = startMinute
+        self.endMinute = endMinute
+        self.mode = mode
+        self.enabled = enabled
+        self.priority = priority
+    }
+
+    init(id: String, _ data: [String: Any]) {
+        self.id = id
+        days = (data["days"] as? [Any] ?? []).compactMap { element in millis(element).map { Int($0) } }
+        startMinute = Int(millis(data["startMinute"]) ?? 0)
+        endMinute = Int(millis(data["endMinute"]) ?? 0)
+        mode = data["mode"] as? String ?? ""
+        enabled = data["enabled"] as? Bool ?? true
+        priority = Int(millis(data["priority"]) ?? 0)
+    }
+
+    /// 안드로이드 `saveSchedule` 은 `ref.set(doc.copy(id = ""))` 로 데이터 클래스를 통째로 넘기고,
+    /// `@Exclude` 가 없어 Firestore 가 `id` 까지 직렬화한다. 그 줄 주석("본문에는 담지 않는다")과
+    /// 달리 **본문에 `"id": ""` 가 실린다**(계획서 판정 기록 6). 스키마의 정본은 코드이므로 같은
+    /// 일곱 필드를 쓴다.
+    var firestoreData: [String: Any] {
+        [
+            "id": "",
+            "days": days,
+            "startMinute": startMinute,
+            "endMinute": endMinute,
+            "mode": mode,
+            "enabled": enabled,
+            "priority": priority,
+        ]
+    }
+
+    /// `ScheduleDoc.toRule()`(ScheduleRepository.kt:154-162) — 겹침 판정은 순수 모델로 한다.
+    var asRule: ScheduleRule {
+        ScheduleRule(id: id, days: Set(days), startMinute: startMinute, endMinute: endMinute,
+                     mode: mode, enabled: enabled, priority: priority)
+    }
+}
+
+/// children/{childUid}/places/{id} — 부모가 정한 장소 하나. 정본은 안드로이드 `PlaceDoc`
+/// (Documents.kt:371-396).
+///
+/// [radiusMeters] 의 기본값 0 은 "안 정해졌다"는 뜻이다. 자녀 폰은 그런 장소를 지오펜스로 걸지
+/// 않는다. 그럴듯한 200 을 기본으로 넣으면 필드가 빠진 문서가 부모가 정하지 않은 반경으로 조용히
+/// 동작한다(:380-383).
+struct PlaceDoc: Equatable {
+    var id: String
+    var name: String
+    var lat: Double
+    var lng: Double
+    var radiusMeters: Double
+    var notifyEnter: Bool
+    var notifyExit: Bool
+
+    init(id: String = "", name: String = "", lat: Double = 0, lng: Double = 0,
+         radiusMeters: Double = 0, notifyEnter: Bool = true, notifyExit: Bool = true) {
+        self.id = id
+        self.name = name
+        self.lat = lat
+        self.lng = lng
+        self.radiusMeters = radiusMeters
+        self.notifyEnter = notifyEnter
+        self.notifyExit = notifyExit
+    }
+
+    init(id: String, _ data: [String: Any]) {
+        self.id = id
+        name = data["name"] as? String ?? ""
+        lat = double(data["lat"]) ?? 0
+        lng = double(data["lng"]) ?? 0
+        radiusMeters = double(data["radiusMeters"]) ?? 0
+        notifyEnter = data["notifyEnter"] as? Bool ?? true
+        notifyExit = data["notifyExit"] as? Bool ?? true
+    }
+
+    /// `savePlace` 도 `ref.set(doc.copy(id = ""))` 라 본문에 `"id": ""` 가 실린다(ScheduleDoc 과 같다).
+    var firestoreData: [String: Any] {
+        [
+            "id": "",
+            "name": name,
+            "lat": lat,
+            "lng": lng,
+            "radiusMeters": radiusMeters,
+            "notifyEnter": notifyEnter,
+            "notifyExit": notifyExit,
+        ]
     }
 }

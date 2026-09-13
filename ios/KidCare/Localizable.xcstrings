@@ -925,6 +925,17 @@
         }
       }
     },
+    "list_loading": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "불러오는 중이에요…"
+          }
+        }
+      }
+    },
     "map_battery_info_confirm": {
       "extractionState": "manual",
       "localizations": {
