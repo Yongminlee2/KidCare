@@ -13,6 +13,17 @@ struct JoinResult {
     let role: MemberRole
 }
 
+/// 가족 멤버 한 명. 정본은 `FamilyRepository.kt:522-527`.
+///
+/// `role` 을 `MemberRole` 이 아니라 문자열로 두는 이유: 선택기는 "child"/"guardian" 만 걸러 쓰고, 모르는 역할
+/// 문서가 하나 섞여도 목록 전체가 깨지면 안 된다(`MemberDoc(_:)` 는 모르는 역할이면 nil 을 돌려준다).
+struct FamilyMember: Hashable, Sendable {
+    let uid: String
+    let role: String
+    let displayName: String
+    let joinedAt: Int64
+}
+
 enum PairingError: Error, Equatable {
     case notFound
     case offline
@@ -451,5 +462,35 @@ enum FamilyRepository {
                 guard let data = snapshot?.data() else { onChange(nil); return }
                 onChange(ChildStatusDoc(data))
             }
+    }
+
+    /// 보호자·자녀 전체 멤버를 감시한다. 선택기와 초대 완료 판정이 쓴다(`FamilyRepository.kt:245-267`).
+    /// 붙인 리스너는 부르는 쪽이 사라질 때 반드시 remove 한다.
+    static func observeMembers(
+        familyId: String,
+        onChange: @escaping ([FamilyMember]) -> Void,
+        onError: @escaping (Error) -> Void
+    ) -> ListenerRegistration {
+        db.collection("families").document(familyId).collection("members")
+            .addSnapshotListener { snapshot, error in
+                if let error { onError(error); return }
+                onChange(snapshot?.documents.map(familyMember) ?? [])
+            }
+    }
+
+    /// 한 번 읽는다. 초대 화면이 "이미 있던 멤버"를 기준으로 삼는다(`:269-278`, `GuardianPairingActivity.kt:121`).
+    static func fetchMembers(familyId: String) async throws -> [FamilyMember] {
+        try await db.collection("families").document(familyId).collection("members")
+            .getDocuments().documents.map(familyMember)
+    }
+
+    private static func familyMember(_ doc: QueryDocumentSnapshot) -> FamilyMember {
+        let data = doc.data()
+        return FamilyMember(
+            uid: doc.documentID,
+            role: data["role"] as? String ?? "",
+            displayName: data["displayName"] as? String ?? "",
+            joinedAt: (data["joinedAt"] as? NSNumber)?.int64Value ?? 0
+        )
     }
 }

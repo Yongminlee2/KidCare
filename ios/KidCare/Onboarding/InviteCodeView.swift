@@ -9,10 +9,9 @@ struct InviteCodeView: View {
         /// 을 함께 받는다 — 왜 이 화면 자신이 소유하지 않는지는 `NewFamilySession`
         /// 타입 주석 참고.
         ///
-        /// 이미 있는 가족에 아이나 다른 보호자를 부르는 갈래(`.invite`)는 아직
-        /// 아무도 안 만들어서 뺐다(YAGNI) — Phase 3가 실제 호출부를 달 때, 그때
-        /// 가서야 알 수 있는 소유 구조(`.newFamily` 처럼 `NavigationStack` 재진입
-        /// 경합을 겪을지, 로컬 상태로 충분할지)에 맞춰 다시 추가한다.
+        /// 이미 있는 가족에 아이나 다른 보호자를 부르는 갈래는 이 화면이 아니라 `GuardianInviteView` +
+        /// `InviteSession` 이다(6단계). 소유자가 온보딩(`RoleSelectView`)이 아니라 본 화면의 선택기이고,
+        /// 안드로이드도 그 갈래만 따로 그린다(`GuardianPairingActivity.renderInviteRole`).
         case newFamily(session: NewFamilySession)
     }
 
