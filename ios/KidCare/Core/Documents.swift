@@ -242,6 +242,14 @@ enum LastSignal: Equatable {
     case minutes(Int)
     case hours(Int)
     case days(Int)
+    /// 자녀 폰 시계가 부모 폰보다 앞서 있어 경과 시간을 모를 때 대신 보여줄 절대
+    /// 시각(자녀 폰이 적어 보낸 UTC 밀리초, [ChildStatusDoc.lastSeenAt] 값 그대로).
+    /// 코틀린 `LastSignalText.relativeText` 의 "기기 시각으로 잰 값이 음수면 상대
+    /// 표현을 포기한다" 갈래와 같다 — Fix round 1 리뷰 전에는 이 갈래가 없어
+    /// 음수 경과를 전부 `minutes(0)`("방금 전")로 뭉갰는데, 그러면 자녀 폰 시계가
+    /// 30분 빠른 옛 기기가 2시간 전에 남긴 신호도 "방금 전"으로 보여 부모가 낡은
+    /// 위치를 현재로 믿는 사고로 이어진다.
+    case skewed(atMillis: Int64)
 }
 
 /// 상태 문서에서 "마지막 신호"를 읽는 자리를 한 곳에 모은다.
@@ -261,24 +269,43 @@ enum StatusCard {
     /// 나온다 — 안드로이드 `ControlFragment` 주석과 같은 함정이다.
     static func lastSignal(status: ChildStatusDoc, nowMillis: Int64) -> LastSignal {
         let atMillis: Int64
+        let fromServerClock: Bool
         // 서버 시각이 있으면 그것을, 없으면 아이 폰이 자기 시계로 적은 옛 필드로
         // 물러난다 — 두 필드가 있는 이유는 [ChildStatusDoc] 주석. 신뢰도가 전혀
-        // 다른 두 시각을 여기서 갈라 이후 계산은 하나의 절대 밀리초만 본다.
-        if let serverAt = status.lastSeenServerAt {
-            let serverMillis = Int64(serverAt.dateValue().timeIntervalSince1970 * 1000)
-            atMillis = serverMillis > 0 ? serverMillis : status.lastSeenAt
-        } else {
+        // 다른 두 시각을 여기서 갈라 **출처까지 함께** 들고 간다 — 안드로이드
+        // `ChildSignal(atMillis, fromServerClock)`과 같은 이유다. 아래 음수 경과
+        // 처리가 이 출처에 따라 완전히 갈리므로, 절대 밀리초만 남기고 출처를
+        // 버리면 그 판단 자체를 할 수 없다.
+        if let serverAt = status.lastSeenServerAt,
+           Int64(serverAt.dateValue().timeIntervalSince1970 * 1000) > 0 {
+            atMillis = Int64(serverAt.dateValue().timeIntervalSince1970 * 1000)
+            fromServerClock = true
+        } else if status.lastSeenAt > 0 {
             atMillis = status.lastSeenAt
+            fromServerClock = false
+        } else {
+            return .never
         }
-        guard atMillis > 0 else { return .never }
 
-        // 음수 경과의 뜻은 시계 출처에 따라 다르다(코틀린 `LastSignalText.relativeText`
-        // 주석): 서버 시각이면 `serverNow` 왕복 보정 오차(수백 밀리초)뿐이라 "방금
-        // 전"이 정직하고, 기기 시각이면 아이 폰 시계가 앞서 있다는 뜻이라 원래는
-        // 절대 시각을 따로 보여줘야 한다. 이 열거형엔 그 절대 시각을 담을 케이스가
-        // 없으므로(위 타입 주석), 두 경우 다 0 으로 잘라 "방금 전" 쪽 안전한 값으로
-        // 수렴시킨다 — 있지도 않은 정밀한 음수 경과를 보여주는 것보다 낫다.
-        let elapsed = max(0, nowMillis - atMillis)
+        let elapsed = nowMillis - atMillis
+
+        // 음수 경과의 뜻은 시계 출처에 따라 다르다 — 코틀린 `LastSignalText.relativeText`
+        // 주석과 완전히 같은 갈래다.
+        if elapsed < 0 {
+            if fromServerClock {
+                // 서버 시각으로 잰 값의 음수는 [FamilyRepository.serverNow] 왕복
+                // 보정 오차(수백 밀리초)뿐이다 — 실제로 방금 신호가 온 것이므로
+                // "방금 전"이 정직하다.
+                return .minutes(0)
+            }
+            // 기기(자녀 폰) 시각으로 잰 값이 음수면 자녀 폰 시계가 부모 폰보다
+            // 앞서 있다는 뜻이고, 그 순간 우리는 신호가 얼마나 오래됐는지 **모른다.**
+            // 상대 표현("N분 전")을 쓰면 같은 화면의 다른 줄("응답하지 않아요" 등)과
+            // 서로를 부정해서 부모가 화면을 덜 믿게 된다 — 그래서 경과 대신 자녀
+            // 폰이 적어 보낸 절대 시각을 그대로 넘긴다. 화면(`lastSignalText`)이
+            // 그 값을 "부정확할 수 있다"는 말과 함께 보여준다.
+            return .skewed(atMillis: atMillis)
+        }
 
         switch elapsed {
         case ..<minuteMillis: return .minutes(0)

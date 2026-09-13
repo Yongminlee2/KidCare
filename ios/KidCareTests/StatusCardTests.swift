@@ -69,14 +69,32 @@ struct StatusCardTests {
         #expect(StatusCard.lastSignal(status: doc, nowMillis: atMillis + 3 * 86_400_000) == .days(3))
     }
 
-    @Test("기기 시계가 앞서 경과가 음수가 나와도 0 이상으로 잘린다")
-    func 음수_경과는_0으로_잘린다() {
-        // 아이 폰 시계가 부모 폰보다 앞서 있으면 nowMillis - atMillis 가 음수다.
-        // LastSignal 은 절대 시각을 담을 케이스가 없으므로 안전한 값(minutes(0))으로
-        // 수렴한다 — Documents.swift 의 StatusCard.lastSignal 주석 참고.
-        let atMillis: Int64 = 1_757_000_600_000
-        let doc = status(lastSeenAt: atMillis)
-        #expect(StatusCard.lastSignal(status: doc, nowMillis: atMillis - 180_000) == .minutes(0))
+    @Test("서버 시각의 음수 경과는 왕복 오차일 뿐이라 방금 전으로 본다")
+    func 서버_시각의_음수_경과는_방금_전() {
+        // serverNow 왕복 보정 오차(수백 밀리초)로 서버 시각이 "지금"보다 살짝 미래로
+        // 보일 수 있다 — 이때는 실제로 방금 온 신호이므로 minutes(0)이 정직하다.
+        // Fix round 1 리뷰 전에는 이 경우와 아래 기기 시각의 음수 경과를 구분하지
+        // 않고 둘 다 minutes(0)으로 뭉갰는데, 그 뭉갬 자체는 이 갈래에서는 우연히
+        // 맞는 답이었다 — 잘못된 답은 기기 시각 갈래(아래 테스트)에서 나왔다.
+        let serverAtMillis: Int64 = 1_757_000_600_000
+        let doc = status(
+            lastSeenAt: 0,
+            lastSeenServerAt: Timestamp(date: Date(timeIntervalSince1970: Double(serverAtMillis) / 1000))
+        )
+        #expect(StatusCard.lastSignal(status: doc, nowMillis: serverAtMillis - 300) == .minutes(0))
+    }
+
+    @Test("기기 시각의 음수 경과는 절대 시각을 그대로 넘긴다 — 방금 전이라고 하면 안 된다")
+    func 기기_시각의_음수_경과는_skewed() {
+        // 자녀 폰 시계가 30분 빠른 옛 기기가 lastSeenServerAt 없이 lastSeenAt 만
+        // 남긴 경우를 흉내낸다. nowMillis - atMillis 가 음수라고 minutes(0)으로
+        // 뭉개면, 실제로는 두 시간 전에 남긴 신호를 "방금 전"이라 보여줘 부모가
+        // 낡은 위치를 현재로 믿게 된다(리뷰가 지적한 실제 실패 시나리오) — 그래서
+        // 경과를 버리고 자녀 폰이 적어 보낸 절대 시각 그 자체를 돌려줘야 한다.
+        let atMillis: Int64 = 1_757_000_600_000 // 자녀 폰 시계 기준 "지금 + 30분"
+        let doc = status(lastSeenAt: atMillis, lastSeenServerAt: nil)
+        let now = atMillis - 30 * 60_000 // 부모 폰이 보는 서버 시각(자녀 폰보다 30분 느림)
+        #expect(StatusCard.lastSignal(status: doc, nowMillis: now) == .skewed(atMillis: atMillis))
     }
 
     @Test("서버 시각이 0 이면 있어도 없는 값으로 보고 기기 시각으로 물러난다")

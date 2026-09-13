@@ -66,6 +66,7 @@
   "control_find_phone": "핸드폰 찾기",
   "control_find_stop": "소리 끄기",
   "control_find_stop_hint": "이미 울리고 있다면 소리 끄기",
+  "control_last_seen_clock_format": "M월 d일 HH:mm",
   "control_last_seen_days": "%1$d일 전",
   "control_last_seen_format": "마지막 신호 %1$s",
   "control_last_seen_hours": "%1$d시간 전",

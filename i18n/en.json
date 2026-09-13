@@ -66,6 +66,7 @@
   "control_find_phone": "Find the phone",
   "control_find_stop": "Stop the sound",
   "control_find_stop_hint": "Stop the sound if it is already ringing",
+  "control_last_seen_clock_format": "MMM d, HH:mm",
   "control_last_seen_days": "%1$d days ago",
   "control_last_seen_format": "Last signal %1$s",
   "control_last_seen_hours": "%1$d hours ago",

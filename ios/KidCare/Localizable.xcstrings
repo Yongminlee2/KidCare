@@ -1,6 +1,17 @@
 {
   "sourceLanguage": "ko",
   "strings": {
+    "alert_row": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "child_default_name": {
       "extractionState": "manual",
       "localizations": {
@@ -8,6 +19,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "아이"
+          }
+        }
+      }
+    },
+    "control_last_seen_clock_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "M월 d일 HH:mm"
           }
         }
       }
@@ -63,6 +85,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "방금 전"
+          }
+        }
+      }
+    },
+    "control_last_seen_skewed_value": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (애기폰 시계 기준이라 정확하지 않아요)"
           }
         }
       }

@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// 지도 위 상태 카드 — 아이 이름·배터리·마지막 신호. 정본은 안드로이드
@@ -84,5 +85,31 @@ func lastSignalText(_ signal: LastSignal) -> String {
         return String(format: String(localized: "control_last_seen_hours"), hours)
     case .days(let days):
         return String(format: String(localized: "control_last_seen_days"), days)
+    case .skewed(let atMillis):
+        // 상대 표현을 못 쓰는 자리다(`StatusCard.lastSignal` 주석) — 절대 시각을
+        // "부정확할 수 있다"는 안내와 함께 보여준다. 안드로이드
+        // `LastSignalText.relativeText` 가 `clockText(atMillis)` 를 같은 문구에
+        // 끼워 넣는 것과 같다.
+        return String(format: String(localized: "control_last_seen_skewed_value"), clockText(atMillis))
     }
+}
+
+/// [LastSignal.skewed] 가 들고 있는 절대 시각을 "9월 13일 14:32" 류 문구로 바꾼다.
+/// 정본은 안드로이드 `LastSignalText.clockText` — 다만 코틀린은 `Locale.KOREA`
+/// 서식을 하드코딩해 14개 언어 중 한국어로만 정확하다. 이 앱은 문구 카탈로그로
+/// 14개 언어를 옮기는 것이 규칙이라, 서식 **패턴 자체**를 `control_last_seen_clock_format`
+/// 키에 담아 두고 언어별로 다른 패턴을 넣을 수 있게 했다(지금은 ko/en 두 벌).
+///
+/// 패턴의 숫자는 항상 아라비아 숫자·그레고리력으로 나와야 한다 — 기기가 다른
+/// 달력(예: 불교력)이나 다른 숫자 체계로 설정돼 있어도 "9월 13일" 같은 리터럴
+/// 글자는 그대로인데 숫자만 다른 체계로 나오면 그 자체가 또 다른 혼란이다.
+/// `CalendarMath.calendar(zone:)` 가 같은 이유로 그레고리력 + `en_US_POSIX` 를
+/// 쓰는 것과 같은 판단이지만, 이 함수는 `Logic/` 이 아니라 화면 문구를 만들 뿐이라
+/// 그 헬퍼를 그대로 재사용하지 않고 `DateFormatter` 에 같은 설정을 직접 준다.
+private func clockText(_ atMillis: Int64) -> String {
+    let formatter = DateFormatter()
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = String(localized: "control_last_seen_clock_format")
+    return formatter.string(from: Date(timeIntervalSince1970: Double(atMillis) / 1000))
 }
