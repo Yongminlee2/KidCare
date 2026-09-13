@@ -42,34 +42,10 @@
 | `%1$d`, `%1$02d` | 그대로 | `control_last_seen_minutes`, `schedule_time_format` |
 | 서식이 아닌 `%` | `%%` | `map_status_format` (`배터리 %1$d%` → `%1$d%%`) |
 
-손으로 옮기다 틀리지 않게, 이번 단계는 아래 명령으로 넣는다(이미 있는 키는 **건너뛴다** — 아래 "알려진 어긋남" 셋을 덮지 않기 위해서다). 기존 파일을 `json.dumps(indent=2, ensure_ascii=False) + "\n"` 로 다시 쓰면 바이트 단위로 같다는 것을 확인했다(키 정렬 포함) — diff 에는 넣은 키만 나온다.
+손으로 옮기다 틀리지 않게, 키는 `tools/add-ios-catalog-keys.py` 로 넣는다(이미 있는 키는 **건너뛴다** — 아래 "알려진 어긋남" 셋을 덮지 않기 위해서다). 파일 전체를 `json.dumps(indent=2, ensure_ascii=False) + "\n"` 로 다시 쓰며, 기존 파일과 바이트 단위로 같아 diff 에는 넣은 키만 나온다(키 정렬 포함). 서식 정규식은 `%(\d+\$)?(\d+)?(\.\d+)?([sdf])` 로 `LocalizableCatalogTests.카탈로그_값` 과 같다 — 예전 인라인 명령의 `([sd])` 는 `%1$.1f` 를 `%%1$.1f` 로 망가뜨렸다(통합 검토 M3).
 
 ```bash
-cd /Users/com/work/KidCare && KEYS="여기에 키를 공백으로" python3 - <<'EOF'
-import json, os, re
-def conv(v):
-    out, i = [], 0
-    while i < len(v):
-        if v[i] != '%':
-            out.append(v[i]); i += 1; continue
-        m = re.match(r'%(\d+\$)?(\d+)?([sd])', v[i:])
-        if m:
-            out.append('%' + (m.group(1) or '') + (m.group(2) or '') + ('@' if m.group(3) == 's' else 'd')); i += m.end()
-        elif v.startswith('%%', i):
-            out.append('%%'); i += 2
-        else:
-            out.append('%%'); i += 1
-    return ''.join(out)
-ko = json.load(open('i18n/ko.json', encoding='utf-8'))
-path = 'ios/KidCare/Localizable.xcstrings'
-cat = json.load(open(path, encoding='utf-8'))
-for k in os.environ['KEYS'].split():
-    if k in cat['strings']:
-        continue
-    cat['strings'][k] = {"extractionState": "manual", "localizations": {"ko": {"stringUnit": {"state": "translated", "value": conv(ko[k])}}}}
-cat['strings'] = dict(sorted(cat['strings'].items()))
-open(path, 'w', encoding='utf-8').write(json.dumps(cat, indent=2, ensure_ascii=False) + '\n')
-EOF
+cd /Users/com/work/KidCare && python3 tools/add-ios-catalog-keys.py 키1 키2 ...
 ```
 
 검사 둘:
