@@ -55,7 +55,16 @@ struct StatusCardView: View {
                         .font(.subheadline)
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(2)
+                        // Task 6 커밋 1(b): 시뮬레이터로 실제 화면을 찍어 보니
+                        // `.lineLimit(2)` 가 무응답 문구(`control_command_timeout_format`
+                        // 이 `control_last_seen_format` 을 한 번 더 감싼 두 줄짜리
+                        // 문장, 그중 둘째 줄 자체가 이 카드 너비에서 또 한 번
+                        // 줄바꿈된다)를 세 번째 줄에서 "…"로 잘랐다 — 코드만 읽고는
+                        // 안 보이던 문제다. 이 카드는 이미 배터리 아이콘·구분선·
+                        // 아이 이름까지 한 줄에 욱여넣어 안드로이드 `status_bar`
+                        // 보다 텍스트 폭이 좁으므로, 줄 수를 고정하지 않고 필요한
+                        // 만큼 감싸게 둔다(14개 언어 문구 길이가 다 다르다는 점도
+                        // 같은 이유로 고정 줄 수와 상성이 나쁘다).
                     if isCommandBusy {
                         ProgressView().controlSize(.small)
                     }

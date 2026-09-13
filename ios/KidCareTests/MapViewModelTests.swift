@@ -812,3 +812,112 @@ struct MapViewModelCommandGenerationTests {
         #expect(listener.removed)
     }
 }
+
+/// `MapViewModel.시계를_돈다()` — 화면이 떠 있는 동안 60초마다 "지금"을 다시 재는
+/// 티커(Task 5 Fix round 2, C1-b). 만들 때는 커밋된 테스트가 없었다(Task 6 브리프
+/// "Commit 1(a)"가 이 구멍을 지적한다). **실제 60초를 기다리지 않고 증명한다** —
+/// `commandSleep` 을 테스트가 여는 문으로 바꿔 심어, 문을 열 때마다 한 틱이 지난
+/// 것처럼 만든다.
+@MainActor
+struct MapViewModelTickerTests {
+
+    /// 매 `commandSleep` 호출마다 한 번씩 열어주는 문. `MapViewModelCommandGenerationTests
+    /// .Gate`(한 번 쓰고 버리는 문)와 달리 **여러 번** 열 수 있어야 한다 — 틱을
+    /// 여러 번 흘려보내야 하기 때문이다. 문을 열 때 아직 아무도 기다리고 있지
+    /// 않으면(테스트가 다음 `wait()` 호출보다 먼저 `release()` 를 부른 경우) 크레딧을
+    /// 쌓아 뒀다가 다음 `wait()` 이 곧바로 통과하게 한다 — 두 태스크의 실행 순서를
+    /// 가정하지 않기 위해서다(`MapViewModelCommandGenerationTests` I2 리뷰와 같은 이유).
+    private actor StepGate {
+        private var sleepCount = 0
+        private var releaseCredits = 0
+        private var waiting: CheckedContinuation<Void, Never>?
+        private var callWaiters: [Int: [CheckedContinuation<Void, Never>]] = [:]
+
+        /// `commandSleep` 이 직접 부른다.
+        func wait() async {
+            sleepCount += 1
+            let n = sleepCount
+            callWaiters[n]?.forEach { $0.resume() }
+            callWaiters[n] = nil
+            if releaseCredits > 0 {
+                releaseCredits -= 1
+                return
+            }
+            await withCheckedContinuation { waiting = $0 }
+        }
+
+        /// 테스트가 부른다 — 지금 막혀 있는 틱을 하나 통과시킨다(없으면 다음
+        /// `wait()` 이 곧바로 통과하도록 미리 쌓아 둔다).
+        func release() {
+            if let waiting {
+                self.waiting = nil
+                waiting.resume()
+            } else {
+                releaseCredits += 1
+            }
+        }
+
+        /// `시계를_돈다()` 가 `n` 번째로 `commandSleep` 에 들어올 때까지 기다린다 —
+        /// 실제 시간이 아니라 "그 지점을 지났다"는 사실 자체를 동기화한다(둘 다
+        /// 다른 태스크라 도착 순서를 가정할 수 없다).
+        func waitForCall(_ n: Int) async {
+            if sleepCount >= n { return }
+            await withCheckedContinuation { callWaiters[n, default: []].append($0) }
+        }
+
+        func currentSleepCount() -> Int { sleepCount }
+    }
+
+    private func 격리된_요청_기록() -> RequestLog {
+        RequestLog(defaults: UserDefaults(suiteName: "MapViewModelTickerTests-\(UUID())")!)
+    }
+
+    @Test("틱마다 '지금'이 갱신된다 — 실제 60초를 기다리지 않는다, Firestore 를 타지 않는다, 명령 진행 상태를 건드리지 않는다")
+    func 틱이_지금을_갱신한다() async {
+        let gate = StepGate()
+        let dayLoadCalls = OSAllocatedUnfairLock(initialState: 0)
+        let vm = MapViewModel(
+            familyId: "family", childUid: nil,
+            requestLog: 격리된_요청_기록(),
+            commandSleep: { _ in await gate.wait() },
+            tickIntervalMillis: 60_000,
+            // 시계를_돈다() 는 childUid 가 nil 이든 아니든 이 클로저를 부르면 안
+            // 된다 — 타입 주석 "Firestore 를 새로 타지 않는다"의 증거. 실제로
+            // 불리면 카운터가 올라가 아래 단언이 잡아낸다.
+            dayLoad: { _, _, _ in
+                dayLoadCalls.withLock { $0 += 1 }
+                return (nil, nil)
+            }
+        )
+
+        let 처음_지금 = vm.서버기준_지금
+        let 초기_진행상태 = vm.commandProgress
+
+        let ticker = Task { await vm.시계를_돈다() }
+        await gate.waitForCall(1) // 첫 sleep(60_000) 에 들어갈 때까지 — 아직 한 틱도 안 지났다
+        #expect(vm.서버기준_지금 == 처음_지금) // 첫 sleep 을 통과하기 전까지는 그대로다
+
+        // 진짜 시계가 아주 조금(수십 ms) 흐르게 해 갱신 전후 값이 밀리초 단위로
+        // 분명히 갈라지게 한다 — "실제 60초를 기다리지 않는다"는 요구와 어긋나지
+        // 않는다(60초의 1/1000 도 안 된다).
+        try? await Task.sleep(nanoseconds: 50_000_000)
+
+        await gate.release() // 첫 틱을 흘려보낸다 — 진짜 60초 대기 없이 보낸다
+        await gate.waitForCall(2) // 갱신을 마치고 다음 sleep 에 다시 들어갈 때까지 기다린다
+
+        #expect(vm.서버기준_지금 > 처음_지금) // 틱이 "지금"을 갱신했다
+        #expect(vm.commandProgress == 초기_진행상태) // 틱이 명령 진행 상태를 안 건드린다
+        #expect(dayLoadCalls.withLock { $0 } == 0) // 틱이 Firestore 를 안 탄다
+
+        ticker.cancel() // 화면이 사라진 것과 같다(ChildMapView.onDisappear 는 .task 를 취소한다)
+        let 취소_직전_지금 = vm.서버기준_지금
+        let 취소_직전_sleep_횟수 = await gate.currentSleepCount()
+        // 실제 commandSleep(Task.sleep)은 취소에 곧바로 응해 리턴한다 — 이 가짜
+        // 문도 같은 자리에서 풀어줘야 취소된 루프가 마저 진행해 guard 에 닿는다.
+        await gate.release()
+        try? await Task.sleep(nanoseconds: 50_000_000) // 취소 처리가 끝날 시간을 준다
+
+        #expect(vm.서버기준_지금 == 취소_직전_지금) // 취소 후에는 더 갱신되지 않는다
+        #expect(await gate.currentSleepCount() == 취소_직전_sleep_횟수) // 취소 후에는 sleep 을 다시 부르지 않는다
+    }
+}
