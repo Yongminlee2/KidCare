@@ -18,6 +18,8 @@ struct GuardianRootView: View {
     /// 장소 탭 뷰모델. 지도·관리와 같은 수명(계획서 5단계 판정 기록 7) — 편집 화면을 연 채 다른 탭을
     /// 봤다 돌아와도 편집 중인 좌표가 남는다(판정 기록 9).
     @State private var placeViewModel: PlaceViewModel
+    /// 알림 탭 뷰모델. 지도·관리·예약·장소와 같은 수명이다. 보임은 이 뷰가 탭 선택과 앱 활성으로 알려준다.
+    @State private var alertViewModel: AlertViewModel
     /// 무응답 배너의 유일한 주인(안드로이드 `GuardianMainActivity` :53-56).
     @State private var banner: DisconnectBanner
     @Environment(\.scenePhase) private var scenePhase
@@ -38,6 +40,14 @@ struct GuardianRootView: View {
         _controlViewModel = State(initialValue: control)
         _scheduleViewModel = State(initialValue: ScheduleViewModel(familyId: familyId, childUid: childUid))
         _placeViewModel = State(initialValue: PlaceViewModel(familyId: familyId, childUid: childUid))
+        // 실기기 확인(-readOnlyCheck)에서는 진짜 가족에 읽음을 쓰지 않는다(6단계 판정 기록 10).
+        let markRead: AlertViewModel.MarkRead
+        if ReadOnlyCheck.isOn {
+            markRead = { _, _ in }
+        } else {
+            markRead = { familyId, ids in try await EventRepository.markRead(familyId: familyId, ids: ids) }
+        }
+        _alertViewModel = State(initialValue: AlertViewModel(familyId: familyId, childUid: childUid, markRead: markRead))
     }
 
     var body: some View {
@@ -51,7 +61,12 @@ struct GuardianRootView: View {
                 ChildMapView(viewModel: mapViewModel)
                     .tabItem { Label(GuardianTab.map.title, systemImage: GuardianTab.map.systemImage) }
                     .tag(GuardianTab.map)
-                TabPlaceholderView(tab: .alert)
+                AlertView(viewModel: alertViewModel)
+                    // 처음 보일 때 구독(AlertFragment.onViewCreated :116), 그리고 보임을 맞춘다(onResume :177-180).
+                    .onAppear {
+                        alertViewModel.시작한다()
+                        알림_보임을_맞춘다()
+                    }
                     .tabItem { Label(GuardianTab.alert.title, systemImage: GuardianTab.alert.systemImage) }
                     .tag(GuardianTab.alert)
                 ControlView(viewModel: controlViewModel)
@@ -93,39 +108,26 @@ struct GuardianRootView: View {
         // 앱으로 돌아왔을 때는 **보고 있는** 탭만 재시도한다 — 안드로이드 onResume 의 `if (!isHidden)`
         // (ScheduleFragment.kt:294-297, PlaceFragment.kt:290-294).
         .onChange(of: scenePhase) { _, phase in
+            // 알림 목록은 백그라운드로 내려갈 때도 알아야 한다(AlertFragment.onPause :182-187) — guard 보다 앞.
+            알림_보임을_맞춘다(phase: phase)
             guard phase == .active else { return }
             if selectedTab == .schedule { scheduleViewModel.다시_알린다() }
             if selectedTab == .place { placeViewModel.다시_알린다() }
         }
+        // 탭 전환은 안드로이드 onHiddenChanged(:172-175) 자리다.
+        .onChange(of: selectedTab) { _, _ in 알림_보임을_맞춘다() }
         .onDisappear {
             mapViewModel.정리한다()
             controlViewModel.정리한다()
             scheduleViewModel.정리한다()
             placeViewModel.정리한다()
+            alertViewModel.정리한다()
         }
     }
-}
 
-/// 아직 이 앱에 없는 탭(알림 6단계)의 자리. 탭 바가 안드로이드와 같은
-/// 모양이 되도록 칸만 먼저 채운다.
-private struct TabPlaceholderView: View {
-    let tab: GuardianTab
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: tab.systemImage)
-                .font(.system(size: 40))
-                .foregroundStyle(KidCarePalette.sky)
-            Text(tab.title)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(KidCarePalette.ink)
-            Text("ios_tab_not_ready_body")
-                .font(.subheadline)
-                .foregroundStyle(KidCarePalette.inkSoft)
-                .multilineTextAlignment(.center)
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(KidCarePalette.paper)
+    /// 알림 목록이 지금 부모 눈앞에 있는가 — 알림 탭이 골라져 있고 앱이 활성일 때뿐이다(`setVisible` :189-202).
+    /// `phase` 는 onChange 가 넘기는 새 값이다(그 순간 환경값이 아직 옛 값일 수 있어 인자를 먼저 본다).
+    private func 알림_보임을_맞춘다(phase: ScenePhase? = nil) {
+        alertViewModel.보임이_바뀌었다(selectedTab == .alert && (phase ?? scenePhase) == .active)
     }
 }

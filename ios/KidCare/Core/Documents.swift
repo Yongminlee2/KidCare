@@ -608,3 +608,51 @@ struct PlaceDoc: Equatable {
         ]
     }
 }
+
+/// families/{familyId}/events/{id} — 아이 폰이 만들고 보호자가 읽는다. 정본은 `Documents.kt:420-428`.
+///
+/// `firestoreData` 가 없다. 보호자가 이 문서에 쓰는 것은 `read` 한 필드뿐이고(규칙 `hasOnly(['read'])`,
+/// firestore.rules:315-318), 그 계약은 `EventRepository.markRead` 안에 갇혀 있다(설계서 §5).
+struct EventDoc: Equatable, Sendable {
+    var id: String
+    var type: String
+    var at: Int64
+    var childUid: String
+    var placeName: String
+    var detail: String
+    var read: Bool
+
+    init(id: String, type: String, at: Int64, childUid: String = "", placeName: String = "", detail: String = "", read: Bool = false) {
+        self.id = id
+        self.type = type
+        self.at = at
+        self.childUid = childUid
+        self.placeName = placeName
+        self.detail = detail
+        self.read = read
+    }
+
+    /// 본문의 "id"(안드로이드가 빈 값으로 싣는다)는 무시하고 문서 ID 를 쓴다(`EventRepository.kt:106`).
+    init(id: String, _ data: [String: Any]) {
+        self.init(
+            id: id,
+            type: data["type"] as? String ?? "",
+            at: millis(data["at"]) ?? 0,
+            childUid: data["childUid"] as? String ?? "",
+            placeName: data["placeName"] as? String ?? "",
+            detail: data["detail"] as? String ?? "",
+            read: data["read"] as? Bool ?? false
+        )
+    }
+}
+
+/// `EventDoc.type` 값들. 규칙이 일부러 값 목록으로 잠그지 않으므로(firestore.rules:297-301) 이 목록이 곧
+/// 약속이다. 정본은 `Documents.kt:437-458`.
+enum EventType {
+    static let placeEnter = "place_enter"
+    static let placeExit = "place_exit"
+    static let lowBattery = "low_battery"
+    static let permissionOff = "permission_off"
+    static let signalLost = "signal_lost"
+    static let commandFailed = "command_failed"
+}
