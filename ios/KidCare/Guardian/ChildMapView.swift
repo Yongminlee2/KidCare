@@ -32,25 +32,29 @@ struct ChildMapView: View {
     private static let logger = Logger(subsystem: "com.kidcare.family", category: "ChildMapView")
 
     var body: some View {
-        ZStack(alignment: .top) {
-            NaverMapView(
-                markerAt: 상태.map { (lat: $0.lat, lng: $0.lng) },
-                routeSections: 경로_구간,
-                카메라를_한번_맞췄나: $카메라를_한번_맞췄나
-            )
-            .ignoresSafeArea()
+        VStack(spacing: 0) {
+            ZStack(alignment: .top) {
+                NaverMapView(
+                    markerAt: 상태.map { (lat: $0.lat, lng: $0.lng) },
+                    routeSections: 경로_구간,
+                    카메라를_한번_맞췄나: $카메라를_한번_맞췄나
+                )
+                .ignoresSafeArea()
 
-            if childUid != nil {
-                StatusCardView(childName: 아이_이름, status: 상태, nowMillis: 서버기준_지금)
+                if childUid != nil {
+                    StatusCardView(childName: 아이_이름, status: 상태, nowMillis: 서버기준_지금)
+                }
+
+                if let 오류 {
+                    Text(오류).padding().background(.thinMaterial).foregroundStyle(.red)
+                } else if childUid == nil {
+                    Text("map_no_child").padding().background(.thinMaterial)
+                } else if 상태 == nil {
+                    Text("map_waiting_first_signal").padding().background(.thinMaterial)
+                }
             }
 
-            if let 오류 {
-                Text(오류).padding().background(.thinMaterial).foregroundStyle(.red)
-            } else if childUid == nil {
-                Text("map_no_child").padding().background(.thinMaterial)
-            } else if 상태 == nil {
-                Text("map_waiting_first_signal").padding().background(.thinMaterial)
-            }
+            타임라인_패널
         }
         // `.task` 는 화면이 사라지면 스스로 취소한다 — 구독이 아니라 한 번의
         // 읽기라 onDisappear 에서 따로 걷어낼 리스너가 없다.
@@ -62,6 +66,41 @@ struct ChildMapView: View {
     private var 경로_구간: [RouteSection] {
         guard let 하루기록 else { return [] }
         return RouteOverlay.sections(points: 하루기록.points, segments: 하루기록.segments)
+    }
+
+    /// 오늘 하루를 머무름·이동으로 요약한 목록. `Timeline.timelineRows` 와 마찬가지로
+    /// 순수 계산이라 `하루기록` 이 바뀔 때마다 다시 구한다.
+    private var 타임라인_행: [TimelineRow] {
+        guard let 하루기록 else { return [] }
+        return Timeline.timelineRows(from: 하루기록.segments, zone: .current)
+    }
+
+    /// 지도 아래 타임라인 패널. 정본은 안드로이드 `fragment_map_timeline.xml` 의
+    /// `timelinePanel` + `MapTimelineFragment.renderTimeline`(:1011)·
+    /// `renderTimelineEmpty`(:1035). 안드로이드는 접었다 펼 수 있는 바텀시트지만,
+    /// 이 Task 의 범위는 "행이 보인다/빈 날엔 빈 상태가 보인다"까지다 — 크기
+    /// 조절·접기는 다루지 않는다.
+    private var 타임라인_패널: some View {
+        Group {
+            if 타임라인_행.isEmpty {
+                Text(String(localized: "timeline_empty"))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 24)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(타임라인_행, id: \.segmentIndex) { row in
+                            TimelineRowView(row: row)
+                            Divider().padding(.leading, 50)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(height: 220)
+        .background(.regularMaterial)
     }
 
     /// 상태와 그 날 경로를 순서대로 한 번씩 읽는다. 정본은 안드로이드

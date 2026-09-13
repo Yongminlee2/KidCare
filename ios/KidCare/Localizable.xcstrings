@@ -539,6 +539,39 @@
           }
         }
       }
+    },
+    "timeline_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 날은 기록이 없어요"
+          }
+        }
+      }
+    },
+    "timeline_move_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이동 %1$@"
+          }
+        }
+      }
+    },
+    "timeline_unknown_place": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "머무른 곳"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
