@@ -14,6 +14,12 @@ import os
 /// 방법이 없다. `@Observable` 타입으로 분리해 두면 이 타입만 인스턴스화해서
 /// 로직을 테스트할 수 있다 — 날짜 이동도 같은 이유로, "다시 읽기"를 이 한 곳에
 /// 모아 뒀다.
+///
+/// **Fix round 1(리뷰)이 두 가지를 고쳤다**: (1) 날짜를 넘기면 상태 카드도
+/// 함께 다시 읽는다 — 아이 상태는 날짜와 무관하다는 첫 설계가 "부모가 며칠을
+/// 넘기는 동안 배터리가 화면 첫 진입 값에 멈춰 있는" 실패를 낳았다(2단계
+/// "방금 전" 버그와 같은 뿌리). (2) `loadGeneration` 으로 빠른 연속 탭의
+/// 늦은 응답을 무시한다 — 아래 그 프로퍼티 주석 참고.
 @Observable
 @MainActor
 final class MapViewModel {
@@ -40,13 +46,60 @@ final class MapViewModel {
     /// 시간대와 다를 수 있다는 기존 한계(Task 1 보고서)를 그대로 물려받는다.
     private let zone: TimeZone
 
+    /// `dayKey` 하루치(상태+경로)를 실제로 읽는 방법. 기본값은 프로덕션이 그대로
+    /// 쓰는 `FamilyRepository.fetchChildStatus`/`TrailRepository.fetch` 다.
+    /// **주입 가능하게 열어 둔 이유**는 `FamilyRepository.measureWithTimeout` 의
+    /// `measure` 주입과 같다 — 실제 Firestore 왕복 순서로 "느린 응답이 늦게
+    /// 도착하는" 경합을 재현하는 테스트는 이 환경에서 결정적일 수 없으므로,
+    /// 테스트가 완료 순서를 직접 정할 수 있는 자리를 남긴다
+    /// (`MapViewModelTests.swift` 의 "빠른 연속 탭" 테스트가 이 자리를 쓴다).
+    private let dayLoad: @Sendable (
+        _ familyId: String, _ childUid: String, _ dayKey: String
+    ) async throws -> (status: ChildStatusDoc?, trail: TrailDoc?)
+
+    /// 날짜를 넘길 때(또는 화면 진입 시 첫 로드)마다 하나씩 올라가는 세대 번호.
+    ///
+    /// **"취소"가 아니라 "무시"인 이유**: Firestore 비동기 읽기는 실제로 취소되지
+    /// 않는다(1단계 확인 — SDK 에 `withTaskCancellationHandler` 로 진행 중인
+    /// 읽기 자체를 끊는 경로가 없다, `FamilyRepository.measureWithTimeout` 주석
+    /// 참고). 그래서 "이전 요청을 취소한다" 대신 "이전 요청의 결과가 와도 이미
+    /// 낡았으면 버린다" 로 막는다: 빠르게 두 번 넘기면(◀◀) 이전 날짜(N-1)의
+    /// 응답이 최신 날짜(N-2) 응답보다 늦게 도착할 수 있는데, 세대 번호가 다르면
+    /// 그 결과를 화면에 반영하지 않는다(Fix round 1 Important 2).
+    ///
+    /// **Task 5 도 같은 원리를 쓴다**: 안드로이드 `commandGeneration`
+    /// (`ControlFragment.kt` — 발행 15초·응답 60초 뒤 늦게 온 콜백을 무시한다)
+    /// 과 정확히 같은 방어다. 다만 그건 "명령 왕복"이라는 다른 상태 기계의
+    /// 세대라 이 `loadGeneration`(날짜 읽기 전용)과 변수를 공유하지 않는다 —
+    /// 원리(세대 번호를 올리고, 캡처해 두고, 응답이 왔을 때 최신인지 다시
+    /// 확인한다)만 재사용한다.
+    private var loadGeneration = 0
+
     private static let logger = Logger(subsystem: "com.kidcare.family", category: "MapViewModel")
 
-    init(familyId: String, childUid: String?, zone: TimeZone = .current) {
+    init(
+        familyId: String,
+        childUid: String?,
+        zone: TimeZone = .current,
+        dayLoad: @escaping @Sendable (
+            _ familyId: String, _ childUid: String, _ dayKey: String
+        ) async throws -> (status: ChildStatusDoc?, trail: TrailDoc?) = MapViewModel.기본_하루_읽기
+    ) {
         self.familyId = familyId
         self.childUid = childUid
         self.zone = zone
+        self.dayLoad = dayLoad
         dayKey = DayPicker.todayKey(zone: zone, nowMillis: Int64(Date().timeIntervalSince1970 * 1000))
+    }
+
+    /// `dayLoad` 의 기본 구현. 정본은 안드로이드 `MapTimelineFragment.load`(:304)
+    /// — 상태 먼저, 경로 다음(둘 다 성공해야 화면을 갱신한다).
+    private static func 기본_하루_읽기(
+        familyId: String, childUid: String, dayKey: String
+    ) async throws -> (status: ChildStatusDoc?, trail: TrailDoc?) {
+        let status = try await FamilyRepository.fetchChildStatus(familyId: familyId, childUid: childUid)
+        let trail = try await TrailRepository.fetch(familyId: familyId, childUid: childUid, dayKey: dayKey)
+        return (status, trail)
     }
 
     /// `RouteOverlay.sections` 는 순수 계산이라 `하루기록` 이 바뀔 때마다 다시
@@ -93,12 +146,15 @@ final class MapViewModel {
     /// (안드로이드 `changeDay` 주석과 같은 이중 방어).
     func 다음_날로() async { await 날짜를_바꾼다(1) }
 
-    /// 날짜를 바꾸고 그 날의 경로·타임라인만 다시 읽는다. **상태 카드는 다시
-    /// 읽지 않는다** — 아이의 "지금" 상태는 어느 날을 보고 있는지와 무관하다
-    /// (brief "상태 카드는 선택한 날짜에 의존하지 않는다"). 안드로이드
-    /// `changeDay` 는 `reload()` 하나로 상태·경로를 같이 다시 읽지만, 그건 두
-    /// 일을 한 함수로 묶어 둔 안드로이드 쪽 구조 때문일 뿐 상태가 날짜에 실제로
-    /// 의존해서가 아니다 — 여기서는 그 결합을 풀었다.
+    /// 날짜를 바꾸고 상태·그 날 경로를 함께 다시 읽는다(Fix round 1 Important 1).
+    ///
+    /// **왜 상태 카드도 다시 읽는가.** 처음엔 "상태 카드는 선택한 날짜와 무관하니
+    /// 다시 읽지 않는다"로 짰지만, 그러면 부모가 며칠을 넘겨보는 몇 분 동안
+    /// 배터리·마지막 신호가 화면을 처음 열었을 때 값에 멈춰 있으면서도 화면은
+    /// 여전히 "지금 이 순간의 상태"인 척한다 — 2단계에서 고친 "방금 전" 버그와
+    /// 뿌리가 같은 실패다. 정본인 안드로이드 `changeDay`(:848) → `reload()`(:341)
+    /// → `load()`(:304) 도 매번 상태·경로를 함께 읽는다 — 여기서도 그대로 따른다.
+    /// 읽기 비용은 하루 이동당 문서 1개(상태) 뿐이다.
     private func 날짜를_바꾼다(_ 일수: Int) async {
         let candidate = DayPicker.shift(dayKey: dayKey, days: 일수)
         let now = Int64(Date().timeIntervalSince1970 * 1000)
@@ -110,36 +166,27 @@ final class MapViewModel {
         // 아이 위치를 잘못된 날짜로 읽는 상태가 된다.
         하루기록 = nil
         오류 = nil
-        await 그날_경로를_다시_읽는다()
+        loadGeneration += 1
+        await 상태와_그날_경로를_읽는다(generation: loadGeneration)
     }
 
-    /// `dayKey` 가 가리키는 날의 경로만 다시 읽는다(상태 카드는 손대지 않는다).
-    private func 그날_경로를_다시_읽는다() async {
+    /// 상태와 그 날 경로를 함께 읽는다. 초기 진입(`하루를_읽는다()`)과 날짜
+    /// 이동(`날짜를_바꾼다`)이 이 함수를 공유한다 — 정본은 안드로이드
+    /// `MapTimelineFragment.load`(:304), 실패하면 하나의 오류 문구로 합쳐
+    /// 보여준다(읽기 2회를 넘지 않는다).
+    ///
+    /// `generation` 은 이 요청을 시작할 때의 `loadGeneration` 스냅샷이다. 응답이
+    /// 왔을 때 `loadGeneration` 이 이미 더 올라가 있으면(그사이 다른 날짜로
+    /// 넘어갔으면) 그 결과를 버린다 — 빠른 연속 탭에서 늦게 온 옛 날짜의 응답이
+    /// 방금 넘어간 새 날짜 화면을 덮어쓰는 것을 막는다(타입 주석의
+    /// `loadGeneration` 설명 참고).
+    private func 상태와_그날_경로를_읽는다(generation: Int) async {
         guard let childUid else { return }
         do {
-            하루기록 = try await TrailRepository.fetch(familyId: familyId, childUid: childUid, dayKey: dayKey)
-            오류 = nil
-        } catch is CancellationError {
-            return
-        } catch is TrailRepositoryError {
-            Self.logger.error("하루 기록 읽기 실패(오프라인)")
-            오류 = String(localized: "pairing_offline")
-        } catch {
-            Self.logger.error("하루 읽기 실패: \(String(describing: error), privacy: .public)")
-            오류 = errorMessage(error)
-        }
-    }
-
-    /// 상태와 그 날 경로를 순서대로 한 번씩 읽는다. 정본은 안드로이드
-    /// `MapTimelineFragment.load` — 상태 먼저, 경로 다음(둘 다 성공해야 화면을
-    /// 갱신한다), 실패하면 하나의 오류 문구로 합쳐 보여준다(읽기 2회를 넘지 않는다).
-    func 하루를_읽는다() async {
-        guard let childUid else { return }
-        do {
-            let status = try await FamilyRepository.fetchChildStatus(familyId: familyId, childUid: childUid)
-            let trail = try await TrailRepository.fetch(familyId: familyId, childUid: childUid, dayKey: dayKey)
-            상태 = status
-            하루기록 = trail
+            let 읽은_것 = try await dayLoad(familyId, childUid, dayKey)
+            guard generation == loadGeneration else { return } // 이미 낡은 응답 — 무시
+            상태 = 읽은_것.status
+            하루기록 = 읽은_것.trail
             // 이전 시도가 남긴 오류가 있었다면, 이번에 성공했으니 지운다 — 안
             // 지우면 그 옛 오류 문구가 화면에 계속 남아 방금 받은 정상 상태를
             // 가린다(3차 리뷰 Important).
@@ -148,12 +195,14 @@ final class MapViewModel {
             // 화면이 사라지며 정상 취소된 것이다 — 오류로 취급하지 않는다.
             return
         } catch is TrailRepositoryError {
+            guard generation == loadGeneration else { return }
             // 오프라인이라 그 날 기록을 못 읽었다 — "이 날은 기록이 없어요"로
             // 잘못 보여주면 안 된다(TrailRepository.fetch 주석). 안드로이드가
             // IOException 을 pairing_offline 문구로 옮기는 것과 같은 재사용이다.
             Self.logger.error("하루 기록 읽기 실패(오프라인)")
             오류 = String(localized: "pairing_offline")
         } catch {
+            guard generation == loadGeneration else { return }
             // Firestore/네트워크 원문은 영어라 그대로 보여주면 로캘라이즈 규칙을
             // 어긴다(JoinFamilyView 와 같은 규율). `errorMessage` 가 코드별로 이미
             // 있는 문구(서버 설정 미완료, 오프라인, 재로그인)로 좁혀주므로 여기서는
@@ -161,15 +210,28 @@ final class MapViewModel {
             Self.logger.error("하루 읽기 실패: \(String(describing: error), privacy: .public)")
             오류 = errorMessage(error)
         }
+    }
+
+    /// 상태와 그 날 경로를 순서대로 한 번씩 읽는다(화면 진입 시 한 번).
+    func 하루를_읽는다() async {
+        guard let childUid else { return }
+        loadGeneration += 1
+        let generation = loadGeneration
+        await 상태와_그날_경로를_읽는다(generation: generation)
 
         // 상태 카드는 하루 기록과 실패를 공유하지 않는다 — 이름 하나, 서버 시각
         // 하나를 못 구했다고 지도·타임라인까지 오류로 덮으면 그 실패와 무관한
         // 정보까지 숨는다. 각자 실패해도 카드가 물러날 기본값(아이_이름 초기값,
         // 기기 시계로 시작한 서버기준_지금)을 이미 갖고 있어 조용히 넘어간다.
+        //
+        // 이 부분은 날짜 이동(`날짜를_바꾼다`)이 공유하지 않는다 — 아이 이름·
+        // 서버 시각은 화면 진입 시 한 번만 구하면 되는 값이라, 안드로이드
+        // `load()` 도 매 호출마다 다시 구하지 않는다.
         async let 멤버_작업 = try? FamilyRepository.fetchMember(familyId: familyId, uid: childUid)
         async let 서버시각_작업 = try? FamilyRepository.serverNow(familyId: familyId, uid: AuthGateway.currentUid())
         let 멤버 = await 멤버_작업
         let 서버시각 = await 서버시각_작업
+        guard generation == loadGeneration else { return } // 그사이 날짜가 바뀌었으면 이 값도 버린다
         if let name = 멤버?.displayName, !name.isEmpty { 아이_이름 = name }
         if let 서버시각 { 서버기준_지금 = 서버시각 }
     }
