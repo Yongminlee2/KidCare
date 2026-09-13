@@ -212,6 +212,88 @@ struct MapViewModelRaceTests {
         #expect(vm.상태?.battery == 22) // 어제(11)의 늦은 응답이 그제(22)를 덮어쓰지 않았다
     }
 
+    /// Task 4 가 남긴 테스트 구멍을 닫는다. `상태와_그날_경로를_읽는다(generation:)`
+    /// 의 두 `catch` 갈래(TrailRepositoryError·일반 오류) 모두 `guard generation
+    /// == loadGeneration` 으로 낡은 응답을 버리는데, **성공 경로만** 테스트돼
+    /// 있어서 리뷰어가 두 `catch` 갈래의 가드만 지웠을 때도 168개 테스트가 전부
+    /// 통과했다 — 실패 경로에 늦게 도착하는 응답을 아무도 테스트하지 않았기
+    /// 때문이다. 이 테스트는 그 반대(❮제거→빨강, 복원→초록❯를 실제로 확인했다)를
+    /// 증명한다: **낡은 요청이 늦게 실패**해도(최신 요청이 이미 성공한 뒤에)
+    /// 오류가 뜨면 안 되고 최신 상태가 그대로 남아야 한다.
+    @Test("늦게 실패하는 옛 요청이 최신 성공 결과를 오류로 덮지 않는다 (일반 오류)")
+    func 늦게_실패하는_이전_요청은_최신_상태를_오류로_덮지_않는다_일반_오류() async throws {
+        let 오늘 = DayPicker.todayKey(zone: .current, nowMillis: Int64(Date().timeIntervalSince1970 * 1000))
+        let 어제 = DayPicker.shift(dayKey: 오늘, days: -1)
+        let 그제 = DayPicker.shift(dayKey: 오늘, days: -2)
+
+        let 어제_문 = Gate()
+        struct 가짜_오류: Error {}
+
+        let vm = MapViewModel(familyId: "family", childUid: "child") { _, _, dayKey in
+            switch dayKey {
+            case 어제:
+                await 어제_문.wait() // 그제가 이미 성공한 뒤에야 실패한다
+                throw 가짜_오류()
+            case 그제:
+                return (Self.status(battery: 22), nil)
+            default:
+                return (nil, nil)
+            }
+        }
+
+        let 첫_탭 = Task { await vm.이전_날로() } // 어제로 — commandSend 가 아니라 dayLoad 가 걸린다
+        await Task.yield()
+        let 두번째_탭 = Task { await vm.이전_날로() } // 그제로 — 이 요청이 최신이다
+        await 두번째_탭.value // 그제 성공을 먼저 완전히 반영시킨다
+        #expect(vm.오류 == nil)
+        #expect(vm.상태?.battery == 22)
+
+        await 어제_문.open() // 이제야 낡은(어제) 요청이 실패한다
+        await 첫_탭.value
+
+        #expect(vm.dayKey == 그제)
+        #expect(vm.오류 == nil) // 낡은 실패가 최신 성공을 오류로 덮으면 안 된다
+        #expect(vm.상태?.battery == 22) // 최신 상태도 그대로 남아야 한다
+    }
+
+    /// 위와 같은 구멍을 `TrailRepositoryError`(오프라인) 갈래에서도 확인한다 —
+    /// `상태와_그날_경로를_읽는다` 의 두 `catch` 는 서로 다른 가드 인스턴스라, 하나만
+    /// 지워져도 다른 하나가 지워졌을 때를 대신 잡아주지 않는다.
+    @Test("늦게 실패하는 옛 요청이 최신 성공 결과를 오류로 덮지 않는다 (오프라인 오류)")
+    func 늦게_실패하는_이전_요청은_최신_상태를_오류로_덮지_않는다_오프라인_오류() async throws {
+        let 오늘 = DayPicker.todayKey(zone: .current, nowMillis: Int64(Date().timeIntervalSince1970 * 1000))
+        let 어제 = DayPicker.shift(dayKey: 오늘, days: -1)
+        let 그제 = DayPicker.shift(dayKey: 오늘, days: -2)
+
+        let 어제_문 = Gate()
+
+        let vm = MapViewModel(familyId: "family", childUid: "child") { _, _, dayKey in
+            switch dayKey {
+            case 어제:
+                await 어제_문.wait()
+                throw TrailRepositoryError.offline(dayKey: 어제)
+            case 그제:
+                return (Self.status(battery: 33), nil)
+            default:
+                return (nil, nil)
+            }
+        }
+
+        let 첫_탭 = Task { await vm.이전_날로() }
+        await Task.yield()
+        let 두번째_탭 = Task { await vm.이전_날로() }
+        await 두번째_탭.value
+        #expect(vm.오류 == nil)
+        #expect(vm.상태?.battery == 33)
+
+        await 어제_문.open()
+        await 첫_탭.value
+
+        #expect(vm.dayKey == 그제)
+        #expect(vm.오류 == nil) // "오프라인"이라는 낡은 실패가 최신 성공을 덮으면 안 된다
+        #expect(vm.상태?.battery == 33)
+    }
+
     nonisolated private static func status(battery: Int) -> ChildStatusDoc {
         ChildStatusDoc([
             "lat": 37.0, "lng": 127.0, "accuracy": 0.0,
