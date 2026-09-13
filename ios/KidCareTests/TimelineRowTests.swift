@@ -88,4 +88,18 @@ struct TimelineRowTests {
     func 빈_하루는_빈_목록() {
         #expect(Timeline.timelineRows(from: [], zone: seoul).isEmpty)
     }
+
+    @Test("M2: 이동 행만 경로 표시 상태를 갖고, startAt 이 숨김 목록에 있으면 hidden 이다")
+    func 이동_행의_경로_표시_상태() {
+        let docs = [
+            stayDoc(startAt: 0, endAt: 600_000, placeName: ""),
+            moveDoc(startAt: 600_000, endAt: 1_200_000, distanceMeters: 300.0),
+            moveDoc(startAt: 1_200_000, endAt: 1_800_000, distanceMeters: 500.0),
+        ]
+        let rows = Timeline.timelineRows(from: docs, zone: seoul, hiddenMoveStarts: [1_200_000])
+
+        #expect(rows[0].routeState == nil) // 머무름에는 표시가 없다(안드로이드 GONE)
+        #expect(rows[1].routeState == .visible)
+        #expect(rows[2].routeState == .hidden)
+    }
 }

@@ -969,6 +969,28 @@
         }
       }
     },
+    "timeline_route_hidden": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지도에서 숨김"
+          }
+        }
+      }
+    },
+    "timeline_route_visible": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지도 표시 중"
+          }
+        }
+      }
+    },
     "timeline_show_all_routes": {
       "extractionState": "manual",
       "localizations": {

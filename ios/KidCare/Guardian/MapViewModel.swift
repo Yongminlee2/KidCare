@@ -385,7 +385,7 @@ final class MapViewModel {
     /// 순수 계산이라 `하루기록` 이 바뀔 때마다 다시 구한다.
     var 타임라인_행: [TimelineRow] {
         guard let 하루기록 else { return [] }
-        return Timeline.timelineRows(from: 하루기록.segments, zone: .current)
+        return Timeline.timelineRows(from: 하루기록.segments, zone: .current, hiddenMoveStarts: hiddenRouteStarts)
     }
 
     /// 다음 날로 넘어갈 수 있는가. 정본은 안드로이드 `renderDayHeader` 의

@@ -10,6 +10,11 @@ import Testing
 @MainActor
 struct RouteVisibilityTests {
 
+    /// `하루를_읽는다()` 가 `AuthGateway.currentUid()` 를 부른다 — Firebase 가 구성되지
+    /// 않은 채 이 스위트만 따로 돌리면(-only-testing) `Auth.auth()` 에서 크래시했다.
+    /// 다른 스위트가 먼저 구성해 주던 실행 순서에 기대지 않는다(`LiveTrackingTests` 와 같다).
+    init() async { await EmulatorHarness.start() }
+
     private let baseLat = 37.5665
 
     /// 아래 딕셔너리 빌더들은 전부 `nonisolated` 다 — `dayLoad` 로 주입하는
@@ -225,5 +230,58 @@ struct RouteVisibilityTests {
 
         await model.이전_날로() // 정본 안드로이드 drawRoute(:1070) 의 "펼쳐진 채로 날짜를 넘기면" 자리
         #expect(model.경로_전체_보기_요청 == 이전_요청_수 + 1)
+    }
+
+    // MARK: - 통합 검토 M7: 같은 날 재로드에서 앞에 구간이 끼어들어도 숨김이 따라간다
+
+    /// 하루_기록_A 앞에 머무름 하나가 끼어든 같은 날 — 뒤쪽 구간들의 인덱스가 하나씩
+    /// 밀린다(이동 6000 은 인덱스 2 → 3).
+    private nonisolated func 하루_기록_A_앞에_구간_추가(dayKey: String) -> TrailDoc {
+        TrailDoc([
+            "dayKey": dayKey,
+            "points": [
+                point(at: 1_000, east: 0.0), point(at: 2_000, east: 1.5),
+                point(at: 3_000, east: 1.5), point(at: 5_000, east: 1.6),
+                point(at: 6_000, east: 1.6), point(at: 7_000, east: 3.1),
+            ],
+            "segments": [
+                stay(startAt: 500, endAt: 1_000, east: 0.0, placeName: "집 앞"),
+                move(startAt: 1_000, endAt: 2_000, east: 1.5),
+                stay(startAt: 2_000, endAt: 6_000, east: 1.55, placeName: "집"),
+                move(startAt: 6_000, endAt: 7_000, east: 3.1),
+            ],
+            "updatedAt": 7_000,
+        ])
+    }
+
+    /// 숨김 키가 인덱스였다면 재로드 뒤 인덱스 2(이제는 머무름 "집")를 가리켜 이동
+    /// 6000 의 선이 다시 나타나고 숨김도 사라진다 — `startAt` 키라서 그대로 따라간다.
+    @Test("M7: 같은 날 다시 읽을 때 앞에 구간이 끼어들어도 숨긴 선은 startAt 으로 그대로 숨는다")
+    func 같은_날_재로드에_구간이_끼어들어도_숨김이_따라간다() async throws {
+        let 읽은_횟수 = Counter()
+        let model = vm { _, _, dayKey in
+            await 읽은_횟수.increment() == 1
+                ? (nil, 하루_기록_A(dayKey: dayKey))
+                : (nil, 하루_기록_A_앞에_구간_추가(dayKey: dayKey))
+        }
+        await model.하루를_읽는다()
+        let 이동2 = try #require(model.타임라인_행.first { $0.icon == .move && $0.startAt == 6_000 })
+        #expect(이동2.segmentIndex == 2)
+        model.타임라인_행을_탭한다(이동2)
+        #expect(model.hiddenRouteStarts == [6_000])
+
+        await model.하루를_읽는다() // 같은 날 — '지금 위치 확인' 완료 뒤 재읽기와 같은 자리
+
+        let 밀린_이동2 = try #require(model.타임라인_행.first { $0.icon == .move && $0.startAt == 6_000 })
+        #expect(밀린_이동2.segmentIndex == 3) // 인덱스가 실제로 밀렸다
+        #expect(model.hiddenRouteStarts == [6_000])
+        #expect(model.표시할_경로_구간.map(\.startAt).sorted() == [1_000])
+        #expect(밀린_이동2.routeState == .hidden)
+        #expect(model.타임라인_행.first { $0.icon == .move && $0.startAt == 1_000 }?.routeState == .visible)
+    }
+
+    private actor Counter {
+        private var value = 0
+        func increment() -> Int { value += 1; return value }
     }
 }

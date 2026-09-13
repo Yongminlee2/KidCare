@@ -7,6 +7,14 @@ enum TimelineIcon: Equatable {
     case move
 }
 
+/// 이동 구간의 선이 지금 지도에 보이는지. 정본은 안드로이드
+/// `TimelineAdapter.Holder.bind`(:96-102)의 `routeState` 텍스트 —
+/// 머무름에는 없고(`View.GONE`), 이동 행에만 "지도 표시 중"/"지도에서 숨김" 이 붙는다.
+enum RouteState: Equatable {
+    case visible
+    case hidden
+}
+
 /// 타임라인 한 줄이 화면에 필요한 값. `SegmentSummarizer` 처럼 문장이 아니라 값을
 /// 담는다 — 서식은 `TimelineRowView` 가 문구 카탈로그로 조립한다.
 ///
@@ -31,12 +39,17 @@ struct TimelineRow: Equatable {
     /// `focusOn`(:1039, :1089).
     let lat: Double
     let lng: Double
+    /// 통합 검토 M2: 이동 행의 경로 표시 상태. 머무름은 `nil` 이다(안드로이드가
+    /// 머무름에서 `routeState` 를 `GONE` 으로 숨기는 것과 같다).
+    let routeState: RouteState?
 }
 
 /// `SegmentDoc` 목록을 화면 행으로 바꾼다. 정본은 안드로이드
 /// `TimelineAdapter.Holder.bind` 와 `MapTimelineFragment.renderTimeline`(:1011).
 enum Timeline {
-    static func timelineRows(from docs: [SegmentDoc], zone: TimeZone) -> [TimelineRow] {
+    /// `hiddenMoveStarts` 는 `MapViewModel.hiddenRouteStarts` — 숨김은 인덱스가 아니라
+    /// `startAt` 으로 짝을 맞춘다(안드로이드 `doc.startAt in hiddenMoveStarts`).
+    static func timelineRows(from docs: [SegmentDoc], zone: TimeZone, hiddenMoveStarts: Set<Int64> = []) -> [TimelineRow] {
         docs.enumerated().map { index, doc in
             let stay = doc.type == "STAY"
             let segment = Segment(
@@ -59,7 +72,8 @@ enum Timeline {
                 segmentIndex: index,
                 startAt: doc.startAt,
                 lat: doc.lat,
-                lng: doc.lng
+                lng: doc.lng,
+                routeState: stay ? nil : (hiddenMoveStarts.contains(doc.startAt) ? .hidden : .visible)
             )
         }
     }
@@ -118,6 +132,17 @@ struct TimelineRowView: View {
                 Text(상세)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                if let routeState = row.routeState {
+                    // 통합 검토 M2: 정본은 안드로이드 `item_timeline.xml` 의
+                    // `route_state`(하늘색 글자, 알약 배경) — 이동 행에만 붙는다.
+                    Text(String(localized: routeState == .hidden ? "timeline_route_hidden" : "timeline_route_visible"))
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Color.blue)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.blue.opacity(0.12), in: Capsule())
+                        .padding(.top, 3)
+                }
             }
 
             Spacer(minLength: 0)
@@ -125,6 +150,11 @@ struct TimelineRowView: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 14)
         .contentShape(Rectangle())
+        // 숨긴 이동 행은 흐리게 — 안드로이드 `binding.root.alpha = 0.62f` 와 같은 값.
+        .opacity(row.routeState == .hidden ? 0.62 : 1)
+        // 제목·시각·표시 상태를 한 덩어리로 읽어준다(안드로이드는 행 전체가 하나의
+        // 클릭 대상이라 TalkBack 이 그 안의 글자를 이어 읽는다).
+        .accessibilityElement(children: .combine)
     }
 
     /// 머무름은 장소 이름을, 이동은 거리로 지은 제목을 보여준다 — 안드로이드
