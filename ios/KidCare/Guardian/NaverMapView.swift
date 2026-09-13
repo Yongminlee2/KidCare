@@ -46,6 +46,10 @@ struct NaverMapView: UIViewRepresentable {
         /// 마지막으로 처리한 [경로_전체_보기_요청] 값. 처음엔 0 과 같아도(둘 다
         /// 초기값 0) 문제없다 — 화면 진입 직후엔 아직 실제 요청(1 이상)이 없다.
         var lastFitRequest = 0
+        /// 마지막으로 그린 경로의 좌표 지문. 통합 검토 M3 로 패널을 끄는 동안 매
+        /// 프레임 `updateUIView` 가 불리게 됐다 — 선이 그대로인데 오버레이를 매번
+        /// 지우고 새로 얹으면 드래그 내내 경로선이 깜빡인다. 좌표가 바뀔 때만 다시 그린다.
+        var lastRouteKey: [Double]?
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -53,12 +57,21 @@ struct NaverMapView: UIViewRepresentable {
     func makeUIView(context: Context) -> NMFNaverMapView {
         let view = NMFNaverMapView(frame: .zero)
         view.showLocationButton = false   // 보호자 앱은 위치 권한을 쓰지 않는다(설계서 §1)
-        view.showZoomControls = true
+        // 통합 검토 D2: 정본은 안드로이드 `onMapReady` 의 `isZoomControlEnabled = false`
+        // (:237). 켜 두면 네이버 줌 컨트롤이 오른쪽 아래에 떠, 안드로이드 배치대로 그
+        // 자리에 있는 실시간 버튼이 "−" 를 가렸다(실기기 확인). 확대·축소는 핀치로 한다.
+        view.showZoomControls = false
         return view
     }
 
     func updateUIView(_ view: NMFNaverMapView, context: Context) {
-        renderRoute(routeSections, on: view.mapView, coordinator: context.coordinator)
+        let routeKey = routeSections.flatMap { section in
+            [Double(section.startAt), Double(section.coordinates.count)] + section.coordinates.flatMap { [$0.lat, $0.lng] }
+        }
+        if context.coordinator.lastRouteKey != routeKey {
+            context.coordinator.lastRouteKey = routeKey
+            renderRoute(routeSections, on: view.mapView, coordinator: context.coordinator)
+        }
         // 안드로이드 `updateNaverLogoMargin` 의 네 인자(left=dp(14), top=0, right=0,
         // bottom=panelHeight+dp(8))와 같은 값 — 패널이 늘어나는 만큼 로고도 같이
         // 밀려 올라가 어느 높이에서도 가려지지 않는다.

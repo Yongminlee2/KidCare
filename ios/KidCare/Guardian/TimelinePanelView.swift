@@ -1,35 +1,26 @@
 import SwiftUI
 
-/// 타임라인 패널의 펼침 여부·높이를 기기에 저장한다. 정본은 안드로이드
-/// `MapTimelineFragment` 의 `KEY_TIMELINE_EXPANDED`/`KEY_TIMELINE_CONTENT_HEIGHT`
-/// (SharedPreferences) — 같은 키 이름을 그대로 쓴다.
+/// 타임라인 패널의 펼침 여부·마지막 펼침 높이를 **이 실행 동안만** 기억한다. 정본은
+/// 안드로이드 `MapTimelineFragment` 의 `onSaveInstanceState`(:1292-1297)와
+/// `onViewCreated`(:175-179)가 주고받는 `KEY_TIMELINE_EXPANDED`/
+/// `KEY_TIMELINE_CONTENT_HEIGHT` — SharedPreferences 가 아니라 `savedInstanceState`
+/// 다. 그래서 앱을 새로 켜면 접힘·기본 높이로 시작하고, 같은 실행 안에서 이 화면이
+/// 다시 만들어질 때만 이어진다.
 ///
-/// `UserDefaults` 를 주입받는 이유는 `RoleStore`/`RequestLog` 와 같다 — 기본
-/// 저장소를 쓰면 테스트가 시뮬레이터의 진짜 앱 컨테이너에 흔적을 남긴다.
-struct TimelinePanelStore {
-    private let defaults: UserDefaults
+/// 통합 검토 M4: 예전 구현은 이 값을 기기 설정 저장소에 영구 저장해 앱을 다시 켜도
+/// 펼친 채로 복원했고, 주석도 SharedPreferences 라고 잘못 적었다. 영구 저장을
+/// 지우고 메모리에만 둔다.
+@MainActor
+final class TimelinePanelStore {
+    /// 이 실행 동안 모든 `TimelinePanelView` 가 함께 쓰는 기억.
+    static let shared = TimelinePanelStore()
 
-    init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
-    }
+    var isExpanded = false
+    /// 마지막으로 펼쳐져 있던 콘텐츠 높이. 아직 한 번도 펼치지 않았으면 안드로이드
+    /// `DEFAULT_TIMELINE_CONTENT_HEIGHT_DP` 와 같은 기본값이다.
+    var contentHeight: CGFloat = TimelinePanel.defaultContentHeight
 
-    var isExpanded: Bool {
-        get { defaults.bool(forKey: Self.expandedKey) }
-        nonmutating set { defaults.set(newValue, forKey: Self.expandedKey) }
-    }
-
-    /// 마지막으로 펼쳐져 있던 콘텐츠 높이. 저장된 값이 없으면(첫 실행) 안드로이드
-    /// `DEFAULT_TIMELINE_CONTENT_HEIGHT_DP` 와 같은 기본값으로 물러난다.
-    var contentHeight: CGFloat {
-        get {
-            let stored = defaults.double(forKey: Self.heightKey)
-            return stored > 0 ? CGFloat(stored) : TimelinePanel.defaultContentHeight
-        }
-        nonmutating set { defaults.set(Double(newValue), forKey: Self.heightKey) }
-    }
-
-    private static let expandedKey = "timeline_expanded"
-    private static let heightKey = "timeline_content_height"
+    init() {}
 }
 
 /// 지도 위에 뜨는, 접기·드래그 가능한 타임라인 패널. 정본은 안드로이드
@@ -38,7 +29,7 @@ struct TimelinePanelStore {
 /// `renderTimelinePanel`(:876)·`renderTimelineToggleState`(:893)·
 /// `collapsedPanelHeight`(:992). 높이 계산 자체(경계값 56/96/340/0.72)는
 /// `Logic/TimelinePanel.swift` 의 순수 함수가 하고, 이 뷰는 제스처·레이아웃·
-/// 영속화만 맡는다.
+/// 같은 실행 안의 기억(`TimelinePanelStore`)만 맡는다.
 ///
 /// **패널이 지도 위에 뜬다** — 안드로이드처럼 `ChildMapView` 가 이 뷰를
 /// `NaverMapView` 와 같은 `ZStack` 의 `.bottom` 정렬 자식으로 얹는다(예전처럼
@@ -63,7 +54,7 @@ struct TimelinePanelView: View {
     let rootHeight: CGFloat
     let store: TimelinePanelStore
 
-    init(viewModel: MapViewModel, rootHeight: CGFloat, store: TimelinePanelStore = TimelinePanelStore()) {
+    init(viewModel: MapViewModel, rootHeight: CGFloat, store: TimelinePanelStore = .shared) {
         self.viewModel = viewModel
         self.rootHeight = rootHeight
         self.store = store
@@ -98,17 +89,26 @@ struct TimelinePanelView: View {
             timelineContent
             dayNavigationRow
         }
-        .background(.regularMaterial)
+        .background(Self.panelBackground)
         .clipShape(.rect(topLeadingRadius: 20, topTrailingRadius: 20))
         .shadow(color: .black.opacity(0.12), radius: 10, y: -2)
         .onAppear {
-            // 복원된 값을 곧바로 MapViewModel(→ Task 8 자리)에 알린다 — 화면이
-            // 처음 뜬 순간부터 지도 컨트롤·로고 여백이 복원된 높이를 반영해야
-            // 한다(안드로이드는 뷰가 레이아웃될 때 이미 SharedPreferences 값을
-            // 읽어 시작하므로 같은 자리다).
+            // 이어받은 값을 곧바로 MapViewModel(→ Task 8 자리)에 알린다 — 화면이
+            // 처음 뜬 순간부터 지도 컨트롤·로고 여백이 그 높이를 반영해야 한다
+            // (안드로이드는 `onViewCreated` 에서 savedInstanceState 를 읽고 첫
+            // 레이아웃 때 `updateMapControls` 를 부르므로 같은 자리다).
             publish()
         }
     }
+
+    /// 통합 검토 D1: 패널 바탕은 **불투명**하다 — 정본은 안드로이드 `timeline_panel`
+    /// 의 `cardBackgroundColor="@color/paper_card"`. 예전엔 `.regularMaterial` 이었는데,
+    /// 그 위에서 계층형 전경 스타일로 그린 것들(행의 시각·기간 줄 `.secondary`, 행 사이
+    /// `Divider`)이 화면에 전혀 찍히지 않았다. 실기기(실제 가족 데이터)와 시뮬레이터
+    /// (Task 6 스크린샷) 모두 데이터와 무관하게 "제목만 있고 아래 줄이 빈" 행이 됐다 —
+    /// 줄 간격은 두 줄짜리 그대로 남아 있었다. 바탕만 불투명 색으로 바꾸자 같은
+    /// 빌드에서 상세 줄이 그대로 나타났다(`TimelinePanelRenderTests` 가 픽셀로 확인한다).
+    static var panelBackground: Color { Color(uiColor: .secondarySystemGroupedBackground) }
 
     // MARK: - 손잡이
 
@@ -132,7 +132,11 @@ struct TimelinePanelView: View {
         // "정말 드래그였는지"를 직접 갈라 안드로이드 `dragging` 플래그 +
         // `performClick()` 과 같은 결과를 낸다.
         .highPriorityGesture(
-            DragGesture(minimumDistance: Self.touchSlop, coordinateSpace: .local)
+            // 통합 검토 I3: `.global` 로 잰다. 손잡이는 패널이 커지는 만큼 함께
+            // 올라가므로 `.local`(움직이는 손잡이 자신의 좌표)로 재면 번역값이 그
+            // 이동만큼 줄어 반 속도로 따라오고 흔들렸다. 정본인 안드로이드도 화면
+            // 좌표 `event.rawY` 로 잰다.
+            DragGesture(minimumDistance: Self.touchSlop, coordinateSpace: .global)
                 .onChanged { value in
                     if !isDragging {
                         isDragging = true
@@ -143,6 +147,11 @@ struct TimelinePanelView: View {
                     contentHeight = TimelinePanel.clampDuringDrag(
                         contentHeight: candidate, basePanelHeight: basePanelHeight, rootHeight: rootHeight
                     )
+                    // 통합 검토 M3: 지도 버튼·네이버 로고 여백이 손가락을 따라 매
+                    // 이동마다 움직여야 한다(안드로이드 ACTION_MOVE 의
+                    // `updateMapControls`, :945-947) — 안착 때만 옮기면 드래그 도중
+                    // 로고가 패널에 가려진다(SDK 약관).
+                    viewModel.타임라인_패널을_끄는_중이다(콘텐츠_높이: contentHeight)
                 }
                 .onEnded { _ in
                     // 버그였던 자리(실기기로 직접 눌러보고서야 드러났다): `minimumDistance`
@@ -152,10 +161,9 @@ struct TimelinePanelView: View {
                     // 반복해 토글이 전혀 안 먹혔다. 실제로 드래그가 있었을 때만
                     // settle 하고, 없었으면(순수 탭) toggle 한다 — 안드로이드
                     // `dragging` 플래그로 `performClick()` 을 가르는 것과 같은 분기다.
-                    if isDragging {
-                        settle()
-                    } else {
-                        toggle()
+                    switch TimelinePanel.release(isDragging: isDragging) {
+                    case .settle: settle()
+                    case .toggle: toggle()
                     }
                     isDragging = false
                 }
@@ -318,14 +326,16 @@ struct TimelinePanelView: View {
         publish()
     }
 
-    /// 정본은 안드로이드 `KEY_TIMELINE_EXPANDED`/`KEY_TIMELINE_CONTENT_HEIGHT` 저장 +
+    /// 정본은 안드로이드 `onSaveInstanceState` 가 남기는 `KEY_TIMELINE_EXPANDED`/
+    /// `KEY_TIMELINE_CONTENT_HEIGHT`(이 앱은 `TimelinePanelStore` 메모리) +
     /// `MapViewModel.타임라인_패널_상태를_갱신한다` 를 통한 Task 8 자리 갱신을 한
-    /// 곳에 모은다 — 토글·드래그 안착·최초 복원 세 자리 모두 이 함수 하나를
+    /// 곳에 모은다 — 토글·드래그 안착·화면 첫 등장 세 자리 모두 이 함수 하나를
     /// 지나가야 한다(잊어버리는 자리가 생기지 않게).
     private func publish() {
         store.isExpanded = expanded
-        // 접혔을 때는 저장된 "마지막 펼침 높이"를 건드리지 않는다 — 그래야 다음에
-        // 펼쳤을 때(토글이든, 다음 실행 때 복원이든) 방금 접기 전 높이로 돌아간다.
+        // 접혔을 때는 기억해 둔 "마지막 펼침 높이"를 건드리지 않는다 — 그래야 다음에
+        // 펼쳤을 때(토글이든, 같은 실행에서 화면이 다시 만들어졌든) 방금 접기 전
+        // 높이로 돌아간다.
         if expanded { store.contentHeight = lastExpandedHeight }
         viewModel.타임라인_패널_상태를_갱신한다(펼쳐짐: expanded, 콘텐츠_높이: contentHeight)
     }

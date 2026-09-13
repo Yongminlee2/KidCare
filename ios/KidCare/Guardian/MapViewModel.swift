@@ -756,6 +756,16 @@ final class MapViewModel {
         if 펼쳐짐 { 경로_전체_보기를_요청한다() }
     }
 
+    /// 통합 검토 M3: 손잡이를 끄는 **도중**의 콘텐츠 높이. 정본은 안드로이드
+    /// `bindTimelineDragHandle` 의 `ACTION_MOVE`(:945-947)가 부르는
+    /// `updateMapControls(basePanelHeight + currentContentHeight)` — 지도 버튼과 네이버
+    /// 로고 여백이 매 이동마다 손가락을 따라간다. 펼침 여부는 바꾸지 않고 경로 전체
+    /// 보기도 요청하지 않는다 — 그 둘은 손을 뗀 뒤 [타임라인_패널_상태를_갱신한다] 의
+    /// 몫이다(안드로이드 `settleTimelineDrag`).
+    func 타임라인_패널을_끄는_중이다(콘텐츠_높이: CGFloat) {
+        타임라인_콘텐츠_높이 = 콘텐츠_높이
+    }
+
     /// 패널 상단의 경로 요약 문구("오늘 480m" 류). 정본은 안드로이드 `renderTimeline`
     /// (:1011)의 `docs.sumOf { it.distanceMeters }` → `SegmentSummarizer.distanceText`
     /// → `timeline_summary_*` 분기(오늘/다른 날/빈 날), 그 위에 Task 8 이

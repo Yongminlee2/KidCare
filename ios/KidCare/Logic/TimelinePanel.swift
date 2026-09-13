@@ -72,6 +72,23 @@ enum TimelinePanel {
         return min(max(contentHeight, minExpandedContentHeight), maxHeight)
     }
 
+    /// 손잡이에서 손을 뗐을 때 할 일.
+    enum HandleRelease: Equatable {
+        /// 실제로 끌었다 — 지금 높이를 [settle(contentHeight:basePanelHeight:rootHeight:)] 로 안착시킨다.
+        case settle
+        /// 끌기 문턱을 넘지 못한 채 뗐다(탭) — 접기/펼치기를 뒤집는다.
+        case toggle
+    }
+
+    /// 통합 검토 M1: 손을 뗐을 때의 탭/드래그 분기를 화면 없이 못박는다. 정본은
+    /// 안드로이드 `bindTimelineDragHandle` 의 `ACTION_UP` 갈래 — `dragging` 이면
+    /// `settleTimelineDrag`, 아니면 `performClick()`. SwiftUI 는 `DragGesture` 의
+    /// `onEnded` 를 문턱 밑의 순수 탭에도 부르므로(Task 6 이 실제로 밟은 함정),
+    /// 이 분기가 틀리면 접힌 채 탭해도 반응이 없다.
+    static func release(isDragging: Bool) -> HandleRelease {
+        isDragging ? .settle : .toggle
+    }
+
     /// 접기/펼치기 토글 버튼을 눌렀을 때의 목표 콘텐츠 높이. 정본은 안드로이드
     /// `renderTimelinePanel`(:876) — 펼쳐진 상태면 `lastExpandedTimelineHeight` 를
     /// (그 순간의 최대 높이로) 다시 한 번 클램프하고, 접힌 상태면 0이다.

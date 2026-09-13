@@ -280,6 +280,20 @@ struct RouteVisibilityTests {
         #expect(model.타임라인_행.first { $0.icon == .move && $0.startAt == 1_000 }?.routeState == .visible)
     }
 
+    // MARK: - 통합 검토 M3: 드래그 도중 높이
+
+    @Test("M3: 손잡이를 끄는 도중에는 콘텐츠 높이만 따라가고 펼침·경로 전체 보기는 건드리지 않는다")
+    func 드래그_중에는_높이만_따라간다() async throws {
+        let model = vm { _, _, dayKey in (nil, 하루_기록_A(dayKey: dayKey)) }
+        await model.하루를_읽는다()
+
+        model.타임라인_패널을_끄는_중이다(콘텐츠_높이: 120)
+
+        #expect(model.타임라인_콘텐츠_높이 == 120) // 지도 버튼·로고 여백이 이 값을 따라간다
+        #expect(model.타임라인_펼쳐짐 == false)
+        #expect(model.경로_전체_보기_요청 == 0)
+    }
+
     private actor Counter {
         private var value = 0
         func increment() -> Int { value += 1; return value }

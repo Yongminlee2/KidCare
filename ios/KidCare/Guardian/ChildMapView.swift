@@ -84,7 +84,13 @@ struct ChildMapView: View {
                 // 정본은 안드로이드 `updateMapControls`(:1204) — 버튼 하단 여백을
                 // 패널의 지금 높이에 맞춰 띄운다(고정 dp 가 아니다). 패널이
                 // 접혀 있어도 뼈대(136)만큼은 항상 비켜 서 있어야 한다.
-                VStack(spacing: 10) {
+                //
+                // 통합 검토 D2: 정본 `fragment_map_timeline.xml` 은 실시간 버튼
+                // (`live_tracking_button`, marginEnd 76dp = 14 + 위치 버튼 52 + 간격 10)과
+                // 위치 버튼(`locate_button`, marginEnd 14dp)을 **같은 줄**에 나란히 두고
+                // 둘 다 bottomMargin = 패널 높이 + 12dp 다. 예전엔 세로로 쌓아 실시간
+                // 알약이 네이버 줌 컨트롤 자리까지 올라가 "−" 를 가렸다.
+                HStack(alignment: .bottom, spacing: 10) {
                     실시간_버튼
                     지금위치_버튼
                 }

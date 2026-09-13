@@ -108,4 +108,22 @@ struct TimelinePanelTests {
             expanded: true, lastExpandedHeight: 5000, basePanelHeight: 136, rootHeight: 800
         ) == 440)
     }
+
+    // MARK: - 통합 검토 M1: 손을 뗐을 때 탭/드래그 분기
+
+    @Test("M1: 실제로 끌었으면 안착(settle), 문턱을 못 넘고 뗐으면(탭) 토글이다")
+    func 손을_뗐을_때의_분기() {
+        #expect(TimelinePanel.release(isDragging: true) == .settle)
+        #expect(TimelinePanel.release(isDragging: false) == .toggle)
+    }
+
+    // MARK: - 통합 검토 M4: 앱 새 실행은 접힘으로 시작한다
+
+    @Test("M4: 새 기억(앱을 새로 켠 것)은 접힘·기본 높이로 시작한다")
+    @MainActor
+    func 새_기억은_접힘으로_시작한다() {
+        let store = TimelinePanelStore()
+        #expect(store.isExpanded == false)
+        #expect(store.contentHeight == TimelinePanel.defaultContentHeight)
+    }
 }
