@@ -14,6 +14,10 @@ struct NaverMapView: UIViewRepresentable {
     /// 그 날 경로선. 정본은 안드로이드 `MapTimelineFragment.buildRouteSections` +
     /// `GradientRouteOverlay` — `RouteOverlay.sections(points:segments:)` 가 만든다.
     var routeSections: [RouteSection] = []
+    /// Task 6: 타임라인 패널의 지금 전체 높이(접힘 뼈대 + 콘텐츠). 네이버 지도
+    /// SDK 이용약관상 로고가 패널에 가려지면 안 되므로, 이 값만큼 로고 여백을
+    /// 띄운다 — 정본은 안드로이드 `updateNaverLogoMargin`(:1194).
+    var panelHeight: CGFloat = 0
     /// 마커가 처음 생겼을 때 한 번만 카메라를 옮긴다. 그 뒤에는 부모가 옮긴 자리를 지킨다.
     @Binding var 카메라를_한번_맞췄나: Bool
     /// M3(리뷰): `MapViewModel.카메라를_다시_맞춰야_한다` — '지금 위치 확인'이
@@ -41,6 +45,10 @@ struct NaverMapView: UIViewRepresentable {
 
     func updateUIView(_ view: NMFNaverMapView, context: Context) {
         renderRoute(routeSections, on: view.mapView, coordinator: context.coordinator)
+        // 안드로이드 `updateNaverLogoMargin` 의 네 인자(left=dp(14), top=0, right=0,
+        // bottom=panelHeight+dp(8))와 같은 값 — 패널이 늘어나는 만큼 로고도 같이
+        // 밀려 올라가 어느 높이에서도 가려지지 않는다.
+        view.mapView.logoMargin = UIEdgeInsets(top: 0, left: 14, bottom: panelHeight + 8, right: 0)
 
         guard let markerAt else {
             context.coordinator.marker.mapView = nil

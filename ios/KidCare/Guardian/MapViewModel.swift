@@ -194,6 +194,12 @@ final class MapViewModel {
     /// 끌려온다).
     private(set) var 카메라를_다시_맞춰야_한다 = false
 
+    /// Task 6: 타임라인 패널이 지금 펼쳐져 있는가. `TimelinePanelView` 가 드래그를
+    /// 놓거나 토글 버튼을 누른 뒤 [타임라인_패널_상태를_갱신한다] 로 이 값을 올린다.
+    private(set) var 타임라인_펼쳐짐 = false
+    /// Task 6: 타임라인 패널의 지금 콘텐츠 높이(포인트) — 접혔으면 0.
+    private(set) var 타임라인_콘텐츠_높이: CGFloat = 0
+
     private static let logger = Logger(subsystem: "com.kidcare.family", category: "MapViewModel")
 
     init(
@@ -600,6 +606,40 @@ final class MapViewModel {
     /// `focusChildOnNextLoad = false` 와 같은 자리(M3).
     func 카메라_재조준을_마쳤다() {
         카메라를_다시_맞춰야_한다 = false
+    }
+
+    /// Task 6: `TimelinePanelView` 가 드래그를 안착시키거나 토글 버튼을 누른 뒤
+    /// (또는 저장된 값을 복원한 직후) 이 값들을 올린다.
+    ///
+    /// **Task 8 자리 — 한국어로 왜:** 안드로이드는 패널이 펼쳐진 채로 끝날 때마다
+    /// `fitWholeRoute()` 로 카메라가 그 날 경로 전체가 보이게 다시 맞춘다(네 곳 —
+    /// `MapTimelineFragment` 의 명령 완료 재읽기 :245, `renderTimelinePanel` :889,
+    /// `settleTimelineDrag` :981, `drawRoute` :1070). 이 Task(6)의 범위는 패널
+    /// 자체(접기·펼치기·드래그·영속화)까지다 — 카메라를 실제로 움직이는 일은
+    /// **Task 8** 몫이라, 여기서는 상태만 내놓는다. `NaverMapView`(또는 그걸 부르는
+    /// `ChildMapView`)가 [타임라인_펼쳐짐]·[타임라인_콘텐츠_높이] 가 바뀌는 것을
+    /// 지켜보다가 그 카메라 피팅을 걸면 된다 — `카메라를_다시_맞춰야_한다` 와 같은
+    /// 자리다.
+    func 타임라인_패널_상태를_갱신한다(펼쳐짐: Bool, 콘텐츠_높이: CGFloat) {
+        타임라인_펼쳐짐 = 펼쳐짐
+        타임라인_콘텐츠_높이 = 콘텐츠_높이
+    }
+
+    /// 패널 상단의 경로 요약 문구("오늘 480m" 류). 정본은 안드로이드 `renderTimeline`
+    /// (:1011)의 `docs.sumOf { it.distanceMeters }` → `SegmentSummarizer.distanceText`
+    /// → `timeline_summary_*` 분기(오늘/다른 날/빈 날). 순수 계산이라 `하루기록` ·
+    /// `dayKey` 가 바뀔 때마다 다시 구하면 그만이다 — [경로_구간]·[타임라인_행] 과
+    /// 같은 이유로 따로 저장하지 않는다.
+    var 경로_요약_문구: String {
+        guard let 하루기록, !하루기록.segments.isEmpty else {
+            return String(localized: "timeline_summary_empty")
+        }
+        let 총_거리 = 하루기록.segments.reduce(0.0) { $0 + $1.distanceMeters }
+        let 거리_문구 = distanceText(SegmentSummarizer.distance(meters: 총_거리))
+        let 오늘 = DayPicker.todayKey(zone: zone, nowMillis: Int64(Date().timeIntervalSince1970 * 1000))
+        return dayKey == 오늘
+            ? String(format: String(localized: "timeline_summary_today"), 거리_문구)
+            : String(format: String(localized: "timeline_summary_day"), 거리_문구)
     }
 
     /// 아이 폰이 대답했다는 사실을 남긴다. 정본은 안드로이드 `recordAnswer`(:682) —

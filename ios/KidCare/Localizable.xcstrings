@@ -771,6 +771,17 @@
         }
       }
     },
+    "timeline_collapse": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이동 기록 접기"
+          }
+        }
+      }
+    },
     "timeline_detail_inline": {
       "extractionState": "manual",
       "localizations": {
@@ -778,6 +789,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "timeline_drag_handle": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위아래로 끌어 이동 기록 높이 조절"
           }
         }
       }
@@ -793,6 +815,17 @@
         }
       }
     },
+    "timeline_expand": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이동 기록 펼치기"
+          }
+        }
+      }
+    },
     "timeline_move_title": {
       "extractionState": "manual",
       "localizations": {
@@ -804,6 +837,39 @@
         }
       }
     },
+    "timeline_summary_day": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 날 %1$@"
+          }
+        }
+      }
+    },
+    "timeline_summary_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘 이동 기록"
+          }
+        }
+      }
+    },
+    "timeline_summary_today": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘 %1$@"
+          }
+        }
+      }
+    },
     "timeline_unknown_place": {
       "extractionState": "manual",
       "localizations": {
@@ -811,6 +877,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "머무른 곳"
+          }
+        }
+      }
+    },
+    "timeline_view_records": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이동 기록 보기"
           }
         }
       }

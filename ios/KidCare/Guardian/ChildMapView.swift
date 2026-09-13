@@ -30,12 +30,20 @@ struct ChildMapView: View {
         _viewModel = State(initialValue: MapViewModel(familyId: familyId, childUid: childUid))
     }
 
+    /// Task 6: 접힘 뼈대(손잡이+경로 요약 줄+날짜 이동 줄) + 지금 콘텐츠 높이 —
+    /// 지도 컨트롤(현재 위치 버튼)과 네이버 로고 여백이 이 값만큼 패널 위로
+    /// 떠야 한다. 정본은 안드로이드 `timelinePanelHeight()`(:1338).
+    private var 패널_전체_높이: CGFloat {
+        TimelinePanel.collapsedPanelHeight + viewModel.타임라인_콘텐츠_높이
+    }
+
     var body: some View {
-        VStack(spacing: 0) {
+        GeometryReader { geo in
             ZStack(alignment: .top) {
                 NaverMapView(
                     markerAt: viewModel.상태.map { (lat: $0.lat, lng: $0.lng) },
                     routeSections: viewModel.경로_구간,
+                    panelHeight: 패널_전체_높이,
                     카메라를_한번_맞췄나: $카메라를_한번_맞췄나,
                     카메라를_다시_맞춰야_한다: Binding(
                         get: { viewModel.카메라를_다시_맞춰야_한다 },
@@ -49,7 +57,9 @@ struct ChildMapView: View {
                 // 같다(:222). 대기 문구·오류·명령 진행 상태를 전부 이 한 줄이
                 // 맡는다(`StatusCardView.상태_문구` 참고) — 예전처럼 지도 위에
                 // 따로 겹쳐 그리면 그 배너가 이 카드를 덮어 "전달 중…"/실패 문구가
-                // 안 보이거나 잘렸다(리뷰 shot0~shot3).
+                // 안 보이거나 잘렸다(리뷰 shot0~shot3). 패널은 화면 아래쪽에 따로
+                // 뜨므로(overlay(alignment: .bottom) 참고) 패널이 아무리 커져도
+                // 이 카드를 가리지 않는다.
                 StatusCardView(
                     childName: viewModel.아이_이름,
                     status: viewModel.상태,
@@ -61,12 +71,19 @@ struct ChildMapView: View {
                 )
             }
             .overlay(alignment: .bottomTrailing) {
+                // 정본은 안드로이드 `updateMapControls`(:1204) — 버튼 하단 여백을
+                // 패널의 지금 높이에 맞춰 띄운다(고정 dp 가 아니다). 패널이
+                // 접혀 있어도 뼈대(136)만큼은 항상 비켜 서 있어야 한다.
                 지금위치_버튼
                     .padding(.trailing, 14)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 패널_전체_높이 + 12)
             }
-
-            타임라인_패널
+            .overlay(alignment: .bottom) {
+                // Task 6: 패널이 지도 위에 뜬다(예전의 VStack 나열이 아니다) —
+                // `TimelinePanelView` 타입 주석의 "패널이 지도 위에 뜬다" 참고.
+                TimelinePanelView(viewModel: viewModel, rootHeight: geo.size.height)
+            }
+            .ignoresSafeArea(.container, edges: .bottom)
         }
         // `.task` 는 화면이 사라지면 스스로 취소한다 — 구독이 아니라 한 번의
         // 읽기라 onDisappear 에서 따로 걷어낼 리스너가 없다.
@@ -101,73 +118,5 @@ struct ChildMapView: View {
         // look disabled").
         .opacity(viewModel.위치확인_버튼_활성화 ? 1 : 0.48)
         .accessibilityLabel(Text("map_locate_now"))
-    }
-
-    /// 지도 아래 타임라인 패널. 정본은 안드로이드 `fragment_map_timeline.xml` 의
-    /// `timelinePanel` + `MapTimelineFragment.renderTimeline`(:1011)·
-    /// `renderTimelineEmpty`(:1035). 안드로이드는 접었다 펼 수 있는 바텀시트지만,
-    /// 이 Task 의 범위는 "행이 보인다/빈 날엔 빈 상태가 보인다"까지다 — 크기
-    /// 조절·접기는 다루지 않는다.
-    private var 타임라인_패널: some View {
-        VStack(spacing: 0) {
-            날짜_이동_바
-
-            Group {
-                if viewModel.타임라인_행.isEmpty {
-                    Text(String(localized: "timeline_empty"))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 24)
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            ForEach(viewModel.타임라인_행, id: \.segmentIndex) { row in
-                                TimelineRowView(row: row)
-                                Divider().padding(.leading, 50)
-                            }
-                        }
-                    }
-                }
-            }
-            .frame(maxHeight: .infinity)
-        }
-        .frame(height: 220)
-        .background(.regularMaterial)
-    }
-
-    /// `◀ 오늘 ▶` 날짜 이동 줄. 정본은 안드로이드 `fragment_map_timeline.xml` 의
-    /// `prev_day_button`/`day_header`/`next_day_button` + `renderDayHeader`(:867).
-    /// 접근성 라벨(`day_prev`/`day_next`)은 안드로이드가 이미 쓰던 키를 그대로
-    /// 재사용한다 — 새 키를 만들지 않는다(brief).
-    private var 날짜_이동_바: some View {
-        HStack {
-            Button {
-                Task { await viewModel.이전_날로() }
-            } label: {
-                Image(systemName: "chevron.left")
-                    .frame(width: 44, height: 44)
-            }
-            .accessibilityLabel(Text("day_prev"))
-
-            Spacer()
-
-            Text(viewModel.날짜_헤더_문구)
-                .font(.subheadline.bold())
-                .foregroundStyle(.primary)
-
-            Spacer()
-
-            Button {
-                Task { await viewModel.다음_날로() }
-            } label: {
-                Image(systemName: "chevron.right")
-                    .frame(width: 44, height: 44)
-            }
-            .disabled(!viewModel.다음_날로_갈_수_있는가)
-            .accessibilityLabel(Text("day_next"))
-        }
-        .padding(.horizontal, 10)
-        .buttonStyle(.plain)
     }
 }
