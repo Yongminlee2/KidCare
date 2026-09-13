@@ -28,12 +28,24 @@ struct NaverMapView: UIViewRepresentable {
     /// liveTrackingActive`(:784), 세 조건 전부 `MapViewModel` 쪽에서 이 한 신호로
     /// 합쳐진다.
     @Binding var 카메라를_다시_맞춰야_한다: Bool
+    /// Task 8: `MapViewModel.포커스_요청` — 타임라인 행을 탭해 특정 좌표로 카메라를
+    /// 옮겨야 할 때. 소비한 뒤 `nil` 로 되돌려 [MapViewModel.포커스_요청을_마쳤다]
+    /// 를 대신한다.
+    @Binding var 포커스_요청: MapFocusRequest?
+    /// Task 8: `MapViewModel.경로_전체_보기_요청` — 값이 바뀔 때마다(카운터이므로
+    /// "다르면 새 요청") 지금 보이는 경로 전체가 화면에 들어오게 카메라를 맞춘다.
+    /// 일반 갱신마다 다시 맞추지 않는다(Task 1 규율) — [Coordinator.lastFitRequest]
+    /// 가 마지막으로 처리한 값을 기억해 걸러낸다.
+    var 경로_전체_보기_요청: Int = 0
 
     final class Coordinator {
         let marker = NMFMarker()
         /// 이전 경로선. 매번 새로 그리기 전에 지운다 — 안 지우면 날짜를 넘길
         /// 때마다(또는 재조회 때마다) 선이 겹겹이 쌓인다(안드로이드 `drawRoute` 주석).
         var routeOverlay: NMFMultipartPath?
+        /// 마지막으로 처리한 [경로_전체_보기_요청] 값. 처음엔 0 과 같아도(둘 다
+        /// 초기값 0) 문제없다 — 화면 진입 직후엔 아직 실제 요청(1 이상)이 없다.
+        var lastFitRequest = 0
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -51,6 +63,23 @@ struct NaverMapView: UIViewRepresentable {
         // bottom=panelHeight+dp(8))와 같은 값 — 패널이 늘어나는 만큼 로고도 같이
         // 밀려 올라가 어느 높이에서도 가려지지 않는다.
         view.mapView.logoMargin = UIEdgeInsets(top: 0, left: 14, bottom: panelHeight + 8, right: 0)
+
+        // Task 8: 경로 전체 보기(정본 안드로이드 `fitWholeRoute` 네 호출 자리) —
+        // 이 값이 지난번 처리한 값과 다를 때만 움직인다. `updateUIView` 는 이
+        // 뷰의 다른 프로퍼티(마커 위치 등)가 바뀔 때도 매번 다시 불리므로, 값
+        // 비교 없이 매번 fitWholeRoute 를 부르면 부모가 방금 옮겨본 지도를 일반
+        // 갱신마다 도로 빼앗는다(Task 1 규율).
+        if context.coordinator.lastFitRequest != 경로_전체_보기_요청 {
+            context.coordinator.lastFitRequest = 경로_전체_보기_요청
+            fitWholeRoute(routeSections, on: view.mapView)
+        }
+
+        // Task 8: 타임라인 행 탭 포커스 — 정본은 안드로이드 `focusOn`(:1039).
+        if let target = 포커스_요청 {
+            let position = NMGLatLng(lat: target.lat, lng: target.lng)
+            view.mapView.moveCamera(NMFCameraUpdate(scrollTo: position, zoomTo: target.zoom))
+            DispatchQueue.main.async { 포커스_요청 = nil }
+        }
 
         guard let markerAt else {
             context.coordinator.marker.mapView = nil
@@ -71,6 +100,26 @@ struct NaverMapView: UIViewRepresentable {
                 if 강제_재조준 { 카메라를_다시_맞춰야_한다 = false }
             }
         }
+    }
+
+    /// Task 8: 지금 보이는 경로 전체가 화면에 들어오게 카메라를 맞춘다. 정본은
+    /// 안드로이드 `fitWholeRoute`(:1177) — 왼쪽/오른쪽 48, 위 112, 아래
+    /// (패널 높이 + 24)의 비대칭 여백과 350ms 애니메이션까지 그대로 옮긴다.
+    /// 좌표가 2개 미만이면(선을 그릴 게 없으면) 아무 일도 하지 않는다.
+    private func fitWholeRoute(_ sections: [RouteSection], on map: NMFMapView) {
+        let coordinates = sections.flatMap(\.coordinates)
+        guard coordinates.count >= 2 else { return }
+        let latLngs = coordinates.map { NMGLatLng(lat: $0.lat, lng: $0.lng) }
+        let bounds = NMGLatLngBounds(latLngs: latLngs)
+        let insets = UIEdgeInsets(top: 112, left: 48, bottom: panelHeight + 24, right: 48)
+        let update = NMFCameraUpdate(fit: bounds, paddingInsets: insets)
+        // 안드로이드 `CameraAnimation.Easing`(가속·감속이 모두 있는 완만한
+        // 애니메이션)에 가장 가까운 iOS SDK 값 — 이 SDK 에는 이름이 같은 값이
+        // 없어(`easeIn`/`easeOut`/`linear`/`fly` 뿐) 감속(도착 직전 느려짐)이
+        // 도착지에 부드럽게 안착하는 인상을 준다는 이유로 `.easeOut` 을 고른다.
+        update.animation = .easeOut
+        update.animationDuration = 0.35
+        map.moveCamera(update)
     }
 
     /// 정본은 안드로이드 `MapTimelineFragment.renderRouteOverlay` + `GradientRouteOverlay`.

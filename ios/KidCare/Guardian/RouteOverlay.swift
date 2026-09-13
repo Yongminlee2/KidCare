@@ -11,6 +11,12 @@ import Foundation
 /// 그 앞뒤 구간을 가리키는 데도 같은 인덱스를 쓴다.
 struct RouteSection {
     let segmentIndex: Int?
+    /// Task 8: 이 구간을 낸 `SegmentDoc.startAt`. 정본은 안드로이드 `RouteSection`
+    /// (`MapTimelineFragment.kt`) — 숨김 상태(`MapViewModel.hiddenRouteStarts`)는
+    /// **이 값으로** 키를 삼는다, [segmentIndex] 가 아니다: 날짜를 다시 읽거나 새
+    /// 구간이 앞에 끼어들면 인덱스가 바뀌어 숨긴 선이 엉뚱한 구간으로 옮겨 붙는다
+    /// (브리프). [segmentIndex] 는 행·구간을 찾는 용도로만 남긴다.
+    let startAt: Int64
     let coordinates: [(lat: Double, lng: Double)]
 }
 
@@ -36,6 +42,7 @@ enum RouteOverlay {
         var result: [RouteSection] = []
         for (windowIndex, entry) in sortedMoves.enumerated() {
             let originalIndex = entry.offset
+            let startAt = entry.element.startAt
             let window = windows[windowIndex]
             let windowPoints = sortedPoints.filter { window.contains($0.at) }
 
@@ -62,7 +69,7 @@ enum RouteOverlay {
             }
 
             for leg in legs {
-                result.append(RouteSection(segmentIndex: originalIndex, coordinates: leg))
+                result.append(RouteSection(segmentIndex: originalIndex, startAt: startAt, coordinates: leg))
             }
         }
         return result

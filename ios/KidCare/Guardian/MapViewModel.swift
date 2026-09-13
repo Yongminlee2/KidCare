@@ -78,6 +78,16 @@ enum LiveTrackingState: Equatable {
     case stopping
 }
 
+/// Task 8: 타임라인 행을 탭했을 때(경로선이 없는 구간, 또는 머무름) 지도가 옮겨가야
+/// 할 자리. 정본은 안드로이드 `focusOn`(:1039). `NaverMapView` 가 한 번 소비한 뒤
+/// `MapViewModel.포커스_요청을_마쳤다()` 로 스스로 지운다 — `카메라를_다시_맞춰야_한다`
+/// 와 같은 일회성 신호 규율이다.
+struct MapFocusRequest: Equatable {
+    let lat: Double
+    let lng: Double
+    let zoom: Double
+}
+
 @Observable
 @MainActor
 final class MapViewModel {
@@ -252,6 +262,26 @@ final class MapViewModel {
     /// 시작 명령의 `durationSeconds` 페이로드에 적을 값(초). 정본은 안드로이드
     /// `LIVE_SESSION_DURATION_SECONDS`.
     static let liveSessionDurationSeconds: Int64 = 600
+    /// 정본은 안드로이드 `CHILD_FOCUS_ZOOM`(:1330) — 타임라인 행 포커스·(향후)
+    /// 다른 단일 지점 포커스가 공유하는 줌 레벨이다.
+    static let childFocusZoom = 18.0
+
+    // MARK: - Task 8: 구간별 경로 보이기
+
+    /// 지금 숨긴 이동 구간들의 `startAt`. **인덱스가 아니라 이 값으로 키를
+    /// 삼는다** — `RouteSection.startAt` 주석 참고.
+    private(set) var hiddenRouteStarts: Set<Int64> = []
+    /// Task 8: 타임라인 행을 탭해 지도를 포커스해야 할 좌표. `NaverMapView` 가
+    /// 소비한 뒤 [포커스_요청을_마쳤다] 로 스스로 지운다.
+    private(set) var 포커스_요청: MapFocusRequest?
+    /// Task 8: 지금 켜진 그 날 경로 전체가 보이게 카메라를 다시 맞춰야 한다는
+    /// 신호. **불리언이 아니라 카운터다** — 같은 순간에 "펼쳐진 채로 다시
+    /// 펼쳐짐"처럼 값이 동일한 요청이 연달아 나도 `NaverMapView` 가 "바뀌었다"로
+    /// 알아채야 하기 때문이다(코디네이터가 마지막으로 처리한 값과 비교한다).
+    /// 정본은 안드로이드 `fitWholeRoute` 호출 네 자리(:245, :889, :981, :1070) —
+    /// **일반 갱신(`updateUIView` 재호출)마다 움직이지 않는다**(Task 1 규율:
+    /// 부모가 옮긴 지도를 빼앗지 않는다), 이 신호가 설 때만 움직인다.
+    private(set) var 경로_전체_보기_요청 = 0
 
     /// M3(리뷰): `done` 직후 카메라가 아이의 새 위치로 다시 움직여야 한다는 신호.
     /// 정본은 안드로이드 `focusChildOnNextLoad`(:157, :420, :807) — 마커가 이미
@@ -334,6 +364,15 @@ final class MapViewModel {
         return RouteOverlay.sections(points: 하루기록.points, segments: 하루기록.segments)
     }
 
+    /// Task 8: 지금 지도에 실제로 그려야 할 구간 — 숨긴 것(`hiddenRouteStarts`)을
+    /// 뺀다. `NaverMapView` 가 그릴 선도, `fitWholeRoute` 가 맞출 범위도 **이
+    /// 값 하나**를 지나간다 — 정본인 안드로이드 `renderRouteOverlay` 의
+    /// `lastRouteLegs`/`lastRoutePositions` 가 숨긴 구간을 뺀 뒤에야 그리기와
+    /// fitBounds 양쪽에 쓰는 것과 같다.
+    var 표시할_경로_구간: [RouteSection] {
+        경로_구간.filter { !hiddenRouteStarts.contains($0.startAt) }
+    }
+
     /// 그 날을 머무름·이동으로 요약한 목록. `Timeline.timelineRows` 와 마찬가지로
     /// 순수 계산이라 `하루기록` 이 바뀔 때마다 다시 구한다.
     var 타임라인_행: [TimelineRow] {
@@ -412,10 +451,24 @@ final class MapViewModel {
             guard generation == loadGeneration else { return } // 이미 낡은 응답 — 무시
             상태 = 읽은_것.status
             하루기록 = 읽은_것.trail
+            // Task 8: 정본은 안드로이드 drawRoute 의 `hiddenRouteStarts.retainAll(validKeys)`
+            // — 날짜를 넘기면(또는 다시 읽으면) 새 하루의 구간과 겹치지 않는
+            // 숨김 키는 자연히 걸러진다. 날짜가 다르면 startAt(밀리초)이 우연히
+            // 같을 일이 사실상 없으므로, 이 교집합이 "날짜를 넘기면 숨김을
+            // 지운다"와 같은 결과를 낸다 — 다만 같은 날을 다시 읽었을 때(예:
+            // '지금 위치 확인' 완료 뒤 재읽기)는 부모가 방금 숨긴 구간을 그대로
+            // 지켜준다.
+            hiddenRouteStarts.formIntersection(Set(경로_구간.map(\.startAt)))
             // 이전 시도가 남긴 오류가 있었다면, 이번에 성공했으니 지운다 — 안
             // 지우면 그 옛 오류 문구가 화면에 계속 남아 방금 받은 정상 상태를
             // 가린다(3차 리뷰 Important).
             오류 = nil
+            // Task 8: 정본은 안드로이드 `drawRoute`(:1070)의
+            // `if (timelineExpanded) fitWholeRoute()` — 패널이 펼쳐진 채로 날짜를
+            // 넘기면(또는 다시 읽으면) 새 경로 전체가 보이게 카메라를 다시
+            // 맞춘다. 접혀 있으면 건드리지 않는다(Task 1 규율 — 부모의 팬을
+            // 빼앗지 않는다).
+            if 타임라인_펼쳐짐 { 경로_전체_보기를_요청한다() }
         } catch is CancellationError {
             // 화면이 사라지며 정상 취소된 것이다 — 오류로 취급하지 않는다.
             return
@@ -686,26 +739,35 @@ final class MapViewModel {
     /// Task 6: `TimelinePanelView` 가 드래그를 안착시키거나 토글 버튼을 누른 뒤
     /// (또는 저장된 값을 복원한 직후) 이 값들을 올린다.
     ///
-    /// **Task 8 자리 — 한국어로 왜:** 안드로이드는 패널이 펼쳐진 채로 끝날 때마다
-    /// `fitWholeRoute()` 로 카메라가 그 날 경로 전체가 보이게 다시 맞춘다(네 곳 —
-    /// `MapTimelineFragment` 의 명령 완료 재읽기 :245, `renderTimelinePanel` :889,
-    /// `settleTimelineDrag` :981, `drawRoute` :1070). 이 Task(6)의 범위는 패널
-    /// 자체(접기·펼치기·드래그·영속화)까지다 — 카메라를 실제로 움직이는 일은
-    /// **Task 8** 몫이라, 여기서는 상태만 내놓는다. `NaverMapView`(또는 그걸 부르는
-    /// `ChildMapView`)가 [타임라인_펼쳐짐]·[타임라인_콘텐츠_높이] 가 바뀌는 것을
-    /// 지켜보다가 그 카메라 피팅을 걸면 된다 — `카메라를_다시_맞춰야_한다` 와 같은
-    /// 자리다.
+    /// **Task 8**: 펼쳐진 채로 끝날 때마다(정본은 안드로이드 `renderTimelinePanel`
+    /// :889·`settleTimelineDrag` :981의 `if (timelineExpanded) fitWholeRoute()`)
+    /// 경로 전체 보기를 요청한다 — 접힐 때는 건드리지 않는다(부모의 팬을 지킨다).
     func 타임라인_패널_상태를_갱신한다(펼쳐짐: Bool, 콘텐츠_높이: CGFloat) {
         타임라인_펼쳐짐 = 펼쳐짐
         타임라인_콘텐츠_높이 = 콘텐츠_높이
+        if 펼쳐짐 { 경로_전체_보기를_요청한다() }
     }
 
     /// 패널 상단의 경로 요약 문구("오늘 480m" 류). 정본은 안드로이드 `renderTimeline`
     /// (:1011)의 `docs.sumOf { it.distanceMeters }` → `SegmentSummarizer.distanceText`
-    /// → `timeline_summary_*` 분기(오늘/다른 날/빈 날). 순수 계산이라 `하루기록` ·
-    /// `dayKey` 가 바뀔 때마다 다시 구하면 그만이다 — [경로_구간]·[타임라인_행] 과
-    /// 같은 이유로 따로 저장하지 않는다.
+    /// → `timeline_summary_*` 분기(오늘/다른 날/빈 날), 그 위에 Task 8 이
+    /// `renderRouteVisibilityState`(:1111)의 숨김 개수 분기를 한 번 더 얹는다.
+    /// 순수 계산이라 `하루기록`·`dayKey`·`hiddenRouteStarts` 가 바뀔 때마다 다시
+    /// 구하면 그만이다 — [경로_구간]·[타임라인_행] 과 같은 이유로 따로 저장하지
+    /// 않는다.
     var 경로_요약_문구: String {
+        let 기본_문구 = 경로_요약_기본_문구
+        let 키_목록 = Set(경로_구간.map(\.startAt))
+        guard !키_목록.isEmpty else { return 기본_문구 }
+        let 숨긴_개수 = 키_목록.intersection(hiddenRouteStarts).count
+        if 숨긴_개수 == 0 { return 기본_문구 }
+        if 숨긴_개수 == 키_목록.count {
+            return String(format: String(localized: "timeline_summary_routes_hidden"), 기본_문구)
+        }
+        return String(format: String(localized: "timeline_summary_routes_partial"), 기본_문구)
+    }
+
+    private var 경로_요약_기본_문구: String {
         guard let 하루기록, !하루기록.segments.isEmpty else {
             return String(localized: "timeline_summary_empty")
         }
@@ -715,6 +777,68 @@ final class MapViewModel {
         return dayKey == 오늘
             ? String(format: String(localized: "timeline_summary_today"), 거리_문구)
             : String(format: String(localized: "timeline_summary_day"), 거리_문구)
+    }
+
+    // MARK: - Task 8: 구간별 경로 보이기 — 동작
+
+    /// 전체 경로 숨김/보임 버튼이 눌릴 수 있는가. 정본은 안드로이드
+    /// `routeVisibilityButton.isEnabled`(:1121) — 구간이 하나도 없으면(그 날
+    /// 이동 기록이 없으면) 막는다. 화면(`TimelinePanelView`)이 이 값을 보고
+    /// alpha 0.38 로 낮춘다(브리프).
+    var 경로_숨김_버튼_활성화: Bool { !경로_구간.isEmpty }
+
+    /// 지금 모든 구간이 보이는 상태인가 — 버튼 아이콘·접근성 문구가 이 값으로
+    /// 갈린다. 정본은 안드로이드 `renderRouteVisibilityState` 의 `allVisible`.
+    var 경로_전체_보임: Bool {
+        let 키_목록 = Set(경로_구간.map(\.startAt))
+        return !키_목록.isEmpty && 키_목록.isDisjoint(with: hiddenRouteStarts)
+    }
+
+    /// 전체 숨김/보임 버튼의 접근성 문구. 기존 안드로이드 키를 그대로 쓴다(브리프
+    /// "All four keys already exist").
+    var 경로_숨김_버튼_접근성_문구: String {
+        String(localized: 경로_전체_보임 ? "timeline_hide_all_routes" : "timeline_show_all_routes")
+    }
+
+    /// 타임라인 행 하나를 탭했을 때. 정본은 안드로이드 어댑터의 탭 처리(:894-896)
+    /// + `toggleRoute`(:1089) — 그릴 선이 있는 이동 구간이면 켜고 끄고, 그렇지
+    /// 않으면(머무름, 또는 근사에도 실패한 이동) 그 좌표로 카메라를 포커스한다.
+    func 타임라인_행을_탭한다(_ row: TimelineRow) {
+        guard row.icon == .move, 경로_구간.contains(where: { $0.startAt == row.startAt }) else {
+            포커스_요청 = MapFocusRequest(lat: row.lat, lng: row.lng, zoom: Self.childFocusZoom)
+            return
+        }
+        if hiddenRouteStarts.contains(row.startAt) {
+            hiddenRouteStarts.remove(row.startAt)
+        } else {
+            hiddenRouteStarts.insert(row.startAt)
+        }
+    }
+
+    /// 전체 숨김/보임 버튼. 정본은 안드로이드 `toggleAllRoutes`(:1101) — 모두
+    /// 보이는 중이면 전부 숨기고, 하나라도 숨겨져 있으면 전부 다시 보인다.
+    func 전체_경로를_토글한다() {
+        let 키_목록 = Set(경로_구간.map(\.startAt))
+        guard !키_목록.isEmpty else { return }
+        if 경로_전체_보임 {
+            hiddenRouteStarts.formUnion(키_목록)
+        } else {
+            hiddenRouteStarts.subtract(키_목록)
+        }
+    }
+
+    /// `NaverMapView` 가 [포커스_요청] 을 소비한 뒤 부른다 — `카메라_재조준을_마쳤다`
+    /// 와 같은 일회성 신호 규율.
+    func 포커스_요청을_마쳤다() {
+        포커스_요청 = nil
+    }
+
+    /// [경로_전체_보기_요청] 을 하나 올린다 — 카운터를 쓰는 이유는 그 프로퍼티
+    /// 주석 참고. `NaverMapView` 의 코디네이터가 "마지막으로 처리한 값"을 직접
+    /// 기억하므로(요청 값 자체가 소비 여부를 겸한다), `카메라_재조준을_마쳤다`
+    /// 와 달리 소비를 알리는 별도 함수가 필요 없다.
+    private func 경로_전체_보기를_요청한다() {
+        경로_전체_보기_요청 += 1
     }
 
     /// 아이 폰이 대답했다는 사실을 남긴다. 정본은 안드로이드 `recordAnswer`(:682) —

@@ -35,6 +35,10 @@ struct TimelineRowTests {
         #expect(rows[0].title == "△△초등학교")
         #expect(rows[0].distance == nil) // 머무름은 거리를 안 보여준다.
         #expect(rows[0].segmentIndex == 0)
+        // Task 8: 탭-포커스·경로 숨김이 쓰는 값들 — SegmentDoc 의 값을 그대로 옮긴다.
+        #expect(rows[0].startAt == 1_757_000_000_000)
+        #expect(rows[0].lat == 37.5)
+        #expect(rows[0].lng == 127.0)
     }
 
     @Test("이름 없는 머무름은 '머무른 곳'으로 대체한다")

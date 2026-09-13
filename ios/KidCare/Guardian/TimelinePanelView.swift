@@ -185,6 +185,21 @@ struct TimelinePanelView: View {
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
+            // Task 8: 전체 구간 숨김/보임. 정본은 안드로이드 `routeVisibilityButton`
+            // + `renderRouteVisibilityState`(:1111).
+            Button {
+                viewModel.전체_경로를_토글한다()
+            } label: {
+                Image(systemName: viewModel.경로_전체_보임 ? "eye" : "eye.slash")
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .buttonStyle(.bordered)
+            .tint(.blue)
+            .disabled(!viewModel.경로_숨김_버튼_활성화)
+            // 구간이 없으면 알아볼 수 있게 흐리게 — 안드로이드 alpha 0.38 과 같다(브리프).
+            .opacity(viewModel.경로_숨김_버튼_활성화 ? 1 : 0.38)
+            .accessibilityLabel(Text(viewModel.경로_숨김_버튼_접근성_문구))
+
             Button(action: toggle) {
                 HStack(spacing: 4) {
                     Text(String(localized: expanded ? "timeline_collapse" : "timeline_view_records"))
@@ -221,6 +236,12 @@ struct TimelinePanelView: View {
                     LazyVStack(spacing: 0) {
                         ForEach(viewModel.타임라인_행, id: \.segmentIndex) { row in
                             TimelineRowView(row: row)
+                                .contentShape(Rectangle())
+                                // Task 8: 정본은 안드로이드 타임라인 어댑터의 탭
+                                // 처리(:894-896) — 이동 구간이면 그 선을 켜고
+                                // 끄고, 그렇지 않으면(머무름 등) 그 좌표로
+                                // 카메라를 포커스한다.
+                                .onTapGesture { viewModel.타임라인_행을_탭한다(row) }
                             Divider().padding(.leading, 50)
                         }
                     }

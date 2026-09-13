@@ -22,6 +22,15 @@ struct TimelineRow: Equatable {
     let duration: Duration
     let distance: Distance?
     let segmentIndex: Int
+    /// Task 8: 이 행을 낸 `SegmentDoc.startAt`. 경로 숨김(`MapViewModel
+    /// .hiddenRouteStarts`)이 이 값으로 `RouteSection` 과 짝을 맞춘다 — 인덱스가
+    /// 아니다(`RouteSection.startAt` 주석과 같은 이유).
+    let startAt: Int64
+    /// Task 8: 행을 탭했을 때 그 구간에 그릴 선이 없으면(머무름, 또는 근사에도
+    /// 실패한 이동) 이 좌표로 카메라를 포커스한다. 정본은 안드로이드 `toggleRoute`/
+    /// `focusOn`(:1039, :1089).
+    let lat: Double
+    let lng: Double
 }
 
 /// `SegmentDoc` 목록을 화면 행으로 바꾼다. 정본은 안드로이드
@@ -47,7 +56,10 @@ enum Timeline {
                 detail: SegmentSummarizer.timeRange(segment, zone: zone),
                 duration: SegmentSummarizer.duration(millis: doc.endAt - doc.startAt),
                 distance: stay ? nil : SegmentSummarizer.distance(meters: doc.distanceMeters),
-                segmentIndex: index
+                segmentIndex: index,
+                startAt: doc.startAt,
+                lat: doc.lat,
+                lng: doc.lng
             )
         }
     }

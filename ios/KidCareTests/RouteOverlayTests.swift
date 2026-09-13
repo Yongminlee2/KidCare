@@ -48,6 +48,9 @@ struct RouteOverlayTests {
         #expect(sections.count == 1)
         guard sections.count == 1 else { return }
         #expect(sections[0].segmentIndex == 0)
+        // Task 8: 숨김 상태는 이 값(구간을 낸 SegmentDoc.startAt)으로 키를 잡는다
+        // — 인덱스가 아니다(RouteSection.startAt 주석).
+        #expect(sections[0].startAt == 1_000)
         #expect(sections[0].coordinates.count == 3)
         #expect(sections[0].coordinates.first?.lng == points[0].lng)
         #expect(sections[0].coordinates.last?.lng == points[2].lng)
@@ -80,5 +83,8 @@ struct RouteOverlayTests {
         let bySegment = Dictionary(uniqueKeysWithValues: sections.map { ($0.segmentIndex, $0) })
         #expect(bySegment[0]?.coordinates.count == 3)   // 1000, 2000, 3000(머무름 앞 절반)
         #expect(bySegment[2]?.coordinates.count == 3)   // 5000(머무름 뒷 절반), 6000, 7000
+        // Task 8: 인덱스와 별개로 startAt 도 각 구간의 것과 일치해야 한다.
+        #expect(bySegment[0]?.startAt == 1_000)
+        #expect(bySegment[2]?.startAt == 6_000)
     }
 }

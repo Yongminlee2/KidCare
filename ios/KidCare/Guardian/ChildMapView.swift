@@ -42,13 +42,20 @@ struct ChildMapView: View {
             ZStack(alignment: .top) {
                 NaverMapView(
                     markerAt: viewModel.상태.map { (lat: $0.lat, lng: $0.lng) },
-                    routeSections: viewModel.경로_구간,
+                    // Task 8: 숨긴 구간을 뺀 것을 넘긴다 — 그려야 그릴 선도,
+                    // fitWholeRoute 가 맞출 범위도 이 값 하나를 지나간다.
+                    routeSections: viewModel.표시할_경로_구간,
                     panelHeight: 패널_전체_높이,
                     카메라를_한번_맞췄나: $카메라를_한번_맞췄나,
                     카메라를_다시_맞춰야_한다: Binding(
                         get: { viewModel.카메라를_다시_맞춰야_한다 },
                         set: { if !$0 { viewModel.카메라_재조준을_마쳤다() } }
-                    )
+                    ),
+                    포커스_요청: Binding(
+                        get: { viewModel.포커스_요청 },
+                        set: { if $0 == nil { viewModel.포커스_요청을_마쳤다() } }
+                    ),
+                    경로_전체_보기_요청: viewModel.경로_전체_보기_요청
                 )
                 .ignoresSafeArea()
 

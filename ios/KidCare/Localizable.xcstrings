@@ -947,6 +947,17 @@
         }
       }
     },
+    "timeline_hide_all_routes": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 이동경로 숨기기"
+          }
+        }
+      }
+    },
     "timeline_move_title": {
       "extractionState": "manual",
       "localizations": {
@@ -954,6 +965,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "이동 %1$@"
+          }
+        }
+      }
+    },
+    "timeline_show_all_routes": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 이동경로 보기"
           }
         }
       }
@@ -976,6 +998,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘 이동 기록"
+          }
+        }
+      }
+    },
+    "timeline_summary_routes_hidden": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · 경로 숨김"
+          }
+        }
+      }
+    },
+    "timeline_summary_routes_partial": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · 일부 숨김"
           }
         }
       }
