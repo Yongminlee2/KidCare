@@ -424,6 +424,25 @@ enum CommandType {
     static let stopLiveTracking = "stop_live_tracking"
     static let payloadDurationSeconds = "durationSeconds"
     static let payloadSessionId = "sessionId"
+
+    /// 관리 탭이 보내는 명령(4단계). 정본은 안드로이드 `CommandType`(Documents.kt:215-339) —
+    /// 값이 하나라도 다르면 자녀 폰(`child/CommandHandler`)이 이 명령을 못 알아본다.
+    static let setRinger = "set_ringer"
+    /// 자녀 폰의 실제 벨소리 모드만 읽어 상태 문서에 올린다. 소리는 안 낸다(:217-218).
+    static let queryRinger = "query_ringer"
+    static let findPhone = "find_phone"
+    static let stopFind = "stop_find"
+    /// 다른 명령과 달리 `delivered` 가 "전해졌지만 아직 안 읽음"이라는 **최종 상태**일 수
+    /// 있다 — `done` 은 아이가 '확인했어요'를 눌렀다는 뜻이다(:247-260).
+    static let message = "message"
+    static let payloadText = "text"
+    static let errorNotificationOff = "message_notification_off"
+    /// 하루 안의 분만 보낸다. 오늘인지 내일인지는 자녀 폰이 정한다(:282-299).
+    static let setAlarm = "set_alarm"
+    static let cancelAlarm = "cancel_alarm"
+    static let payloadAtMinuteOfDay = "atMinuteOfDay"
+    static let payloadLabel = "label"
+    static let errorAlarmExactDenied = "alarm_exact_denied"
 }
 
 /// [CommandDoc.state] 값들. 정본은 안드로이드 `CommandState` 오브젝트.
@@ -432,4 +451,47 @@ enum CommandState {
     static let delivered = "delivered"
     static let done = "done"
     static let failed = "failed"
+}
+
+/// `set_ringer` 의 모드 값과 페이로드 키. 정본은 `ControlFragment.kt:1119-1128` — 안드로이드는
+/// guardian 이 child 를 import 하지 않아 이 값을 두 곳에 적는다(`child/RingerStateStore.kt:21-27`).
+/// 바꿀 일이 생기면 세 곳을 함께 고친다(README "함께 고쳐야 하는 짝").
+enum RingerMode {
+    static let normal = "normal"
+    static let vibrate = "vibrate"
+    static let silent = "silent"
+    static let payloadKey = "mode"
+    /// 자녀 폰이 소리 모드 변경을 거부당했을 때 적는 코드.
+    static let errorDenied = "ringer_denied"
+
+    static func isKnown(_ mode: String) -> Bool { mode == normal || mode == vibrate || mode == silent }
+}
+
+/// 자녀 폰이 올리는 방해 금지 상태. 정본은 `child/RingerStateStore.kt:9-19`. 방해 금지가
+/// 켜지면 안드로이드가 벨소리 모드를 무조건 '무음'으로 보고하므로 둘을 함께 봐야 한다.
+enum Dnd {
+    /// 꺼짐도 모름도 아니면 켜져 있는 것이다.
+    static func isOn(_ value: String?) -> Bool { value == "priority" || value == "alarms" || value == "none" }
+}
+
+/// `ChildStatusDoc.network` 값. 정본은 `child/NetworkState.kt:23-27`. 빈 값은 "모른다".
+enum NetworkKind {
+    static let wifi = "wifi"
+    static let cell = "cell"
+    static let none = "none"
+}
+
+/// children/{childUid}/settings/ringer. 정본은 `Documents.kt:466-482`. 보호자 앱은 이 문서를
+/// **통째로 쓰지 않는다** — 필드 하나씩 병합한다(`ScheduleRepository.setRingerLock` 주석).
+/// 그래서 `firestoreData` 가 없다.
+struct RingerSettingsDoc {
+    var lockEnabled = false
+    var defaultMode = ""
+    var holidayOff = false
+
+    init(_ data: [String: Any]) {
+        lockEnabled = data["lockEnabled"] as? Bool ?? false
+        defaultMode = data["defaultMode"] as? String ?? ""
+        holidayOff = data["holidayOff"] as? Bool ?? false
+    }
 }

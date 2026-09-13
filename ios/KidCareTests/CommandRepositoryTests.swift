@@ -23,60 +23,6 @@ struct CommandRepositoryTests {
 
     init() async { await EmulatorHarness.start() }
 
-    /// 자녀 폰을 흉내 내는 두 번째 세션. 테스트마다 이름을 다르게 줘 서로 다른
-    /// `FirebaseApp` 을 쓰게 한다 — 안 그러면 이미 로그인된 세션을 재사용해
-    /// "새 자녀" 를 흉내 낼 수 없다.
-    private struct ChildSession {
-        let uid: String
-        let db: Firestore
-    }
-
-    private func freshChildSession() async throws -> ChildSession {
-        // FIRApp 이름은 영문·숫자·하이픈·밑줄만 허용한다 — `#function`(한글 테스트
-        // 이름 + 괄호)을 그대로 붙이면 그 자리에서 예외로 죽는다. UUID 만으로도
-        // 세션마다 다른 이름을 보장하기엔 충분하다.
-        let appName = "CommandRepositoryTests-\(UUID().uuidString)"
-        let options = FirebaseOptions(
-            googleAppID: "1:000000000000:ios:0000000000000001",
-            gcmSenderID: "000000000000"
-        )
-        options.projectID = EmulatorHarness.projectId
-        options.apiKey = "emulator-does-not-check-this"
-        FirebaseApp.configure(name: appName, options: options)
-        let app = try #require(FirebaseApp.app(name: appName))
-
-        let auth = Auth.auth(app: app)
-        auth.useEmulator(withHost: "127.0.0.1", port: 9099)
-
-        let firestore = Firestore.firestore(app: app)
-        firestore.useEmulator(withHost: "127.0.0.1", port: 8080)
-        let settings = firestore.settings
-        settings.cacheSettings = MemoryCacheSettings()
-        settings.isSSLEnabled = false
-        firestore.settings = settings
-
-        let result = try await auth.signInAnonymously()
-        return ChildSession(uid: result.user.uid, db: firestore)
-    }
-
-    /// 자녀 세션으로 `families/{familyId}/members/{childUid}` 를 직접 만든다 —
-    /// `FamilyRepository.joinFamily` 와 정확히 같은 필드를 쓰되, 그 함수는 기본
-    /// `Firestore.firestore()`(보호자 세션)만 상대해서 여기(자녀 세션)에는 못
-    /// 쓴다. 규칙(초대 코드로 자녀 자리를 가져가는 갈래)은 그대로 태운다.
-    private func joinAsChild(_ child: ChildSession, familyId: String, joinCode: String) async throws {
-        let now = Int64(Date().timeIntervalSince1970 * 1000)
-        try await child.db.collection("families").document(familyId)
-            .collection("members").document(child.uid).setData([
-                "role": "child",
-                "displayName": "아이",
-                "fcmToken": "",
-                "appVersion": "",
-                "updatedAt": now,
-                "joinCode": joinCode,
-                "joinedAt": now,
-            ])
-    }
-
     @Test("send() 는 pending 으로 시작하고 안드로이드가 읽는 필드 이름 그대로 저장한다")
     func 명령을_보내면_안드로이드와_같은_필드로_pending_문서가_생긴다() async throws {
         let guardianUid = try await EmulatorHarness.freshUser()
@@ -127,10 +73,10 @@ struct CommandRepositoryTests {
         let familyId = try await FamilyRepository.createFamily(guardianUid: guardianUid)
         let invite = try await FamilyRepository.createInvite(familyId: familyId, role: .child, previousCode: nil)
 
-        let child = try await freshChildSession()
-        try await joinAsChild(child, familyId: familyId, joinCode: invite.code)
+        let child = try await EmulatorHarness.freshChildSession()
+        try await EmulatorHarness.joinAsChild(child, familyId: familyId, joinCode: invite.code)
 
-        // 여기서부터 기본 세션은 다시 보호자다(freshChildSession 은 두 번째 앱을
+        // 여기서부터 기본 세션은 다시 보호자다(EmulatorHarness.freshChildSession 은 두 번째 앱을
         // 쓰므로 기본 Auth.auth() 를 건드리지 않았다) — send() 가 guardian 역할을
         // 요구하는 규칙을 그대로 통과한다.
         let commandId = try await CommandRepository.send(
@@ -170,8 +116,8 @@ struct CommandRepositoryTests {
         let familyId = try await FamilyRepository.createFamily(guardianUid: guardianUid)
         let invite = try await FamilyRepository.createInvite(familyId: familyId, role: .child, previousCode: nil)
 
-        let child = try await freshChildSession()
-        try await joinAsChild(child, familyId: familyId, joinCode: invite.code)
+        let child = try await EmulatorHarness.freshChildSession()
+        try await EmulatorHarness.joinAsChild(child, familyId: familyId, joinCode: invite.code)
         let commandId = try await CommandRepository.send(
             familyId: familyId, childUid: child.uid, type: CommandType.locateNow
         )

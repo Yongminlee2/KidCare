@@ -12,6 +12,39 @@
         }
       }
     },
+    "control_alarm_state_confirmed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "애기폰에 %1$@ 알람이 맞춰져 있어요"
+          }
+        }
+      }
+    },
+    "control_alarm_state_labeled": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ '%2$@'"
+          }
+        }
+      }
+    },
+    "control_alarm_state_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 알람을 보냈어요 · 애기폰 대답을 기다리는 중이에요"
+          }
+        }
+      }
+    },
     "control_command_done": {
       "extractionState": "manual",
       "localizations": {
@@ -67,6 +100,17 @@
         }
       }
     },
+    "control_error_alarm_exact_denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "애기폰에서 '알람 및 리마인더' 권한이 꺼져 있어 알람을 맞추지 못했어요. 아이 폰 설정 → 앱 → '우리아이 지킴이' → 알람 및 리마인더에서 켜주세요."
+          }
+        }
+      }
+    },
     "control_error_child_failed": {
       "extractionState": "manual",
       "localizations": {
@@ -74,6 +118,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "아이 폰이 이 명령을 처리하지 못했어요."
+          }
+        }
+      }
+    },
+    "control_error_message_notification_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아이 폰에서 알림이 꺼져 있어 메시지를 띄우지 못했어요. 아이 폰 설정 → 앱 → '우리아이 지킴이' → 알림에서 켜주세요."
+          }
+        }
+      }
+    },
+    "control_error_ringer_denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아이 폰에서 소리 설정 권한이 꺼져 있어요. 아이 폰 설정에서 켜야 바꿀 수 있어요."
           }
         }
       }
@@ -162,6 +228,204 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ (애기폰 시계 기준이라 정확하지 않아요)"
+          }
+        }
+      }
+    },
+    "control_message_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보낼 말을 적어주세요."
+          }
+        }
+      }
+    },
+    "control_message_read": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "읽음"
+          }
+        }
+      }
+    },
+    "control_message_unread": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "애기폰에 도착했어요 · 아직 안 읽음"
+          }
+        }
+      }
+    },
+    "control_mode_normal": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "벨소리"
+          }
+        }
+      }
+    },
+    "control_mode_silent": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무음"
+          }
+        }
+      }
+    },
+    "control_mode_vibrate": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "진동"
+          }
+        }
+      }
+    },
+    "control_network_cell": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "데이터로 연결돼 있어요"
+          }
+        }
+      }
+    },
+    "control_network_none": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "인터넷에 연결돼 있지 않아요"
+          }
+        }
+      }
+    },
+    "control_network_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "꺼짐"
+          }
+        }
+      }
+    },
+    "control_network_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜짐"
+          }
+        }
+      }
+    },
+    "control_network_unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 확인하지 못했어요"
+          }
+        }
+      }
+    },
+    "control_network_wifi": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "와이파이로 연결돼 있어요"
+          }
+        }
+      }
+    },
+    "control_network_wifi_switch": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "와이파이 스위치 %1$@"
+          }
+        }
+      }
+    },
+    "control_ringer_dnd": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "방해금지 모드"
+          }
+        }
+      }
+    },
+    "control_ringer_status_applied": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "현재 상태 · %1$@"
+          }
+        }
+      }
+    },
+    "control_ringer_status_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마지막 확인 · %1$@"
+          }
+        }
+      }
+    },
+    "control_ringer_status_loading": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "애기폰의 현재 소리 상태를 확인하는 중이에요"
+          }
+        }
+      }
+    },
+    "control_ringer_status_unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마지막 소리 상태를 아직 확인하지 못했어요"
           }
         }
       }
@@ -822,6 +1086,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "수"
+          }
+        }
+      }
+    },
+    "schedule_time_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$02d:%2$02d"
           }
         }
       }
