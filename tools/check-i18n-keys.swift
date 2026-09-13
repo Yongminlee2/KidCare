@@ -81,7 +81,7 @@ for file in jsonFiles {
 if hasMismatch {
     print("")
     print("14개 i18n/*.json 파일이 같은 키 집합을 공유하지 않는다.")
-    print("번역을 지어내지 말 것 — 실제 번역이 준비되는 대로(Phase 6) 위에 나열된 키를 채운다.")
+    print("번역을 지어내지 말 것 — 빈 칸은 tools/i18n-untranslated.json 에 기록돼 있고 카탈로그에서는 영어로 물러난다(python3 tools/ios-strings.py).")
     exit(1)
 } else {
     print("모든 i18n/*.json 파일이 같은 \(unionKeys.count)개 키를 공유한다.")

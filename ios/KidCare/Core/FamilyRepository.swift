@@ -221,9 +221,12 @@ enum FamilyRepository {
         let bootTime = deviceNow()
         let familyRef = db.collection("families").document()
 
+        // 서버에 **저장되는** 기본 이름은 문구 키를 쓰지 않는다. 키 값은 언어마다 달라지고(6단계부터 14개),
+        // role_guardian 은 화면용이라 "보호자 (엄마·아빠)"다. 안드로이드는 이 값들을 글자 그대로 저장한다
+        // (FamilyRepository.kt:145, 156, 349 — README "안드로이드에 남은 다국어 구멍" 3번).
         try await familyRef.setData(
             FamilyDoc(
-                name: String(localized: "family_default_name"),
+                name: "우리 가족",
                 createdAt: bootTime,
                 ownerUid: guardianUid,
                 schemaVersion: FamilyDoc.currentSchemaVersion
@@ -232,7 +235,7 @@ enum FamilyRepository {
         try await familyRef.collection("members").document(guardianUid).setData(
             MemberDoc(
                 role: .guardian,
-                displayName: String(localized: "role_guardian"),
+                displayName: "보호자",
                 updatedAt: bootTime,
                 joinedAt: bootTime
             ).firestoreData
@@ -301,9 +304,8 @@ enum FamilyRepository {
 
         let familyRef = db.collection("families").document(doc.familyId)
         let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let fallback = doc.role == .guardian
-            ? String(localized: "role_guardian")
-            : String(localized: "role_child")
+        // 저장 이름은 글자 그대로다 — 문구 키를 쓰지 않는 이유는 createFamily 의 주석.
+        let fallback = doc.role == .guardian ? "보호자" : "아이"
         let name = trimmed.isEmpty ? fallback : String(trimmed.prefix(20))
 
         do {

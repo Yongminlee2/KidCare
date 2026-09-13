@@ -15,15 +15,17 @@ final class PairingUITests: XCTestCase {
     /// 앱이 뜨고 역할 선택 화면이 보이는지. 자동화가 실기기에 닿는지를 먼저 확인한다.
     func test_역할선택_화면이_보인다() throws {
         let app = XCUIApplication()
+        // 기기 언어와 무관하게 한국어 글자로 버튼을 찾는다(6단계부터 14개 언어).
+        app.launchArguments += ["-AppleLanguages", "(ko)", "-AppleLocale", "ko_KR"]
         app.launch()
 
-        let 보호자 = app.buttons["보호자"]
+        let 보호자 = app.buttons["보호자 (엄마·아빠)"]
         XCTAssertTrue(보호자.waitForExistence(timeout: 20), "역할 선택 화면이 안 떴다")
 
         붙인다(app, 이름: "01-역할선택")
     }
 
-    /// 보호자 → 가족에 합류하기 → 코드 입력 → 합류.
+    /// 보호자 (엄마·아빠) → 초대 번호로 기존 가족 참여 → 코드 입력 → 합류.
     ///
     /// 코드는 안드로이드 폰에서 발급한 **보호자용** 6자리를 환경변수로 받는다.
     /// 없으면 건너뛴다 — 코드는 10분이면 죽어서 소스에 박아둘 수가 없다.
@@ -34,14 +36,16 @@ final class PairingUITests: XCTestCase {
         }
 
         let app = XCUIApplication()
+        // 기기 언어와 무관하게 한국어 글자로 버튼을 찾는다(6단계부터 14개 언어).
+        app.launchArguments += ["-AppleLanguages", "(ko)", "-AppleLocale", "ko_KR"]
         app.launch()
 
-        let 보호자 = app.buttons["보호자"]
+        let 보호자 = app.buttons["보호자 (엄마·아빠)"]
         XCTAssertTrue(보호자.waitForExistence(timeout: 20), "역할 선택 화면이 안 떴다")
         보호자.tap()
         붙인다(app, 이름: "02-보호자-갈래선택")
 
-        let 합류 = app.buttons["가족에 합류하기"]
+        let 합류 = app.buttons["초대 번호로 기존 가족 참여"]
         XCTAssertTrue(합류.waitForExistence(timeout: 10), "합류 갈래가 안 보인다")
         합류.tap()
 

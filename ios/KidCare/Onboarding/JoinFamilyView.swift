@@ -50,7 +50,7 @@ struct JoinFamilyView: View {
             let uid = try await AuthGateway.uid()
             let result = try await FamilyRepository.joinFamily(
                 code: 입력, uid: uid, expectedRole: expectedRole,
-                displayName: String(localized: "role_guardian")
+                displayName: ""
             )
             RoleStore.shared.role = result.role
             RoleStore.shared.familyId = result.familyId

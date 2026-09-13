@@ -1,16 +1,10 @@
 import Foundation
 import Testing
 
-/// `Localizable.xcstrings` 는 6단계 전까지 `i18n/ko.json` 에서 손(계획서 공통 절차 A 의
-/// 명령)으로 옮긴다. 옮긴 값이 원본과 어긋나지 않았는지, 코드가 부르는 원본 키가
-/// 카탈로그에서 빠지지 않았는지를 여기서 기계로 본다 — 빠진 키는 화면에 키 이름
-/// 그대로("control_find_hint") 뜨는데 빌드도 다른 테스트도 그걸 못 잡는다.
+/// `Localizable.xcstrings` 는 `tools/ios-strings.py` 가 `i18n/*.json` 14벌에서 생성한다(6단계).
+/// 생성물이 원본과 어긋나지 않았는지, 코드가 부르는 키가 빠지지 않았는지를 기계로 본다 — 빠진 키는
+/// 화면에 키 이름 그대로("control_find_hint") 뜨는데 빌드도 다른 테스트도 그걸 못 잡는다.
 struct LocalizableCatalogTests {
-
-    /// 1단계에서 화면에 맞춰 손으로 고친 값이 남은 키. `PairingUITests` 가 이 문구로
-    /// 버튼을 찾아서 지금 고치면 실기기 자동화가 깨진다. 6단계가 원본에서 생성할 때
-    /// 정리한다 — **여기에 새 키를 더하지 않는다.**
-    static let 알려진_어긋남: Set<String> = ["guardian_start_join_family", "map_no_child", "role_guardian"]
 
     /// 안드로이드 서식 → iOS 서식. `%1$s`→`%1$@`, 숫자 서식(`%1$d`·`%1$02d`·`%1$.1f`)은
     /// 그대로, 서식이 아닌 `%` 는 `%%`. 소수 서식은 계획서 공통 절차 A 의 명령이 빠뜨린
@@ -65,16 +59,6 @@ struct LocalizableCatalogTests {
         #expect(Self.카탈로그_값("%1$.1fkm") == "%1$.1fkm")
     }
 
-    @Test("카탈로그의 모든 한국어 값은 i18n/ko.json 에서 변환 규칙대로 나왔다")
-    func 카탈로그는_원본에서_나온다() throws {
-        let ko = try json("i18n/ko.json")
-        for (key, value) in try 카탈로그() {
-            let source = try #require(ko[key] as? String, "\(key) 가 i18n/ko.json 에 없다 — 카탈로그에만 있는 키는 6단계 생성 때 사라진다")
-            if Self.알려진_어긋남.contains(key) { continue }
-            #expect(value == Self.카탈로그_값(source), "\(key) 값이 원본과 다르다")
-        }
-    }
-
     @Test("앱 코드가 부르는 원본 키는 전부 카탈로그에 있다")
     func 코드가_부르는_키는_카탈로그에_있다() throws {
         let root = try #require(TestRepo.root())
@@ -92,11 +76,51 @@ struct LocalizableCatalogTests {
         #expect(missing.isEmpty, "카탈로그에 없는 키: \(missing.joined(separator: ", "))")
     }
 
-    @Test("공유 원본 i18n/*.json 에는 iOS 서식 %@ 가 없다")
+    /// (i18n 파일 이름, 카탈로그 언어 태그). 태그는 안드로이드 `AppLanguage.kt:23-36` 의 tag 와 같다 —
+    /// 인도네시아어는 파일도 태그도 `id` 다(`values-in` 은 안드로이드 리소스 폴더 이름일 뿐이다).
+    static let 언어_태그: [(file: String, tag: String)] = [
+        ("ko", "ko"), ("en", "en"), ("ja", "ja"), ("zh", "zh-Hans"), ("zh_Hant", "zh-Hant"),
+        ("es", "es"), ("pt", "pt"), ("de", "de"), ("fr", "fr"), ("it", "it"),
+        ("ru", "ru"), ("id", "id"), ("vi", "vi"), ("th", "th"),
+    ]
+
+    private func 항목들() throws -> [String: [String: Any]] {
+        try #require(try json("ios/KidCare/Localizable.xcstrings")["strings"] as? [String: [String: Any]])
+    }
+
+    private func 칸(_ entry: [String: Any], _ tag: String) -> (state: String?, value: String?) {
+        let unit = ((entry["localizations"] as? [String: Any])?[tag] as? [String: Any])?["stringUnit"] as? [String: Any]
+        return (unit?["state"] as? String, unit?["value"] as? String)
+    }
+
+    @Test("원본의 모든 키가 14개 언어 칸을 가진다 — 번역은 translated, 빈 칸은 en 값의 needs_review(판정 기록 3)")
+    func 카탈로그는_원본에서_나온다() throws {
+        let strings = try 항목들()
+        let ko = try json("i18n/ko.json")
+        let en = try json("i18n/en.json")
+        #expect(Set(strings.keys) == Set(ko.keys), "카탈로그 키가 원본과 다르다 — python3 tools/ios-strings.py")
+        for (file, tag) in Self.언어_태그 {
+            let source = try json("i18n/\(file).json")
+            for key in ko.keys.sorted() {
+                let entry = try #require(strings[key], "\(key) 가 카탈로그에 없다")
+                let unit = 칸(entry, tag)
+                if let value = source[key] as? String {
+                    #expect(unit.state == "translated", "\(tag) \(key)")
+                    #expect(unit.value == Self.카탈로그_값(value), "\(tag) \(key) 값이 원본과 다르다")
+                } else {
+                    let fallback = try #require(en[key] as? String)
+                    #expect(unit.state == "needs_review", "\(tag) \(key) 빈 칸이 표시되지 않았다")
+                    #expect(unit.value == Self.카탈로그_값(fallback), "\(tag) \(key) 빈 칸이 영어로 물러나지 않았다")
+                }
+            }
+        }
+    }
+
+    @Test("공유 원본 i18n/*.json 14벌에는 iOS 서식 %@ 가 없다")
     func 원본에는_iOS_서식이_없다() throws {
-        for file in ["i18n/ko.json", "i18n/en.json"] {
-            for (key, value) in try json(file) {
-                #expect(!(value as? String ?? "").contains("@"), "\(file) 의 \(key) 에 %@ 류 서식이 있다")
+        for (file, _) in Self.언어_태그 {
+            for (key, value) in try json("i18n/\(file).json") {
+                #expect(!(value as? String ?? "").contains("%@"), "i18n/\(file).json 의 \(key) 에 %@ 가 있다")
             }
         }
     }
