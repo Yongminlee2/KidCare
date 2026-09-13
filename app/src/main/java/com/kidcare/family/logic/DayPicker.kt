@@ -16,8 +16,20 @@ import java.time.format.DateTimeFormatter
  */
 object DayPicker {
 
+    /**
+     * 날짜 머리말에 무엇을 쓸지. **문장이 아니라 값이다** — 번역은 화면이 한다
+     * (guardian/TimelineText). 예전에는 여기서 "오늘"·"8월 5일 (수)"를 직접 만들어,
+     * 폰 언어를 영어로 바꿔도 이 한 줄만 한국어로 남았다. 아이폰도 같은 모양이다.
+     */
+    sealed interface Header {
+        data object Today : Header
+        data object Yesterday : Header
+
+        /** [isoDayOfWeek] 는 1=월 ~ 7=일 ([ScheduleResolver] 와 같다). */
+        data class Date(val month: Int, val day: Int, val isoDayOfWeek: Int) : Header
+    }
+
     private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    private val weekdayNames = listOf("월", "화", "수", "목", "금", "토", "일")
 
     fun todayKey(zone: ZoneId, nowMillis: Long): String =
         Instant.ofEpochMilli(nowMillis).atZone(zone).toLocalDate().format(formatter)
@@ -29,14 +41,14 @@ object DayPicker {
         LocalDate.parse(dayKey, formatter)
             .isAfter(Instant.ofEpochMilli(nowMillis).atZone(zone).toLocalDate())
 
-    /** "오늘" / "어제" / "8월 5일 (수)". 최근 이틀은 날짜보다 이름이 빨리 읽힌다. */
-    fun headerText(dayKey: String, zone: ZoneId, nowMillis: Long): String {
+    /** 오늘 / 어제 / 날짜와 요일. 최근 이틀은 날짜보다 이름이 빨리 읽힌다. */
+    fun header(dayKey: String, zone: ZoneId, nowMillis: Long): Header {
         val date = LocalDate.parse(dayKey, formatter)
         val today = Instant.ofEpochMilli(nowMillis).atZone(zone).toLocalDate()
         return when (date) {
-            today -> "오늘"
-            today.minusDays(1) -> "어제"
-            else -> "${date.monthValue}월 ${date.dayOfMonth}일 (${weekdayNames[date.dayOfWeek.value - 1]})"
+            today -> Header.Today
+            today.minusDays(1) -> Header.Yesterday
+            else -> Header.Date(date.monthValue, date.dayOfMonth, date.dayOfWeek.value)
         }
     }
 

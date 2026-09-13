@@ -109,6 +109,9 @@
     <string name="control_section_message" formatted="false">Dizer uma palavra</string>
     <string name="control_section_network" formatted="false">Conexão com a internet</string>
     <string name="control_section_ringer" formatted="false">Mudar agora mesmo</string>
+    <string name="day_header_date">%3$s, %2$d/%1$d</string>
+    <string name="day_header_today" formatted="false">Hoje</string>
+    <string name="day_header_yesterday" formatted="false">Ontem</string>
     <string name="day_next" formatted="false">Dia seguinte</string>
     <string name="day_prev" formatted="false">Dia anterior</string>
     <string name="dialog_cancel" formatted="false">Cancelar</string>
@@ -139,6 +142,18 @@
     <string name="holiday_substitute" formatted="false">Feriado substituto</string>
     <string name="language_follow_system" formatted="false">Seguir a configuração do sistema</string>
     <string name="language_picker_title" formatted="false">Idioma</string>
+    <string name="leave_family_confirm" formatted="false">Remover</string>
+    <string name="leave_family_done_message" formatted="false">O vínculo de responsável no servidor e a conta anônima foram apagados, e o vínculo familiar deste telefone foi removido. Os registros, horários e lugares da criança continuam na família.</string>
+    <string name="leave_family_done_signed_out_message" formatted="false">O vínculo de responsável no servidor foi apagado e o vínculo familiar deste telefone foi removido. Não foi possível confirmar a exclusão da conta anônima, então só foi feito o logout. Se a conta ainda existir, ela guarda apenas o ID e a data de criação, sem dados da família.</string>
+    <string name="leave_family_done_title" formatted="false">Este telefone foi removido da família</string>
+    <string name="leave_family_failed_title" formatted="false">Não foi possível remover este telefone</string>
+    <string name="leave_family_in_progress" formatted="false">Removendo da família…</string>
+    <string name="leave_family_last_guardian_message" formatted="false">Este telefone é o último responsável da família. Depois disso, ninguém poderá ver nem gerenciar esta família por um telefone de responsável, e não dá para desfazer. O telefone da criança continuará enviando registros sem ninguém para ver, então apague o app do telefone dela também.</string>
+    <string name="leave_family_menu" formatted="false">Remover este telefone da família</string>
+    <string name="leave_family_message" formatted="false">O vínculo de responsável deste telefone e sua conta anônima serão apagados. Os registros, horários e lugares da criança continuam na família. Para vê-los de novo, você precisará de um novo código de convite.</string>
+    <string name="leave_family_no_account" formatted="false">Não encontramos o login deste telefone, então não foi possível removê-lo no servidor. Nada foi apagado. Abra o app de novo e tente outra vez.</string>
+    <string name="leave_family_title" formatted="false">Remover este telefone da família?</string>
+    <string name="leave_family_unconfirmed_message" formatted="false">O servidor não confirmou, então nada foi apagado ainda. Talvez já tenha sido removido no servidor; toque de novo quando estiver conectado.</string>
     <string name="list_loading" formatted="false">Carregando…</string>
     <string name="map_battery_info_confirm" formatted="false">OK</string>
     <string name="map_battery_info_message" formatted="false">O nível que aparece aqui é o que o celular do seu filho informou. O Android não deixa ler de outro celular qual aplicativo gastou quanta bateria, então isso precisa ser visto em Configurações &gt; Bateria no celular dele.</string>
@@ -321,6 +336,13 @@
     <string name="schedule_sync_retry" formatted="false">Tentar avisar de novo</string>
     <string name="schedule_sync_slow" formatted="false">A regra está salva. Avisar o celular do seu filho termina assim que houver internet.</string>
     <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="segment_distance_kilometers">%1$.1f km</string>
+    <string name="segment_distance_meters">%1$d m</string>
+    <string name="segment_distance_under_ten_meters" formatted="false">Menos de 10 m</string>
+    <string name="segment_duration_hours">%1$d h</string>
+    <string name="segment_duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="segment_duration_minutes">%1$d min</string>
+    <string name="segment_duration_under_minute" formatted="false">Menos de 1 min</string>
     <string name="tab_alert" formatted="false">Avisos</string>
     <string name="tab_control" formatted="false">Controle</string>
     <string name="tab_map" formatted="false">Mapa</string>

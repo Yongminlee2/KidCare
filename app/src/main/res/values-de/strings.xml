@@ -109,6 +109,9 @@
     <string name="control_section_message" formatted="false">Ein Wort senden</string>
     <string name="control_section_network" formatted="false">Internetverbindung</string>
     <string name="control_section_ringer" formatted="false">Sofort ändern</string>
+    <string name="day_header_date">%3$s, %2$d.%1$d.</string>
+    <string name="day_header_today" formatted="false">Heute</string>
+    <string name="day_header_yesterday" formatted="false">Gestern</string>
     <string name="day_next" formatted="false">Nächster Tag</string>
     <string name="day_prev" formatted="false">Vorheriger Tag</string>
     <string name="dialog_cancel" formatted="false">Abbrechen</string>
@@ -139,6 +142,18 @@
     <string name="holiday_substitute" formatted="false">Ersatzfeiertag</string>
     <string name="language_follow_system" formatted="false">Systemeinstellung folgen</string>
     <string name="language_picker_title" formatted="false">Sprache</string>
+    <string name="leave_family_confirm" formatted="false">Entfernen</string>
+    <string name="leave_family_done_message" formatted="false">Die Elternverbindung auf dem Server und das anonyme Konto wurden gelöscht, und die Familienverbindung auf diesem Handy wurde entfernt. Aufzeichnungen, Zeitpläne und Orte deines Kindes bleiben in der Familie.</string>
+    <string name="leave_family_done_signed_out_message" formatted="false">Die Elternverbindung auf dem Server wurde gelöscht und die Familienverbindung auf diesem Handy entfernt. Das Löschen des anonymen Kontos ließ sich nicht bestätigen, daher wurde das Handy nur abgemeldet. Falls das Konto noch existiert, enthält es nur seine ID und das Erstellungsdatum, keine Familiendaten.</string>
+    <string name="leave_family_done_title" formatted="false">Dieses Handy wurde aus der Familie entfernt</string>
+    <string name="leave_family_failed_title" formatted="false">Entfernen hat nicht geklappt</string>
+    <string name="leave_family_in_progress" formatted="false">Wird aus der Familie entfernt…</string>
+    <string name="leave_family_last_guardian_message" formatted="false">Dieses Handy ist der letzte Elternteil der Familie. Danach kann niemand diese Familie mehr von einem Eltern-Handy aus sehen oder verwalten, und das lässt sich nicht rückgängig machen. Das Handy deines Kindes lädt weiter hoch, ohne dass es jemand sieht – bitte lösche die App auch dort.</string>
+    <string name="leave_family_menu" formatted="false">Dieses Handy aus der Familie entfernen</string>
+    <string name="leave_family_message" formatted="false">Die Elternverbindung dieses Handys und sein anonymes Konto werden gelöscht. Aufzeichnungen, Zeitpläne und Orte deines Kindes bleiben in der Familie. Um sie wieder zu sehen, brauchst du einen neuen Einladungscode.</string>
+    <string name="leave_family_no_account" formatted="false">Die Anmeldung dieses Handys wurde nicht gefunden, daher konnte es auf dem Server nicht entfernt werden. Es wurde nichts gelöscht. Bitte öffne die App neu und versuche es noch einmal.</string>
+    <string name="leave_family_title" formatted="false">Dieses Handy aus der Familie entfernen?</string>
+    <string name="leave_family_unconfirmed_message" formatted="false">Der Server hat nichts bestätigt, daher wurde noch nichts gelöscht. Auf dem Server ist es vielleicht schon entfernt – tippe bitte erneut, sobald du online bist.</string>
     <string name="list_loading" formatted="false">Wird geladen…</string>
     <string name="map_battery_info_confirm" formatted="false">OK</string>
     <string name="map_battery_info_message" formatted="false">Der hier gezeigte Stand ist der, den das Handy Ihres Kindes gemeldet hat. Welche App wie viel Akku verbraucht hat, lässt Android von einem anderen Handy aus nicht auslesen; das müssen Sie dort unter Einstellungen &gt; Akku nachsehen.</string>
@@ -321,6 +336,13 @@
     <string name="schedule_sync_retry" formatted="false">Erneut benachrichtigen</string>
     <string name="schedule_sync_slow" formatted="false">Die Regel ist gespeichert. Die Benachrichtigung des Kinderhandys endet, sobald Internet da ist.</string>
     <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="segment_distance_kilometers">%1$.1f km</string>
+    <string name="segment_distance_meters">%1$d m</string>
+    <string name="segment_distance_under_ten_meters" formatted="false">Unter 10 m</string>
+    <string name="segment_duration_hours">%1$d Std.</string>
+    <string name="segment_duration_hours_minutes">%1$d Std. %2$d Min.</string>
+    <string name="segment_duration_minutes">%1$d Min.</string>
+    <string name="segment_duration_under_minute" formatted="false">Unter 1 Min.</string>
     <string name="tab_alert" formatted="false">Meldungen</string>
     <string name="tab_control" formatted="false">Steuerung</string>
     <string name="tab_map" formatted="false">Karte</string>

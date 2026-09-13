@@ -18,7 +18,9 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.firestore.ListenerRegistration
@@ -39,7 +41,6 @@ import com.kidcare.family.logic.DayPicker
 import com.kidcare.family.logic.Fix
 import com.kidcare.family.logic.RoutePathRefiner
 import com.kidcare.family.logic.RouteWindows
-import com.kidcare.family.logic.SegmentSummarizer
 import com.kidcare.family.logic.SegmentType
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.geometry.LatLngBounds
@@ -106,6 +107,19 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
     private var lastRouteLegs: List<List<LatLng>> = emptyList()
     private var lastRoutePositions: List<LatLng> = emptyList()
     private var lastMapStatus: ChildStatusDoc? = null
+
+    /**
+     * 상태 줄의 "N분 전"을 시간만 흘러도 다시 쓰기 위한 재료([refreshStatusElapsed]).
+     *
+     * 예전에는 새 상태를 읽을 때만 이 줄을 그려서, 아이 폰이 조용하면 "3분 전"이 한 시간
+     * 뒤에도 "3분 전"이었다 — 이 화면이 가장 하면 안 되는 "묵은 위치를 방금 것처럼"이다.
+     * 서버 시각 차이를 함께 적어 두는 이유: 1분마다 [FamilyRepository.serverNow] 를
+     * 부르면 오프셋이 없을 때 매번 서버 쓰기가 나간다(무료 한도).
+     */
+    private var statusSignal: ChildSignal? = null
+    private var statusBattery = 0
+    private var statusServerOffsetMillis = 0L
+    private var statusLineText: String? = null
 
     // 자녀가 members 에 들어오는 순간을 계속 지켜본다(known-issues 3): 부모가 이 화면을
     // 켜 둔 채로 아이가 페어링을 끝내면, 한 번 조회 방식에서는 화면을 다시 만들기
@@ -200,6 +214,14 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
         )
         binding.timelineList.adapter = timelineAdapter
         renderTimeline(emptyList())
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (true) {
+                    delay(ELAPSED_REFRESH_MILLIS)
+                    refreshStatusElapsed()
+                }
+            }
+        }
         binding.prevDayButton.setOnClickListener { changeDay(-1) }
         binding.nextDayButton.setOnClickListener { changeDay(1) }
         binding.timelineToggleButton.setOnClickListener {
@@ -734,6 +756,7 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
         val signal = status?.lastSignal()
         if (status == null || signal == null) {
             b.statusBar.text = getString(R.string.map_status_never)
+            statusSignal = null
             lastMapStatus = null
             renderMapStatus()
             return
@@ -756,14 +779,40 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
         // 기기 시각으로 되돌려 비교한다 — 두 시계의 어긋남이 안 섞이게.
         if (System.currentTimeMillis() - elapsed > requestLog.lastRequestAt(childUid)) recordAnswer()
 
-        b.statusBar.text = ctx.getString(
+        val text = ctx.getString(
             R.string.map_status_format,
             status.battery,
             LastSignalText.relativeText(ctx, signal, elapsed),
         )
+        b.statusBar.text = text
+        statusSignal = signal
+        statusBattery = status.battery
+        statusServerOffsetMillis = now - System.currentTimeMillis()
+        statusLineText = text
 
         lastMapStatus = status
         renderMapStatus()
+    }
+
+    /**
+     * 시간만 흘렀을 때 "N분 전"을 다시 쓴다. 서버를 부르지 않는다.
+     *
+     * 상태 줄은 '확인하는 중'·오류 같은 다른 소식도 함께 쓰는 한 줄이다. 마지막으로
+     * 여기서 쓴 글자가 아직 그대로일 때만 바꾼다 — 그 사이 올라온 다른 말을 덮지 않게.
+     */
+    private fun refreshStatusElapsed() {
+        val b = _binding ?: return
+        val ctx = context ?: return
+        val signal = statusSignal ?: return
+        if (b.statusBar.text.toString() != statusLineText) return
+        val elapsed = System.currentTimeMillis() + statusServerOffsetMillis - signal.atMillis
+        val text = ctx.getString(
+            R.string.map_status_format,
+            statusBattery,
+            LastSignalText.relativeText(ctx, signal, elapsed),
+        )
+        b.statusBar.text = text
+        statusLineText = text
     }
 
     /** 네이버 지도가 비동기로 준비되므로 상태를 보관했다가 준비 직후에도 다시 그린다. */
@@ -866,7 +915,9 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
 
     private fun renderDayHeader() {
         _binding ?: return
-        binding.dayHeader.text = DayPicker.headerText(dayKey, zone, System.currentTimeMillis())
+        binding.dayHeader.text = TimelineText.dayHeader(
+            requireContext(), DayPicker.header(dayKey, zone, System.currentTimeMillis()),
+        )
         // 아무 반응 없는 버튼은 고장으로 읽힌다 — 오늘에서는 눌러도 못 넘어가므로
         // 아예 비활성으로 보여준다.
         binding.nextDayButton.isEnabled =
@@ -1014,7 +1065,7 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
     ) {
         _binding ?: return
         timelineAdapter.submitList(docs)
-        val distance = SegmentSummarizer.distanceText(docs.sumOf { it.distanceMeters })
+        val distance = TimelineText.distance(requireContext(), docs.sumOf { it.distanceMeters })
         routeSummaryBaseText = if (docs.isEmpty()) {
             getString(R.string.timeline_summary_empty)
         } else if (dayKey == DayPicker.todayKey(zone, System.currentTimeMillis())) {
@@ -1314,6 +1365,9 @@ class MapTimelineFragment : Fragment(), OnMapReadyCallback {
         private const val TAG = "MapTimelineFragment"
         /** 관리 탭의 무응답 표시와 같은 값이어야 한다(설계서 §5). */
         private const val COMMAND_TIMEOUT_MILLIS = 60_000L
+
+        /** "N분 전"을 다시 쓰는 간격. 분 단위 표기라 1분이면 충분하다([refreshStatusElapsed]). */
+        private const val ELAPSED_REFRESH_MILLIS = 60_000L
 
         /** 명령 발행(서버 확인)을 기다리는 시간. 근거는 [ControlFragment.SEND_TIMEOUT_MILLIS]. */
         private const val SEND_TIMEOUT_MILLIS = 15_000L

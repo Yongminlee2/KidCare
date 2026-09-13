@@ -109,6 +109,9 @@
     <string name="control_section_message" formatted="false">Nhắn một câu</string>
     <string name="control_section_network" formatted="false">Kết nối internet</string>
     <string name="control_section_ringer" formatted="false">Đổi ngay bây giờ</string>
+    <string name="day_header_date">%3$s, %2$d/%1$d</string>
+    <string name="day_header_today" formatted="false">Hôm nay</string>
+    <string name="day_header_yesterday" formatted="false">Hôm qua</string>
     <string name="day_next" formatted="false">Ngày sau</string>
     <string name="day_prev" formatted="false">Ngày trước</string>
     <string name="dialog_cancel" formatted="false">Hủy</string>
@@ -139,6 +142,18 @@
     <string name="holiday_substitute" formatted="false">Ngày nghỉ bù</string>
     <string name="language_follow_system" formatted="false">Theo cài đặt của máy</string>
     <string name="language_picker_title" formatted="false">Ngôn ngữ</string>
+    <string name="leave_family_confirm" formatted="false">Xóa</string>
+    <string name="leave_family_done_message" formatted="false">Đã xóa liên kết phụ huynh trên máy chủ và tài khoản ẩn danh, đồng thời xóa liên kết gia đình trên điện thoại này. Lịch sử, lịch hẹn và địa điểm của con vẫn ở lại trong gia đình.</string>
+    <string name="leave_family_done_signed_out_message" formatted="false">Đã xóa liên kết phụ huynh trên máy chủ và xóa liên kết gia đình trên điện thoại này. Không xác nhận được việc xóa tài khoản ẩn danh nên chỉ đăng xuất. Nếu tài khoản vẫn còn, nó chỉ có mã tài khoản và thời gian tạo, không có thông tin gia đình.</string>
+    <string name="leave_family_done_title" formatted="false">Đã xóa điện thoại này khỏi gia đình</string>
+    <string name="leave_family_failed_title" formatted="false">Không thể xóa điện thoại này</string>
+    <string name="leave_family_in_progress" formatted="false">Đang xóa khỏi gia đình…</string>
+    <string name="leave_family_last_guardian_message" formatted="false">Điện thoại này là phụ huynh cuối cùng của gia đình. Sau khi xóa, không ai có thể xem hay quản lý gia đình này từ điện thoại phụ huynh và không thể hoàn tác. Điện thoại của con vẫn tiếp tục gửi dữ liệu mà không ai xem, vì vậy hãy xóa cả ứng dụng trên điện thoại của con.</string>
+    <string name="leave_family_menu" formatted="false">Xóa điện thoại này khỏi gia đình</string>
+    <string name="leave_family_message" formatted="false">Liên kết phụ huynh và tài khoản ẩn danh của điện thoại này sẽ bị xóa. Lịch sử, lịch hẹn và địa điểm của con vẫn ở lại trong gia đình. Để xem lại, bạn cần mã mời mới.</string>
+    <string name="leave_family_no_account" formatted="false">Không tìm thấy thông tin đăng nhập của điện thoại này nên không thể xóa trên máy chủ. Chưa có gì bị xóa. Hãy mở lại ứng dụng rồi thử lại.</string>
+    <string name="leave_family_title" formatted="false">Xóa điện thoại này khỏi gia đình?</string>
+    <string name="leave_family_unconfirmed_message" formatted="false">Máy chủ chưa xác nhận nên chưa có gì bị xóa. Có thể máy chủ đã xóa rồi, hãy nhấn lại sau khi có kết nối mạng.</string>
     <string name="list_loading" formatted="false">Đang tải…</string>
     <string name="map_battery_info_confirm" formatted="false">Đã hiểu</string>
     <string name="map_battery_info_message" formatted="false">Mức pin hiện ở đây là mức mà điện thoại của con báo về. Ứng dụng nào tốn bao nhiêu pin thì Android không cho đọc từ máy khác, phải xem trực tiếp ở Cài đặt &gt; Pin trên máy của con.</string>
@@ -321,6 +336,13 @@
     <string name="schedule_sync_retry" formatted="false">Báo lại lần nữa</string>
     <string name="schedule_sync_slow" formatted="false">Đã lưu quy tắc. Việc báo cho điện thoại của con sẽ xong khi có mạng.</string>
     <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="segment_distance_kilometers">%1$.1f km</string>
+    <string name="segment_distance_meters">%1$d m</string>
+    <string name="segment_distance_under_ten_meters" formatted="false">Dưới 10 m</string>
+    <string name="segment_duration_hours">%1$d giờ</string>
+    <string name="segment_duration_hours_minutes">%1$d giờ %2$d phút</string>
+    <string name="segment_duration_minutes">%1$d phút</string>
+    <string name="segment_duration_under_minute" formatted="false">Dưới 1 phút</string>
     <string name="tab_alert" formatted="false">Tin</string>
     <string name="tab_control" formatted="false">Điều khiển</string>
     <string name="tab_map" formatted="false">Bản đồ</string>

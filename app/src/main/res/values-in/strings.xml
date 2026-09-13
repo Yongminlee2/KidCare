@@ -109,6 +109,9 @@
     <string name="control_section_message" formatted="false">Kirim sepatah kata</string>
     <string name="control_section_network" formatted="false">Koneksi internet</string>
     <string name="control_section_ringer" formatted="false">Ubah sekarang juga</string>
+    <string name="day_header_date">%3$s, %2$d/%1$d</string>
+    <string name="day_header_today" formatted="false">Hari ini</string>
+    <string name="day_header_yesterday" formatted="false">Kemarin</string>
     <string name="day_next" formatted="false">Hari berikutnya</string>
     <string name="day_prev" formatted="false">Hari sebelumnya</string>
     <string name="dialog_cancel" formatted="false">Batal</string>
@@ -139,6 +142,18 @@
     <string name="holiday_substitute" formatted="false">Libur pengganti</string>
     <string name="language_follow_system" formatted="false">Ikuti setelan sistem</string>
     <string name="language_picker_title" formatted="false">Bahasa</string>
+    <string name="leave_family_confirm" formatted="false">Keluarkan</string>
+    <string name="leave_family_done_message" formatted="false">Tautan orang tua di server dan akun anonim sudah dihapus, dan tautan keluarga di ponsel ini sudah dihapus. Catatan, jadwal, dan tempat anak tetap ada di keluarga.</string>
+    <string name="leave_family_done_signed_out_message" formatted="false">Tautan orang tua di server sudah dihapus, dan tautan keluarga di ponsel ini sudah dihapus. Penghapusan akun anonim tidak bisa dipastikan, jadi ponsel ini hanya dikeluarkan dari akun. Jika akun itu masih ada, isinya hanya ID dan waktu pembuatan, tanpa info keluarga.</string>
+    <string name="leave_family_done_title" formatted="false">Ponsel ini sudah dikeluarkan dari keluarga</string>
+    <string name="leave_family_failed_title" formatted="false">Gagal mengeluarkan ponsel ini</string>
+    <string name="leave_family_in_progress" formatted="false">Mengeluarkan dari keluarga…</string>
+    <string name="leave_family_last_guardian_message" formatted="false">Ponsel ini adalah orang tua terakhir di keluarga ini. Setelah dikeluarkan, tidak ada yang bisa melihat atau mengelola keluarga ini dari ponsel orang tua, dan tidak bisa dibatalkan. Ponsel anak akan terus mengunggah tanpa ada yang melihat, jadi hapus juga aplikasi di ponsel anak.</string>
+    <string name="leave_family_menu" formatted="false">Keluarkan ponsel ini dari keluarga</string>
+    <string name="leave_family_message" formatted="false">Tautan orang tua dan akun anonim ponsel ini akan dihapus. Catatan, jadwal, dan tempat anak tetap ada di keluarga. Untuk melihatnya lagi, Anda perlu kode undangan baru.</string>
+    <string name="leave_family_no_account" formatted="false">Info masuk ponsel ini tidak ditemukan, jadi tidak bisa dikeluarkan di server. Tidak ada yang dihapus. Buka lagi aplikasinya lalu coba lagi.</string>
+    <string name="leave_family_title" formatted="false">Keluarkan ponsel ini dari keluarga?</string>
+    <string name="leave_family_unconfirmed_message" formatted="false">Server tidak memberi konfirmasi, jadi belum ada yang dihapus. Mungkin sudah dikeluarkan di server, jadi ketuk lagi setelah tersambung ke internet.</string>
     <string name="list_loading" formatted="false">Memuat…</string>
     <string name="map_battery_info_confirm" formatted="false">Oke</string>
     <string name="map_battery_info_message" formatted="false">Sisa daya yang tampil di sini adalah yang dilaporkan ponsel anak Anda. Aplikasi mana memakai berapa banyak baterai tidak bisa dibaca dari ponsel lain karena aturan Android, jadi itu harus dilihat di Setelan &gt; Baterai di ponselnya.</string>
@@ -321,6 +336,13 @@
     <string name="schedule_sync_retry" formatted="false">Coba beri tahu lagi</string>
     <string name="schedule_sync_slow" formatted="false">Aturannya tersimpan. Memberi tahu ponsel anak Anda selesai begitu ada internet.</string>
     <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="segment_distance_kilometers">%1$.1f km</string>
+    <string name="segment_distance_meters">%1$d m</string>
+    <string name="segment_distance_under_ten_meters" formatted="false">Kurang dari 10 m</string>
+    <string name="segment_duration_hours">%1$d jam</string>
+    <string name="segment_duration_hours_minutes">%1$d jam %2$d mnt</string>
+    <string name="segment_duration_minutes">%1$d mnt</string>
+    <string name="segment_duration_under_minute" formatted="false">Kurang dari 1 menit</string>
     <string name="tab_alert" formatted="false">Kabar</string>
     <string name="tab_control" formatted="false">Kendali</string>
     <string name="tab_map" formatted="false">Peta</string>

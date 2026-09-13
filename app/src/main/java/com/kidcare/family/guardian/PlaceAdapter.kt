@@ -1,6 +1,7 @@
 package com.kidcare.family.guardian
 
 import android.content.Context
+import android.icu.text.BreakIterator
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.content.res.ColorStateList
@@ -65,7 +66,7 @@ class PlaceAdapter(
          */
         private fun bindSticker(doc: PlaceDoc) {
             val context = binding.root.context
-            val letter = doc.name.trim().firstOrNull()?.toString().orEmpty()
+            val letter = firstGrapheme(doc.name.trim())
             val key = doc.id.ifEmpty { doc.name }
             val (strong, soft) = STICKER_COLORS[
                 Math.floorMod(key.hashCode(), STICKER_COLORS.size)
@@ -78,6 +79,18 @@ class PlaceAdapter(
     }
 
     private companion object {
+        /**
+         * 사람 눈에 한 글자인 첫 덩어리. `first()` 는 UTF-16 한 칸이라 "🏠할머니 댁"에서
+         * 이모지의 **반쪽**(짝 잃은 서로게이트)을 꺼내 스티커에 깨진 글자가 떴다.
+         * 문자 경계 탐색기는 서로게이트 짝·피부색·ZWJ 로 붙인 이모지를 한 글자로 본다.
+         */
+        fun firstGrapheme(text: String): String {
+            if (text.isEmpty()) return ""
+            val boundary = BreakIterator.getCharacterInstance().apply { setText(text) }
+            val end = boundary.next()
+            return if (end == BreakIterator.DONE) text else text.substring(0, end)
+        }
+
         /** (진한 색, 연한 색) 짝. 앱 팔레트에서 서로 잘 구분되는 넷만 골랐다. */
         val STICKER_COLORS = listOf(
             R.color.sky to R.color.sky_soft,

@@ -109,6 +109,9 @@
     <string name="control_section_message" formatted="false">ひとこと送る</string>
     <string name="control_section_network" formatted="false">インターネット接続</string>
     <string name="control_section_ringer" formatted="false">いますぐ変える</string>
+    <string name="day_header_date">%1$d月%2$d日（%3$s）</string>
+    <string name="day_header_today" formatted="false">今日</string>
+    <string name="day_header_yesterday" formatted="false">昨日</string>
     <string name="day_next" formatted="false">次の日</string>
     <string name="day_prev" formatted="false">前の日</string>
     <string name="dialog_cancel" formatted="false">キャンセル</string>
@@ -139,6 +142,18 @@
     <string name="holiday_substitute" formatted="false">振替休日</string>
     <string name="language_follow_system" formatted="false">端末の設定に従う</string>
     <string name="language_picker_title" formatted="false">言語</string>
+    <string name="leave_family_confirm" formatted="false">外す</string>
+    <string name="leave_family_done_message" formatted="false">サーバー上の保護者連携と匿名アカウントを削除し、このスマホから家族との連携を削除しました。お子さんの記録や予約・場所は家族にそのまま残っています。</string>
+    <string name="leave_family_done_signed_out_message" formatted="false">サーバー上の保護者連携を削除し、このスマホから家族との連携を削除しました。匿名アカウントは削除を確認できなかったため、ログアウトだけしました。アカウントが残っていても、家族の情報はなくアカウント番号と作成日時だけです。</string>
+    <string name="leave_family_done_title" formatted="false">このスマホを家族から外しました</string>
+    <string name="leave_family_failed_title" formatted="false">家族から外せませんでした</string>
+    <string name="leave_family_in_progress" formatted="false">家族から外しています…</string>
+    <string name="leave_family_last_guardian_message" formatted="false">このスマホはこの家族の最後の保護者です。外すと、どの保護者のスマホからもこの家族を見たり管理したりできなくなり、元に戻せません。お子さんのスマホは記録を送り続けますが見る人がいないので、お子さんのスマホのアプリも削除してください。</string>
+    <string name="leave_family_menu" formatted="false">このスマホを家族から外す</string>
+    <string name="leave_family_message" formatted="false">このスマホの保護者としての連携と匿名アカウントを削除します。お子さんの記録や予約・場所は家族にそのまま残ります。もう一度見るには新しい招待コードが必要です。</string>
+    <string name="leave_family_no_account" formatted="false">このスマホのログイン情報が見つからず、サーバーから外せませんでした。何も削除していません。アプリを開き直してからもう一度お試しください。</string>
+    <string name="leave_family_title" formatted="false">このスマホを家族から外しますか？</string>
+    <string name="leave_family_unconfirmed_message" formatted="false">サーバーの確認が取れなかったため、まだ何も削除していません。サーバーではすでに外れている可能性があるので、インターネットにつながってからもう一度押してください。</string>
     <string name="list_loading" formatted="false">読み込んでいます…</string>
     <string name="map_battery_info_confirm" formatted="false">OK</string>
     <string name="map_battery_info_message" formatted="false">ここに出る残量はお子さんの端末が送った状態です。どのアプリがどれだけバッテリーを使ったかはAndroidの仕組み上ほかの端末から読み取れないため、お子さんの端末の設定＞バッテリーで直接確認してください。</string>
@@ -321,6 +336,13 @@
     <string name="schedule_sync_retry" formatted="false">もう一度知らせる</string>
     <string name="schedule_sync_slow" formatted="false">ルールは保存しました。お子さんの端末に知らせるのはインターネットにつながれば終わります。</string>
     <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="segment_distance_kilometers">%1$.1fkm</string>
+    <string name="segment_distance_meters">%1$dm</string>
+    <string name="segment_distance_under_ten_meters" formatted="false">10m未満</string>
+    <string name="segment_duration_hours">%1$d時間</string>
+    <string name="segment_duration_hours_minutes">%1$d時間%2$d分</string>
+    <string name="segment_duration_minutes">%1$d分</string>
+    <string name="segment_duration_under_minute" formatted="false">1分未満</string>
     <string name="tab_alert" formatted="false">お知らせ</string>
     <string name="tab_control" formatted="false">そうさ</string>
     <string name="tab_map" formatted="false">地図</string>

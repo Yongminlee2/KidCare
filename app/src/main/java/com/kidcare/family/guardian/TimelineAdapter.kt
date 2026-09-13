@@ -1,5 +1,6 @@
 package com.kidcare.family.guardian
 
+import android.content.Context
 import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
@@ -12,10 +13,47 @@ import androidx.recyclerview.widget.RecyclerView
 import com.kidcare.family.R
 import com.kidcare.family.core.model.SegmentDoc
 import com.kidcare.family.databinding.ItemTimelineBinding
+import com.kidcare.family.logic.DayPicker
 import com.kidcare.family.logic.Segment
 import com.kidcare.family.logic.SegmentSummarizer
 import com.kidcare.family.logic.SegmentType
 import java.time.ZoneId
+
+/**
+ * 날짜 머리말·기간·거리를 그 폰의 언어로 옮긴다. `logic` 은 안드로이드를 몰라 값만
+ * 돌려주고([DayPicker.Header], [SegmentSummarizer.Duration]), 번역은 여기 한 곳에서 한다
+ * ([PlaceText]·[ScheduleText] 와 같은 자리, 같은 이유).
+ */
+object TimelineText {
+
+    fun dayHeader(context: Context, header: DayPicker.Header): String = when (header) {
+        DayPicker.Header.Today -> context.getString(R.string.day_header_today)
+        DayPicker.Header.Yesterday -> context.getString(R.string.day_header_yesterday)
+        is DayPicker.Header.Date -> context.getString(
+            R.string.day_header_date,
+            header.month,
+            header.day,
+            context.getString(ScheduleText.DAY_NAME_RES[header.isoDayOfWeek - 1]),
+        )
+    }
+
+    fun duration(context: Context, millis: Long): String =
+        when (val d = SegmentSummarizer.duration(millis)) {
+            SegmentSummarizer.Duration.UnderMinute -> context.getString(R.string.segment_duration_under_minute)
+            is SegmentSummarizer.Duration.Minutes -> context.getString(R.string.segment_duration_minutes, d.minutes)
+            is SegmentSummarizer.Duration.Hours -> context.getString(R.string.segment_duration_hours, d.hours)
+            is SegmentSummarizer.Duration.HoursMinutes ->
+                context.getString(R.string.segment_duration_hours_minutes, d.hours, d.minutes)
+        }
+
+    fun distance(context: Context, meters: Double): String =
+        when (val d = SegmentSummarizer.distance(meters)) {
+            SegmentSummarizer.Distance.UnderTenMeters -> context.getString(R.string.segment_distance_under_ten_meters)
+            is SegmentSummarizer.Distance.Meters -> context.getString(R.string.segment_distance_meters, d.meters)
+            is SegmentSummarizer.Distance.Kilometers ->
+                context.getString(R.string.segment_distance_kilometers, d.kilometers)
+        }
+}
 
 /**
  * 하루 요약을 한 줄씩 보여준다. 누르면 지도가 그 지점으로 움직인다.
@@ -85,13 +123,13 @@ class TimelineAdapter(
             } else {
                 context.getString(
                     R.string.timeline_move_title,
-                    SegmentSummarizer.distanceText(doc.distanceMeters),
+                    TimelineText.distance(context, doc.distanceMeters),
                 )
             }
             binding.detailText.text = context.getString(
                 R.string.timeline_detail,
                 SegmentSummarizer.timeRange(segment, zone),
-                SegmentSummarizer.durationText(doc.endAt - doc.startAt),
+                TimelineText.duration(context, doc.endAt - doc.startAt),
             )
             val routeHidden = !stay && doc.startAt in hiddenMoveStarts
             binding.routeState.visibility = if (stay) View.GONE else View.VISIBLE

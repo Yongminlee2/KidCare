@@ -94,11 +94,14 @@ object FamilyRepository {
             // 값을 돌려주면 안 된다 — 반드시 취소를 완성시킨다.
             throw e
         } catch (e: Exception) {
-            // 실패는(예: 아직 멤버가 아니라 쓸 자기 문서가 없다) 캐시한다. 통신이
-            // 되는데도 못 재는 상태라 다시 물어봐야 답이 달라지지 않는다.
-            Log.w(TAG, "서버 시각 보정 실패 — 기기 시계를 그대로 쓴다", e)
-            0L
-        }
+            // 실패도 **캐시하지 않는다.** 예전에는 "다시 물어봐도 답이 같다"며 0 을
+            // 굳혔는데, 대표적인 실패인 "아직 멤버가 아니다"는 곧 풀린다 — 보호자
+            // 초대로 합류하는 순간 이 함수가 한 번 실패하고, 그 0 이 프로세스 내내 남아
+            // 그 뒤 이 폰이 만드는 초대 코드가 전부 기기 시계로 계산됐다(시계가 느린 폰이면
+            // known-issues 2번 "만들자마자 죽은 코드"). 아이폰도 실패를 캐시하지 않는다.
+            Log.w(TAG, "서버 시각 보정 실패 — 이번만 기기 시계를 쓴다", e)
+            return System.currentTimeMillis()
+        } ?: return System.currentTimeMillis()
         serverOffsetMillis = offset
         return System.currentTimeMillis() + offset
     }
@@ -112,11 +115,11 @@ object FamilyRepository {
      *
      * [uid] 가 아직 이 가족의 멤버가 아니면(예: 아이가 페어링을 끝내기 전) update 자체가
      * "자기 문서" 조건에 걸려 실패한다 — 그 문서가 없기 때문이다. 규칙을 고치지 않고는
-     * 이 경우를 측정할 방법이 없으므로, 위 serverNow() 가 이 실패를 잡아 오프셋 0(기기
-     * 시계 그대로)으로 물러난다.
+     * 이 경우를 측정할 방법이 없으므로, 위 serverNow() 가 이 실패를 잡아 그 호출만 기기
+     * 시계로 물러난다. null 은 "잴 재료가 없다"는 뜻이고 역시 캐시하지 않는다.
      */
-    private suspend fun measureServerOffset(familyId: String?, uid: String?): Long {
-        if (familyId == null || uid == null) return 0L
+    private suspend fun measureServerOffset(familyId: String?, uid: String?): Long? {
+        if (familyId == null || uid == null) return null
         val ref = db.collection("families").document(familyId).collection("members").document(uid)
         val before = System.currentTimeMillis()
         ref.update("updatedAt", FieldValue.serverTimestamp()).await()
@@ -125,7 +128,7 @@ object FamilyRepository {
         // Timestamp 다 — toObject(MemberDoc::class.java) 로 읽으면 타입이 안 맞아
         // 깨진다. 여기서는 raw snapshot 에서 getTimestamp 로만 읽는다.
         val serverMillis = ref.get(Source.SERVER).await()
-            .getTimestamp("updatedAt")?.toDate()?.time ?: return 0L
+            .getTimestamp("updatedAt")?.toDate()?.time ?: return null
         // 왕복 시간의 절반을 오차로 보고 중간값을 쓴다 — 네트워크 지연이 클수록
         // before 만 쓰면 오프셋을 과대평가한다.
         return serverMillis - (before + after) / 2
@@ -140,9 +143,13 @@ object FamilyRepository {
         // 대조하므로 family 문서가 먼저 있어야 한다. 초대 코드·만료 시각은 아직
         // 정하지 않는다 — serverNow() 로 보정하려면 "자기 멤버 문서"가 있어야 하는데
         // (measureServerOffset 참고) 이 시점엔 그 문서가 없어 잴 수가 없다.
+        //
+        // 이름은 **비워서** 저장한다. 예전에는 "우리 가족"·"보호자"를 한국어 그대로 넣어,
+        // 영어 폰이 만든 가족도 서버에는 한국어로 남았다. 저장된 값은 번역되지 않으므로
+        // 기본 이름은 읽는 화면이 그 폰의 언어로 입힌다(아이 이름의 child_default_name 과 같다).
         familyRef.set(
             FamilyDoc(
-                name = "우리 가족",
+                name = "",
                 createdAt = bootTime,
                 inviteCode = "",
                 inviteExpiresAt = 0L,
@@ -153,7 +160,7 @@ object FamilyRepository {
         familyRef.collection("members").document(guardianUid).set(
             MemberDoc(
                 role = "guardian",
-                displayName = "보호자",
+                displayName = "",
                 updatedAt = bootTime,
                 joinedAt = bootTime,
             )
@@ -346,9 +353,9 @@ object FamilyRepository {
             familyRef.collection("members").document(uid).set(
                 MemberDoc(
                     role = inviteRole,
-                    displayName = displayName.trim().take(20).ifEmpty {
-                        if (inviteRole == "guardian") "보호자" else "아이"
-                    },
+                    // 비었으면 빈 채로 둔다 — 읽는 화면이 child_default_name 으로 채운다
+                    // (createFamily 의 이름 주석과 같은 이유).
+                    displayName = displayName.trim().take(20),
                     updatedAt = now,
                     joinCode = normalized,
                     joinedAt = now,
@@ -387,7 +394,7 @@ object FamilyRepository {
 
     /** 옛 1:1 호출부 호환용. 자녀 초대로 간주한다. */
     suspend fun joinFamily(code: String, childUid: String): String =
-        joinFamily(code, childUid, "child", "아이").familyId
+        joinFamily(code, childUid, "child", "").familyId
 
     /**
      * 이 기기가 **아직 이 가족의 멤버인가.** 서버가 확답을 안 준 동안은 null 이다.

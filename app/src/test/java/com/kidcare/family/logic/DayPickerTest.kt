@@ -57,13 +57,13 @@ class DayPickerTest {
 
     @Test
     fun `오늘과 어제는 이름으로 부른다`() {
-        assertEquals("오늘", DayPicker.headerText("2026-08-07", seoul, now))
-        assertEquals("어제", DayPicker.headerText("2026-08-06", seoul, now))
+        assertEquals(DayPicker.Header.Today, DayPicker.header("2026-08-07", seoul, now))
+        assertEquals(DayPicker.Header.Yesterday, DayPicker.header("2026-08-06", seoul, now))
     }
 
     @Test
     fun `그 이전은 날짜와 요일로 쓴다`() {
-        // 2026-08-05 는 수요일이다.
-        assertEquals("8월 5일 (수)", DayPicker.headerText("2026-08-05", seoul, now))
+        // 2026-08-05 는 수요일(3)이다.
+        assertEquals(DayPicker.Header.Date(8, 5, 3), DayPicker.header("2026-08-05", seoul, now))
     }
 }

@@ -109,6 +109,9 @@
     <string name="control_section_message" formatted="false">Сказать словечко</string>
     <string name="control_section_network" formatted="false">Подключение к интернету</string>
     <string name="control_section_ringer" formatted="false">Поменять прямо сейчас</string>
+    <string name="day_header_date">%3$s, %2$d.%1$d</string>
+    <string name="day_header_today" formatted="false">Сегодня</string>
+    <string name="day_header_yesterday" formatted="false">Вчера</string>
     <string name="day_next" formatted="false">Следующий день</string>
     <string name="day_prev" formatted="false">Предыдущий день</string>
     <string name="dialog_cancel" formatted="false">Отмена</string>
@@ -139,6 +142,18 @@
     <string name="holiday_substitute" formatted="false">Перенесённый выходной</string>
     <string name="language_follow_system" formatted="false">Как в системе</string>
     <string name="language_picker_title" formatted="false">Язык</string>
+    <string name="leave_family_confirm" formatted="false">Удалить</string>
+    <string name="leave_family_done_message" formatted="false">Связь родителя на сервере и анонимный аккаунт удалены, связь с семьёй на этом телефоне стёрта. Записи, расписания и места ребёнка остаются в семье.</string>
+    <string name="leave_family_done_signed_out_message" formatted="false">Связь родителя на сервере удалена, связь с семьёй на этом телефоне стёрта. Удаление анонимного аккаунта подтвердить не удалось, поэтому выполнен только выход. Если аккаунт остался, в нём есть только номер и время создания, без данных о семье.</string>
+    <string name="leave_family_done_title" formatted="false">Этот телефон удалён из семьи</string>
+    <string name="leave_family_failed_title" formatted="false">Не удалось удалить этот телефон</string>
+    <string name="leave_family_in_progress" formatted="false">Удаляем из семьи…</string>
+    <string name="leave_family_last_guardian_message" formatted="false">Этот телефон — последний родитель в семье. После удаления никто не сможет видеть эту семью или управлять ею с родительского телефона, и это нельзя отменить. Телефон ребёнка продолжит отправлять данные, которые никто не увидит, поэтому удалите приложение и на телефоне ребёнка.</string>
+    <string name="leave_family_menu" formatted="false">Удалить этот телефон из семьи</string>
+    <string name="leave_family_message" formatted="false">Связь этого телефона как родителя и его анонимный аккаунт будут удалены. Записи, расписания и места ребёнка останутся в семье. Чтобы снова их видеть, понадобится новый код приглашения.</string>
+    <string name="leave_family_no_account" formatted="false">Не найден вход этого телефона, поэтому удалить его на сервере не удалось. Ничего не удалено. Откройте приложение заново и попробуйте ещё раз.</string>
+    <string name="leave_family_title" formatted="false">Удалить этот телефон из семьи?</string>
+    <string name="leave_family_unconfirmed_message" formatted="false">Сервер не подтвердил, поэтому пока ничего не удалено. На сервере телефон мог уже быть удалён — нажмите ещё раз, когда появится интернет.</string>
     <string name="list_loading" formatted="false">Загрузка…</string>
     <string name="map_battery_info_confirm" formatted="false">Понятно</string>
     <string name="map_battery_info_message" formatted="false">Уровень здесь — тот, что сообщил телефон ребёнка. Какое приложение сколько батареи израсходовало, Android не даёт прочитать с другого телефона, это нужно смотреть в Настройках &gt; Батарея на его телефоне.</string>
@@ -321,6 +336,13 @@
     <string name="schedule_sync_retry" formatted="false">Предупредить ещё раз</string>
     <string name="schedule_sync_slow" formatted="false">Правило сохранено. Предупреждение телефона ребёнка закончится, как только появится интернет.</string>
     <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="segment_distance_kilometers">%1$.1f км</string>
+    <string name="segment_distance_meters">%1$d м</string>
+    <string name="segment_distance_under_ten_meters" formatted="false">Меньше 10 м</string>
+    <string name="segment_duration_hours">%1$d ч</string>
+    <string name="segment_duration_hours_minutes">%1$d ч %2$d мин</string>
+    <string name="segment_duration_minutes">%1$d мин</string>
+    <string name="segment_duration_under_minute" formatted="false">Меньше 1 мин</string>
     <string name="tab_alert" formatted="false">Новости</string>
     <string name="tab_control" formatted="false">Управление</string>
     <string name="tab_map" formatted="false">Карта</string>

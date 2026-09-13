@@ -109,6 +109,9 @@
     <string name="control_section_message" formatted="false">Decir algo</string>
     <string name="control_section_network" formatted="false">Conexión a internet</string>
     <string name="control_section_ringer" formatted="false">Cambiarlo ahora mismo</string>
+    <string name="day_header_date">%3$s %2$d/%1$d</string>
+    <string name="day_header_today" formatted="false">Hoy</string>
+    <string name="day_header_yesterday" formatted="false">Ayer</string>
     <string name="day_next" formatted="false">Día siguiente</string>
     <string name="day_prev" formatted="false">Día anterior</string>
     <string name="dialog_cancel" formatted="false">Cancelar</string>
@@ -139,6 +142,18 @@
     <string name="holiday_substitute" formatted="false">Festivo sustitutorio</string>
     <string name="language_follow_system" formatted="false">Seguir el ajuste del sistema</string>
     <string name="language_picker_title" formatted="false">Idioma</string>
+    <string name="leave_family_confirm" formatted="false">Quitar</string>
+    <string name="leave_family_done_message" formatted="false">Se borraron el vínculo de padre en el servidor y la cuenta anónima, y se quitó el vínculo familiar de este teléfono. Los registros, horarios y lugares de tu hijo siguen en la familia.</string>
+    <string name="leave_family_done_signed_out_message" formatted="false">Se borró el vínculo de padre en el servidor y se quitó el vínculo familiar de este teléfono. No se pudo confirmar el borrado de la cuenta anónima, así que solo se cerró la sesión. Si la cuenta sigue existiendo, solo guarda su ID y su fecha de creación, sin datos de la familia.</string>
+    <string name="leave_family_done_title" formatted="false">Este teléfono se quitó de la familia</string>
+    <string name="leave_family_failed_title" formatted="false">No se pudo quitar este teléfono</string>
+    <string name="leave_family_in_progress" formatted="false">Quitando de la familia…</string>
+    <string name="leave_family_last_guardian_message" formatted="false">Este teléfono es el último padre de la familia. Después, nadie podrá ver ni gestionar esta familia desde un teléfono de padre, y no se puede deshacer. El teléfono de tu hijo seguirá subiendo datos sin que nadie los vea, así que borra también la app de su teléfono.</string>
+    <string name="leave_family_menu" formatted="false">Quitar este teléfono de la familia</string>
+    <string name="leave_family_message" formatted="false">Se borrarán el vínculo de padre de este teléfono y su cuenta anónima. Los registros, horarios y lugares de tu hijo se quedan en la familia. Para volver a verlos necesitarás un nuevo código de invitación.</string>
+    <string name="leave_family_no_account" formatted="false">No se encontró el inicio de sesión de este teléfono, así que no se pudo quitar en el servidor. No se borró nada. Vuelve a abrir la app e inténtalo de nuevo.</string>
+    <string name="leave_family_title" formatted="false">¿Quitar este teléfono de la familia?</string>
+    <string name="leave_family_unconfirmed_message" formatted="false">El servidor no lo confirmó, así que aún no se ha borrado nada. Puede que ya se haya quitado en el servidor; vuelve a tocar cuando tengas conexión.</string>
     <string name="list_loading" formatted="false">Cargando…</string>
     <string name="map_battery_info_confirm" formatted="false">Vale</string>
     <string name="map_battery_info_message" formatted="false">El nivel que se ve aquí es el que informó el teléfono de tu hijo. Android no deja leer desde otro teléfono qué aplicación gastó cuánta batería, así que eso hay que mirarlo en Ajustes &gt; Batería en su teléfono.</string>
@@ -321,6 +336,13 @@
     <string name="schedule_sync_retry" formatted="false">Intentar avisar otra vez</string>
     <string name="schedule_sync_slow" formatted="false">La regla está guardada. Avisar al teléfono de tu hijo terminará en cuanto haya internet.</string>
     <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="segment_distance_kilometers">%1$.1f km</string>
+    <string name="segment_distance_meters">%1$d m</string>
+    <string name="segment_distance_under_ten_meters" formatted="false">Menos de 10 m</string>
+    <string name="segment_duration_hours">%1$d h</string>
+    <string name="segment_duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="segment_duration_minutes">%1$d min</string>
+    <string name="segment_duration_under_minute" formatted="false">Menos de 1 min</string>
     <string name="tab_alert" formatted="false">Avisos</string>
     <string name="tab_control" formatted="false">Control</string>
     <string name="tab_map" formatted="false">Mapa</string>
