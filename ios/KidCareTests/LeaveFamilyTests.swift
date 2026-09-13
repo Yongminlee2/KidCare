@@ -84,20 +84,36 @@ struct LeaveFamilyTests {
     }
 
     /// 15초 약속의 서버 쪽 절반. 확인되지 않은 삭제가 **나중에 몰래 서버에 닿으면** "아무것도 지우지 않았다"는 안내가
-    /// 거짓이 된다. 보통 `delete()` 는 오프라인이면 쓰기 대기열에 남았다가 연결되는 순간 올라간다 — 앱을 껐다 켜도(디스크
-    /// 캐시) 남는다. 그래서 대기열에 남지 않는 트랜잭션으로 지운다. 이 테스트는 "확인 못 받은 호출 뒤에 문서가 사라지는
-    /// 일"이 없는지를 본다.
-    @Test("연결이 끊긴 채 부른 빼기가 확인되지 않았으면, 다시 연결된 뒤에도 멤버 문서는 남아 있다")
+    /// 거짓이 된다. 보통 `delete()` 는 서버에 닿지 못하면 디스크 캐시의 쓰기 대기열에 남았다가, 앱을 다시 켜고 연결되는
+    /// 순간 올라간다. 그래서 대기열에 남지 않는 트랜잭션으로 지운다.
+    ///
+    /// **`disableNetwork()` 로는 이것을 볼 수 없다(리뷰 M5 를 고치며 확인).** 연결을 끊어도 트랜잭션 커밋은 서버에 곧장
+    /// 닿아(에뮬레이터에서 2ms 안에 확인, 문서 삭제) 전제가 늘 깨졌고, 옛 테스트는 조건문 덕에 공허하게 통과했다. 그래서
+    /// 앱을 다시 켜는 것을 그대로 흉내 낸다 — 디스크 캐시를 쓰는 같은 앱을 아무도 듣지 않는 포트로 열어 빼기를 부르고
+    /// (확인 없음), 그 인스턴스를 끝낸 뒤 진짜 에뮬레이터 포트로 다시 열어 대기열에 남은 쓰기가 올라갈 틈을 준다.
+    @Test("서버에 닿지 못해 확인되지 않은 빼기는, 앱을 다시 켜고 연결된 뒤에도 서버에 닿지 않는다")
     func 확인_안_된_삭제는_나중에도_안_닿는다() async throws {
-        let session = try await 따로_보호자_세션()
-        try await session.db.disableNetwork()
+        let appName = "LeaveDisk-\(UUID().uuidString)"
+        let app = try 디스크_앱(appName)
+        let uid = try await Auth.auth(app: app).signInAnonymously().user.uid
+        let now = Int64(Date().timeIntervalSince1970 * 1000)
 
-        let appName = session.appName
-        let familyId = session.familyId, uid = session.uid
+        // 1) 살아 있는 포트로 가족과 멤버 문서를 만든다.
+        let live = 디스크_Firestore(app, port: 8080)
+        let family = live.collection("families").document()
+        let familyId = family.documentID
+        try await family.setData(["ownerUid": uid, "name": "", "inviteCode": "", "inviteExpiresAt": 0, "schemaVersion": 2, "createdAt": now])
+        try await family.collection("members").document(uid).setData([
+            "role": "guardian", "displayName": "", "fcmToken": "", "appVersion": "", "updatedAt": now, "joinedAt": now,
+        ])
+        try await live.terminate()
+
+        // 2) 같은 앱(같은 디스크 캐시)을 죽은 포트로 다시 열고 빼기를 부른다. 확인이 오면 안 된다.
+        _ = 디스크_Firestore(app, port: 1)
         let confirmed: Bool
         do {
             confirmed = try await firstToFinish(
-                timeoutMillis: 2_000,
+                timeoutMillis: 3_000,
                 sleep: { try? await Task.sleep(nanoseconds: UInt64($0) * 1_000_000) }
             ) {
                 try await LeaveFamilyRepository.removeMember(familyId: familyId, uid: uid, db: try LeaveFamilyTests.앱의_Firestore_(appName))
@@ -106,19 +122,23 @@ struct LeaveFamilyTests {
         } catch {
             confirmed = false
         }
-
-        try await session.db.enableNetwork()
-        // 대기열에 남은 쓰기가 있으면 이 사이에 올라간다.
-        try await Task.sleep(nanoseconds: 3_000_000_000)
-
-        let still = try? await session.db.collection("families").document(familyId)
-            .collection("members").document(uid).getDocument(source: .server)
-        if confirmed {
-            // 연결이 끊긴 것처럼 보여도 트랜잭션은 서버에 곧장 닿을 수 있다 — 그러면 확인됐다고 말한 것이므로 사라져도 된다.
-            #expect(still?.exists != true)
-        } else {
-            #expect(still?.exists == true, "확인되지 않았다고 알렸는데 멤버 문서가 나중에 사라졌다")
+        try await LeaveFamilyTests.앱의_Firestore_(appName).terminate()
+        // 전제: 서버에 닿지 못했으니 확인이 없어야 한다. 전제가 깨지면 아래 검사는 아무것도 증명하지 못하므로 조용히
+        // 통과하지 않고 실패로 드러낸다(리뷰 M5).
+        guard !confirmed else {
+            Issue.record("전제가 깨졌다: 죽은 포트인데 빼기가 확인됐다 — 이 테스트는 늦은 삭제를 검사하지 못한다")
+            return
         }
+
+        // 3) 앱을 다시 켠 것처럼 진짜 포트로 연다. 디스크 대기열에 쓰기가 남았다면 이제 올라간다.
+        let again = 디스크_Firestore(app, port: 8080)
+        try await again.waitForPendingWrites()
+        try await Task.sleep(nanoseconds: 2_000_000_000)
+        let still = try await again.collection("families").document(familyId)
+            .collection("members").document(uid).getDocument(source: .server)
+        #expect(still.exists, "확인되지 않았다고 알렸는데 멤버 문서가 나중에 사라졌다")
+        try await again.terminate()
+        try? await again.clearPersistence()
     }
 
     @Test("서버에 전혀 닿지 않으면 확인되지 않는다(성공으로 오지 않는다)")
@@ -149,6 +169,14 @@ struct LeaveFamilyTests {
         #expect(Auth.auth().currentUser == nil)
     }
 
+    @Test("계정 삭제 대신 로그아웃으로 물러나면 정말 로그아웃됐는지 보고 signedOutOnly 를 돌려준다(리뷰 M2)")
+    func 로그아웃() async throws {
+        _ = try await EmulatorHarness.freshUser()
+        let outcome = await LeaveFamilyRepository.signOut()
+        #expect(outcome == .signedOutOnly)
+        #expect(Auth.auth().currentUser == nil)
+    }
+
     // MARK: - 도우미
 
     struct 보호자_세션 {
@@ -161,12 +189,34 @@ struct LeaveFamilyTests {
 
     private enum 세션오류: Error { case 앱_없음 }
 
+    /// 에뮬레이터 Auth 를 쓰는 이름 붙은 앱. 디스크 캐시 경로는 앱 이름으로 갈리므로 다른 스위트와 섞이지 않는다.
+    private func 디스크_앱(_ name: String) throws -> FirebaseApp {
+        let options = FirebaseOptions(googleAppID: "1:000000000000:ios:0000000000000002", gcmSenderID: "000000000000")
+        options.projectID = EmulatorHarness.projectId
+        options.apiKey = "emulator-does-not-check-this"
+        FirebaseApp.configure(name: name, options: options)
+        let app = try #require(FirebaseApp.app(name: name))
+        Auth.auth(app: app).useEmulator(withHost: "127.0.0.1", port: 9099)
+        return app
+    }
+
+    /// 앱의 Firestore 를 **디스크 캐시**로 연다(앱과 같은 설정). `terminate()` 뒤에 부르면 새 인스턴스가 같은 캐시를 연다.
+    private func 디스크_Firestore(_ app: FirebaseApp, port: Int) -> Firestore {
+        let db = Firestore.firestore(app: app)
+        db.useEmulator(withHost: "127.0.0.1", port: port)
+        let settings = db.settings
+        settings.cacheSettings = PersistentCacheSettings()
+        settings.isSSLEnabled = false
+        db.settings = settings
+        return db
+    }
+
     private static func 앱의_Firestore_(_ name: String) throws -> Firestore {
         guard let app = FirebaseApp.app(name: name) else { throw 세션오류.앱_없음 }
         return Firestore.firestore(app: app)
     }
 
-    /// 기본 앱과 따로 노는 이름 붙은 앱으로 가족을 만든 보호자. 연결 끊기(disableNetwork)가 다른 스위트의 기본 앱에 번지지
+    /// 기본 앱과 따로 노는 이름 붙은 앱으로 가족을 만든 보호자. 이 스위트의 설정(죽은 포트 등)이 다른 스위트의 기본 앱에 번지지
     /// 않게 한다. `deadFirestore` 면 가족은 진짜 에뮬레이터에 만들되, 빼기를 부를 Firestore 는 아무도 듣지 않는 포트를 본다.
     private func 따로_보호자_세션(deadFirestore: Bool = false) async throws -> 보호자_세션 {
         let appName = "LeaveGuardian-\(UUID().uuidString)"

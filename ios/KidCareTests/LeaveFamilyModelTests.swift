@@ -23,6 +23,9 @@ struct LeaveFamilyModelTests {
         읽기_전용: Bool = false,
         remove: @escaping LeaveFamilyModel.RemoveMember,
         auth: LeaveFamilyRepository.AuthOutcome = .deleted,
+        deleteAuth: LeaveFamilyModel.DeleteAuth? = nil,
+        signOut: LeaveFamilyRepository.AuthOutcome = .signedOutOnly,
+        clearLocal: (@MainActor () -> Void)? = nil,
         sleep: @escaping @Sendable (Int64) async -> Void = LeaveFamilyModelTests.오래
     ) -> LeaveFamilyModel {
         LeaveFamilyModel(
@@ -30,8 +33,9 @@ struct LeaveFamilyModelTests {
             읽기_전용: 읽기_전용,
             currentUid: { uid },
             removeMember: remove,
-            deleteAuth: { log.적는다("auth"); return auth },
-            clearLocal: { log.적는다("local") },
+            deleteAuth: deleteAuth ?? { log.적는다("auth"); return auth },
+            signOut: { log.적는다("signOut"); return signOut },
+            clearLocal: { log.적는다("local"); clearLocal?() },
             onLeft: { outcome in log.적는다("left \(outcome.map { "\($0)" } ?? "nil")") },
             sleep: sleep
         )
@@ -44,7 +48,7 @@ struct LeaveFamilyModelTests {
         m.묻는다()
         await m.뺀다()
         #expect(log.순서 == ["remove fam me", "auth", "left deleted", "local"])
-        #expect(m.실패_문구 == nil)
+        #expect(m.실패 == nil)
         #expect(m.빼는중 == false)
         #expect(m.묻는중 == false)
         #expect(m.계정_결과 == .deleted)
@@ -59,9 +63,49 @@ struct LeaveFamilyModelTests {
         #expect(m.계정_결과 == .signedOutOnly)
         #expect(LeaveFamilyModel.끝_문구(.signedOutOnly) == String(localized: "ios_leave_family_done_signed_out_message"))
         #expect(LeaveFamilyModel.끝_문구(.deleted) == String(localized: "ios_leave_family_done_message"))
+        #expect(LeaveFamilyModel.끝_문구(.notSignedOut) == String(localized: "ios_leave_family_done_not_signed_out_message"))
     }
 
-    @Test("서버 확인이 15초 안에 안 오면 아무것도 지우지 않고 오프라인이라고 말한다")
+    @Test("계정 삭제가 10초 안에 끝나지 않으면 로그아웃으로 물러나 그 결과를 그대로 알리고, 이 폰의 기록을 지운다(리뷰 I1 c)")
+    func 계정_삭제_시간_초과() async {
+        let log = 기록()
+        let 잰_시간 = 기록()
+        let m = 만든다(
+            log,
+            remove: { _, _ in log.적는다("remove") },
+            deleteAuth: { log.적는다("auth"); try? await Task.sleep(nanoseconds: 3_600_000_000_000); return .deleted },
+            sleep: { millis in
+                잰_시간.적는다("\(millis)")
+                // 서버 확인 쪽 시간 초과는 이기지 않게, 계정 쪽은 곧바로 끝나게 한다.
+                if millis == LeaveFamilyModel.timeoutMillis { try? await Task.sleep(nanoseconds: 3_600_000_000_000) }
+            }
+        )
+        await m.뺀다()
+        #expect(log.순서 == ["remove", "auth", "signOut", "left signedOutOnly", "local"])
+        #expect(m.계정_결과 == .signedOutOnly)
+        #expect(m.실패 == nil)
+        #expect(잰_시간.순서.contains("\(LeaveFamilyModel.authTimeoutMillis)"))
+        #expect(LeaveFamilyModel.authTimeoutMillis == 10_000)
+    }
+
+    @Test("로그아웃도 되지 않았으면 로그아웃했다고 말하지 않는다(리뷰 M2)")
+    func 로그아웃도_안_됨() async {
+        let log = 기록()
+        let m = 만든다(
+            log,
+            remove: { _, _ in log.적는다("remove") },
+            deleteAuth: { log.적는다("auth"); try? await Task.sleep(nanoseconds: 3_600_000_000_000); return .deleted },
+            signOut: .notSignedOut,
+            sleep: { millis in
+                if millis == LeaveFamilyModel.timeoutMillis { try? await Task.sleep(nanoseconds: 3_600_000_000_000) }
+            }
+        )
+        await m.뺀다()
+        #expect(log.순서 == ["remove", "auth", "signOut", "left notSignedOut", "local"])
+        #expect(m.계정_결과 == .notSignedOut)
+    }
+
+    @Test("서버 확인이 15초 안에 안 오면 아무것도 지우지 않고, 실패가 아니라 확인하지 못했다고 말한다(리뷰 I1)")
     func 시간_초과() async {
         let log = 기록()
         let m = 만든다(
@@ -73,7 +117,11 @@ struct LeaveFamilyModelTests {
         )
         await m.뺀다()
         #expect(log.순서 == [])
-        #expect(m.실패_문구 == String(localized: "ios_leave_family_offline"))
+        #expect(m.실패 == LeaveFamilyModel.안내(
+            제목: String(localized: "ios_leave_family_unconfirmed_title"),
+            문구: String(localized: "ios_leave_family_unconfirmed_message")
+        ))
+        #expect(m.실패?.제목 != String(localized: "ios_leave_family_failed_title"))
         #expect(m.빼는중 == false)
         #expect(m.계정_결과 == nil)
         #expect(LeaveFamilyModel.timeoutMillis == 15_000)
@@ -94,13 +142,55 @@ struct LeaveFamilyModelTests {
             sleep: { _ in }
         )
         await m.뺀다()
-        #expect(m.실패_문구 == String(localized: "ios_leave_family_offline"))
+        #expect(m.실패 == LeaveFamilyModel.확인하지_못함)
         await 문.fire()
         await 끝.wait()
         // 늦은 결과가 흘러갈 틈을 준다.
         try? await Task.sleep(nanoseconds: 100_000_000)
         #expect(log.순서 == ["remove"])
         #expect(m.계정_결과 == nil)
+    }
+
+    @Test("15초 뒤에 늦게 커밋돼 서버에서는 빠졌으면, 다시 누를 때 계정과 이 폰의 기록까지 마무리된다(리뷰 I1 b)")
+    func 늦은_커밋_뒤_다시_누르면_마무리() async {
+        let log = 기록()
+        let 문 = TestSignal()
+        let 끝 = TestSignal()
+        // 서버 흉내: 첫 호출은 문이 열릴 때 커밋되고, 그 뒤의 호출은 `removeMember` 의 "이미 빠짐" 판정처럼 성공한다.
+        let 서버 = 기록()
+        let 잰_횟수 = 기록()
+        let m = 만든다(
+            log,
+            remove: { _, _ in
+                if 서버.순서.isEmpty {
+                    서버.적는다("첫 시도")
+                    await 문.wait()
+                    log.적는다("late commit")
+                    await 끝.fire()
+                } else {
+                    log.적는다("remove again")
+                }
+            },
+            sleep: { millis in
+                // 첫 누름의 서버 확인 한도만 곧바로 끝난다(시간 초과). 두 번째 누름과 계정 쪽 한도는 이기지 않는다.
+                if millis == LeaveFamilyModel.timeoutMillis, 잰_횟수.순서.isEmpty {
+                    잰_횟수.적는다("첫 한도")
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 3_600_000_000_000)
+            }
+        )
+        await m.뺀다()
+        #expect(m.실패 == LeaveFamilyModel.확인하지_못함)
+        await 문.fire()
+        await 끝.wait()
+        m.실패를_닫는다()
+
+        m.묻는다()
+        await m.뺀다()
+        #expect(log.순서 == ["late commit", "remove again", "auth", "left deleted", "local"])
+        #expect(m.실패 == nil)
+        #expect(m.계정_결과 == .deleted)
     }
 
     @Test("서버가 거부하면 errorMessage 문구를 보이고 아무것도 지우지 않는다")
@@ -110,27 +200,74 @@ struct LeaveFamilyModelTests {
         let m = 만든다(log, remove: { _, _ in throw denied })
         await m.뺀다()
         #expect(log.순서 == [])
-        #expect(m.실패_문구 == errorMessage(denied))
+        #expect(m.실패 == LeaveFamilyModel.안내(제목: String(localized: "ios_leave_family_failed_title"), 문구: errorMessage(denied)))
         m.실패를_닫는다()
-        #expect(m.실패_문구 == nil)
+        #expect(m.실패 == nil)
     }
 
-    @Test("서버에 닿지 못했다는 오류(unavailable)도 오프라인 문구로 알리고 아무것도 지우지 않는다")
+    @Test("서버에 닿지 못했거나 기한을 넘긴 오류(unavailable, deadlineExceeded)도 확인하지 못했다고 알리고 아무것도 지우지 않는다")
     func 닿지_못함() async {
-        let log = 기록()
-        let unavailable = NSError(domain: FirestoreErrorDomain, code: FirestoreErrorCode.unavailable.rawValue)
-        let m = 만든다(log, remove: { _, _ in throw unavailable })
-        await m.뺀다()
-        #expect(log.순서 == [])
-        #expect(m.실패_문구 == String(localized: "ios_leave_family_offline"))
+        for code in [FirestoreErrorCode.unavailable, .deadlineExceeded] {
+            let log = 기록()
+            let error = NSError(domain: FirestoreErrorDomain, code: code.rawValue)
+            let m = 만든다(log, remove: { _, _ in throw error })
+            await m.뺀다()
+            #expect(log.순서 == [])
+            #expect(m.실패 == LeaveFamilyModel.확인하지_못함)
+        }
     }
 
-    @Test("로그인한 적이 없으면 서버에 묻지 않고 이 폰의 기록만 지운다")
-    func 로그인_전() async {
+    @Test("본 화면인데 로그인 정보가 없으면 서버도 이 폰도 건드리지 않고 실패로 알린다(리뷰 M4)")
+    func 로그인_정보_없음() async {
         let log = 기록()
         let m = 만든다(log, uid: nil, remove: { _, _ in log.적는다("remove") })
         await m.뺀다()
-        #expect(log.순서 == ["left nil", "local"])
+        #expect(log.순서 == [])
+        #expect(m.실패 == LeaveFamilyModel.안내(
+            제목: String(localized: "ios_leave_family_failed_title"),
+            문구: String(localized: "ios_leave_family_no_account")
+        ))
+        #expect(m.계정_결과 == nil)
+    }
+
+    @Test("서버에서 빠진 뒤 건 정리(선택기·탭)를 계정 삭제와 이 폰의 기록 지우기보다 먼저 부르고, 뗀 정리는 부르지 않는다(리뷰 M3)")
+    func 정리_먼저() async {
+        let log = 기록()
+        let m = 만든다(log, remove: { _, _ in log.적는다("remove") })
+        let 뗄_것 = UUID()
+        m.떠나기_전에(UUID()) { log.적는다("teardown") }
+        m.떠나기_전에(뗄_것) { log.적는다("removed teardown") }
+        m.정리를_뗀다(뗄_것)
+        await m.뺀다()
+        #expect(log.순서 == ["remove", "teardown", "auth", "left deleted", "local"])
+    }
+
+    @Test("빠진 뒤 늦게 온 멤버 스냅샷이 지운 childUid 를 다시 쓰지 못한다 — 진짜 선택기로(리뷰 M3)")
+    func 늦은_스냅샷이_선택을_되살리지_않는다() async {
+        let log = 기록()
+        let store = RoleStore(defaults: TestDefaults.isolated("LeaveFamilyModelTests-M3"))
+        store.role = .guardian
+        store.familyId = "fam"
+        let onChange = TestCallbackBox<([FamilyMember]) -> Void>()
+        let selector = ChildSelectorModel(
+            familyId: "fam", roleStore: store, 읽기_전용: false,
+            membersObserve: { _, change, _ in onChange.set(change); return TestListenerRegistration() }
+        )
+        selector.시작한다()
+        let 아이 = FamilyMember(uid: "c1", role: "child", displayName: "민준", joinedAt: 1)
+        onChange.value?([아이])
+        await eventually { store.childUid == "c1" }
+
+        let m = 만든다(log, remove: { _, _ in log.적는다("remove") }, clearLocal: { store.clear() })
+        m.떠나기_전에(UUID()) { selector.정리한다() }
+        await m.뺀다()
+        #expect(store.childUid == nil)
+
+        // 리스너를 떼기 직전에 대기열에 올랐던 콜백이 뒤늦게 돈다.
+        onChange.value?([아이])
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        #expect(store.childUid == nil)
+        #expect(store.familyId == nil)
     }
 
     @Test("빼는 중에 다시 눌러도 서버에는 한 번만 간다")
@@ -158,15 +295,17 @@ struct LeaveFamilyModelTests {
         await m.뺀다()
         #expect(log.순서 == [])
         #expect(m.빼는중 == false)
-        #expect(m.실패_문구 == nil)
+        #expect(m.실패 == nil)
     }
 
-    @Test("마지막 보호자면 경고를 앞에 붙이고, 둘 이상이면 기본 문구만")
+    @Test("마지막 보호자면 따로 쓴 문구(새 초대 번호 이야기 없음), 둘 이상이면 기본 문구(리뷰 I2)")
     func 확인_문구() {
         let base = String(localized: "ios_leave_family_message")
+        let last = String(localized: "ios_leave_family_last_guardian_message")
         #expect(LeaveFamilyModel.확인_문구(보호자_수: 2) == base)
-        #expect(LeaveFamilyModel.확인_문구(보호자_수: 1) != base)
-        #expect(LeaveFamilyModel.확인_문구(보호자_수: 1).hasSuffix(base))
+        #expect(LeaveFamilyModel.확인_문구(보호자_수: 1) == last)
+        #expect(last != base && !last.contains(base))
+        #expect(last != "ios_leave_family_last_guardian_message", "카탈로그에 키가 없다")
         // 멤버 목록을 아직 못 받았으면(0) 경고 쪽으로 기운다 — 경고가 빠지는 것보다 남는 것이 안전하다.
         #expect(LeaveFamilyModel.확인_문구(보호자_수: 0) == LeaveFamilyModel.확인_문구(보호자_수: 1))
     }

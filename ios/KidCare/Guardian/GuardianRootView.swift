@@ -26,6 +26,10 @@ struct GuardianRootView: View {
     /// 선택 탭. 주인은 `GuardianHomeView` 다 — 아이를 바꿔 이 뷰가 다시 만들어져도 보던 탭이 남아야 하고
     /// (recreateTabsForSelectedChild :293-298), 바깥의 선택기 줄이 지도 탭인지 알아야 한다(:330).
     @Binding var selectedTab: GuardianTab
+    /// "이 아이폰을 가족에서 빼기". 서버에서 빠진 뒤 이 폰의 기록을 지우기 **전에** 다섯 탭을 떼게 정리를 건다(리뷰 M3) —
+    /// 탭 콜백이 명령 기록·못 보낸 알림 깃발을 지운 뒤에 다시 쓰지 못하게. 미리보기·테스트처럼 없으면 걸지 않는다.
+    @Environment(LeaveFamilyModel.self) private var leave: LeaveFamilyModel?
+    @State private var 정리_열쇠 = UUID()
 
     init(familyId: String, childUid: String?, selectedTab: Binding<GuardianTab>) {
         _selectedTab = selectedTab
@@ -114,7 +118,15 @@ struct GuardianRootView: View {
         // 탭 전환은 안드로이드 onHiddenChanged(:172-175) 자리다.
         .onChange(of: selectedTab) { _, _ in 알림_보임을_맞춘다() }
         // 아이를 바꾸면 `GuardianHomeView` 의 `.id(childUid)` 가 이 뷰를 통째로 새로 만들고, 옛 뷰의 이 자리가 불린다.
+        .onAppear {
+            let (map, control, schedule, place, alert) =
+                (mapViewModel, controlViewModel, scheduleViewModel, placeViewModel, alertViewModel)
+            leave?.떠나기_전에(정리_열쇠) {
+                Self.탭을_모두_정리한다(map: map, control: control, schedule: schedule, place: place, alert: alert)
+            }
+        }
         .onDisappear {
+            leave?.정리를_뗀다(정리_열쇠)
             Self.탭을_모두_정리한다(
                 map: mapViewModel, control: controlViewModel, schedule: scheduleViewModel,
                 place: placeViewModel, alert: alertViewModel

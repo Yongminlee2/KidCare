@@ -13446,85 +13446,174 @@
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "id": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "it": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "서버의 이 아이폰 보호자 연결과 익명 계정, 이 폰에 저장된 가족 정보를 지웠어요. 아이 폰의 기록과 예약·장소는 가족에 그대로 남아 있어요."
+            "value": "서버의 이 아이폰 보호자 연결과 익명 계정을 지우고, 이 폰에서 가족 연결을 지웠어요. 아이 폰의 기록과 예약·장소는 가족에 그대로 남아 있어요."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "th": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+            "value": "This iPhone's guardian link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
+          }
+        }
+      }
+    },
+    "ios_leave_family_done_not_signed_out_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버의 이 아이폰 보호자 연결을 지우고, 이 폰에서 가족 연결을 지웠어요. 익명 계정은 삭제를 확인하지 못했고 로그아웃도 되지 않았어요. 이 계정에는 가족 정보 없이 계정 번호와 만든 시각만 있어요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info."
           }
         }
       }
@@ -13624,85 +13713,85 @@
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "id": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "it": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "서버의 이 아이폰 보호자 연결과 이 폰에 저장된 가족 정보를 지웠어요. 익명 계정은 서버가 삭제를 받지 않아 로그아웃만 했어요. 남은 계정에는 가족 정보 없이 계정 번호와 만든 시각만 있어요."
+            "value": "서버의 이 아이폰 보호자 연결을 지우고, 이 폰에서 가족 연결을 지웠어요. 익명 계정은 삭제를 확인하지 못해 이 폰에서 로그아웃만 했어요. 계정이 남아 있더라도 가족 정보 없이 계정 번호와 만든 시각만 있어요."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "th": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+            "value": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this iPhone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
           }
         }
       }
@@ -14063,91 +14152,91 @@
         }
       }
     },
-    "ios_leave_family_last_guardian_format": {
+    "ios_leave_family_last_guardian_message": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "id": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "it": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 아이폰이 이 가족의 마지막 보호자예요. 빼고 나면 아이 폰이 올리는 기록을 볼 사람이 없으니 아이 폰의 앱도 함께 지워 주세요.\n\n%1$@"
+            "value": "이 아이폰이 이 가족의 마지막 보호자예요. 빼고 나면 누구도 보호자 폰에서 이 가족을 보거나 관리할 수 없고, 되돌릴 수 없어요. 아이 폰은 계속 기록을 올리지만 볼 사람이 없으니 아이 폰의 앱도 함께 지워 주세요. 이 아이폰의 보호자 연결과 익명 계정을 지우고, 아이 폰의 기록과 예약·장소는 가족에 그대로 남아요."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "th": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+            "value": "This iPhone is the family's last guardian. After it's removed, no one will be able to see or manage this family from a guardian phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too. This deletes this iPhone's guardian link and its anonymous account; your child's records, schedules and places stay with the family."
           }
         }
       }
@@ -14330,91 +14419,91 @@
         }
       }
     },
-    "ios_leave_family_offline": {
+    "ios_leave_family_no_account": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "id": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "it": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "인터넷에 연결되지 않아 빼지 못했어요. 연결된 뒤 다시 해 주세요."
+            "value": "이 폰의 로그인 정보를 찾지 못해 서버에서 뺄 수 없었어요. 아무것도 지우지 않았어요. 앱을 다시 켠 뒤 다시 해 주세요."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "th": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
           }
         }
       }
@@ -14504,6 +14593,184 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Remove this iPhone from the family?"
+          }
+        }
+      }
+    },
+    "ios_leave_family_unconfirmed_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버의 확인을 받지 못해 이 폰에서는 아직 아무것도 지우지 않았어요. 서버에서는 이미 빠졌을 수도 있으니 인터넷에 연결된 뒤 다시 눌러 주세요. 이미 빠졌다면 그대로 마무리돼요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No confirmation came from the server, so nothing has been deleted on this phone yet. This iPhone may already be removed on the server, so please tap again once you're connected. If it was already removed, that will finish it."
+          }
+        }
+      }
+    },
+    "ios_leave_family_unconfirmed_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빠졌는지 확인하지 못했어요"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't confirm the removal"
           }
         }
       }

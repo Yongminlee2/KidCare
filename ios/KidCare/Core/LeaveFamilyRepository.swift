@@ -15,8 +15,11 @@ enum LeaveFamilyRepository {
     enum AuthOutcome: Equatable, Sendable {
         /// 익명 계정까지 서버에서 지웠다.
         case deleted
-        /// 서버가 계정 삭제를 받지 않아 로그아웃만 했다. 남은 익명 계정에는 uid 와 만든 시각뿐이다.
+        /// 계정 삭제를 확인하지 못해(거부, 망 오류, 시간 초과 — 사유는 가리지 않는다) 로그아웃만 했고, 로그아웃은 확인됐다.
+        /// 남은 익명 계정이 있다면 uid 와 만든 시각뿐이다.
         case signedOutOnly
+        /// 계정 삭제도 확인하지 못했고 로그아웃도 되지 않았다(`signOut()` 이 던졌거나 뒤에도 `currentUser` 가 남음).
+        case notSignedOut
     }
 
     /// `families/{familyId}/members/{uid}` 를 지운다. **이미 빠진 상태면 성공으로 본다.**
@@ -73,21 +76,34 @@ enum LeaveFamilyRepository {
         }
     }
 
-    /// 익명 계정을 지운다. 어떤 이유로든 못 지우면 로그아웃만 하고 그렇다고 돌려준다.
+    /// 익명 계정을 지운다. 어떤 이유로든 못 지우면 로그아웃만 하고 그 결과를 돌려준다(`signOut()`).
     ///
     /// 던지지 않는 이유: 이 함수는 멤버 문서를 지운 **뒤에만** 불린다. 여기서 실패를 화면에 올리면 "가족에서는 빠졌는데
     /// 실패했다"는 모순된 안내가 된다. 익명 계정은 로그아웃하면 다시 들어갈 길이 없으므로 로그아웃이 곧 이 폰에서의 끝이다.
     /// 대신 결과를 돌려주고, 첫 화면이 "계정은 로그아웃만 했다"고 있는 그대로 알린다(`LeaveFamilyModel.끝_문구`).
     /// 운영 Auth 가 오래된 익명 로그인에 `requiresRecentLogin` 을 내는지는 확인하지 못했다(판정 기록 8) — 두 갈래 모두 여기서 끝난다.
+    /// 시간 제한은 부르는 쪽(`LeaveFamilyModel.authTimeoutMillis`)이 건다.
     static func deleteAuthUser() async -> AuthOutcome {
-        guard let user = Auth.auth().currentUser else { return .signedOutOnly }
+        guard let user = Auth.auth().currentUser else { return await signOut() }
         do {
             try await user.delete()
             return .deleted
         } catch {
-            try? Auth.auth().signOut()
-            return .signedOutOnly
+            return await signOut()
         }
+    }
+
+    /// 로그아웃하고, **정말 로그아웃됐는지** 돌려준다(리뷰 M2). `signOut()` 이 던지면 여전히 로그인된 채이므로
+    /// "로그아웃만 했다"고 말하면 거짓이다.
+    @MainActor
+    static func signOut() -> AuthOutcome {
+        let auth = Auth.auth()
+        do {
+            try auth.signOut()
+        } catch {
+            return .notSignedOut
+        }
+        return auth.currentUser == nil ? .signedOutOnly : .notSignedOut
     }
 
     static func isPermissionDenied(_ error: Error) -> Bool {
