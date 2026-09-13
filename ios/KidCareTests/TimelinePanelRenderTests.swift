@@ -9,17 +9,20 @@ import UIKit
 /// 전혀 찍히지 않았다(시뮬레이터에서 이름 있는 머무름·이동 행까지 똑같이 재현됐고,
 /// 바탕만 불투명 색으로 바꾸자 같은 빌드에서 나타났다).
 ///
-/// 문자열 조립(`timeline_detail_inline`)만 보는 테스트는 이 결함을 절대 못 잡는다 —
+/// 문자열 조립(`timeline_detail`)만 보는 테스트는 이 결함을 절대 못 잡는다 —
 /// 문자열은 처음부터 멀쩡했다. 그래서 테스트 호스트 앱의 실제 창에 패널을 띄우고
-/// `drawHierarchy` 로 렌더 결과를 받아, 제목 아래에 글자 줄이 하나 더 있는지 픽셀로 센다.
+/// `drawHierarchy` 로 렌더 결과를 받아, 카드 안에 글자 줄이 몇 개 찍혔는지 픽셀로 센다.
+///
+/// 안드로이드처럼 가로 카드로 바꾼 뒤에도 목적은 같다 — 카드의 시각·기간 두 줄이
+/// 패널(과 카드) 바탕 위에 실제로 보여야 한다.
 @Suite(.serialized)
 @MainActor
 struct TimelinePanelRenderTests {
 
     init() async { await EmulatorHarness.start() }
 
-    @Test("D1: 펼친 패널에서 이름 없는 머무름 행의 제목 아래 시각·기간 줄이 실제로 그려진다")
-    func 머무름_행의_상세_줄이_그려진다() async throws {
+    @Test("D1: 펼친 패널에서 이름 없는 머무름 카드의 시각·기간 두 줄이 실제로 그려진다")
+    func 머무름_카드의_상세_줄이_그려진다() async throws {
         let model = MapViewModel(familyId: "family", childUid: "child", dayLoad: { _, _, dayKey in
             let start: Int64 = 1_757_000_000_000
             return (nil, TrailDoc([
@@ -51,14 +54,16 @@ struct TimelinePanelRenderTests {
             _ = host.view.drawHierarchy(in: bounds, afterScreenUpdates: true)
         }
 
-        // 손잡이(28) + 경로 요약 줄(54) 아래가 콘텐츠다. 첫 행 높이만큼만, 아이콘 열
-        // (왼쪽 14 + 폭 26 + 간격 10 = 50)을 뺀 글자 열을 본다.
-        let 띠_수 = Self.글자_띠_수(image, x: 50..<380, y: 82..<146)
-        #expect(띠_수 >= 2, "제목 아래 시각·기간 줄이 그려지지 않았다 — 글자 띠 \(띠_수)개")
+        // 손잡이(28) + 경로 요약 줄(54) 아래 174 가 콘텐츠다(82..<256). 카드는 목록 여백
+        // (가로 10·세로 6)과 카드 여백(가로 5·세로 2) 안쪽, x 15..<147·y 90..<248 에 놓인다.
+        // 테두리 안쪽만 본다. 머무름 카드는 위에서부터 아이콘 그림 · 제목 · 시각 줄 · 기간 줄
+        // 이라 글자 띠가 4개여야 한다 — 상세 줄이 안 찍히면 2개로 줄어든다.
+        let 띠_수 = Self.글자_띠_수(image, x: 17..<145, y: 92..<246)
+        #expect(띠_수 >= 4, "카드의 시각·기간 두 줄이 그려지지 않았다 — 글자 띠 \(띠_수)개")
     }
 
     /// 영역을 위에서 아래로 훑어 "어두운 불투명 픽셀이 하나라도 있는 가로줄"이 이어진
-    /// 덩어리 수를 센다. 제목 한 줄이면 1, 제목 + 상세 줄이면 2 이상이다.
+    /// 덩어리 수를 센다. 아이콘 그림·제목·상세 두 줄이 모두 찍히면 4 이상이다.
     private static func 글자_띠_수(_ image: UIImage, x: Range<Int>, y: Range<Int>) -> Int {
         guard let cg = image.cgImage else { return 0 }
         let scale = Int(image.scale.rounded())

@@ -240,19 +240,26 @@ struct TimelinePanelView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 0) {
+                // 정본은 안드로이드 `timeline_list`: 가로 `LinearLayoutManager`
+                // (`MapTimelineFragment` :198-199), 목록 안쪽 여백 가로 10·세로 6,
+                // `clipToPadding=false`. 카드마다 바깥 여백 가로 5·세로 2
+                // (`item_timeline.xml`), 높이는 콘텐츠 높이를 채운다. 구분선은 없다.
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 0) {
                         ForEach(viewModel.타임라인_행, id: \.segmentIndex) { row in
                             TimelineRowView(row: row)
-                                .contentShape(Rectangle())
                                 // Task 8: 정본은 안드로이드 타임라인 어댑터의 탭
                                 // 처리(:894-896) — 이동 구간이면 그 선을 켜고
                                 // 끄고, 그렇지 않으면(머무름 등) 그 좌표로
-                                // 카메라를 포커스한다.
+                                // 카메라를 포커스한다. 카드 전체가 탭 대상이다.
                                 .onTapGesture { viewModel.타임라인_행을_탭한다(row) }
-                            Divider().padding(.leading, 50)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
                         }
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .frame(maxHeight: .infinity)
                 }
             }
         }

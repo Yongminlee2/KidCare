@@ -102,4 +102,16 @@ struct TimelineRowTests {
         #expect(rows[1].routeState == .visible)
         #expect(rows[2].routeState == .hidden)
     }
+
+    @Test("카드 상세는 안드로이드 키 timeline_detail 로 시각 범위와 기간을 두 줄에 나눈다")
+    func 카드_상세는_timeline_detail_두_줄() {
+        let start: Int64 = 1_757_000_000_000
+        let docs = [stayDoc(startAt: start, endAt: start + 90 * 60_000, placeName: "")]
+        let row = Timeline.timelineRows(from: docs, zone: seoul)[0]
+
+        let detail = TimelineRowView.상세_문구(row)
+        #expect(detail == String(format: String(localized: "timeline_detail"), timeRangeText(row.detail), durationText(row.duration)))
+        let lines = detail.components(separatedBy: "\n")
+        #expect(lines == [timeRangeText(row.detail), durationText(row.duration)])
+    }
 }

@@ -115,46 +115,93 @@ func distanceText(_ distance: Distance) -> String {
     }
 }
 
-/// 타임라인 한 줄. 정본은 안드로이드 `item_timeline.xml` + `TimelineAdapter.Holder.bind`.
+/// 타임라인 카드 한 장. 정본은 안드로이드 `item_timeline.xml`(`MaterialCardView`) +
+/// `TimelineAdapter.Holder.bind`(:47-110). 안드로이드는 이 카드를 가로로 넘기는
+/// 목록(`MapTimelineFragment` :198-199, `LinearLayoutManager.HORIZONTAL`)에 늘어놓는다 —
+/// 폭 132, 높이는 콘텐츠를 채우고, 가운데 정렬한 세로 줄(아이콘 → 제목 → 시각·기간
+/// 두 줄 → 이동이면 경로 표시 알약)이다. 바깥 여백(가로 5·세로 2)은 목록 쪽이 준다.
 struct TimelineRowView: View {
     let row: TimelineRow
 
+    /// `item_timeline.xml` 의 `layout_width="132dp"`.
+    static let cardWidth: CGFloat = 132
+    /// `ShapeAppearance.KidCare.Large`(`themes.xml:90-93`)의 `cornerSize` 24dp.
+    static let cornerRadius: CGFloat = 24
+
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: row.icon == .stay ? "mappin.circle.fill" : "arrow.triangle.swap")
-                .font(.title3)
-                .foregroundStyle(row.icon == .stay ? .orange : .pink)
-                .frame(width: 26)
+        VStack(spacing: 0) {
+            // 40×40 동그라미 바탕에 안쪽 여백 10 — 그림은 20×20 이다(`bg_route_icon` +
+            // `android:padding="10dp"`). 바탕·그림 색은 bind 가 머무름/이동으로 고른다.
+            Image(systemName: Self.그림_이름(row.icon))
+                .resizable()
+                .scaledToFit()
+                .frame(width: 20, height: 20)
+                .foregroundStyle(row.icon == .stay ? KidCarePalette.apricot : KidCarePalette.berry)
+                .frame(width: 40, height: 40)
+                .background(row.icon == .stay ? KidCarePalette.apricotSoft : KidCarePalette.berrySoft, in: Circle())
+                .accessibilityHidden(true) // 안드로이드 `importantForAccessibility="no"`
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(제목)
-                    .font(.subheadline.weight(.semibold))
-                Text(상세)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                if let routeState = row.routeState {
-                    // 통합 검토 M2: 정본은 안드로이드 `item_timeline.xml` 의
-                    // `route_state`(하늘색 글자, 알약 배경) — 이동 행에만 붙는다.
-                    Text(String(localized: routeState == .hidden ? "timeline_route_hidden" : "timeline_route_visible"))
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(Color.blue)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.blue.opacity(0.12), in: Capsule())
-                        .padding(.top, 3)
-                }
+            // textAppearanceBodyMedium(15sp), 한 줄, 끝 줄임.
+            Text(제목)
+                .font(.subheadline)
+                .foregroundStyle(KidCarePalette.ink)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .multilineTextAlignment(.center)
+                .padding(.top, 5)
+
+            // textAppearanceBodySmall(13sp), 두 줄까지, 끝 줄임, colorOnSurfaceVariant(ink_soft).
+            Text(Self.상세_문구(row))
+                .font(.footnote)
+                .foregroundStyle(KidCarePalette.inkSoft)
+                .lineLimit(2)
+                .truncationMode(.tail)
+                .multilineTextAlignment(.center)
+                .padding(.top, 3)
+
+            if let routeState = row.routeState {
+                // 통합 검토 M2: 정본은 `route_state`(sky 글자, `bg_date_pill` 바탕 —
+                // sky_soft, 반지름 22) — 이동 카드에만 붙는다.
+                Text(String(localized: routeState == .hidden ? "timeline_route_hidden" : "timeline_route_visible"))
+                    .font(.caption.weight(.medium)) // textAppearanceLabelSmall(12sp, medium)
+                    .foregroundStyle(KidCarePalette.sky)
+                    .lineLimit(1)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(KidCarePalette.skySoft, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .padding(.top, 5)
             }
-
-            Spacer(minLength: 0)
         }
+        .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .padding(.horizontal, 14)
-        .contentShape(Rectangle())
-        // 숨긴 이동 행은 흐리게 — 안드로이드 `binding.root.alpha = 0.62f` 와 같은 값.
+        .frame(width: Self.cardWidth)
+        .frame(maxHeight: .infinity) // layout_height="match_parent", gravity="center"
+        .background(
+            KidCarePalette.paperCard,
+            in: RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                .strokeBorder(KidCarePalette.lineSoft, lineWidth: 1)
+        )
+        // cardElevation 2dp 에 가까운 옅은 그림자.
+        .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
+        .contentShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
+        // 숨긴 이동 카드는 흐리게 — 안드로이드 `binding.root.alpha = 0.62f` 와 같은 값.
         .opacity(row.routeState == .hidden ? 0.62 : 1)
-        // 제목·시각·표시 상태를 한 덩어리로 읽어준다(안드로이드는 행 전체가 하나의
+        // 제목·시각·표시 상태를 한 덩어리로 읽어준다(안드로이드는 카드 전체가 하나의
         // 클릭 대상이라 TalkBack 이 그 안의 글자를 이어 읽는다).
         .accessibilityElement(children: .combine)
+    }
+
+    /// 머무름은 장소 탭과 같은 그림(`GuardianTab.place` 의 `mappin.and.ellipse` —
+    /// 안드로이드 `ic_tab_place`), 이동은 안드로이드 `ic_route`(왼쪽 위 점에서 굽은 길을
+    /// 따라 오른쪽 아래 점으로 가는 모양)와 가장 가까운 SF Symbol 이다.
+    static func 그림_이름(_ icon: TimelineIcon) -> String {
+        switch icon {
+        case .stay: "mappin.and.ellipse"
+        case .move: "point.topleft.down.to.point.bottomright.curvepath.fill"
+        }
     }
 
     /// 머무름은 장소 이름을, 이동은 거리로 지은 제목을 보여준다 — 안드로이드
@@ -169,18 +216,10 @@ struct TimelineRowView: View {
         }
     }
 
-    /// 시각 범위와 기간을 한 줄로 잇는다. 두 값 다 문구 카탈로그의 서식 문자열로
-    /// 만든 뒤에도 잇는 가운뎃점(" · ")을 Swift 문자열 보간으로 박아 넣었던 것을
-    /// Fix round 1 에서 안드로이드 알림 탭(`AlertAdapter.kt`)·시스템 알림
-    /// (`AlertService.kt`) 전용 서식 키로 바꿨었는데, 그건 또 다른 잘못이었다
-    /// (Fix round 2 리뷰): 문구가 우연히 같다고 다른 화면 전용 키를 빌려 쓰면,
-    /// 알림 탭 문구를 고칠 때 이 타임라인 줄까지 말없이 따라 바뀐다 — Phase 1
-    /// 최종 리뷰가 확인 버튼 문구를 다른 화면 전용 키로 돌려썼다가 되돌린 것과
-    /// 같은 실수다. 안드로이드의 두 줄짜리 서식으로 바꾸면 이미 화면으로 확인한
-    /// 한 줄 레이아웃이 깨지므로, 그 대신 이 화면 전용 새 키
-    /// `timeline_detail_inline`("%1$s · %2$s")을 만들어 `i18n/ko.json`·`en.json`·
-    /// `Localizable.xcstrings`에 넣었다.
-    private var 상세: String {
-        String(format: String(localized: "timeline_detail_inline"), timeRangeText(row.detail), durationText(row.duration))
+    /// 시각 범위를 첫 줄에, 기간을 둘째 줄에 둔다 — 안드로이드 이 화면 자신의 키
+    /// `timeline_detail`("%1$s\n%2$s")을 그대로 쓴다. 한 줄 목록이던 때 만든 iOS 전용
+    /// `timeline_detail_inline` 은 카드로 바꾸면서 쓸 곳이 없어져 지웠다.
+    static func 상세_문구(_ row: TimelineRow) -> String {
+        String(format: String(localized: "timeline_detail"), timeRangeText(row.detail), durationText(row.duration))
     }
 }

@@ -366,7 +366,6 @@
   "tab_schedule": "Schedule",
   "timeline_collapse": "Collapse the trip log",
   "timeline_detail": "%1$s\n%2$s",
-  "timeline_detail_inline": "%1$s · %2$s",
   "timeline_drag_handle": "Drag up or down to resize the trip log",
   "timeline_empty": "No records for this day",
   "timeline_error": "Could not load the records\n%1$s",

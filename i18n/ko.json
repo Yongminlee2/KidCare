@@ -366,7 +366,6 @@
   "tab_schedule": "예약",
   "timeline_collapse": "이동 기록 접기",
   "timeline_detail": "%1$s\n%2$s",
-  "timeline_detail_inline": "%1$s · %2$s",
   "timeline_drag_handle": "위아래로 끌어 이동 기록 높이 조절",
   "timeline_empty": "이 날은 기록이 없어요",
   "timeline_error": "기록을 불러오지 못했어요\n%1$s",

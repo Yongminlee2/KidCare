@@ -39,8 +39,7 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ],
   "es": [
     "alert_time_date_format",
@@ -82,8 +81,7 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ],
   "fr": [
     "alert_time_date_format",
@@ -125,8 +123,7 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ],
   "id": [
     "alert_time_date_format",
@@ -168,8 +165,7 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ],
   "it": [
     "alert_time_date_format",
@@ -211,8 +207,7 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ],
   "ja": [
     "alert_time_date_format",
@@ -254,8 +249,7 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ],
   "pt": [
     "alert_time_date_format",
@@ -297,8 +291,7 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ],
   "ru": [
     "alert_time_date_format",
@@ -340,8 +333,7 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ],
   "th": [
     "alert_time_date_format",
@@ -383,8 +375,7 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ],
   "vi": [
     "alert_time_date_format",
@@ -426,8 +417,7 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ],
   "zh": [
     "alert_time_date_format",
@@ -469,8 +459,7 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ],
   "zh_Hant": [
     "alert_time_date_format",
@@ -512,7 +501,6 @@
     "segment_duration_hours_minutes",
     "segment_duration_minutes",
     "segment_duration_under_minute",
-    "segment_time_range_format",
-    "timeline_detail_inline"
+    "segment_time_range_format"
   ]
 }
