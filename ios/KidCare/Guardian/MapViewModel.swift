@@ -71,11 +71,9 @@ enum LiveTrackingState: Equatable {
     case off
     case starting
     case on(until: Int64)
-    /// 세션을 정리하는 아주 짧은 순간(리스너·타이머를 떼고, 종료 명령을 쏘는
-    /// 자리). 안드로이드는 이 정리가 완전히 동기라 별도 상태가 없지만, 이
-    /// 열거형은 "켜짐/꺼지는 중" 둘 다 "전환 중"으로 묶어 잠그는 인터락 규칙
-    /// (브리프: "on 이거나 전환 중이면 막는다")을 표현하려고 이 갈래를 그대로 둔다.
-    case stopping
+    // 통합 검토 M5: 예전엔 `stopping` 갈래가 있었지만 `stopLiveTrackingCore` 가 같은
+    // 동기 턴 안에서 설정하고 곧바로 `.off` 로 되돌려 어떤 관찰자도 볼 수 없었다.
+    // 안드로이드 `stopLiveTracking` 도 정리가 완전히 동기라 그런 상태가 없다 — 지웠다.
 }
 
 /// Task 8: 타임라인 행을 탭했을 때(경로선이 없는 구간, 또는 머무름) 지도가 옮겨가야
@@ -97,7 +95,17 @@ final class MapViewModel {
 
     private(set) var 상태: ChildStatusDoc?
     private(set) var 하루기록: TrailDoc?
-    private(set) var 오류: String?
+    /// 상태 줄에 남길 오류·결과 문구. 값을 쓸 때마다 [오류_순번] 이 올라간다 —
+    /// [상태_줄_덮어쓰기_문구] 가 "마지막으로 쓴 쪽이 이긴다"를 판정하는 재료다.
+    private(set) var 오류: String? {
+        didSet { if 오류 != nil { 오류_순번 = 상태줄_다음_순번() } }
+    }
+    /// 통합 검토 I2: 상태 줄에 무언가를 쓴 순서. 정본인 안드로이드 `statusBar` 는
+    /// 텍스트뷰 하나라 나중에 쓴 쪽이 그냥 덮어쓴다 — iOS 는 문구 출처가 여럿으로
+    /// 나뉘어 있어 이 순번으로 같은 결과를 흉내 낸다.
+    private var 상태줄_순번 = 0
+    private var 오류_순번 = 0
+    private var 실시간_문구_순번 = 0
     /// 상태 카드에 쓸 아이 이름. 못 읽었으면(또는 아직 읽는 중이면) 안드로이드
     /// `selectedChildLabelText()` 의 기본값과 같은 자리로 물러난다.
     private(set) var 아이_이름 = String(localized: "child_default_name")
@@ -883,14 +891,14 @@ final class MapViewModel {
     var 실시간_버튼_문구: String {
         switch liveTrackingState {
         case .starting: return String(localized: "map_live_button_connecting")
-        case .on, .stopping: return String(localized: "map_live_stop")
+        case .on: return String(localized: "map_live_stop")
         case .off: return String(localized: "map_live_start")
         }
     }
 
     var 실시간_버튼_접근성_문구: String {
         switch liveTrackingState {
-        case .starting, .stopping: return String(localized: "map_live_cancel_description")
+        case .starting: return String(localized: "map_live_cancel_description")
         case .on: return String(localized: "map_live_stop_description")
         case .off: return String(localized: "map_live_start_description")
         }
@@ -902,10 +910,49 @@ final class MapViewModel {
     /// (`위치확인_버튼_활성화`) 두 문구가 동시에 보여줄 실제 경합이 없다.
     var 실시간_상태_문구: String? {
         switch liveTrackingState {
-        case .off, .stopping: return nil
+        case .off: return nil
         case .starting: return String(localized: "map_live_connecting")
         case .on: return 실시간_최근_문구 ?? String(localized: "map_live_waiting")
         }
+    }
+
+    /// 상태 카드가 평소 문구(그리고 `오류`)보다 먼저 보여줄 문구. `ChildMapView` 가
+    /// `StatusCardView.commandStatusText` 로 넘긴다.
+    ///
+    /// **통합 검토 I2 — 마지막으로 쓴 쪽이 이긴다.** 정본은 안드로이드 `statusBar`
+    /// 텍스트뷰 하나다: 실시간 추적 중에 `load()` 가 실패하면 `showError` 가 그 줄을
+    /// 덮어쓰고(:333, :715), 다음 실시간 신호가 오면 다시 덮어쓴다(:561). 예전 iOS 는
+    /// `실시간_상태_문구 ?? 명령_상태_문구` 라 실시간이 켜져 있는 동안 날짜 읽기 실패가
+    /// 아예 안 보였다. 이제는 실시간 문구보다 나중에 쓴 `오류` 가 있으면 그 오류가
+    /// 이긴다.
+    var 상태_줄_덮어쓰기_문구: String? {
+        if let 실시간 = 실시간_상태_문구 {
+            if let 오류, 오류_순번 > 실시간_문구_순번 { return 오류 }
+            return 실시간
+        }
+        return 명령_상태_문구
+    }
+
+    private func 상태줄_다음_순번() -> Int {
+        상태줄_순번 += 1
+        return 상태줄_순번
+    }
+
+    /// 실시간 문구(연결 중·대기·활성)를 방금 새로 썼다고 적어 둔다.
+    private func 실시간_문구를_썼다() {
+        실시간_문구_순번 = 상태줄_다음_순번()
+    }
+
+    /// 통합 검토 I1: 끝난 '지금 위치 확인' 결과(`.queued`/`.done`/`.failed`/`.timedOut`)를
+    /// 상태 줄에서 거둔다. 실시간 추적을 시작하거나 끝낼 때 부른다 — 안 거두면
+    /// `StatusCardView` 가 명령 문구를 `오류` 보다 먼저 보여줘서, 실시간이 남긴
+    /// `map_live_timeout`/`map_live_stopped`/시작 실패 문구가 옛 "응답 없음"(얼어붙은
+    /// 마지막 신호 시각)에 가려진다. 안드로이드는 statusBar 하나라 나중에 쓴 실시간
+    /// 문구가 그냥 이긴다. **아직 진행 중인 왕복은 건드리지 않는다** — 그 결과는 곧
+    /// 새로 쓰일 문구다.
+    private func 끝난_명령_문구를_거둔다() {
+        guard !commandProgress.isInFlight else { return }
+        commandProgress = .idle
     }
 
     /// 실시간 버튼. 정본은 안드로이드 `liveTrackingButton.setOnClickListener`(:906) —
@@ -933,7 +980,9 @@ final class MapViewModel {
         liveBaselineAt = 상태?.at ?? .min
         실시간_최근_문구 = nil
         오류 = nil
+        끝난_명령_문구를_거둔다()
         liveTrackingState = .starting
+        실시간_문구를_썼다()
 
         let familyId = self.familyId
         let send = commandSend
@@ -987,6 +1036,11 @@ final class MapViewModel {
 
     private func handleLiveCommandChange(_ doc: CommandDoc, childUid: String, generation: Int) {
         guard generation == liveCommandGeneration else { return } // 이미 낡은 응답 — 새 요청이 시작됐다
+        // 통합 검토 M8: 같은 세대의 `done` 스냅샷이 두 번 오면(첫 번째가 리스너를
+        // `remove()` 하기 전에 두 번째가 이미 `Task { @MainActor }` 로 줄을 섰으면)
+        // 구독과 10분 타이머를 처음부터 다시 걸게 된다. 시작 확인은 `.starting` 에서만
+        // 의미가 있다 — 안드로이드는 콜백이 메인 스레드에서 곧바로 돌아 이런 틈이 없다.
+        guard case .starting = liveTrackingState else { return }
         switch doc.state {
         case CommandState.done:
             beginLiveStatusSubscription(childUid: childUid, generation: generation)
@@ -1004,6 +1058,7 @@ final class MapViewModel {
         stopLiveCommandTracking()
         실시간_최근_문구 = nil
         liveTrackingState = .on(until: 서버기준_지금 + liveSessionTimeoutMillis)
+        실시간_문구를_썼다()
 
         let familyId = self.familyId
         let observe = liveStatusObserve
@@ -1035,6 +1090,7 @@ final class MapViewModel {
         guard generation == liveCommandGeneration, case .on = liveTrackingState else { return }
         guard let status, status.at > liveBaselineAt else {
             실시간_최근_문구 = nil // 대기 문구로 되돌아간다
+            실시간_문구를_썼다()
             return
         }
         상태 = status
@@ -1042,10 +1098,19 @@ final class MapViewModel {
         카메라를_다시_맞춰야_한다 = true
         let 정확도 = max(Int(status.accuracy.rounded()), 0)
         실시간_최근_문구 = String(format: String(localized: "map_live_active_status"), 정확도, status.battery)
+        실시간_문구를_썼다()
     }
 
+    /// 통합 검토 I2(판정): 스냅샷 리스너 오류는 종결이다(예: 가족 멤버십이 취소돼
+    /// 규칙이 읽기를 막음) — Firestore 는 오류를 낸 리스너를 다시 살리지 않는다.
+    /// 예전엔 `오류` 만 적고 `.on` 을 유지해, 죽은 리스너 위로 최대 10분 동안
+    /// "실시간 추적 중 · 정확도 약 8m" 가 그대로 떠 있었다. 이제는 세션을 멈추고
+    /// (리스너·타이머 정리, 아이 폰에도 종료 명령) 오류를 보여준다. 정본인
+    /// 안드로이드는 `showError` 만 부르지만(:571-575) 그 뒤 죽은 리스너가 줄을 다시
+    /// 덮지 않으니 "오류가 보인다"는 결과는 같다.
     private func handleLiveStatusError(_ error: Error, generation: Int) {
-        guard generation == liveCommandGeneration else { return }
+        guard generation == liveCommandGeneration, case .on = liveTrackingState else { return }
+        stopLiveTrackingCore(sendCommand: true)
         오류 = errorMessage(error)
     }
 
@@ -1086,11 +1151,11 @@ final class MapViewModel {
     /// 정리된다, `stopLiveTracking` 의 `lifecycleScope.launch` 와 같다).
     private func stopLiveTrackingCore(sendCommand: Bool) {
         guard liveTrackingState != .off else { return }
+        끝난_명령_문구를_거둔다()
         let sessionId = liveSessionId
         let targetUid = childUid
         liveSessionId = nil
         liveCommandGeneration += 1
-        liveTrackingState = .stopping
         stopLiveCommandTracking()
         liveStatusListener?.remove()
         liveStatusListener = nil

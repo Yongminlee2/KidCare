@@ -83,6 +83,23 @@ struct LiveTrackingTests {
         }
     }
 
+    /// `liveStatusObserve` 가 넘겨준 `onChange` 를 나중에 테스트가 직접 부르기 위한 상자
+    /// (`CommandChangeBox` 와 같은 사정).
+    final class StatusChangeBox: @unchecked Sendable {
+        private let lock = NSLock()
+        private var handler: ((ChildStatusDoc?) -> Void)?
+        func set(_ handler: @escaping (ChildStatusDoc?) -> Void) {
+            lock.lock(); defer { lock.unlock() }
+            self.handler = handler
+        }
+        func call(_ doc: ChildStatusDoc?) {
+            lock.lock()
+            let h = handler
+            lock.unlock()
+            h?(doc)
+        }
+    }
+
     private static let 빈_하루_읽기: @Sendable (String, String, String) async throws -> (status: ChildStatusDoc?, trail: TrailDoc?) = { _, _, _ in (nil, nil) }
 
     private func 격리된_요청_기록() -> RequestLog {
@@ -247,8 +264,12 @@ struct LiveTrackingTests {
         await vm.실시간_추적을_시작한다()
         try? await Task.sleep(nanoseconds: 150_000_000) // done → 구독 시작 → 신호 처리, 두 단계 Task 를 흘려보낸다
 
-        let 기대_문구 = String(format: String(localized: "map_live_active_status"), 15, 42)
-        #expect(vm.실시간_상태_문구 == 기대_문구)
+        // 통합 검토 M6: 기대값을 같은 서식 키로 만들면 `%%` 가 `%` 로 망가져도(배터리
+        // 뒤 "%" 가 사라져도) 양쪽이 똑같이 망가져 초록이다. 화면에 실제로 찍혀야 할
+        // 글자를 리터럴로 못박는다.
+        let 문구 = try #require(vm.실시간_상태_문구)
+        #expect(문구.hasSuffix("42%"), "배터리 뒤 % 가 사라졌다: \(문구)")
+        #expect(문구.contains("15m"), "정확도 반올림이 틀렸다: \(문구)")
         #expect(vm.카메라를_다시_맞춰야_한다 == true)
         #expect(vm.상태?.battery == 42)
     }
@@ -437,5 +458,222 @@ struct LiveTrackingTests {
         #expect(vm.위치확인_버튼_활성화 == true)
         await 문.open()
         태스크.cancel()
+    }
+
+    // MARK: - 통합 검토 I1: 끝난 '지금 위치 확인' 결과가 실시간 문구를 가리지 않는다
+
+    /// 발행 대기(.queued)로 끝난 위치 확인이 남아 있는 채로 실시간을 시작하면, 그
+    /// 옛 결과를 거둔다 — 안 거두면 `StatusCardView` 가 명령 문구를 먼저 보여준다.
+    @Test("I1: 끝난 위치 확인 결과는 실시간을 시작하면 상태 줄에서 거둔다")
+    func 끝난_위치확인_결과는_실시간_시작에서_거둔다() async throws {
+        let sendTimeout: Int64 = 111
+        let 발행_시간초과_횟수 = OSAllocatedUnfairLock(initialState: 0)
+        let vm = MapViewModel(
+            familyId: "family", childUid: "child",
+            requestLog: 격리된_요청_기록(),
+            commandSend: { _, _, type, _ in
+                if type == CommandType.locateNow { await Gate().wait(); return "never" } // 발행이 영영 안 끝난다
+                return "cmd-live"
+            },
+            commandObserve: { _, _, _, onChange, _ in
+                onChange(CommandDoc(id: "cmd-live", ["state": "done"]))
+                return FakeListenerRegistration()
+            },
+            commandSleep: { millis in
+                // 첫 발행 대기(위치 확인)만 곧바로 시간 초과시킨다. 실시간 시작의 발행
+                // 대기까지 즉시 끝내면 전송과 경주가 돼 결과가 흔들린다.
+                if millis == sendTimeout, 발행_시간초과_횟수.withLock({ $0 += 1; return $0 }) == 1 { return }
+                await Gate().wait()
+            },
+            sendTimeoutMillis: sendTimeout,
+            liveStatusObserve: { _, _, _, _ in FakeListenerRegistration() },
+            dayLoad: Self.빈_하루_읽기
+        )
+
+        await vm.지금_위치를_확인한다()
+        #expect(vm.명령_상태_문구 == String(localized: "control_command_queued"))
+
+        await vm.실시간_추적을_시작한다()
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        guard case .on = vm.liveTrackingState else {
+            Issue.record("on 이 아니라 \(vm.liveTrackingState) 다")
+            return
+        }
+        #expect(vm.명령_상태_문구 == nil)
+        #expect(vm.상태_줄_덮어쓰기_문구 == String(localized: "map_live_waiting"))
+    }
+
+    /// 실시간 추적 도중에 끝난 위치 확인(.timedOut)이 10분 자동 종료 문구를 가리지
+    /// 않는다 — 리뷰가 든 시나리오 그대로다(얼어붙은 "마지막 신호 N분 전" 대신
+    /// `map_live_timeout` 이 보여야 한다).
+    @Test("I1: 실시간이 끝나면 옛 무응답 문구가 map_live_timeout 을 가리지 않는다")
+    func 실시간_종료는_옛_무응답_문구를_거둔다() async throws {
+        let answerTimeout: Int64 = 222
+        let sessionTimeout: Int64 = 333
+        let 응답_문 = Gate()
+        let 세션_문 = Gate()
+        let vm = MapViewModel(
+            familyId: "family", childUid: "child",
+            requestLog: 격리된_요청_기록(),
+            commandSend: { _, _, type, _ in type == CommandType.locateNow ? "cmd-locate" : "cmd-live" },
+            commandObserve: { _, _, commandId, onChange, _ in
+                if commandId == "cmd-live" { onChange(CommandDoc(id: "cmd-live", ["state": "done"])) }
+                return FakeListenerRegistration() // 위치 확인에는 아이 폰이 끝내 대답하지 않는다
+            },
+            commandSleep: { millis in
+                switch millis {
+                case answerTimeout: await 응답_문.wait()
+                case sessionTimeout: await 세션_문.wait()
+                default: await Gate().wait() // 발행 대기·시계 — 전송이 먼저 이긴다
+                }
+            },
+            answerTimeoutMillis: answerTimeout,
+            commandServerNow: { _, _ in 1_000 },
+            liveStatusObserve: { _, _, _, _ in FakeListenerRegistration() },
+            liveSessionTimeoutMillis: sessionTimeout,
+            dayLoad: Self.빈_하루_읽기
+        )
+
+        await vm.지금_위치를_확인한다()
+        #expect(vm.commandProgress == .delivering)
+
+        await vm.실시간_추적을_시작한다()
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        guard case .on = vm.liveTrackingState else {
+            Issue.record("on 이 아니라 \(vm.liveTrackingState) 다")
+            return
+        }
+        #expect(vm.commandProgress == .delivering) // 진행 중인 왕복은 건드리지 않는다
+
+        await 응답_문.open() // 실시간 도중에 위치 확인이 무응답으로 끝난다
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        guard case .timedOut = vm.commandProgress else {
+            Issue.record("timedOut 이 아니라 \(vm.commandProgress) 다")
+            return
+        }
+
+        await 세션_문.open() // 10분 자동 종료
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        #expect(vm.liveTrackingState == .off)
+        #expect(vm.오류 == String(localized: "map_live_timeout"))
+        #expect(vm.명령_상태_문구 == nil)
+        #expect(vm.상태_줄_덮어쓰기_문구 == nil) // 카드는 loadError(= map_live_timeout)로 물러난다
+    }
+
+    // MARK: - 통합 검토 I2: 실시간 중 오류가 보인다
+
+    /// 상태 리스너 오류는 종결이다 — 세션을 멈추고(리스너 정리) 오류를 보여준다.
+    @Test("I2: 실시간 상태 리스너가 오류를 내면 세션을 멈추고 오류를 보여준다")
+    func 상태_리스너_오류는_세션을_멈춘다() async throws {
+        struct 권한_오류: Error {}
+        let statusListener = FakeListenerRegistration()
+        let 보낸_종류 = OSAllocatedUnfairLock(initialState: [String]())
+        let vm = MapViewModel(
+            familyId: "family", childUid: "child",
+            requestLog: 격리된_요청_기록(),
+            commandSend: { _, _, type, _ in
+                보낸_종류.withLock { $0.append(type) }
+                return "cmd"
+            },
+            commandObserve: { _, _, _, onChange, _ in
+                onChange(CommandDoc(id: "cmd", ["state": "done"]))
+                return FakeListenerRegistration()
+            },
+            commandSleep: { _ in await Gate().wait() },
+            liveStatusObserve: { _, _, _, onError in
+                onError(권한_오류())
+                return statusListener
+            },
+            dayLoad: Self.빈_하루_읽기
+        )
+
+        await vm.실시간_추적을_시작한다()
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        #expect(vm.liveTrackingState == .off)
+        #expect(statusListener.removed)
+        #expect(vm.오류 == errorMessage(권한_오류()))
+        #expect(vm.실시간_상태_문구 == nil) // "실시간 추적 중" 이 죽은 리스너 위에 남지 않는다
+        #expect(vm.상태_줄_덮어쓰기_문구 == nil)
+        try? await Task.sleep(nanoseconds: 50_000_000) // 종료 명령은 기다리지 않는 태스크로 나간다
+        #expect(보낸_종류.withLock { $0 }.contains(CommandType.stopLiveTracking))
+    }
+
+    /// 실시간이 켜진 채로 하루 읽기가 실패하면 그 오류가 보인다 — 마지막으로 쓴 쪽이
+    /// 이긴다. 그 뒤 새 실시간 신호가 오면 다시 실시간 문구가 이긴다(안드로이드
+    /// statusBar 와 같은 순서).
+    @Test("I2: 실시간 중 하루 읽기 실패가 보이고, 이후 새 신호가 다시 덮는다")
+    func 실시간_중_하루읽기_실패는_마지막으로_쓴_쪽이_이긴다() async throws {
+        struct 읽기_오류: Error {}
+        let box = StatusChangeBox()
+        let vm = MapViewModel(
+            familyId: "family", childUid: "child",
+            requestLog: 격리된_요청_기록(),
+            commandSend: { _, _, _, _ in "cmd" },
+            commandObserve: { _, _, _, onChange, _ in
+                onChange(CommandDoc(id: "cmd", ["state": "done"]))
+                return FakeListenerRegistration()
+            },
+            commandSleep: { _ in await Gate().wait() },
+            liveStatusObserve: { _, _, onChange, _ in
+                box.set(onChange)
+                return FakeListenerRegistration()
+            },
+            dayLoad: { _, _, _ in throw 읽기_오류() }
+        )
+
+        await vm.실시간_추적을_시작한다()
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        #expect(vm.상태_줄_덮어쓰기_문구 == String(localized: "map_live_waiting"))
+
+        await vm.하루를_읽는다() // 실패한다
+        let 오류_문구 = errorMessage(읽기_오류())
+        #expect(vm.오류 == 오류_문구)
+        #expect(vm.상태_줄_덮어쓰기_문구 == 오류_문구)
+        #expect(vm.liveTrackingState != .off) // 읽기 실패는 실시간 세션을 끝내지 않는다
+
+        box.call(Self.status(at: 999_999_999_999, accuracy: 8, battery: 69)) // 새 신호
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        #expect(vm.상태_줄_덮어쓰기_문구?.hasSuffix("69%") == true)
+    }
+
+    // MARK: - 통합 검토 M8: 같은 세대의 두 번째 done 은 구독을 다시 걸지 않는다
+
+    @Test("M8: 같은 세대의 done 이 두 번 와도 상태 구독·10분 타이머를 한 번만 건다")
+    func 두번째_done_은_구독을_다시_걸지_않는다() async throws {
+        let 구독_횟수 = OSAllocatedUnfairLock(initialState: 0)
+        let sessionTimeout: Int64 = 333
+        let 세션_타이머_횟수 = OSAllocatedUnfairLock(initialState: 0)
+        let vm = MapViewModel(
+            familyId: "family", childUid: "child",
+            requestLog: 격리된_요청_기록(),
+            commandSend: { _, _, _, _ in "cmd" },
+            commandObserve: { _, _, _, onChange, _ in
+                // 첫 스냅샷이 리스너를 떼기 전에 두 번째 스냅샷이 이미 줄을 섰다.
+                onChange(CommandDoc(id: "cmd", ["state": "done"]))
+                onChange(CommandDoc(id: "cmd", ["state": "done"]))
+                return FakeListenerRegistration()
+            },
+            commandSleep: { millis in
+                if millis == sessionTimeout { 세션_타이머_횟수.withLock { $0 += 1 } }
+                await Gate().wait()
+            },
+            liveStatusObserve: { _, _, _, _ in
+                구독_횟수.withLock { $0 += 1 }
+                return FakeListenerRegistration()
+            },
+            liveSessionTimeoutMillis: sessionTimeout,
+            dayLoad: Self.빈_하루_읽기
+        )
+
+        await vm.실시간_추적을_시작한다()
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        guard case .on = vm.liveTrackingState else {
+            Issue.record("on 이 아니라 \(vm.liveTrackingState) 다")
+            return
+        }
+        #expect(구독_횟수.withLock { $0 } == 1)
+        #expect(세션_타이머_횟수.withLock { $0 } == 1)
     }
 }

@@ -73,11 +73,10 @@ struct ChildMapView: View {
                     nowMillis: viewModel.서버기준_지금,
                     hasChild: childUid != nil,
                     loadError: viewModel.오류,
-                    // Task 7: 실시간 추적이 켜져 있는 동안(off 가 아닌 동안)에는
-                    // 그 문구가 '지금 위치 확인' 진행 문구보다 우선한다 — 두
-                    // 버튼이 인터락되어(위치확인 버튼이 실시간 추적 중엔 막힌다)
-                    // 동시에 보여줄 실제 경합이 없다.
-                    commandStatusText: viewModel.실시간_상태_문구 ?? viewModel.명령_상태_문구,
+                    // Task 7 + 통합 검토 I1·I2: 실시간 문구·명령 문구·그보다 나중에
+                    // 쓴 오류 중 무엇이 이기는지는 `MapViewModel.상태_줄_덮어쓰기_문구`
+                    // 한 곳이 정한다(안드로이드 statusBar 처럼 마지막으로 쓴 쪽이 이긴다).
+                    commandStatusText: viewModel.상태_줄_덮어쓰기_문구,
                     isCommandBusy: viewModel.commandProgress.isInFlight || viewModel.liveTrackingState == .starting
                 )
             }
