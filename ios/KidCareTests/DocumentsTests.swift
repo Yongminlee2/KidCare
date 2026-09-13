@@ -68,4 +68,97 @@ struct DocumentsTests {
         let keys = Set(doc.firestoreData.keys)
         #expect(keys == ["familyId", "expiresAt", "role", "createdByUid"])
     }
+
+    // MARK: - TrailDoc·TrailPoint·SegmentDoc
+    //
+    // 정본은 안드로이드 `core/model/Documents.kt:148-189`. 필드 이름이 한 글자라도
+    // 어긋나면 안드로이드(자녀 폰)가 쓴 문서를 못 읽는다. 이 세 타입은 **읽기 전용**
+    // 이다(보호자는 쓰지 않는다) — 그래서 firestoreData 를 만들지 않는다.
+
+    @Test("TrailPoint 는 speed 를 0 으로 뭉개지 않고 그대로 읽는다")
+    func 경로점_speed가_실린다() throws {
+        // Phase 2 에서 Fix.speed 가 영원히 0 이던 버그를 고쳤다 — 그 고침이 실제로
+        // 쓰이려면 여기서부터 speed 필드가 실려 와야 한다.
+        let point = try #require(TrailPoint([
+            "lat": 37.5665, "lng": 126.9780, "accuracy": 12.5, "speed": 1.8,
+            "at": Int64(1_757_000_000_000),
+        ]))
+        #expect(point.lat == 37.5665)
+        #expect(point.lng == 126.9780)
+        #expect(point.accuracy == 12.5)
+        #expect(point.speed == 1.8)
+        #expect(point.at == 1_757_000_000_000)
+    }
+
+    @Test("TrailPoint.asFix 는 speed 를 포함해 그대로 옮긴다")
+    func 경로점_asFix가_speed를_옮긴다() throws {
+        let point = try #require(TrailPoint([
+            "lat": 37.1, "lng": 127.2, "accuracy": 8.0, "speed": 3.4,
+            "at": Int64(1_757_000_001_000),
+        ]))
+        let fix = point.asFix
+        #expect(fix.lat == 37.1)
+        #expect(fix.lng == 127.2)
+        #expect(fix.accuracy == 8.0)
+        #expect(fix.speed == 3.4)
+        #expect(fix.at == 1_757_000_001_000)
+    }
+
+    @Test("옛 TrailPoint 문서에 speed 가 없으면 0 이다")
+    func 옛_경로점은_speed가_0이다() throws {
+        let point = try #require(TrailPoint([
+            "lat": 37.0, "lng": 127.0, "accuracy": 10.0, "at": Int64(1_757_000_000_000),
+        ]))
+        #expect(point.speed == 0)
+    }
+
+    @Test("SegmentDoc 은 안드로이드 필드 이름을 그대로 읽는다")
+    func 구간문서_읽기() throws {
+        let doc = try #require(SegmentDoc([
+            "type": "MOVE",
+            "startAt": Int64(1_757_000_000_000),
+            "endAt": Int64(1_757_000_060_000),
+            "lat": 37.55, "lng": 126.99,
+            "distanceMeters": 120.5,
+            "pointCount": 6,
+            "placeName": "",
+        ]))
+        #expect(doc.type == "MOVE")
+        #expect(doc.startAt == 1_757_000_000_000)
+        #expect(doc.endAt == 1_757_000_060_000)
+        #expect(doc.distanceMeters == 120.5)
+        #expect(doc.pointCount == 6)
+        #expect(doc.placeName == "")
+    }
+
+    @Test("TrailDoc 은 하루치 점·구간 배열을 함께 읽는다")
+    func 하루기록_읽기() {
+        let doc = TrailDoc([
+            "dayKey": "2026-09-13",
+            "points": [
+                ["lat": 37.0, "lng": 127.0, "accuracy": 10.0, "speed": 1.0, "at": Int64(1_000)],
+                ["lat": 37.01, "lng": 127.01, "accuracy": 10.0, "speed": 1.5, "at": Int64(2_000)],
+            ],
+            "segments": [
+                ["type": "MOVE", "startAt": Int64(1_000), "endAt": Int64(2_000),
+                 "lat": 37.01, "lng": 127.01, "distanceMeters": 15.0, "pointCount": 2, "placeName": ""],
+            ],
+            "updatedAt": Int64(2_000),
+        ])
+        #expect(doc.dayKey == "2026-09-13")
+        #expect(doc.points.count == 2)
+        #expect(doc.points[1].speed == 1.5)
+        #expect(doc.segments.count == 1)
+        #expect(doc.segments[0].type == "MOVE")
+        #expect(doc.updatedAt == 2_000)
+    }
+
+    @Test("빈 문서는 빈 배열로 읽힌다")
+    func 빈_하루기록() {
+        let doc = TrailDoc([:])
+        #expect(doc.dayKey == "")
+        #expect(doc.points.isEmpty)
+        #expect(doc.segments.isEmpty)
+        #expect(doc.updatedAt == 0)
+    }
 }

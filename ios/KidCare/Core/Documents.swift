@@ -196,3 +196,85 @@ struct ChildStatusDoc {
         lastSeenServerAt = data["lastSeenServerAt"] as? Timestamp
     }
 }
+
+/// children/{childUid}/trails/{dayKey} 의 원소. 정본은 안드로이드
+/// `core/model/Documents.kt:157-167` 의 `TrailPoint`. 이 구조체는 **읽기 전용이다**
+/// — 보호자 앱은 이 문서를 쓰지 않는다(자녀 폰만 쓴다, TrailRepository.swift 참고).
+///
+/// `battery` 를 안 옮긴 것도 코틀린과 같은 이유다 — 읽는 곳이 없고, 배열 원소마다
+/// 필드 이름이 같이 저장되므로 안 쓰는 필드 하나가 하루 문서 크기를 그대로 키운다.
+struct TrailPoint {
+    let lat: Double
+    let lng: Double
+    let accuracy: Double
+    /// m/s. **반드시 실려야 한다** — `Fix.speed` 주석 참고. 2단계에서 이 값이
+    /// 영원히 0 이던 버그(`let speed: Double = 0` 선언부 기본값이 memberwise
+    /// 초기화 목록을 통째로 빼버린 것)를 고쳤는데, 여기서 0 으로 뭉개면 그 고침이
+    /// 소용없어진다 — `RoutePathRefiner` 가 실제 속도를 영원히 못 받는다.
+    let speed: Double
+    let at: Int64
+
+    init?(_ data: [String: Any]) {
+        guard let lat = double(data["lat"]), let lng = double(data["lng"]) else { return nil }
+        self.lat = lat
+        self.lng = lng
+        accuracy = double(data["accuracy"]) ?? 0
+        speed = double(data["speed"]) ?? 0
+        at = millis(data["at"]) ?? 0
+    }
+
+    /// `RoutePathRefiner.refine(points:)` 가 요구하는 값 모양으로 바꾼다.
+    var asFix: Fix { Fix(lat: lat, lng: lng, accuracy: accuracy, at: at, speed: speed) }
+}
+
+/// 하루를 머무름·이동으로 요약한 한 토막. 정본은 안드로이드
+/// `core/model/Documents.kt:179-189` 의 `SegmentDoc`. 이 구조체도 읽기 전용이다.
+struct SegmentDoc {
+    /// "STAY" | "MOVE". 코틀린 `SegmentType` 의 `name` 그대로다 — enum 으로
+    /// 좁히지 않는 이유는 옛 문서에 다른 값이 있어도(예: 앞으로 새 타입이 추가돼도)
+    /// 읽기 자체는 실패하지 않게 두기 위해서다. `RouteOverlay` 가 "MOVE" 문자열만
+    /// 비교해서 쓴다.
+    let type: String
+    let startAt: Int64
+    let endAt: Int64
+    let lat: Double
+    let lng: Double
+    let distanceMeters: Double
+    let pointCount: Int
+    /// 머무른 곳 이름. Task 4 가 채운다. 비어 있으면 화면이 "머무른 곳"으로 표시한다.
+    let placeName: String
+
+    init?(_ data: [String: Any]) {
+        guard let type = data["type"] as? String else { return nil }
+        self.type = type
+        startAt = millis(data["startAt"]) ?? 0
+        endAt = millis(data["endAt"]) ?? 0
+        lat = double(data["lat"]) ?? 0
+        lng = double(data["lng"]) ?? 0
+        distanceMeters = double(data["distanceMeters"]) ?? 0
+        pointCount = Int(millis(data["pointCount"]) ?? 0)
+        placeName = data["placeName"] as? String ?? ""
+    }
+}
+
+/// children/{childUid}/trails/{dayKey} — 하루가 문서 하나다. 정본은 안드로이드
+/// `core/model/Documents.kt:148-155` 의 `TrailDoc`. 읽기 전용이다 — 쓰기는
+/// 자녀 폰만 한다(`TrailRepository.kt` 주석과 같은 이유).
+///
+/// 실패하지 않는 이유(다른 Doc 들과 달리 `init?`이 아닌 이유): 코틀린도
+/// `toObject(TrailDoc::class.java)`가 데이터 클래스의 기본값으로 없는 필드를
+/// 채운다 — 필수 필드가 없다. 빈 맵을 줘도 "빈 하루"가 나오는 것이 맞는 동작이다.
+struct TrailDoc {
+    let dayKey: String
+    let points: [TrailPoint]
+    let segments: [SegmentDoc]
+    /// 자녀 폰이 이 문서를 마지막으로 올린 시각(자녀 폰 시계).
+    let updatedAt: Int64
+
+    init(_ data: [String: Any]) {
+        dayKey = data["dayKey"] as? String ?? ""
+        points = (data["points"] as? [[String: Any]] ?? []).compactMap(TrailPoint.init)
+        segments = (data["segments"] as? [[String: Any]] ?? []).compactMap(SegmentDoc.init)
+        updatedAt = millis(data["updatedAt"]) ?? 0
+    }
+}
