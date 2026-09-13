@@ -40,12 +40,12 @@ struct GuardianHomeView: View {
         // 확인 → 빼기. 누르는 순간 대화상자는 닫히고(isPresented 가 false 로) 빼기는 따로 돈다.
         // 마지막 보호자 경고의 보호자 수는 선택기의 멤버 구독에서 온다(아직 못 받았으면 0 → 경고 쪽).
         .confirmationDialog(
-            Text("ios_leave_family_title"),
+            Text("leave_family_title"),
             isPresented: Binding(get: { leave.묻는중 }, set: { if !$0 { leave.취소한다() } }),
             titleVisibility: .visible
         ) {
-            Button(role: .destructive) { Task { await leave.뺀다() } } label: { Text("ios_leave_family_confirm") }
-            Button(role: .cancel) { leave.취소한다() } label: { Text("ios_leave_family_cancel") }
+            Button(role: .destructive) { Task { await leave.뺀다() } } label: { Text("leave_family_confirm") }
+            Button(role: .cancel) { leave.취소한다() } label: { Text("dialog_cancel") }
         } message: {
             Text(verbatim: LeaveFamilyModel.확인_문구(보호자_수: selector.guardians.count))
         }
@@ -65,7 +65,7 @@ struct GuardianHomeView: View {
                     Color.black.opacity(0.25).ignoresSafeArea()
                     VStack(spacing: 12) {
                         ProgressView()
-                        Text("ios_leave_family_in_progress")
+                        Text("leave_family_in_progress")
                             .font(.system(size: 15))
                             .foregroundStyle(KidCarePalette.ink)
                     }

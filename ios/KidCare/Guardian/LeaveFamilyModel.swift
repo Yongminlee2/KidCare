@@ -93,15 +93,15 @@ final class LeaveFamilyModel {
     /// 기본 문구를 뒤에 붙이지 않는 이유는 머리 주석의 "마지막 보호자".
     static func 확인_문구(보호자_수: Int) -> String {
         보호자_수 <= 1
-            ? String(localized: "ios_leave_family_last_guardian_message")
-            : String(localized: "ios_leave_family_message")
+            ? String(localized: "leave_family_last_guardian_message")
+            : String(localized: "leave_family_message")
     }
 
     /// 빠진 뒤 첫 화면에 알리는 글. 계정까지 지웠는지, 로그아웃만 했는지를 있는 그대로 말한다.
     static func 끝_문구(_ outcome: LeaveFamilyRepository.AuthOutcome) -> String {
         switch outcome {
-        case .deleted: String(localized: "ios_leave_family_done_message")
-        case .signedOutOnly: String(localized: "ios_leave_family_done_signed_out_message")
+        case .deleted: String(localized: "leave_family_done_message")
+        case .signedOutOnly: String(localized: "leave_family_done_signed_out_message")
         case .notSignedOut: String(localized: "ios_leave_family_done_not_signed_out_message")
         }
     }
@@ -110,7 +110,7 @@ final class LeaveFamilyModel {
     static var 확인하지_못함: 안내 {
         안내(
             제목: String(localized: "ios_leave_family_unconfirmed_title"),
-            문구: String(localized: "ios_leave_family_unconfirmed_message")
+            문구: String(localized: "leave_family_unconfirmed_message")
         )
     }
 
@@ -122,7 +122,7 @@ final class LeaveFamilyModel {
         if ns.domain == FirestoreErrorDomain && 알_수_없음.contains(ns.code) {
             return 확인하지_못함
         }
-        return 안내(제목: String(localized: "ios_leave_family_failed_title"), 문구: errorMessage(error))
+        return 안내(제목: String(localized: "leave_family_failed_title"), 문구: errorMessage(error))
     }
 
     /// 이 폰의 기록을 지우기 전에 부를 정리를 건다. 같은 열쇠로 다시 걸면 바꾼다.
@@ -160,8 +160,8 @@ final class LeaveFamilyModel {
             // 본 화면에 있는데 로그인 정보가 없다(키체인 접근 실패 등, 리뷰 M4). 이 폰으로 가족에 들어왔으니 서버에는 멤버
             // 문서가 있을 것이다. 이 폰만 지우면 그 문서가 영영 남으므로 아무것도 지우지 않고 그렇다고 알린다.
             실패 = 안내(
-                제목: String(localized: "ios_leave_family_failed_title"),
-                문구: String(localized: "ios_leave_family_no_account")
+                제목: String(localized: "leave_family_failed_title"),
+                문구: String(localized: "leave_family_no_account")
             )
             return
         }

@@ -61,8 +61,8 @@ struct LeaveFamilyModelTests {
         await m.뺀다()
         #expect(log.순서 == ["remove", "auth", "left signedOutOnly", "local"])
         #expect(m.계정_결과 == .signedOutOnly)
-        #expect(LeaveFamilyModel.끝_문구(.signedOutOnly) == String(localized: "ios_leave_family_done_signed_out_message"))
-        #expect(LeaveFamilyModel.끝_문구(.deleted) == String(localized: "ios_leave_family_done_message"))
+        #expect(LeaveFamilyModel.끝_문구(.signedOutOnly) == String(localized: "leave_family_done_signed_out_message"))
+        #expect(LeaveFamilyModel.끝_문구(.deleted) == String(localized: "leave_family_done_message"))
         #expect(LeaveFamilyModel.끝_문구(.notSignedOut) == String(localized: "ios_leave_family_done_not_signed_out_message"))
     }
 
@@ -119,9 +119,9 @@ struct LeaveFamilyModelTests {
         #expect(log.순서 == [])
         #expect(m.실패 == LeaveFamilyModel.안내(
             제목: String(localized: "ios_leave_family_unconfirmed_title"),
-            문구: String(localized: "ios_leave_family_unconfirmed_message")
+            문구: String(localized: "leave_family_unconfirmed_message")
         ))
-        #expect(m.실패?.제목 != String(localized: "ios_leave_family_failed_title"))
+        #expect(m.실패?.제목 != String(localized: "leave_family_failed_title"))
         #expect(m.빼는중 == false)
         #expect(m.계정_결과 == nil)
         #expect(LeaveFamilyModel.timeoutMillis == 15_000)
@@ -200,7 +200,7 @@ struct LeaveFamilyModelTests {
         let m = 만든다(log, remove: { _, _ in throw denied })
         await m.뺀다()
         #expect(log.순서 == [])
-        #expect(m.실패 == LeaveFamilyModel.안내(제목: String(localized: "ios_leave_family_failed_title"), 문구: errorMessage(denied)))
+        #expect(m.실패 == LeaveFamilyModel.안내(제목: String(localized: "leave_family_failed_title"), 문구: errorMessage(denied)))
         m.실패를_닫는다()
         #expect(m.실패 == nil)
     }
@@ -224,8 +224,8 @@ struct LeaveFamilyModelTests {
         await m.뺀다()
         #expect(log.순서 == [])
         #expect(m.실패 == LeaveFamilyModel.안내(
-            제목: String(localized: "ios_leave_family_failed_title"),
-            문구: String(localized: "ios_leave_family_no_account")
+            제목: String(localized: "leave_family_failed_title"),
+            문구: String(localized: "leave_family_no_account")
         ))
         #expect(m.계정_결과 == nil)
     }
@@ -300,12 +300,12 @@ struct LeaveFamilyModelTests {
 
     @Test("마지막 보호자면 따로 쓴 문구(새 초대 번호 이야기 없음), 둘 이상이면 기본 문구(리뷰 I2)")
     func 확인_문구() {
-        let base = String(localized: "ios_leave_family_message")
-        let last = String(localized: "ios_leave_family_last_guardian_message")
+        let base = String(localized: "leave_family_message")
+        let last = String(localized: "leave_family_last_guardian_message")
         #expect(LeaveFamilyModel.확인_문구(보호자_수: 2) == base)
         #expect(LeaveFamilyModel.확인_문구(보호자_수: 1) == last)
         #expect(last != base && !last.contains(base))
-        #expect(last != "ios_leave_family_last_guardian_message", "카탈로그에 키가 없다")
+        #expect(last != "leave_family_last_guardian_message", "카탈로그에 키가 없다")
         // 멤버 목록을 아직 못 받았으면(0) 경고 쪽으로 기운다 — 경고가 빠지는 것보다 남는 것이 안전하다.
         #expect(LeaveFamilyModel.확인_문구(보호자_수: 0) == LeaveFamilyModel.확인_문구(보호자_수: 1))
     }

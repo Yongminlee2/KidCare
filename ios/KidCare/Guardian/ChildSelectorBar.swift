@@ -76,7 +76,7 @@ struct ChildMenu<Content: View>: View {
             if let leave {
                 // 실기기 읽기 전용 확인에서는 누를 수 없다(6단계 판정 기록 10 과 같은 자리). 흐리게 하는 것은 표시용이고,
                 // 실제 차단은 `LeaveFamilyModel.묻는다`·`뺀다` 의 가드다.
-                Button(role: .destructive) { leave.묻는다() } label: { Text("ios_leave_family_menu") }
+                Button(role: .destructive) { leave.묻는다() } label: { Text("leave_family_menu") }
                     .disabled(leave.읽기_전용)
             }
         } label: {

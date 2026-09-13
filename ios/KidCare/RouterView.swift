@@ -65,7 +65,7 @@ struct RouterView: View {
             if newValue == nil { showMain = false }
         }
         .alert(
-            Text("ios_leave_family_done_title"),
+            Text("leave_family_done_title"),
             isPresented: Binding(get: { 빠진_결과 != nil }, set: { if !$0 { 빠진_결과 = nil } })
         ) {
             Button(role: .cancel) { 빠진_결과 = nil } label: { Text("ios_leave_family_done_ok") }
