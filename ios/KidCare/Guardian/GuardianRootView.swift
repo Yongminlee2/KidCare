@@ -62,6 +62,7 @@ struct GuardianRootView: View {
                 ChildMapView(viewModel: mapViewModel)
                     .tabItem { Label(GuardianTab.map.title, systemImage: GuardianTab.map.systemImage) }
                     .tag(GuardianTab.map)
+                    .toolbar(.hidden, for: .tabBar)
                 AlertView(viewModel: alertViewModel)
                     // 처음 보일 때 구독(AlertFragment.onViewCreated :116), 그리고 보임을 맞춘다(onResume :177-180).
                     .onAppear {
@@ -70,12 +71,14 @@ struct GuardianRootView: View {
                     }
                     .tabItem { Label(GuardianTab.alert.title, systemImage: GuardianTab.alert.systemImage) }
                     .tag(GuardianTab.alert)
+                    .toolbar(.hidden, for: .tabBar)
                 ControlView(viewModel: controlViewModel)
                     // 안드로이드는 관리 탭을 처음 보여줄 때 프래그먼트를 만들고 subscribe 한다
                     // (showTab 의 tx.add :339-341). 두 번째부터는 뷰모델이 무시한다.
                     .onAppear { controlViewModel.시작한다() }
                     .tabItem { Label(GuardianTab.control.title, systemImage: GuardianTab.control.systemImage) }
                     .tag(GuardianTab.control)
+                    .toolbar(.hidden, for: .tabBar)
                 ScheduleView(viewModel: scheduleViewModel)
                     // 처음 보일 때 구독(ScheduleFragment.kt:279), 보일 때마다 못 보낸 알림 재시도 —
                     // 안드로이드는 첫 onResume(:293-297)과 onHiddenChanged(false)(:288-291)가 이 자리다.
@@ -85,6 +88,7 @@ struct GuardianRootView: View {
                     }
                     .tabItem { Label(GuardianTab.schedule.title, systemImage: GuardianTab.schedule.systemImage) }
                     .tag(GuardianTab.schedule)
+                    .toolbar(.hidden, for: .tabBar)
                 PlaceView(viewModel: placeViewModel)
                     // PlaceFragment.kt:232(subscribe), :290-294(onResume), :317-320(onHiddenChanged).
                     .onAppear {
@@ -93,12 +97,13 @@ struct GuardianRootView: View {
                     }
                     .tabItem { Label(GuardianTab.place.title, systemImage: GuardianTab.place.systemImage) }
                     .tag(GuardianTab.place)
+                    .toolbar(.hidden, for: .tabBar)
             }
-            // themes.xml:186-195 — 탭 띠 바탕 paper_card, 선택 항목 sky. 지도 위에서도 탭 띠가
-            // 투명해지지 않게 바탕을 늘 보이게 둔다(안드로이드는 그림자 대신 선으로 띠를 뗀다).
             .tint(KidCarePalette.sky)
-            .toolbarBackground(KidCarePalette.paperCard, for: .tabBar)
-            .toolbarBackground(.visible, for: .tabBar)
+            // 탭 막대는 안드로이드 모양의 붙박이 띠로 따로 그린다(`KidCareTabBar` 머리 주석). `TabView` 는 선택과
+            // 탭마다의 수명만 맡는다. 띠가 `TabView` 아래 칸을 차지하므로 어느 탭의 내용(밀려 들어간 편집 판 포함)도
+            // 띠 밑으로 숨지 않는다.
+            KidCareTabBar(selection: $selectedTab)
         }
         // 안드로이드 onStart 에서 곧바로 한 번 판정하고 1분마다, onStop 에서 멈춘다(:395-421).
         // scenePhase 가 바뀌면 이 task 가 취소되고 새로 시작한다.
