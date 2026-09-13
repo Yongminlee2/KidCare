@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// 앱을 열었을 때 어디로 갈지 정한다. 안드로이드 `RouterActivity` 와 같은 자리다.
@@ -20,13 +21,30 @@ struct RouterView: View {
     @State private var store = RoleStore.shared
     @State private var showMain: Bool
 
+    /// I4(리뷰): `KidCareTests` 는 `KidCare.app` 을 호스트로 띄워서 도는 XcodeGen
+    /// 설정이라(`project.yml` 주석), 테스트 프로세스에서도 이 뷰가 실제로 그려진다.
+    /// 시뮬레이터에 남은 진짜 `RoleStore` 값(수동 확인이 남긴 것, 또는 `-only-testing`
+    /// 이전 실행의 흔적)이 있으면 `showMain` 이 곧장 `ChildMapView` 로 가고, 그
+    /// `.task` 가 `FamilyRepository.fetchChildStatus` → `Firestore.firestore()` 를
+    /// 부른다 — 그런데 `FirebaseBootstrap.configureForApp()` 은 테스트 프로세스에서
+    /// 일부러 아무 것도 안 한다(그 함수 주석) — `EmulatorHarness.start()` 가 아직
+    /// 아무 테스트도 부르지 않았으니 `FirebaseApp` 은 통째로 미구성 상태고, 그
+    /// 호출은 `FIRIllegalStateException` 으로 곧장 죽는다. 이 죽음은 테스트 **바디가
+    /// 실행되기도 전에** 앱 프로세스 자체를 끝장내서, 실제 앱은 멀쩡한데도 스위트
+    /// 전체가 시뮬레이터에 우연히 남아 있던 상태에 따라 죽었다 살았다 한다. 그래서
+    /// 테스트 프로세스에서는 데이터를 읽는 화면으로 아예 가지 않는다 — 실제 화면
+    /// 검증은 각 뷰모델·리포지토리 테스트가 이미 UI 없이 하고 있다.
+    private let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+
     init() {
         let store = RoleStore.shared
         _showMain = State(initialValue: store.role == .guardian && store.familyId != nil)
     }
 
     var body: some View {
-        if showMain, let familyId = store.familyId {
+        if isRunningTests {
+            Color.clear
+        } else if showMain, let familyId = store.familyId {
             ChildMapView(familyId: familyId, childUid: store.childUid)
         } else {
             RoleSelectView(onGuardianReady: { showMain = true })
