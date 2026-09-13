@@ -18,6 +18,18 @@ enum KidCarePalette {
     static let berrySoft = Color(hex: 0xFDE8F2)
     /// `themes.xml:23` 의 `colorOnErrorContainer` — 무응답 배너 글자.
     static let onBerrySoft = Color(hex: 0x5B213C)
+    /// colors.xml:14-16 — 벨소리 스티커(ScheduleAdapter.kt:224)와 시각 버튼(fragment_schedule.xml:565-567).
+    static let apricot = Color(hex: 0xF2A05F)
+    static let apricotSoft = Color(hex: 0xFFF0E2)
+    static let onApricotSoft = Color(hex: 0x5A3216)
+    /// colors.xml:23 — `themes.xml:20` 의 colorError. 삭제 그림, 경고 글자, 일요일 칸.
+    static let berryInk = Color(hex: 0xB64C66)
+    /// colors.xml:25 — `themes.xml:36` 의 colorOutline. 입력칸 테두리.
+    static let line = Color(hex: 0xA398AE)
+    /// colors.xml:26 — 카드 테두리, 고르지 않은 칸, 하루 띠 바탕.
+    static let lineSoft = Color(hex: 0xE9E1ED)
+    /// colors.xml:6 — `themes.xml:29` 의 colorSurfaceVariant. 장소 상한 안내 바탕.
+    static let paperFold = Color(hex: 0xF5F0FF)
 }
 
 private extension Color {

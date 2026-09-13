@@ -13,6 +13,8 @@ struct GuardianRootView: View {
     /// 관리 탭 뷰모델. 지도와 같은 이유로 탭 전환보다 오래 산다 — 안드로이드 관리 프래그먼트도
     /// show/hide 로만 오가며 `settings/ringer` 리스너를 붙든 채 둔다(계획서 판정 기록 2).
     @State private var controlViewModel: ControlViewModel
+    /// 예약 탭 뷰모델. 지도·관리와 같은 수명(계획서 5단계 판정 기록 7).
+    @State private var scheduleViewModel: ScheduleViewModel
     /// 무응답 배너의 유일한 주인(안드로이드 `GuardianMainActivity` :53-56).
     @State private var banner: DisconnectBanner
     @Environment(\.scenePhase) private var scenePhase
@@ -31,6 +33,7 @@ struct GuardianRootView: View {
         // 관리 탭의 대답도 배너를 곧바로 다시 판정하게 한다(ControlFragment.kt:747-750).
         control.대답이_기록되면 = { [weak banner] in banner?.다시_판정한다() }
         _controlViewModel = State(initialValue: control)
+        _scheduleViewModel = State(initialValue: ScheduleViewModel(familyId: familyId, childUid: childUid))
     }
 
     var body: some View {
@@ -53,7 +56,13 @@ struct GuardianRootView: View {
                     .onAppear { controlViewModel.시작한다() }
                     .tabItem { Label(GuardianTab.control.title, systemImage: GuardianTab.control.systemImage) }
                     .tag(GuardianTab.control)
-                TabPlaceholderView(tab: .schedule)
+                ScheduleView(viewModel: scheduleViewModel)
+                    // 처음 보일 때 구독(ScheduleFragment.kt:279), 보일 때마다 못 보낸 알림 재시도 —
+                    // 안드로이드는 첫 onResume(:293-297)과 onHiddenChanged(false)(:288-291)가 이 자리다.
+                    .onAppear {
+                        scheduleViewModel.시작한다()
+                        scheduleViewModel.다시_알린다()
+                    }
                     .tabItem { Label(GuardianTab.schedule.title, systemImage: GuardianTab.schedule.systemImage) }
                     .tag(GuardianTab.schedule)
                 TabPlaceholderView(tab: .place)
@@ -72,14 +81,21 @@ struct GuardianRootView: View {
             guard scenePhase == .active else { return }
             await banner.주기적으로_판정한다()
         }
+        // 앱으로 돌아왔을 때는 **보고 있는** 탭만 재시도한다 — 안드로이드 onResume 의 `if (!isHidden)`
+        // (ScheduleFragment.kt:294-297, PlaceFragment.kt:290-294).
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            if selectedTab == .schedule { scheduleViewModel.다시_알린다() }
+        }
         .onDisappear {
             mapViewModel.정리한다()
             controlViewModel.정리한다()
+            scheduleViewModel.정리한다()
         }
     }
 }
 
-/// 아직 이 앱에 없는 탭(알림 6단계, 예약·장소 5단계)의 자리. 탭 바가 안드로이드와 같은
+/// 아직 이 앱에 없는 탭(알림 6단계, 장소 5단계)의 자리. 탭 바가 안드로이드와 같은
 /// 모양이 되도록 칸만 먼저 채운다.
 private struct TabPlaceholderView: View {
     let tab: GuardianTab

@@ -870,6 +870,138 @@
         }
       }
     },
+    "holiday_buddha": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "부처님오신날"
+          }
+        }
+      }
+    },
+    "holiday_children": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어린이날"
+          }
+        }
+      }
+    },
+    "holiday_christmas": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "성탄절"
+          }
+        }
+      }
+    },
+    "holiday_chuseok": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "추석 연휴"
+          }
+        }
+      }
+    },
+    "holiday_foundation": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개천절"
+          }
+        }
+      }
+    },
+    "holiday_hangul": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "한글날"
+          }
+        }
+      }
+    },
+    "holiday_independence": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "삼일절"
+          }
+        }
+      }
+    },
+    "holiday_liberation": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "광복절"
+          }
+        }
+      }
+    },
+    "holiday_memorial": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "현충일"
+          }
+        }
+      }
+    },
+    "holiday_new_year": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "신정"
+          }
+        }
+      }
+    },
+    "holiday_seollal": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설 연휴"
+          }
+        }
+      }
+    },
+    "holiday_substitute": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대체공휴일"
+          }
+        }
+      }
+    },
     "invite_code_done": {
       "extractionState": "manual",
       "localizations": {
@@ -1299,6 +1431,61 @@
         }
       }
     },
+    "schedule_add": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "규칙 추가"
+          }
+        }
+      }
+    },
+    "schedule_allday_cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시각 다시 고르기"
+          }
+        }
+      }
+    },
+    "schedule_allday_confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "하루 종일로 저장"
+          }
+        }
+      }
+    },
+    "schedule_allday_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시작과 끝이 %1$@(으)로 같아요.\n이대로 저장하면 고른 요일에는 24시간 내내 %2$@(으)로 바뀝니다."
+          }
+        }
+      }
+    },
+    "schedule_allday_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "하루 종일로 저장할까요?"
+          }
+        }
+      }
+    },
     "schedule_day_fri": {
       "extractionState": "manual",
       "localizations": {
@@ -1372,6 +1559,611 @@
           "stringUnit": {
             "state": "translated",
             "value": "수"
+          }
+        }
+      }
+    },
+    "schedule_days_everyday": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "매일"
+          }
+        }
+      }
+    },
+    "schedule_days_none": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "요일 없음"
+          }
+        }
+      }
+    },
+    "schedule_days_weekday": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "평일"
+          }
+        }
+      }
+    },
+    "schedule_days_weekend": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "주말"
+          }
+        }
+      }
+    },
+    "schedule_default_cleared": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "규칙이 끝나도 소리를 그대로 둬요."
+          }
+        }
+      }
+    },
+    "schedule_default_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "예약이 없는 시간에는"
+          }
+        }
+      }
+    },
+    "schedule_default_none": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그대로 두기"
+          }
+        }
+      }
+    },
+    "schedule_default_saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "규칙이 끝나면 %1$@(으)로 돌아가요."
+          }
+        }
+      }
+    },
+    "schedule_delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "삭제"
+          }
+        }
+      }
+    },
+    "schedule_delete_cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그대로 두기"
+          }
+        }
+      }
+    },
+    "schedule_delete_confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지우기"
+          }
+        }
+      }
+    },
+    "schedule_delete_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@\n\n지우면 이 시간대에는 소리가 저절로 바뀌지 않아요."
+          }
+        }
+      }
+    },
+    "schedule_delete_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 규칙을 지울까요?"
+          }
+        }
+      }
+    },
+    "schedule_deleting": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지우는 중…"
+          }
+        }
+      }
+    },
+    "schedule_editor_cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "취소"
+          }
+        }
+      }
+    },
+    "schedule_editor_days_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어떤 요일에"
+          }
+        }
+      }
+    },
+    "schedule_editor_days_required": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "요일을 하나 이상 골라주세요. 요일을 안 고르면 이 규칙은 한 번도 켜지지 않아요."
+          }
+        }
+      }
+    },
+    "schedule_editor_end_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "끝나는 시각"
+          }
+        }
+      }
+    },
+    "schedule_editor_mode_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그동안 아이 폰을"
+          }
+        }
+      }
+    },
+    "schedule_editor_save": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장"
+          }
+        }
+      }
+    },
+    "schedule_editor_start_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시작 시각"
+          }
+        }
+      }
+    },
+    "schedule_editor_time_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "몇 시부터 몇 시까지"
+          }
+        }
+      }
+    },
+    "schedule_editor_title_edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "규칙 고치기"
+          }
+        }
+      }
+    },
+    "schedule_editor_title_new": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 규칙"
+          }
+        }
+      }
+    },
+    "schedule_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 정해둔 시간대가 없어요.\n아래 '규칙 추가'를 눌러\n'평일 밤에는 무음' 같은 규칙을 만들어 보세요."
+          }
+        }
+      }
+    },
+    "schedule_error_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "규칙을 불러오지 못했어요\n%1$@"
+          }
+        }
+      }
+    },
+    "schedule_holiday_cleared": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공휴일에도 예약대로 바꿔요."
+          }
+        }
+      }
+    },
+    "schedule_holiday_date": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d월 %2$d일"
+          }
+        }
+      }
+    },
+    "schedule_holiday_next": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음 쉬는 날은 %1$@ %2$@이에요."
+          }
+        }
+      }
+    },
+    "schedule_holiday_saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공휴일에는 예약을 쉬어요."
+          }
+        }
+      }
+    },
+    "schedule_holiday_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "쉬는 날에는 아래 규칙을 하나도 켜지 않아요."
+          }
+        }
+      }
+    },
+    "schedule_holiday_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공휴일엔 쉬어요"
+          }
+        }
+      }
+    },
+    "schedule_holiday_unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 기기에서는 공휴일 날짜를 계산하지 못했어요. 스위치를 켜도 요일대로만 돌아요."
+          }
+        }
+      }
+    },
+    "schedule_mode_normal": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "벨소리"
+          }
+        }
+      }
+    },
+    "schedule_mode_silent": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무음"
+          }
+        }
+      }
+    },
+    "schedule_mode_vibrate": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "진동"
+          }
+        }
+      }
+    },
+    "schedule_no_family": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요."
+          }
+        }
+      }
+    },
+    "schedule_overlap_cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고치기"
+          }
+        }
+      }
+    },
+    "schedule_overlap_confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그대로 저장"
+          }
+        }
+      }
+    },
+    "schedule_overlap_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 시간대는 '%1$@' 규칙과 겹칩니다.\n겹치는 동안에는 나중에 만든 규칙이 이깁니다."
+          }
+        }
+      }
+    },
+    "schedule_overlap_message_more": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 시간대는 '%1$@' 외 %2$d개 규칙과 겹칩니다.\n겹치는 동안에는 나중에 만든 규칙이 이깁니다."
+          }
+        }
+      }
+    },
+    "schedule_overlap_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "겹치는 규칙이 있어요"
+          }
+        }
+      }
+    },
+    "schedule_range": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ~ %2$@"
+          }
+        }
+      }
+    },
+    "schedule_range_allday": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "하루 종일 (%1$@부터 24시간)"
+          }
+        }
+      }
+    },
+    "schedule_range_overnight": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ~ 다음 날 %2$@"
+          }
+        }
+      }
+    },
+    "schedule_range_separator": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "–"
+          }
+        }
+      }
+    },
+    "schedule_row_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (꺼둠)"
+          }
+        }
+      }
+    },
+    "schedule_save_slow": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장 요청은 보냈지만 아직 서버 확인이 안 됐어요. 인터넷이 연결되면 저절로 저장돼요."
+          }
+        }
+      }
+    },
+    "schedule_saving": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장 중…"
+          }
+        }
+      }
+    },
+    "schedule_summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "schedule_sync_failed_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "규칙은 저장했지만 아이 폰에 알리지 못했어요. 이 화면을 다시 열면 한 번 더 알릴게요.\n%1$@"
+          }
+        }
+      }
+    },
+    "schedule_sync_no_child": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "규칙을 저장했어요. 아이 폰이 연결되면 저절로 적용돼요."
+          }
+        }
+      }
+    },
+    "schedule_sync_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 애기폰에 전달되지 않았어요. 애기폰은 지금도 예전 규칙대로 동작해요."
+          }
+        }
+      }
+    },
+    "schedule_sync_retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 알리기"
+          }
+        }
+      }
+    },
+    "schedule_sync_slow": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "규칙은 저장했어요. 아이 폰에 알리는 것은 인터넷이 연결되면 끝나요."
           }
         }
       }
