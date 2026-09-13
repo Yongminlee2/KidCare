@@ -17,6 +17,15 @@ struct StatusCardView: View {
     /// [FamilyRepository.serverNow] 로 잰 값. 기기 시계를 넘기면 부모 폰이 뒤처진
     /// 만큼 "마지막 신호 -3분 전" 이 뜬다 — brief·`StatusCard.lastSignal` 주석 참고.
     let nowMillis: Int64
+    /// `MapViewModel.명령_상태_문구` — '지금 위치 확인' 이 진행 중이거나 방금
+    /// 끝났으면 아래 배터리·마지막 신호 문구 대신 이 문구를 보여준다. 정본은
+    /// 안드로이드 `status_bar` 가 `renderLocating`/`showError` 로 같은 텍스트뷰를
+    /// 잠깐 덮어썼다가, `reload()` 가 다시 부르는 `renderStatus()` 로 되돌리는
+    /// 것과 같은 자리 — `nil` 이면 평소 문구로 돌아간다.
+    var commandStatusText: String? = nil
+    /// 명령 발행·응답을 기다리는 동안 `true`. 안드로이드 `locate_progress`
+    /// (`ProgressBar`)와 같은 자리 — 배터리 아이콘 옆에 작은 스피너를 돌린다.
+    var isCommandBusy: Bool = false
 
     @State private var 배터리_설명_표시 = false
 
@@ -35,11 +44,14 @@ struct StatusCardView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "battery.100")
                         .foregroundStyle(.green)
-                    Text(상태_문구)
+                    Text(commandStatusText ?? 상태_문구)
                         .font(.subheadline)
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
+                    if isCommandBusy {
+                        ProgressView().controlSize(.small)
+                    }
                 }
             }
             .buttonStyle(.plain)

@@ -12,6 +12,72 @@
         }
       }
     },
+    "control_command_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료"
+          }
+        }
+      }
+    },
+    "control_command_queued": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 안 갔어요. 인터넷이 연결되면 그때 애기폰으로 가서 실행돼요 — 그 사이 상황이 달라졌을 수 있어요."
+          }
+        }
+      }
+    },
+    "control_command_sending": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전달 중…"
+          }
+        }
+      }
+    },
+    "control_command_timeout": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "애기폰이 응답하지 않아요"
+          }
+        }
+      }
+    },
+    "control_command_timeout_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "애기폰이 응답하지 않아요\n%1$@"
+          }
+        }
+      }
+    },
+    "control_error_child_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아이 폰이 이 명령을 처리하지 못했어요."
+          }
+        }
+      }
+    },
     "control_last_seen_clock_format": {
       "extractionState": "manual",
       "localizations": {
@@ -316,6 +382,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "아이 휴대폰 배터리"
+          }
+        }
+      }
+    },
+    "map_locate_no_fix": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "애기폰이 아직 위치를 못 잡았어요. 잠시 뒤에 다시 눌러주세요."
+          }
+        }
+      }
+    },
+    "map_locate_now": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 위치 확인"
+          }
+        }
+      }
+    },
+    "map_locating": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "애기폰에 물어보는 중…"
           }
         }
       }

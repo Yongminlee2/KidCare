@@ -41,7 +41,13 @@ struct ChildMapView: View {
                 .ignoresSafeArea()
 
                 if childUid != nil {
-                    StatusCardView(childName: viewModel.아이_이름, status: viewModel.상태, nowMillis: viewModel.서버기준_지금)
+                    StatusCardView(
+                        childName: viewModel.아이_이름,
+                        status: viewModel.상태,
+                        nowMillis: viewModel.서버기준_지금,
+                        commandStatusText: viewModel.명령_상태_문구,
+                        isCommandBusy: viewModel.commandProgress.isInFlight
+                    )
                 }
 
                 if let 오류 = viewModel.오류 {
@@ -52,12 +58,43 @@ struct ChildMapView: View {
                     Text("map_waiting_first_signal").padding().background(.thinMaterial)
                 }
             }
+            .overlay(alignment: .bottomTrailing) {
+                지금위치_버튼
+                    .padding(.trailing, 14)
+                    .padding(.bottom, 20)
+            }
 
             타임라인_패널
         }
         // `.task` 는 화면이 사라지면 스스로 취소한다 — 구독이 아니라 한 번의
         // 읽기라 onDisappear 에서 따로 걷어낼 리스너가 없다.
         .task { await viewModel.하루를_읽는다() }
+        // '지금 위치 확인'의 명령 리스너·60초 타이머는 `.task` 처럼 스스로 걷히지
+        // 않는다(그 값이 구독이 아니라 명시적인 `ListenerRegistration` 이라서다) —
+        // 화면이 사라질 때 반드시 여기서 정리한다(브리프 "Testability").
+        .onDisappear { viewModel.명령_추적을_정리한다() }
+    }
+
+    /// '지금 위치 확인' 버튼. 정본은 안드로이드 `fragment_map_timeline.xml` 의
+    /// `locate_button`(원형, 지도 오른쪽 아래) — `status_card` 의 일부가 아니라
+    /// 별도로 떠 있는 요소다(진행 문구·스피너만 카드 쪽, `StatusCardView` 참고).
+    private var 지금위치_버튼: some View {
+        Button {
+            Task { await viewModel.지금_위치를_확인한다() }
+        } label: {
+            Image(systemName: "location.fill")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 52, height: 52)
+                .background(.thinMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!viewModel.위치확인_버튼_활성화)
+        // 비활성 상태가 눈에 보여야 한다 — 안드로이드 `setLocateButtonEnabled` 가
+        // alpha 를 0.48 로 낮추는 것과 같은 값(브리프 "A disabled button must
+        // look disabled").
+        .opacity(viewModel.위치확인_버튼_활성화 ? 1 : 0.48)
+        .accessibilityLabel(Text("map_locate_now"))
     }
 
     /// 지도 아래 타임라인 패널. 정본은 안드로이드 `fragment_map_timeline.xml` 의

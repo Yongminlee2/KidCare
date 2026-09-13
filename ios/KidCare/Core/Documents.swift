@@ -367,3 +367,65 @@ struct TrailDoc {
         updatedAt = millis(data["updatedAt"]) ?? 0
     }
 }
+
+/// families/{familyId}/children/{childUid}/commands/{commandId}. 정본은 안드로이드
+/// `core/model/Documents.kt:204` 의 `CommandDoc`·`FirestoreCommandTransport.toDoc`.
+///
+/// **이 구조체는 읽기 전용이다.** 이 앱(보호자)은 이 문서를 만들기만 한다 —
+/// `state` 는 항상 `pending` 으로 시작해야 하고(`CommandRepository.send` 참고),
+/// 그 뒤 상태를 옮기는 것은 자녀 폰(안드로이드)의 몫이라 이 구조체에 쓰기 표현은
+/// 없다(그래서 `firestoreData` 가 없다 — 다른 Doc 들과 다른 점).
+///
+/// 상태 전이는 pending → delivered → done|failed 한 방향뿐이다(`firestore.rules`
+/// 의 `commands` update 규칙). `type`·`payload` 는 자녀가 못 바꾸므로 불변이다.
+struct CommandDoc {
+    let id: String
+    let type: String
+    let payload: [String: String]
+    /// "pending"|"delivered"|"done"|"failed". `CommandState` 상수와 비교해서 쓴다 —
+    /// [SegmentDoc.type] 과 같은 이유로 닫힌 enum 으로 좁히지 않는다: 옛 문서에
+    /// 다른 값이 있어도 읽기 자체는 실패하지 않게 둔다.
+    let state: String
+    let createdAt: Int64
+    let deliveredAt: Int64
+    let doneAt: Int64
+    /// 자녀 폰이 실패 이유로 적는 코드(사람이 읽는 문장이 아니다). `childErrorText`
+    /// 가 번역한다 — 정본은 안드로이드 `MapTimelineFragment.childErrorText`(:691).
+    let error: String
+
+    init(id: String, _ data: [String: Any]) {
+        self.id = id
+        type = data["type"] as? String ?? ""
+        let rawPayload = data["payload"] as? [String: Any] ?? [:]
+        // 지금 이 앱이 보내는 명령([CommandType.locateNow])은 페이로드가 늘 비어
+        // 있다 — 값이 생기는 순간은 이후 Task(메시지·알람)의 몫이라, 코틀린처럼
+        // 문자열로 뭉개는 정도의 변환이면 충분하다.
+        var payload: [String: String] = [:]
+        for (key, value) in rawPayload { payload[key] = "\(value)" }
+        self.payload = payload
+        state = data["state"] as? String ?? ""
+        createdAt = millis(data["createdAt"]) ?? 0
+        deliveredAt = millis(data["deliveredAt"]) ?? 0
+        doneAt = millis(data["doneAt"]) ?? 0
+        error = data["error"] as? String ?? ""
+    }
+}
+
+/// [CommandDoc.type]·[CommandDoc.error] 값들. 정본은 안드로이드 `CommandType`
+/// 오브젝트 — 이 앱(보호자)은 지금 이 Task(지금 위치 확인)가 쓰는 값만 옮긴다.
+/// 닫힌 enum 이 아니라 문자열 상수 모음인 이유도 안드로이드와 같다: 새 명령이
+/// 계속 늘어나는 자리라, 아직 옮기지 않은 값(다른 Task 가 그 기능을 옮길 때
+/// 추가한다)까지 이 타입이 미리 알 필요는 없다.
+enum CommandType {
+    static let locateNow = "locate_now"
+    /// [locateNow] 가 위치를 못 잡았을 때 자녀 폰이 [CommandDoc.error] 에 적는 코드.
+    static let errorNoFix = "locate_no_fix"
+}
+
+/// [CommandDoc.state] 값들. 정본은 안드로이드 `CommandState` 오브젝트.
+enum CommandState {
+    static let pending = "pending"
+    static let delivered = "delivered"
+    static let done = "done"
+    static let failed = "failed"
+}

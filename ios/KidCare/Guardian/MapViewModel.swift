@@ -1,3 +1,4 @@
+import FirebaseFirestore
 import Foundation
 import Observation
 import os
@@ -20,6 +21,44 @@ import os
 /// 넘기는 동안 배터리가 화면 첫 진입 값에 멈춰 있는" 실패를 낳았다(2단계
 /// "방금 전" 버그와 같은 뿌리). (2) `loadGeneration` 으로 빠른 연속 탭의
 /// 늦은 응답을 무시한다 — 아래 그 프로퍼티 주석 참고.
+/// '지금 위치 확인' 왕복이 지금 어디에 있는지. 정본은 안드로이드 `ControlFragment`
+/// 의 `CommandUi` 와 같은 발상이지만, `MapTimelineFragment.locateNow`/`track` 이
+/// 실제로 구분하는 갈래(발행 대기·큐잉·응답 대기·완료·실패·시간 초과)만 옮긴다.
+///
+/// `.queued` 와 `.timedOut` 은 서로 다른 실패다 — 헷갈리면 안 된다. `.queued` 는
+/// **발행**(Firestore 서버 확인) 자체를 15초 안에 못 받은 것이고(브리프 규칙 2,
+/// 오프라인 쓰기는 로컬 큐에 남아 나중에 나간다 — 이건 실패가 아니다), `.timedOut`
+/// 은 명령이 실제로 나간 뒤 아이 폰의 **응답**을 60초 안에 못 받은 것이다(규칙 3).
+enum CommandProgress: Equatable {
+    case idle
+    /// 발행(서버 확인)을 기다리는 중 — 안드로이드 `renderLocating(true)` 가 곧바로
+    /// 세팅하는 `map_locating` 문구 자리.
+    case sending
+    /// 발행이 15초 안에 서버 확인을 못 받았다. 실패가 아니다(브리프 규칙 2).
+    case queued
+    /// 명령 문서 하나에 리스너를 붙이고 아이 폰의 응답(`done`/`failed`)을 기다리는 중.
+    case delivering
+    /// 아이 폰이 `done` 이라고 적었다는 것 하나만 뜻한다 — 실제로 위치가 갱신됐는지,
+    /// 그 값이 정확한지는 이 값이 보장하지 않는다(코틀린 코멘트의 경고를 그대로 옮긴다).
+    case done
+    /// 이미 `childErrorText` 로 번역된 문구.
+    case failed(String)
+    /// 60초 안에 응답이 없었다. `lastSeen` 은 `StatusCard.lastSignal` 한 곳을 거쳐
+    /// 나온 값이어야 한다(브리프 규칙 3 — 이 화면의 "마지막 신호"는 항상 이 함수
+    /// 하나만 지나간다는 `Documents.swift` 의 규율과 같다).
+    case timedOut(lastSeen: LastSignal)
+
+    /// 진행 중이라 버튼을 다시 눌러도 소용없는 상태인가. 안드로이드
+    /// `renderLocating(busy)` 의 `busy` 와 같다 — `.queued`/`.timedOut`/`.failed`/
+    /// `.done` 은 이미 `renderLocating(false)` 를 지나온 자리라 다시 눌러도 된다.
+    var isInFlight: Bool {
+        switch self {
+        case .sending, .delivering: return true
+        case .idle, .queued, .done, .failed, .timedOut: return false
+        }
+    }
+}
+
 @Observable
 @MainActor
 final class MapViewModel {
@@ -75,12 +114,75 @@ final class MapViewModel {
     /// 확인한다)만 재사용한다.
     private var loadGeneration = 0
 
+    /// '지금 위치 확인' 왕복이 지금 어디에 있는지. `ChildMapView`/`StatusCardView`
+    /// 가 이 값을 읽어 버튼·상태 줄을 그린다.
+    private(set) var commandProgress: CommandProgress = .idle
+
+    /// 명령 왕복 전용 세대 번호. `loadGeneration`(날짜 읽기)과 원리는 같지만
+    /// (세대를 올리고, 캡처해 두고, 응답이 왔을 때 최신인지 다시 확인한다) 변수를
+    /// 공유하지 않는다 — 서로 다른 상태 기계라 날짜를 넘긴다고 명령 왕복이,
+    /// 명령을 다시 누른다고 날짜 읽기가 무효화될 이유가 없다. 정본은 안드로이드
+    /// `ControlFragment`/`MapTimelineFragment` 의 `commandGeneration`(각 파일
+    /// :374, :409, :444 세 곳에서 검사한다) — 이게 없으면 두 번째 요청 도중에
+    /// 첫 요청의 "응답 없음"이 뜬다.
+    private var commandGeneration = 0
+    /// 지금 추적 중인 명령 문서의 리스너. 완료·실패·시간 초과·새 요청·화면
+    /// 사라짐 네 자리 모두에서 반드시 뗀다(브리프 "Testability") — 남겨두면
+    /// Spark 무료 읽기 한도를 계속 갉아먹는다.
+    private var commandListener: ListenerRegistration?
+    /// 60초 무응답 타이머. 리스너와 항상 같이 정리한다.
+    private var commandTimeoutTask: Task<Void, Never>?
+
+    /// "언제 물어봤고 언제 대답을 받았나" — `DisconnectRule`(무응답 배너)의 재료.
+    /// 배너 UI 자체는 Phase 4 의 몫이라 여기서는 기록만 한다(브리프 규칙 5).
+    private let requestLog: RequestLog
+
+    /// 명령을 실제로 보내는 방법. 기본값은 프로덕션이 그대로 쓰는
+    /// `CommandRepository.send` 다. `dayLoad` 와 같은 이유로 주입 가능하게 열어
+    /// 뒀다 — 세대·시간 초과 순서를 결정적으로 재현하려면 진짜 Firestore 왕복이
+    /// 아니라 테스트가 완료 시점을 직접 정할 수 있는 자리가 필요하다.
+    private let commandSend: @Sendable (
+        _ familyId: String, _ childUid: String, _ type: String, _ payload: [String: String]
+    ) async throws -> String
+    /// 명령 문서 하나를 구독하는 방법. 기본값은 `CommandRepository.observeOne`.
+    private let commandObserve: @Sendable (
+        _ familyId: String, _ childUid: String, _ commandId: String,
+        _ onChange: @escaping (CommandDoc) -> Void, _ onError: @escaping (Error) -> Void
+    ) -> ListenerRegistration
+    /// 15초·60초 제한시간을 **실제로 기다리는** 방법. 테스트는 이 자리에 즉시
+    /// 끝나거나(또는 `MapViewModelRaceTests.Gate` 처럼 테스트가 여는 문으로) 도는
+    /// 가짜를 꽂아 60초를 실제로 기다리지 않는다(브리프 "Testability").
+    private let commandSleep: @Sendable (_ millis: Int64) async -> Void
+    /// 안드로이드 `MapTimelineFragment.SEND_TIMEOUT_MILLIS`(:1319)와 정확히 같은 값.
+    private let sendTimeoutMillis: Int64
+    /// 안드로이드 `MapTimelineFragment.COMMAND_TIMEOUT_MILLIS`(:1316)와 정확히 같은
+    /// 값 — 관리 탭(`ControlFragment`)의 무응답 표시와 같은 기준이다(설계서 §5).
+    private let answerTimeoutMillis: Int64
+
+    /// Task 7(10분 실시간 추적)이 켜져 있거나 켜지는/꺼지는 중이면 이 버튼도 막는다는
+    /// 안드로이드 `setLocateButtonEnabled`(:709)의 세 번째 조건 자리다. 그 기능
+    /// 자체가 아직 없어 항상 false — Task 7 이 이 프로퍼티를 실제 상태로 바꿔 낀다.
+    private(set) var liveTrackingActiveOrTransitioning = false
+
     private static let logger = Logger(subsystem: "com.kidcare.family", category: "MapViewModel")
 
     init(
         familyId: String,
         childUid: String?,
         zone: TimeZone = .current,
+        requestLog: RequestLog = RequestLog(),
+        commandSend: @escaping @Sendable (
+            _ familyId: String, _ childUid: String, _ type: String, _ payload: [String: String]
+        ) async throws -> String = CommandRepository.send,
+        commandObserve: @escaping @Sendable (
+            _ familyId: String, _ childUid: String, _ commandId: String,
+            _ onChange: @escaping (CommandDoc) -> Void, _ onError: @escaping (Error) -> Void
+        ) -> ListenerRegistration = CommandRepository.observeOne,
+        commandSleep: @escaping @Sendable (_ millis: Int64) async -> Void = { millis in
+            try? await Task.sleep(nanoseconds: UInt64(millis) * 1_000_000)
+        },
+        sendTimeoutMillis: Int64 = 15_000,
+        answerTimeoutMillis: Int64 = 60_000,
         dayLoad: @escaping @Sendable (
             _ familyId: String, _ childUid: String, _ dayKey: String
         ) async throws -> (status: ChildStatusDoc?, trail: TrailDoc?) = MapViewModel.기본_하루_읽기
@@ -88,6 +190,12 @@ final class MapViewModel {
         self.familyId = familyId
         self.childUid = childUid
         self.zone = zone
+        self.requestLog = requestLog
+        self.commandSend = commandSend
+        self.commandObserve = commandObserve
+        self.commandSleep = commandSleep
+        self.sendTimeoutMillis = sendTimeoutMillis
+        self.answerTimeoutMillis = answerTimeoutMillis
         self.dayLoad = dayLoad
         dayKey = DayPicker.todayKey(zone: zone, nowMillis: Int64(Date().timeIntervalSince1970 * 1000))
     }
@@ -234,6 +342,252 @@ final class MapViewModel {
         guard generation == loadGeneration else { return } // 그사이 날짜가 바뀌었으면 이 값도 버린다
         if let name = 멤버?.displayName, !name.isEmpty { 아이_이름 = name }
         if let 서버시각 { 서버기준_지금 = 서버시각 }
+    }
+
+    // MARK: - 지금 위치 확인
+
+    /// 지금 위치 확인 버튼을 눌러도 되는가. 정본은 안드로이드
+    /// `setLocateButtonEnabled`(:709) — 진행 중이거나, 아이가 없거나, 실시간
+    /// 추적이 켜져 있거나 전환 중이면 막는다.
+    var 위치확인_버튼_활성화: Bool {
+        childUid != nil && !commandProgress.isInFlight && !liveTrackingActiveOrTransitioning
+    }
+
+    /// 상태 카드가 평소의 배터리·마지막 신호 문구 대신 보여줄 문구. `nil` 이면
+    /// 평소 문구로 돌아간다. 정본은 안드로이드 `status_bar` 가 `renderLocating`/
+    /// `showError` 로 임시로 덮었다가, `reload()` 가 다시 부르는 `renderStatus()`
+    /// 가 평소 문구로 되돌리는 것과 같은 자리 — `commandProgress` 를 `.idle` 로
+    /// 되돌리는 지점들이 그 "되돌림"을 대신한다.
+    var 명령_상태_문구: String? {
+        switch commandProgress {
+        case .idle:
+            return nil
+        case .sending:
+            return String(localized: "map_locating")
+        case .queued:
+            return String(localized: "control_command_queued")
+        case .delivering:
+            return String(localized: "control_command_sending")
+        case .done:
+            return String(localized: "control_command_done")
+        case .failed(let text):
+            return text
+        case .timedOut(let lastSeen):
+            // 브리프 규칙 3: 무응답 문구와 마지막 신호 시각을 함께 보여준다.
+            // `lastSeen` 은 이미 `StatusCard.lastSignal` 한 곳을 거쳐 나온 값이다
+            // (`handleCommandTimeout` 참고) — 여기서는 문구로만 바꾼다.
+            return String(format: String(localized: "control_command_timeout_format"), lastSignalText(lastSeen))
+        }
+    }
+
+    /// '지금 위치 확인' 버튼. 정본은 안드로이드 `MapTimelineFragment.locateNow`(:363)
+    /// 와 `track`(:406). **`완료` 가 뜻하는 것은 아이 폰이 done 이라고 적었다는
+    /// 것 하나뿐이다** — 실제로 위치가 갱신됐는지, 그 값이 정확한지는 이 함수가
+    /// 보장하지 않는다(코틀린 코멘트의 경고를 그대로 옮긴다).
+    func 지금_위치를_확인한다() async {
+        guard let childUid else {
+            오류 = String(localized: "map_no_child")
+            return
+        }
+        stopCommandTracking()
+        // 부모가 버튼을 또 누를 수 있다. 지금 세대를 붙잡아 두고, 왕복이 끝난
+        // 뒤 그 값이 아직 최신인지로 판단한다(`commandGeneration` 타입 주석 참고).
+        commandGeneration += 1
+        let generation = commandGeneration
+        requestLog.recordRequest(childUid)
+        오류 = nil
+        commandProgress = .sending
+
+        // 클로저가 `self` 대신 이 지역 상수만 붙잡게 한다 — `firstToFinish` 안의
+        // 비구조적 태스크는 `self`(MainActor 격리)를 안전하게 건널 방법이 없다.
+        let familyId = self.familyId
+        let send = commandSend
+        let sleep = commandSleep
+        let sendTimeout = sendTimeoutMillis
+
+        do {
+            // 발행(서버 확인)을 15초 기다리다 못 받으면 실패가 아니라 큐잉이다 —
+            // 오프라인 Firestore 쓰기는 로컬 큐에 들어가 나중에 나간다(브리프
+            // 규칙 2). 시간 초과 쪽이 이겨도 진 쪽(대개 오프라인으로 계속 도는
+            // 실제 쓰기)을 강제로 멈추지 않고 결과만 버려둔 채 계속 돌게 둔다
+            // (`FamilyRepository.measureWithTimeout` 주석과 같은 근거).
+            let commandId = try await Self.firstToFinish(timeoutMillis: sendTimeout, sleep: sleep) {
+                try await send(familyId, childUid, CommandType.locateNow, [:])
+            }
+            guard generation == commandGeneration else { return } // 그새 다른 요청이 시작됐다
+            guard let commandId else {
+                commandProgress = .queued
+                return
+            }
+            beginTrackingCommand(childUid: childUid, commandId: commandId, generation: generation)
+        } catch is CancellationError {
+            return
+        } catch {
+            guard generation == commandGeneration else { return }
+            commandProgress = .idle
+            오류 = errorMessage(error)
+        }
+    }
+
+    /// 명령 문서 하나에 리스너를 붙이고 60초 무응답 타이머를 건다. 정본은
+    /// 안드로이드 `track`(:406). 리스너는 `done`/`failed` 에서 곧바로 뗀다 — 답이
+    /// 온 뒤에도 남겨두면 상시 구독을 없앤 의미가 사라진다.
+    private func beginTrackingCommand(childUid: String, commandId: String, generation: Int) {
+        commandProgress = .delivering
+        let familyId = self.familyId
+        let observe = commandObserve
+
+        // Firestore 리스너 콜백은 격리되지 않은 자리에서 불린다 — `NewFamilySession
+        // .듣기를_시작한다()` 의 `onJoined`/`onError` 와 같은 이유로 `Task { @MainActor
+        // in ... }` 로 명시적으로 건너간다.
+        commandListener = observe(familyId, childUid, commandId, { [weak self] doc in
+            Task { @MainActor in self?.handleCommandChange(doc, generation: generation) }
+        }, { [weak self] error in
+            Task { @MainActor in self?.handleCommandError(error, generation: generation) }
+        })
+
+        let sleep = commandSleep
+        let answerTimeout = answerTimeoutMillis
+        // `sleep` 자체는 MainActor 와 무관한 순수 함수라 굳이 이 태스크를 여기서
+        // MainActor 로 격리할 필요는 없지만, 상태를 실제로 건드리는 마지막 줄이
+        // MainActor 로 건너가야 하므로 위 리스너 콜백과 같은 방식(`Task { @MainActor
+        // in ... }`)으로 통일해 둔다 — 상속에 기대지 않는다.
+        commandTimeoutTask = Task { @MainActor [weak self] in
+            await sleep(answerTimeout)
+            guard !Task.isCancelled else { return } // stopCommandTracking() 이 취소했다
+            self?.handleCommandTimeout(generation: generation)
+        }
+    }
+
+    private func handleCommandChange(_ doc: CommandDoc, generation: Int) {
+        guard generation == commandGeneration else { return } // 이미 낡은 응답 — 새 요청이 시작됐다
+        switch doc.state {
+        case CommandState.done:
+            stopCommandTracking()
+            recordAnswer()
+            commandProgress = .done
+            // 안드로이드 `reload()`(마커가 새 위치로 움직이도록 상태를 다시
+            // 읽는다)와 같다 — 새 상태 기계를 만들지 않고 이미 있는 하루 읽기
+            // 경로를 그대로 재사용한다(브리프 "After DONE").
+            Task { @MainActor [weak self] in
+                await self?.하루를_읽는다()
+                guard let self, generation == self.commandGeneration else { return }
+                // 다시 읽었으니 평소의 배터리·마지막 신호 문구로 돌려놓는다 —
+                // "완료"를 계속 띄워두면 다음 명령 전까지 정상 정보를 가린다
+                // (안드로이드 `reload()`→`renderStatus()` 가 statusBar 를
+                // 되돌리는 것과 같은 효과).
+                self.commandProgress = .idle
+            }
+        case CommandState.failed:
+            stopCommandTracking()
+            // 실패도 대답이다 — 아이 폰이 살아 있으니 error 를 적을 수 있었다
+            // (브리프 규칙 5, README "아이가 앱을 강제 종료하면" 절).
+            recordAnswer()
+            commandProgress = .failed(childErrorText(doc.error))
+        default:
+            break // pending/delivered — 아직 기다린다.
+        }
+    }
+
+    private func handleCommandError(_ error: Error, generation: Int) {
+        guard generation == commandGeneration else { return }
+        stopCommandTracking()
+        commandProgress = .idle
+        오류 = errorMessage(error)
+    }
+
+    /// 60초 무응답. 정본은 안드로이드 `track`(:443-446). 여기서는 `RequestLog`
+    /// 에 응답을 적지 않는다 — 그래야 `DisconnectRule`(무응답 배너, Phase 4)이
+    /// 이 무응답을 근거로 배너를 띄울 수 있다(브리프 규칙 5).
+    private func handleCommandTimeout(generation: Int) {
+        guard generation == commandGeneration else { return }
+        stopCommandTracking()
+        // "마지막 신호"는 항상 이 함수 하나만 거친다(`Documents.swift` 의 규율).
+        let signal: LastSignal = 상태.map { StatusCard.lastSignal(status: $0, nowMillis: 서버기준_지금) } ?? .never
+        commandProgress = .timedOut(lastSeen: signal)
+    }
+
+    /// 아이 폰이 대답했다는 사실을 남긴다. 정본은 안드로이드 `recordAnswer`(:682) —
+    /// 다만 배너 화면(`GuardianMainActivity.refreshBanner`) 자체는 Phase 4 의 몫이라
+    /// 여기서는 기록만 한다(브리프 "Port the recording; the banner UI itself is
+    /// Phase 4").
+    private func recordAnswer() {
+        guard let childUid else { return }
+        requestLog.recordAnswer(childUid)
+    }
+
+    /// 자녀 폰이 `error` 필드에 남긴 값은 사람이 읽는 문장이 아니라 코드다. 정본은
+    /// 안드로이드 `childErrorText`(:691).
+    private func childErrorText(_ raw: String) -> String {
+        switch raw {
+        case CommandType.errorNoFix: return String(localized: "map_locate_no_fix")
+        default: return String(localized: "control_error_child_failed")
+        }
+    }
+
+    private func stopCommandTracking() {
+        commandListener?.remove()
+        commandListener = nil
+        commandTimeoutTask?.cancel()
+        commandTimeoutTask = nil
+    }
+
+    /// 화면이 사라질 때 부른다. 정본은 안드로이드 `onDestroyView` 의
+    /// `stopTracking()` 호출과 같은 정리이지만, `_binding` 같은 널 가능한 뷰
+    /// 바인딩이 없는 SwiftUI 에서는 세대를 올려 이미 대기열에 오른 콜백까지
+    /// 무해하게 만든다 — 코틀린의 `_binding ?: return` 을 세대 번호가 대신한다.
+    func 명령_추적을_정리한다() {
+        stopCommandTracking()
+        commandGeneration += 1
+    }
+
+    /// `withTimeoutOrNull` 같은 것. Firestore 쓰기는 취소에 응하지 않으므로
+    /// (`FamilyRepository.measureWithTimeout` 주석과 같은 근거) 시간 초과 쪽이
+    /// 이겨도 진 태스크(대개 오프라인 상태로 계속 도는 실제 쓰기)를 강제로 멈추지
+    /// 않고 결과만 버려둔 채 계속 돌게 둔다. `withThrowingTaskGroup` 을 쓰지 않는
+    /// 이유도 같은 문서가 설명한 것과 같다 — 스코프를 빠져나갈 때 취소된 태스크가
+    /// 실제로 끝나기를 기다려 버리면(오프라인이면 영원히) 시간 제한이 장식으로
+    /// 전락한다.
+    private static func firstToFinish<T: Sendable>(
+        timeoutMillis: Int64,
+        sleep: @escaping @Sendable (Int64) async -> Void,
+        operation: @escaping @Sendable () async throws -> T
+    ) async throws -> T? {
+        try Task.checkCancellation()
+        let race = CommandRace<T>()
+        Task {
+            do {
+                let value = try await operation()
+                await race.resolve(.success(value))
+            } catch {
+                await race.resolve(.failure(error))
+            }
+        }
+        Task {
+            await sleep(timeoutMillis)
+            await race.resolve(.success(nil))
+        }
+        return try await race.outcome()
+    }
+}
+
+/// [MapViewModel.firstToFinish] 전용 "누가 먼저 끝나는지" 심판. 두 번째부터의
+/// `resolve` 호출은 조용히 버린다 — 이긴 쪽만 결과를 낸다. actor 로 묶어 두
+/// 태스크가 동시에 `resolve` 를 불러도 경합이 없다.
+private actor CommandRace<T: Sendable> {
+    private var result: Result<T?, Error>?
+    private var waiters: [CheckedContinuation<T?, Error>] = []
+
+    func resolve(_ newResult: Result<T?, Error>) {
+        guard result == nil else { return }
+        result = newResult
+        for waiter in waiters { waiter.resume(with: newResult) }
+        waiters.removeAll()
+    }
+
+    func outcome() async throws -> T? {
+        if let result { return try result.get() }
+        return try await withCheckedThrowingContinuation { waiters.append($0) }
     }
 }
 

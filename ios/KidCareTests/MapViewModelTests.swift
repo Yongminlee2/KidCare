@@ -178,7 +178,7 @@ struct MapViewModelRaceTests {
         let 어제_문: Gate = Gate()
         let 그제_문: Gate = Gate()
 
-        let vm = MapViewModel(familyId: "family", childUid: "child") { _, _, dayKey in
+        let vm = MapViewModel(familyId: "family", childUid: "child", dayLoad: { _, _, dayKey in
             switch dayKey {
             case 어제:
                 await 어제_문.wait() // 테스트가 열어줄 때까지 응답을 미룬다
@@ -189,7 +189,7 @@ struct MapViewModelRaceTests {
             default:
                 return (nil, nil)
             }
-        }
+        })
 
         // ◀ 를 빠르게 두 번 누른 것과 같다 — 첫 호출이 어제의 응답을 기다리는
         // 동안(아직 안 열었다) 두 번째 호출이 시작돼 그제로 넘어간다.
@@ -229,7 +229,7 @@ struct MapViewModelRaceTests {
         let 어제_문 = Gate()
         struct 가짜_오류: Error {}
 
-        let vm = MapViewModel(familyId: "family", childUid: "child") { _, _, dayKey in
+        let vm = MapViewModel(familyId: "family", childUid: "child", dayLoad: { _, _, dayKey in
             switch dayKey {
             case 어제:
                 await 어제_문.wait() // 그제가 이미 성공한 뒤에야 실패한다
@@ -239,7 +239,7 @@ struct MapViewModelRaceTests {
             default:
                 return (nil, nil)
             }
-        }
+        })
 
         let 첫_탭 = Task { await vm.이전_날로() } // 어제로 — commandSend 가 아니라 dayLoad 가 걸린다
         await Task.yield()
@@ -267,7 +267,7 @@ struct MapViewModelRaceTests {
 
         let 어제_문 = Gate()
 
-        let vm = MapViewModel(familyId: "family", childUid: "child") { _, _, dayKey in
+        let vm = MapViewModel(familyId: "family", childUid: "child", dayLoad: { _, _, dayKey in
             switch dayKey {
             case 어제:
                 await 어제_문.wait()
@@ -277,7 +277,7 @@ struct MapViewModelRaceTests {
             default:
                 return (nil, nil)
             }
-        }
+        })
 
         let 첫_탭 = Task { await vm.이전_날로() }
         await Task.yield()
@@ -300,5 +300,141 @@ struct MapViewModelRaceTests {
             "at": Int64(0), "battery": battery, "charging": false,
             "ringerMode": "normal", "lastSeenAt": Int64(0),
         ])!
+    }
+}
+
+/// '지금 위치 확인' 의 `commandGeneration` 이 늦게 도착하는 콜백·타이머를 실제로
+/// 무시하는지 본다. 정본은 안드로이드 `commandGeneration`(`MapTimelineFragment.kt`
+/// :374, :409, :444) — Task 4 의 `loadGeneration` 테스트 구멍(위 두 테스트가 닫은
+/// 것)과 같은 실수를 반복하지 않으려고, **성공 경로가 아니라 에러·시간 초과
+/// 경로**를 시험한다(브리프 규칙 4). Firestore 를 전혀 타지 않는다 — `commandSend`
+/// ·`commandObserve`·`commandSleep` 셋 다 가짜를 주입해 순서를 테스트가 직접 정한다.
+@MainActor
+struct MapViewModelCommandGenerationTests {
+
+    /// [MapViewModelRaceTests.Gate] 와 같은 발상 — 테스트가 열어줄 때까지 매달려
+    /// 있는 문. 구조체 밖(다른 스위트)에서도 쓰므로 여기서는 파일 스코프로 둔다.
+    private actor Gate {
+        private var isOpen = false
+        private var waiters: [CheckedContinuation<Void, Never>] = []
+
+        func wait() async {
+            if isOpen { return }
+            await withCheckedContinuation { waiters.append($0) }
+        }
+
+        func open() {
+            isOpen = true
+            waiters.forEach { $0.resume() }
+            waiters.removeAll()
+        }
+    }
+
+    /// 몇 번째 호출인지 센다 — 같은 가짜 클로저가 여러 번 불릴 때 "이번이 몇
+    /// 번째냐"로 동작을 갈라야 하는 자리에 쓴다.
+    private actor CallCounter {
+        private var count = 0
+        func next() -> Int {
+            count += 1
+            return count
+        }
+    }
+
+    /// `CommandRepository.observeOne` 이 돌려주는 진짜 `ListenerRegistration` 을
+    /// 흉내 낸다. `remove()` 가 실제로 불렸는지도 테스트가 확인할 수 있다
+    /// (리스너 정리 확인용 — 이 스위트에서는 안 쓰지만 다른 스위트가 재사용한다).
+    final class FakeListenerRegistration: NSObject, ListenerRegistration {
+        private(set) var removed = false
+        func remove() { removed = true }
+    }
+
+    @Test("발행이 늦게 실패해도, 그새 새 요청이 시작됐으면 그 실패가 화면을 건드리지 않는다")
+    func 발행이_늦게_실패해도_새_요청이_시작됐으면_무시된다() async throws {
+        let 첫_요청_문 = Gate()
+        let 호출_순번 = CallCounter()
+        struct 가짜_전송_오류: Error {}
+
+        let vm = MapViewModel(
+            familyId: "family", childUid: "child",
+            commandSend: { _, _, _, _ in
+                let n = await 호출_순번.next()
+                if n == 1 {
+                    await 첫_요청_문.wait() // 두 번째 요청이 이미 끝난 뒤에야 실패한다
+                    throw 가짜_전송_오류()
+                }
+                return "cmd-2"
+            },
+            commandObserve: { _, _, _, _, _ in FakeListenerRegistration() },
+            // 발행 대기(15초)·응답 대기(60초) 둘 다 이 테스트에서는 승패에
+            // 끼어들 필요가 없다 — 실제 전송(commandSend)이 항상 먼저 끝나거나
+            // 던지므로, 시간 제한 쪽은 영원히 안 열리는 문에 매달아 둔다.
+            commandSleep: { _ in await Gate().wait() }
+        )
+
+        let 첫_탭 = Task { await vm.지금_위치를_확인한다() }
+        await Task.yield() // 첫 탭이 commandSend 안의 문 앞에서 멈출 시간을 준다
+        let 두번째_탭 = Task { await vm.지금_위치를_확인한다() }
+        await 두번째_탭.value // 두 번째 요청은 곧바로 성공해 delivering 이 된다
+
+        #expect(vm.commandProgress == .delivering)
+        #expect(vm.오류 == nil)
+
+        await 첫_요청_문.open() // 이제야 낡은(첫) 요청이 실패한다
+        await 첫_탭.value
+
+        // 세대가 이미 낡아 첫 요청의 실패가 화면에 아무 영향도 못 준다 — 두 번째
+        // 요청의 결과(delivering)가 그대로 남아 있어야 한다.
+        #expect(vm.commandProgress == .delivering)
+        #expect(vm.오류 == nil)
+    }
+
+    @Test("응답을 기다리는 중 새 요청이 시작되면, 먼저 눌렀던 요청의 60초 무응답 타이머는 화면을 건드리지 않는다")
+    func 응답_대기_중_새_요청이_시작되면_이전_타이머는_무시된다() async throws {
+        let 첫_요청_타이머_문 = Gate()
+        let 절대_안_열리는_문 = Gate()
+        let 타이머_호출_순번 = CallCounter()
+        let sendTimeout: Int64 = 111
+        let answerTimeout: Int64 = 222
+
+        let vm = MapViewModel(
+            familyId: "family", childUid: "child",
+            commandSend: { _, _, _, _ in "cmd" },
+            commandObserve: { _, _, _, _, _ in FakeListenerRegistration() },
+            commandSleep: { millis in
+                guard millis == answerTimeout else {
+                    // 발행 대기(sendTimeout) 쪽은 절대 이기면 안 된다 — commandSend
+                    // 가 늘 즉시 끝나므로, 이 문을 매번 새로 만들어 영원히 열지
+                    // 않는다(즉시 반환하면 "누가 먼저 끝나는지"가 스케줄러
+                    // 타이밍에 좌우되는 진짜 경합이 되어 이 테스트가 흔들린다).
+                    await Gate().wait()
+                    return
+                }
+                let n = await 타이머_호출_순번.next()
+                if n == 1 {
+                    await 첫_요청_타이머_문.wait()
+                } else {
+                    await 절대_안_열리는_문.wait() // 두 번째 요청의 타이머는 이 테스트의 관심사가 아니다
+                }
+            },
+            sendTimeoutMillis: sendTimeout,
+            answerTimeoutMillis: answerTimeout
+        )
+
+        await vm.지금_위치를_확인한다() // 첫 요청 — delivering 이 되고 60초 타이머가 걸린다
+        await Task.yield()
+        await Task.yield() // 타이머 태스크가 실제로 시작해 sleep(...) 안에서 멈추게 한다
+        #expect(vm.commandProgress == .delivering)
+
+        await vm.지금_위치를_확인한다() // 다시 누른다 — 세대가 올라가고 새 타이머가 걸린다
+        await Task.yield()
+        await Task.yield()
+        #expect(vm.commandProgress == .delivering)
+
+        await 첫_요청_타이머_문.open() // 첫 요청의 시간 초과를 이제 발생시킨다
+        await Task.yield()
+        await Task.yield()
+
+        // 낡은 세대의 시간 초과가 두 번째 요청의 화면(delivering)을 덮으면 안 된다.
+        #expect(vm.commandProgress == .delivering)
     }
 }
