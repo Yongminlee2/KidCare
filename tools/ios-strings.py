@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # i18n/*.json 14벌 → ios/KidCare/Localizable.xcstrings (설계서 §7, 6단계 계획서 공통 절차 A).
+# 같은 원본의 app_name 으로 ios/KidCare/InfoPlist.xcstrings(CFBundleDisplayName)도 만든다(7단계 판정 기록 13).
 #
 #   python3 tools/ios-strings.py              생성한다. 빈 칸이 기록과 다르면 쓰지 않고 멈춘다.
 #   python3 tools/ios-strings.py --check      쓰지 않는다. 카탈로그가 지금 생성 결과와 다르면 종료 코드 1.
@@ -22,6 +23,9 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CATALOG = os.path.join(ROOT, 'ios/KidCare/Localizable.xcstrings')
 GAPS = os.path.join(ROOT, 'tools/i18n-untranslated.json')
+INFOPLIST = os.path.join(ROOT, 'ios/KidCare/InfoPlist.xcstrings')
+# Info.plist 키 → i18n 키. 안드로이드 런처 이름이 app_name 이다.
+INFOPLIST_KEYS = {'CFBundleDisplayName': 'app_name'}
 # (i18n 파일 이름, 카탈로그 언어 태그). 태그는 안드로이드 AppLanguage.kt:23-36 의 tag 와 같다.
 LANGS = [
     ('ko', 'ko'), ('en', 'en'), ('ja', 'ja'), ('zh', 'zh-Hans'), ('zh_Hant', 'zh-Hant'),
@@ -118,6 +122,25 @@ def build(src, version):
     return json.dumps(catalog, indent=2, ensure_ascii=False, sort_keys=True) + '\n', gaps
 
 
+def build_infoplist(src):
+    """InfoPlist.xcstrings. Info.plist 값은 서식 문자열이 아니므로 conv() 를 거치지 않는다 — 거치면 % 가 %% 로 남는다."""
+    en = src['en']
+    strings = {}
+    for plist_key, key in sorted(INFOPLIST_KEYS.items()):
+        if key not in en:
+            fail('en.json 에 %s 가 없다' % key)
+        localizations = {}
+        for name, tag in LANGS:
+            if key in src[name]:
+                unit = {'state': 'translated', 'value': src[name][key]}
+            else:
+                unit = {'state': 'needs_review', 'value': en[key]}
+            localizations[tag] = {'stringUnit': unit}
+        strings[plist_key] = {'extractionState': 'manual', 'localizations': localizations}
+    catalog = {'sourceLanguage': 'ko', 'strings': strings, 'version': '1.0'}
+    return json.dumps(catalog, indent=2, ensure_ascii=False, sort_keys=True) + '\n'
+
+
 def report(gaps):
     for name, keys in sorted(gaps.items()):
         print('번역 대기 %-8s %3d개' % (name, len(keys)))
@@ -133,6 +156,11 @@ def main(args):
     version = json.loads(current).get('version', '1.0')
     src = load()
     text, gaps = build(src, version)
+    plist_text = build_infoplist(src)
+    plist_current = ''
+    if os.path.exists(INFOPLIST):
+        with open(INFOPLIST, encoding='utf-8') as f:
+            plist_current = f.read()
     report(gaps)
 
     if '--write-gaps' in args:
@@ -151,11 +179,16 @@ def main(args):
     if '--check' in args:
         if current != text:
             fail('카탈로그가 원본에서 생성한 결과와 다르다. python3 tools/ios-strings.py 를 돌린다')
+        if plist_current != plist_text:
+            fail('InfoPlist.xcstrings 가 원본에서 생성한 결과와 다르다. python3 tools/ios-strings.py 를 돌린다')
         return
     if current != text:
         with open(CATALOG, 'w', encoding='utf-8') as f:
             f.write(text)
-    print('카탈로그 %d키 × %d개 언어' % (len(src['ko']), len(LANGS)))
+    if plist_current != plist_text:
+        with open(INFOPLIST, 'w', encoding='utf-8') as f:
+            f.write(plist_text)
+    print('카탈로그 %d키 × %d개 언어, InfoPlist %d키' % (len(src['ko']), len(LANGS), len(INFOPLIST_KEYS)))
 
 
 if __name__ == '__main__':

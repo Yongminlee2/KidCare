@@ -36,6 +36,9 @@ enum FirebaseBootstrap {
         configured = true
     }
 
+    // 출시 빌드에는 싣지 않는다 — 가짜 googleAppID·apiKey 와 127.0.0.1 을 배포 바이너리에 남길 이유가 없다.
+    // 부르는 곳은 테스트(EmulatorHarness)뿐이고 테스트 스킴은 Debug 다(7단계 판정 기록 6).
+    #if DEBUG
     /// 테스트용. **plist 가 없어도 돈다** — 그래서 Firebase 콘솔 설정이 끝나기 전에도
     /// Task 4~6 의 테스트를 다 쓸 수 있다. 에뮬레이터는 apiKey 를 검사하지 않는다.
     static func configureForEmulator(projectId: String) {
@@ -69,4 +72,5 @@ enum FirebaseBootstrap {
 
         configured = true
     }
+    #endif
 }
