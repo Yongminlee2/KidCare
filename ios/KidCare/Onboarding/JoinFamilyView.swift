@@ -16,7 +16,7 @@ struct JoinFamilyView: View {
     let onJoined: () -> Void
 
     @State private var 입력 = ""
-    /// 안드로이드 `name_input`(XML :53-68) — 비워 두면 저장소가 "보호자"로 채운다(`FamilyRepository.joinFamily`).
+    /// 안드로이드 `name_input`(XML :53-68) — 비워 두면 빈칸으로 저장하고 읽는 화면이 그 폰의 언어로 채운다(`FamilyRepository.joinFamily`, 안드로이드 2026-09-14 변경과 같음).
     @State private var 이름 = ""
     @State private var 진행중 = false
     @State private var 오류: String?
