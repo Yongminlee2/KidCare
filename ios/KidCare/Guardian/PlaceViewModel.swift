@@ -144,12 +144,14 @@ final class PlaceViewModel {
         }
         pendingSync = syncStore.pendingSync(childUid: childUid)
         아이_위치_읽기 = Task { [weak self] in await self?.아이_위치를_읽는다(childUid) }
+        // 콜백은 `remove()` 직전에 이미 대기열에 올라 있을 수 있다 — 정리 뒤에는 아무것도 만지지 않는다(5단계 통합 검토 M2).
         placeListener = placesObserve(familyId, childUid, { [weak self] docs, fromCache in
             Task { @MainActor in self?.장소가_바뀌었다(docs, fromCache: fromCache) }
         }, { [weak self] error in
             Task { @MainActor in
-                self?.listLoad = .failed
-                self?.상태_줄 = String(format: String(localized: "place_error_format"), errorMessage(error))
+                guard let self, !self.닫힘 else { return }
+                self.listLoad = .failed
+                self.상태_줄 = String(format: String(localized: "place_error_format"), errorMessage(error))
             }
         })
     }
@@ -183,6 +185,7 @@ final class PlaceViewModel {
 
     /// 이름순 — 자녀 폰이 지오펜스 20개를 자르는 기준도 이름순이라 두 화면이 같은 순서를 본다(:447-450).
     private func 장소가_바뀌었다(_ docs: [PlaceDoc], fromCache: Bool) {
+        guard !닫힘 else { return }
         places = docs.sorted { a, b in
             a.name == b.name ? KotlinMath.precedes(a.id, b.id) : KotlinMath.precedes(a.name, b.name)
         }
@@ -388,6 +391,8 @@ final class PlaceViewModel {
         깃발을_바꾼다(true)
         do {
             let done: Void? = try await firstToFinish(timeoutMillis: Self.writeTimeoutMillis, sleep: writeSleep, operation: 쓰기)
+            // 기다리는 동안 정리됐으면 사라진 화면을 만지지도 명령을 보내지도 않는다 — 깃발은 남아 다음 세션이 보낸다(5단계 통합 검토 I1).
+            guard !닫힘 else { return }
             if generation == writeGeneration {
                 끝나면(done == nil)
             } else if 목록이_이어받았나(generation), done == nil {
@@ -395,6 +400,7 @@ final class PlaceViewModel {
             }
             await 아이에게_알린다(generation)
         } catch {
+            guard !닫힘 else { return }
             if generation == writeGeneration {
                 실패하면(errorMessage(error))
             } else if 목록이_이어받았나(generation) {
@@ -406,7 +412,12 @@ final class PlaceViewModel {
     // MARK: - 아이 폰에 알리기 (:723-787)
 
     /// 예약 규칙과 **같은** 명령을 쓴다 — 자녀 쪽이 그 하나로 둘 다 다시 읽는다(:727-730).
+    ///
+    /// 닫힘 확인은 `ScheduleViewModel.아이에게_알린다` 와 같게 겹쳐 둔다(5단계 통합 검토 I1): `쓰고_알린다` 의
+    /// await 뒤와 여기 입구는 서로를 가리고(둘 다 지워야 `정리_뒤_늦은_저장`·`정리_뒤_늦은_삭제` 가 빨개진다),
+    /// 명령 await 뒤는 `정리_뒤_늦은_알림` 이 따로 지킨다. 겹친 guard 를 "중복"으로 지우지 않는다.
     private func 아이에게_알린다(_ generation: Int) async {
+        guard !닫힘 else { return }
         guard let childUid else {
             깃발을_바꾼다(false)
             if 글자를_쓸_수_있나(generation) { 상태_줄 = String(localized: "place_sync_no_child") }
@@ -417,12 +428,15 @@ final class PlaceViewModel {
             let commandId = try await firstToFinish(timeoutMillis: Self.writeTimeoutMillis, sleep: writeSleep) {
                 try await send(fid, childUid, CommandType.syncRules, [:])
             }
+            // 명령을 기다리는 동안 정리됐으면 깃발도 만지지 않는다 — 남은 깃발로 다음 세션이 한 번 더 보낸다(중복은 해가 없다).
+            guard !닫힘 else { return }
             guard commandId != nil else {
                 if 글자를_쓸_수_있나(generation) { 상태_줄 = String(localized: "place_sync_slow") }
                 return
             }
             깃발을_바꾼다(false)
         } catch {
+            guard !닫힘 else { return }
             if 글자를_쓸_수_있나(generation) {
                 상태_줄 = String(format: String(localized: "place_sync_failed_format"), errorMessage(error))
             }

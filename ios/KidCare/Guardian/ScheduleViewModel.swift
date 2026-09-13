@@ -156,6 +156,7 @@ final class ScheduleViewModel {
         }
         pendingSync = syncStore.pendingSync(childUid: childUid)
         // 구독은 await 없이 곧바로 붙인다 — 붙이기 전에 `정리한다()` 가 끼어들 틈이 없다(4단계 M1 의 경주가 없다).
+        // 콜백 넷 모두 첫 줄에서 닫힘을 본다 — `remove()` 직전에 대기열에 오른 콜백이 정리 뒤에 돌 수 있다(5단계 통합 검토 M2).
         scheduleListener = schedulesObserve(familyId, childUid, { [weak self] docs, fromCache in
             Task { @MainActor in self?.규칙이_바뀌었다(docs, fromCache: fromCache) }
         }, { [weak self] error in
@@ -168,7 +169,10 @@ final class ScheduleViewModel {
                 self.defaultMode = doc.defaultMode
             }
         }, { [weak self] _ in
-            Task { @MainActor in self?.설정_잠김 = true }
+            Task { @MainActor in
+                guard let self, !self.닫힘 else { return }
+                self.설정_잠김 = true
+            }
         })
     }
 
@@ -199,6 +203,7 @@ final class ScheduleViewModel {
     }
 
     private func 목록을_못_읽었다(_ error: Error) {
+        guard !닫힘 else { return }
         listLoad = .failed
         상태_줄 = String(format: String(localized: "schedule_error_format"), errorMessage(error))
     }
@@ -497,6 +502,13 @@ final class ScheduleViewModel {
     // MARK: - 아이 폰에 알리기 (:894-969)
 
     /// 세대는 **글자를 쓸지만** 가른다. 명령은 늘 보낸다(:894-901).
+    ///
+    /// 닫힘 확인은 겹쳐 둔다(5단계 통합 검토 M1):
+    /// - 다섯 쓰기 갈래의 await 뒤 guard 와 여기 입구 guard 는 **서로를 가린다.** 정리가 세대를 올려 글자 쓰기는
+    ///   이미 막히므로 둘 중 하나만 지우면 동작이 같고, 어느 테스트도 빨개지지 않는다. 둘 다 지우면
+    ///   `정리_뒤_늦은_저장`·`정리_뒤_늦은_켬끔`·`정리_뒤_늦은_삭제` 가 빨개진다.
+    /// - 명령 await 뒤 guard 는 따로 드러난다(`정리_뒤_늦은_알림` — 깃발이 남는가).
+    /// 겹친 guard 를 "중복"으로 지우지 않는다. 한 겹이 사라지면 남은 한 겹이 유일한 방어가 된다.
     private func 아이에게_알린다(_ generation: Int) async {
         guard !닫힘 else { return }
         guard let childUid else {

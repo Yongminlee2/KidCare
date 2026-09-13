@@ -45,7 +45,11 @@ private final class ScheduleFakes: Sendable {
     let log = ScheduleFakeLog()
     let sleep = WriteSleepFake()
     let 저장_문 = TestGate()
+    let 삭제_문 = TestGate()
+    let 명령_문 = TestGate()
+    let 명령_도착 = TestSignal()
     let 목록 = TestCallbackBox<([ScheduleDoc], Bool) -> Void>()
+    let 목록_오류 = TestCallbackBox<(Error) -> Void>()
     let 설정 = TestCallbackBox<(RingerSettingsDoc) -> Void>()
     let 설정_오류 = TestCallbackBox<(Error) -> Void>()
     let 목록_등록 = TestListenerRegistration()
@@ -63,6 +67,8 @@ struct ScheduleViewModelTests {
         childUid: String? = "child",
         store: RuleSyncStore? = nil,
         저장이_기다린다: Bool = false,
+        삭제가_기다린다: Bool = false,
+        명령이_기다린다: Bool = false,
         holidayNext: @escaping (DateComponents) -> (DateComponents, Holiday)? = { _ in nil }
     ) -> ScheduleViewModel {
         var 번호 = 0
@@ -70,8 +76,9 @@ struct ScheduleViewModelTests {
             familyId: "family",
             childUid: childUid,
             syncStore: store ?? RuleSyncStore(kind: .schedule, defaults: TestDefaults.isolated("ScheduleViewModelTests")),
-            schedulesObserve: { _, _, onChange, _ in
+            schedulesObserve: { _, _, onChange, onError in
                 f.목록.set(onChange)
+                f.목록_오류.set(onError)
                 return f.목록_등록
             },
             settingsObserve: { _, _, onChange, onError in
@@ -83,10 +90,19 @@ struct ScheduleViewModelTests {
                 if 저장이_기다린다 { await f.저장_문.wait() }
                 return try await f.log.저장(doc)
             },
-            scheduleDelete: { _, _, id in try await f.log.지운다(id) },
+            scheduleDelete: { _, _, id in
+                if 삭제가_기다린다 { await f.삭제_문.wait() }
+                try await f.log.지운다(id)
+            },
             defaultModeSave: { _, _, mode in try await f.log.기본_모드를_쓴다(mode) },
             holidayOffSave: { _, _, on in try await f.log.공휴일을_쓴다(on) },
-            commandSend: { _, _, type, _ in try await f.log.명령(type) },
+            commandSend: { _, _, type, _ in
+                if 명령이_기다린다 {
+                    await f.명령_도착.fire()
+                    await f.명령_문.wait()
+                }
+                return try await f.log.명령(type)
+            },
             writeSleep: { millis in await f.sleep.sleep(millis) },
             today: { DateComponents(year: 2026, month: 9, day: 13) },
             holidayNext: holidayNext,
@@ -402,5 +418,73 @@ struct ScheduleViewModelTests {
         #expect(await f.log.저장한_규칙.map(\.id) == ["new-1"])
         #expect(await f.log.보낸_명령.isEmpty)
         #expect(store.pendingSync(childUid: "child"))
+    }
+
+    @Test("켬끔 쓰기가 도는 중에 정리되면 늦게 온 결과로 줄을 바꾸지도 알림을 보내지도 않고, 깃발은 남는다(5단계 통합 검토 M1)")
+    func 정리_뒤_늦은_켬끔() async {
+        let f = ScheduleFakes()
+        let store = RuleSyncStore(kind: .schedule, defaults: TestDefaults.isolated("ScheduleViewModelTests-late-toggle"))
+        let vm = 만든다(f, store: store, 저장이_기다린다: true)
+        vm.시작한다()
+        let 켬끔 = Task { await vm.켬끔을_바꾼다(규칙("a", 540, 900), enabled: false) }
+        await eventually { vm.pendingSync }
+        vm.정리한다()
+        await f.저장_문.open()
+        await 켬끔.value
+        #expect(await f.log.저장한_규칙.map(\.enabled) == [false])
+        #expect(await f.log.보낸_명령.isEmpty)
+        #expect(store.pendingSync(childUid: "child"))
+        #expect(vm.상태_줄 == nil)
+    }
+
+    @Test("삭제가 도는 중에 정리되면 늦게 온 결과로 줄을 바꾸지도 알림을 보내지도 않고, 깃발은 남는다(5단계 통합 검토 M1)")
+    func 정리_뒤_늦은_삭제() async {
+        let f = ScheduleFakes()
+        let store = RuleSyncStore(kind: .schedule, defaults: TestDefaults.isolated("ScheduleViewModelTests-late-delete"))
+        let vm = 만든다(f, store: store, 삭제가_기다린다: true)
+        vm.시작한다()
+        let 삭제 = Task { await vm.삭제를_확인했다(규칙("a", 540, 900)) }
+        await eventually { vm.pendingSync }
+        #expect(vm.상태_줄 == String(localized: "schedule_deleting"))
+        vm.정리한다()
+        await f.삭제_문.open()
+        await 삭제.value
+        #expect(await f.log.지운_ID == ["a"])
+        #expect(await f.log.보낸_명령.isEmpty)
+        #expect(store.pendingSync(childUid: "child"))
+        #expect(vm.상태_줄 == String(localized: "schedule_deleting"))
+    }
+
+    @Test("sync_rules 발행을 기다리는 중에 정리되면 늦게 온 성공으로 깃발을 내리지 않는다 — 다음 세션이 한 번 더 보낸다(5단계 통합 검토 M1)")
+    func 정리_뒤_늦은_알림() async {
+        let f = ScheduleFakes()
+        let store = RuleSyncStore(kind: .schedule, defaults: TestDefaults.isolated("ScheduleViewModelTests-late-command"))
+        let vm = 만든다(f, store: store, 명령이_기다린다: true)
+        vm.시작한다()
+        let 켬끔 = Task { await vm.켬끔을_바꾼다(규칙("a", 540, 900), enabled: false) }
+        await f.명령_도착.wait()
+        vm.정리한다()
+        await f.명령_문.open()
+        await 켬끔.value
+        #expect(await f.log.보낸_명령 == [CommandType.syncRules])
+        #expect(store.pendingSync(childUid: "child"))
+        #expect(vm.상태_줄 == nil)
+    }
+
+    @Test("정리 뒤에 늦게 도착한 목록 오류·설정 오류 콜백은 목록 줄도 스위치 잠금도 바꾸지 않는다(5단계 통합 검토 M2)")
+    func 정리_뒤_늦은_콜백() async {
+        let f = ScheduleFakes()
+        let vm = 만든다(f)
+        vm.시작한다()
+        await 목록을_받는다(f, vm, [규칙("a", 540, 900)])
+        let 목록_오류 = f.목록_오류.value
+        let 설정_오류 = f.설정_오류.value
+        vm.정리한다()
+        목록_오류?(가짜_오류())
+        설정_오류?(가짜_오류())
+        await 메인_대기열을_비운다()
+        #expect(vm.listLoad == ListLoad.after(fromCache: false))
+        #expect(vm.상태_줄 == nil)
+        #expect(!vm.설정_잠김)
     }
 }

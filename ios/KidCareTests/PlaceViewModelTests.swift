@@ -33,8 +33,12 @@ private final class PlaceFakes: Sendable {
     let log = PlaceFakeLog()
     let sleep = WriteSleepFake()
     let 저장_문 = TestGate()
+    let 삭제_문 = TestGate()
+    let 명령_문 = TestGate()
+    let 명령_도착 = TestSignal()
     let 위치_문 = TestGate()
     let 목록 = TestCallbackBox<([PlaceDoc], Bool) -> Void>()
+    let 목록_오류 = TestCallbackBox<(Error) -> Void>()
     let 목록_등록 = TestListenerRegistration()
 }
 
@@ -47,30 +51,43 @@ struct PlaceViewModelTests {
     private func 만든다(
         _ f: PlaceFakes,
         childUid: String? = "child",
+        store: RuleSyncStore? = nil,
         아이_위치: (lat: Double, lng: Double)? = nil,
         위치가_기다린다: Bool = false,
-        저장이_기다린다: Bool = false
+        저장이_기다린다: Bool = false,
+        삭제가_기다린다: Bool = false,
+        명령이_기다린다: Bool = false
     ) -> PlaceViewModel {
         var 번호 = 0
         return PlaceViewModel(
             familyId: "family",
             childUid: childUid,
-            syncStore: RuleSyncStore(kind: .place, defaults: TestDefaults.isolated("PlaceViewModelTests")),
-            placesObserve: { _, _, onChange, _ in
+            syncStore: store ?? RuleSyncStore(kind: .place, defaults: TestDefaults.isolated("PlaceViewModelTests")),
+            placesObserve: { _, _, onChange, onError in
                 f.목록.set(onChange)
+                f.목록_오류.set(onError)
                 return f.목록_등록
             },
             placeSave: { _, _, doc in
                 if 저장이_기다린다 { await f.저장_문.wait() }
                 return try await f.log.저장(doc)
             },
-            placeDelete: { _, _, id in try await f.log.지운다(id) },
+            placeDelete: { _, _, id in
+                if 삭제가_기다린다 { await f.삭제_문.wait() }
+                try await f.log.지운다(id)
+            },
             statusFetch: { _, _ in
                 if 위치가_기다린다 { await f.위치_문.wait() }
                 guard let 아이_위치 else { return nil }
                 return ChildStatusDoc(["lat": 아이_위치.lat, "lng": 아이_위치.lng])
             },
-            commandSend: { _, _, type, _ in try await f.log.명령(type) },
+            commandSend: { _, _, type, _ in
+                if 명령이_기다린다 {
+                    await f.명령_도착.fire()
+                    await f.명령_문.wait()
+                }
+                return try await f.log.명령(type)
+            },
             writeSleep: { millis in await f.sleep.sleep(millis) },
             newId: {
                 번호 += 1
@@ -348,5 +365,84 @@ struct PlaceViewModelTests {
         먼저_닫힘.정리한다()
         먼저_닫힘.시작한다()
         #expect(g.목록.value == nil)
+    }
+
+    @Test("저장이 도는 중에 정리되면 늦게 온 결과로 화면을 만지지도 sync_rules 를 보내지도 않고, 깃발은 남아 다음 세션이 보낸다(5단계 통합 검토 I1)")
+    func 정리_뒤_늦은_저장() async {
+        let f = PlaceFakes()
+        let store = RuleSyncStore(kind: .place, defaults: TestDefaults.isolated("PlaceViewModelTests-late-save"))
+        let vm = 만든다(f, store: store, 아이_위치: (37.5, 127.0), 저장이_기다린다: true)
+        await 시작하고_위치를_읽는다(vm)
+        vm.편집을_연다(nil)
+        vm.이름을_바꾼다("학교")
+        let 저장 = Task { await vm.저장을_눌렀다() }
+        await eventually { vm.저장_중 }
+        vm.정리한다()
+        await f.저장_문.open()
+        await 저장.value
+        #expect(await f.log.저장한_장소.map(\.id) == ["new-1"])
+        #expect(await f.log.보낸_명령.isEmpty)
+        #expect(store.pendingSync(childUid: "child"))
+        #expect(vm.pendingSync)
+        #expect(vm.편집_중)
+        #expect(vm.저장_중)
+        #expect(vm.편집_줄 == "저장 중…")
+        #expect(vm.상태_줄 == nil)
+    }
+
+    @Test("삭제가 도는 중에 정리되면 늦게 온 결과로 목록 줄을 바꾸지도 sync_rules 를 보내지도 않고, 깃발은 남는다(5단계 통합 검토 I1)")
+    func 정리_뒤_늦은_삭제() async {
+        let f = PlaceFakes()
+        let store = RuleSyncStore(kind: .place, defaults: TestDefaults.isolated("PlaceViewModelTests-late-delete"))
+        let vm = 만든다(f, store: store, 삭제가_기다린다: true)
+        vm.시작한다()
+        let 삭제 = Task { await vm.삭제를_확인했다(장소("school", "학교")) }
+        await eventually { vm.pendingSync }
+        let 지우는_중 = vm.상태_줄
+        #expect(지우는_중 == String(localized: "place_deleting"))
+        vm.정리한다()
+        await f.삭제_문.open()
+        await 삭제.value
+        #expect(await f.log.지운_ID == ["school"])
+        #expect(await f.log.보낸_명령.isEmpty)
+        #expect(store.pendingSync(childUid: "child"))
+        #expect(vm.pendingSync)
+        #expect(vm.상태_줄 == 지우는_중)
+    }
+
+    @Test("sync_rules 발행을 기다리는 중에 정리되면 늦게 온 성공으로 깃발을 내리지 않는다 — 다음 세션이 한 번 더 보낸다(5단계 통합 검토 I1)")
+    func 정리_뒤_늦은_알림() async {
+        let f = PlaceFakes()
+        let store = RuleSyncStore(kind: .place, defaults: TestDefaults.isolated("PlaceViewModelTests-late-command"))
+        let vm = 만든다(f, store: store, 명령이_기다린다: true)
+        vm.시작한다()
+        let 삭제 = Task { await vm.삭제를_확인했다(장소("school", "학교")) }
+        await f.명령_도착.wait()
+        let 그때_줄 = vm.상태_줄
+        vm.정리한다()
+        await f.명령_문.open()
+        await 삭제.value
+        #expect(await f.log.보낸_명령 == [CommandType.syncRules])
+        #expect(store.pendingSync(childUid: "child"))
+        #expect(vm.pendingSync)
+        #expect(vm.상태_줄 == 그때_줄)
+    }
+
+    @Test("정리 뒤에 늦게 도착한 스냅샷·오류 콜백은 목록도 상태 줄도 바꾸지 않는다(5단계 통합 검토 M2)")
+    func 정리_뒤_늦은_콜백() async {
+        let f = PlaceFakes()
+        let vm = 만든다(f)
+        vm.시작한다()
+        f.목록.value?([장소("a", "학교")], false)
+        await eventually { vm.places.count == 1 }
+        let 바뀜 = f.목록.value
+        let 오류 = f.목록_오류.value
+        vm.정리한다()
+        바뀜?([], true)
+        오류?(가짜_오류())
+        await 메인_대기열을_비운다()
+        #expect(vm.places.map(\.id) == ["a"])
+        #expect(vm.listLoad == ListLoad.after(fromCache: false))
+        #expect(vm.상태_줄 == nil)
     }
 }

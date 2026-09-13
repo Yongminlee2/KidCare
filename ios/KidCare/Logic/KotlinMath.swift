@@ -8,10 +8,24 @@ import Foundation
 /// 코드를 봐서는 안 보이므로 한 곳에 모으고 자바에서 알려진 값으로 테스트한다.
 enum KotlinMath {
 
-    /// `Double.roundToInt()` = `Math.round(double)` = `floor(x + 0.5)`.
-    /// Swift `.rounded()` 는 `-1.5` 를 `-2` 로 보내지만 자바는 `-1` 이다.
+    /// `Double.roundToInt()`(kotlin-stdlib JVM):
+    /// NaN 이면 던지고, `Int.MAX_VALUE` 보다 크면 그 값, `Int.MIN_VALUE` 보다 작으면 그 값, 나머지는
+    /// `Math.round(double)` — 수학적으로 정확한 `floor(x + 0.5)`.
+    ///
+    /// - 코틀린의 `Int` 는 32비트다. 그래서 ±무한대·1e19 도 `Int32` 끝값으로 고정한다(5단계 통합 검토 M3) —
+    ///   고정하지 않으면 콘솔에서 `radiusMeters: Infinity` 를 넣은 문서 하나로 장소 탭이 그릴 때마다 죽는다.
+    /// - **NaN 만 코틀린과 다르다: 던지지 않고 0 을 돌려준다.** 코틀린은 예외지만, 앱에서 예외(트랩)는
+    ///   곧 화면이 죽는 것이고 문서 한 줄이 화면을 못 열게 만들면 안 된다(판정 기록 12).
+    /// - `x + 0.5` 를 부동소수로 더하면 `0.49999999999999994` 가 `1.0` 으로 올라가 1 이 된다(자바 7+ 는 0).
+    ///   그래서 더하지 않고 `floor(x)` 와의 차이를 0.5 와 비교한다. `x - floor(x)` 는 Sterbenz 보조정리로
+    ///   정확하다(유일한 예외 `floor(x) == -1, x > -0.5` 는 차이가 0.5 보다 커서 반올림돼도 판정이 같다).
+    ///   Swift `.rounded()` 는 `-1.5` 를 `-2` 로 보내지만 자바는 `-1` 이다.
     static func roundToInt(_ x: Double) -> Int {
-        Int((x + 0.5).rounded(.down))
+        if x.isNaN { return 0 }
+        if x > Double(Int32.max) { return Int(Int32.max) }
+        if x < Double(Int32.min) { return Int(Int32.min) }
+        let down = x.rounded(.down)
+        return Int(x - down >= 0.5 ? down + 1 : down)
     }
 
     /// `String.hashCode()` — `s[0]*31^(n-1) + … + s[n-1]` 을 UTF-16 코드 단위로, 32비트 넘침 그대로.
