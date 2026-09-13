@@ -1,0 +1,72 @@
+import SwiftUI
+
+/// 보호자 본 화면 — 하단 탭 다섯의 컨테이너. 정본은 안드로이드 `GuardianMainActivity`.
+///
+/// **탭마다의 뷰모델을 여기서 소유한다.** 안드로이드는 프래그먼트를 태그로 찾아 두고
+/// show/hide 로만 오가서(`:39-42`, `showTab` :329-353), 다른 탭을 보는 동안에도 지도
+/// 프래그먼트의 명령 추적·실시간 세션이 살아 있다. SwiftUI `TabView` 도 탭 뷰의 상태는
+/// 살려 두지만 탭을 옮길 때마다 `onDisappear` 를 부르므로, 수명이 걸린 정리는 탭 뷰가
+/// 아니라 이 뷰의 `onDisappear`(= 안드로이드 `onDestroyView` 자리)에 둔다.
+struct GuardianRootView: View {
+
+    @State private var mapViewModel: MapViewModel
+    /// 안드로이드 `onSaveInstanceState` 의 `KEY_SELECTED_TAB`(:459-462) 자리. 처음엔 지도(:172).
+    @SceneStorage("guardian.selectedTab") private var selectedTab: GuardianTab = .map
+
+    init(familyId: String, childUid: String?) {
+        _mapViewModel = State(initialValue: MapViewModel(familyId: familyId, childUid: childUid))
+    }
+
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            ChildMapView(viewModel: mapViewModel)
+                .tabItem { Label(GuardianTab.map.title, systemImage: GuardianTab.map.systemImage) }
+                .tag(GuardianTab.map)
+            TabPlaceholderView(tab: .alert)
+                .tabItem { Label(GuardianTab.alert.title, systemImage: GuardianTab.alert.systemImage) }
+                .tag(GuardianTab.alert)
+            TabPlaceholderView(tab: .control)
+                .tabItem { Label(GuardianTab.control.title, systemImage: GuardianTab.control.systemImage) }
+                .tag(GuardianTab.control)
+            TabPlaceholderView(tab: .schedule)
+                .tabItem { Label(GuardianTab.schedule.title, systemImage: GuardianTab.schedule.systemImage) }
+                .tag(GuardianTab.schedule)
+            TabPlaceholderView(tab: .place)
+                .tabItem { Label(GuardianTab.place.title, systemImage: GuardianTab.place.systemImage) }
+                .tag(GuardianTab.place)
+        }
+        // themes.xml:186-195 — 탭 띠 바탕 paper_card, 선택 항목 sky. 지도 위에서도 탭 띠가
+        // 투명해지지 않게 바탕을 늘 보이게 둔다(안드로이드는 그림자 대신 선으로 띠를 뗀다).
+        .tint(KidCarePalette.sky)
+        .toolbarBackground(KidCarePalette.paperCard, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        .onDisappear {
+            mapViewModel.명령_추적을_정리한다()
+            mapViewModel.실시간_추적을_정리한다()
+        }
+    }
+}
+
+/// 아직 이 앱에 없는 탭(알림 6단계, 예약·장소 5단계)의 자리. 탭 바가 안드로이드와 같은
+/// 모양이 되도록 칸만 먼저 채운다.
+private struct TabPlaceholderView: View {
+    let tab: GuardianTab
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: tab.systemImage)
+                .font(.system(size: 40))
+                .foregroundStyle(KidCarePalette.sky)
+            Text(tab.title)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(KidCarePalette.ink)
+            Text("ios_tab_not_ready_body")
+                .font(.subheadline)
+                .foregroundStyle(KidCarePalette.inkSoft)
+                .multilineTextAlignment(.center)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(KidCarePalette.paper)
+    }
+}

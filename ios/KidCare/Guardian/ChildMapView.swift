@@ -15,19 +15,16 @@ import SwiftUI
 /// `MapViewModel` 타입 주석 참고. 이 뷰는 뷰모델을 그리기만 한다.
 struct ChildMapView: View {
 
-    let familyId: String
-    let childUid: String?
-
-    @State private var viewModel: MapViewModel
+    /// 뷰모델은 `GuardianRootView` 가 소유한다 — 탭을 오가도 같은 인스턴스가 살아 있어야
+    /// 명령 추적·실시간 세션이 끊기지 않는다(안드로이드 show/hide 와 같은 수명).
+    let viewModel: MapViewModel
     /// 마커가 처음 생겼을 때 카메라를 한 번만 맞추는 플래그. 지도 렌더링(`NaverMapView`)
     /// 만의 관심사라 `MapViewModel` 로 옮기지 않았다 — 날짜를 넘겨도, 다시 읽어도
     /// 상관없이 이 화면이 떠 있는 동안에는 계속 지켜야 하는 뷰 쪽 그리기 상태다.
     @State private var 카메라를_한번_맞췄나 = false
 
-    init(familyId: String, childUid: String?) {
-        self.familyId = familyId
-        self.childUid = childUid
-        _viewModel = State(initialValue: MapViewModel(familyId: familyId, childUid: childUid))
+    init(viewModel: MapViewModel) {
+        self.viewModel = viewModel
     }
 
     /// Task 6: 접힘 뼈대(손잡이+경로 요약 줄+날짜 이동 줄) + 지금 콘텐츠 높이 —
@@ -57,7 +54,10 @@ struct ChildMapView: View {
                     ),
                     경로_전체_보기_요청: viewModel.경로_전체_보기_요청
                 )
-                .ignoresSafeArea()
+                // 위쪽만 상태바 뒤로 편다. 아래쪽 안전 영역은 TabView 의 탭 바다 — 거기까지
+                // 펴면 네이버 로고가 탭 바 뒤로 숨어 지도 SDK 약관을 어기고, 안드로이드도
+                // 프래그먼트 자리가 하단 탭 위에서 끝난다(activity_guardian_main.xml:85-89).
+                .ignoresSafeArea(edges: .top)
 
                 // I1(리뷰): 상태 카드는 항상 그린다 — 안드로이드 `status_card` 가
                 // 아이 선택 여부와 무관하게 늘 떠 있고 그 안의 한 줄만 바뀌는 것과
@@ -71,7 +71,7 @@ struct ChildMapView: View {
                     childName: viewModel.아이_이름,
                     status: viewModel.상태,
                     nowMillis: viewModel.서버기준_지금,
-                    hasChild: childUid != nil,
+                    hasChild: viewModel.childUid != nil,
                     loadError: viewModel.오류,
                     // Task 7 + 통합 검토 I1·I2: 실시간 문구·명령 문구·그보다 나중에
                     // 쓴 오류 중 무엇이 이기는지는 `MapViewModel.상태_줄_덮어쓰기_문구`
@@ -102,25 +102,19 @@ struct ChildMapView: View {
                 // `TimelinePanelView` 타입 주석의 "패널이 지도 위에 뜬다" 참고.
                 TimelinePanelView(viewModel: viewModel, rootHeight: geo.size.height)
             }
-            .ignoresSafeArea(.container, edges: .bottom)
+            // 아래쪽 안전 영역을 무시하지 않는다 — 타임라인 패널이 탭 바 위에서 끝나야 한다.
         }
-        // `.task` 는 화면이 사라지면 스스로 취소한다 — 구독이 아니라 한 번의
-        // 읽기라 onDisappear 에서 따로 걷어낼 리스너가 없다.
-        .task { await viewModel.하루를_읽는다() }
+        // 첫 읽기는 뷰모델이 한 번만 한다 — `MapViewModel.처음이면_읽는다` 주석 참고.
+        // `.task` 로 두면 탭을 옮길 때마다 취소되고 돌아올 때마다 다시 읽는다.
+        .onAppear { viewModel.처음이면_읽는다() }
         // C1-b(리뷰): 화면이 떠 있는 동안 "지금"을 60초마다 다시 잰다(Firestore 를
         // 새로 타지 않는다 — `MapViewModel.시계를_돈다()` 주석 참고). `.task` 라
         // 화면이 사라지면 이 태스크도 스스로 취소된다.
         .task { await viewModel.시계를_돈다() }
-        // '지금 위치 확인'의 명령 리스너·60초 타이머는 `.task` 처럼 스스로 걷히지
-        // 않는다(그 값이 구독이 아니라 명시적인 `ListenerRegistration` 이라서다) —
-        // 화면이 사라질 때 반드시 여기서 정리한다(브리프 "Testability").
-        .onDisappear {
-            viewModel.명령_추적을_정리한다()
-            // Task 7: 화면이 사라질 때 실시간 세션의 리스너·타이머도 반드시
-            // 뗀다(브리프 "Remove it ... when the screen disappears") — 안 하면
-            // 화면을 나가도 아이 상태 구독이 몇 초마다 계속 읽기를 태운다.
-            viewModel.실시간_추적을_정리한다()
-        }
+        // 명령·실시간 리스너 정리는 여기서 하지 않는다 — TabView 는 탭을 옮길 때마다
+        // onDisappear 를 부르므로, 여기서 떼면 관리 탭을 한 번 눌렀을 뿐인데 실시간
+        // 보기가 꺼진다. 안드로이드는 onDestroyView 에서만 뗀다(MapTimelineFragment.kt
+        // :1299-1311). 정리는 GuardianRootView.onDisappear 가 한다.
     }
 
     /// '지금 위치 확인' 버튼. 정본은 안드로이드 `fragment_map_timeline.xml` 의
@@ -167,10 +161,10 @@ struct ChildMapView: View {
         .buttonStyle(.borderedProminent)
         .tint(viewModel.liveTrackingState == .off ? Color(.systemGray5) : Color.green)
         .foregroundStyle(viewModel.liveTrackingState == .off ? Color.primary : Color.white)
-        .disabled(childUid == nil)
+        .disabled(viewModel.childUid == nil)
         // 비활성 상태가 눈에 보여야 한다 — 안드로이드 `renderLiveTrackingState` 의
         // alpha 0.55 와 같은 값.
-        .opacity(childUid == nil ? 0.55 : 1)
+        .opacity(viewModel.childUid == nil ? 0.55 : 1)
         .accessibilityLabel(Text(viewModel.실시간_버튼_접근성_문구))
     }
 }

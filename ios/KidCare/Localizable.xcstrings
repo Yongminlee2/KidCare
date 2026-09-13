@@ -364,6 +364,17 @@
         }
       }
     },
+    "ios_tab_not_ready_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 탭은 아이폰 앱에 곧 들어와요. 그동안은 안드로이드 보호자 폰에서 쓸 수 있어요."
+          }
+        }
+      }
+    },
     "map_battery_info_confirm": {
       "extractionState": "manual",
       "localizations": {
@@ -888,6 +899,61 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$02d:%2$02d~%3$02d:%4$02d"
+          }
+        }
+      }
+    },
+    "tab_alert": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알림"
+          }
+        }
+      }
+    },
+    "tab_control": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "관리"
+          }
+        }
+      }
+    },
+    "tab_map": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지도"
+          }
+        }
+      }
+    },
+    "tab_place": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장소"
+          }
+        }
+      }
+    },
+    "tab_schedule": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "예약"
           }
         }
       }

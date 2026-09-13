@@ -10,7 +10,7 @@ import SwiftUI
 /// 안에서 그대로 읽어 분기했는데, `@Observable` 이 그 읽기를 추적하는 바람에
 /// `InviteCodeView` 가 `RoleStore.shared.familyId` 를 쓰는 순간(코드를 아직 받기도
 /// 전에) `RouterView` 가 다시 그려져 `RoleSelectView`·`InviteCodeView` 를 통째로
-/// 걷어내고 `ChildMapView` 로 바꿔치기했다 — 보호자가 코드를 읽기도 전에 지도로
+/// 걷어내고 `GuardianRootView` 로 바꿔치기했다 — 보호자가 코드를 읽기도 전에 지도로
 /// 튕겨나가 아무도 그 코드를 못 봤다(1차 리뷰 CRITICAL). 안드로이드
 /// `RouterActivity.destination()` 이 앱을 켤 때 딱 한 번만 도는 것과 같은 이유로,
 /// 여기서도 판단은 시작할 때 한 번뿐이어야 한다 — 그 이후로는 온보딩 화면이
@@ -24,7 +24,7 @@ struct RouterView: View {
     /// I4(리뷰): `KidCareTests` 는 `KidCare.app` 을 호스트로 띄워서 도는 XcodeGen
     /// 설정이라(`project.yml` 주석), 테스트 프로세스에서도 이 뷰가 실제로 그려진다.
     /// 시뮬레이터에 남은 진짜 `RoleStore` 값(수동 확인이 남긴 것, 또는 `-only-testing`
-    /// 이전 실행의 흔적)이 있으면 `showMain` 이 곧장 `ChildMapView` 로 가고, 그
+    /// 이전 실행의 흔적)이 있으면 `showMain` 이 곧장 `GuardianRootView` 로 가고, 그
     /// `.task` 가 `FamilyRepository.fetchChildStatus` → `Firestore.firestore()` 를
     /// 부른다 — 그런데 `FirebaseBootstrap.configureForApp()` 은 테스트 프로세스에서
     /// 일부러 아무 것도 안 한다(그 함수 주석) — `EmulatorHarness.start()` 가 아직
@@ -45,7 +45,7 @@ struct RouterView: View {
         if isRunningTests {
             Color.clear
         } else if showMain, let familyId = store.familyId {
-            ChildMapView(familyId: familyId, childUid: store.childUid)
+            GuardianRootView(familyId: familyId, childUid: store.childUid)
         } else {
             RoleSelectView(onGuardianReady: { showMain = true })
         }

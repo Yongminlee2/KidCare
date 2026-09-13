@@ -498,6 +498,25 @@ final class MapViewModel {
         }
     }
 
+    /// 첫 읽기 작업. `nil` 이면 아직 한 번도 시작하지 않았다.
+    private var 처음_읽기: Task<Void, Never>?
+
+    /// 화면이 보일 때마다 불러도 되는 첫 읽기. 정본은 안드로이드 `MapTimelineFragment.load`
+    /// 가 `onViewCreated` 에서 한 번만 도는 것 — 탭은 show/hide 라 다시 보여도 다시 읽지
+    /// 않는다(`GuardianMainActivity.kt:329-353`).
+    ///
+    /// **`.task` 가 아니라 뷰모델이 소유한 비구조적 Task 인 이유:** `TabView` 는 탭을 옮길
+    /// 때마다 `.task` 를 취소한다. 첫 읽기 도중 부모가 관리 탭을 누르면 `serverNow` 가
+    /// 취소를 받아 아이 이름·서버 시각을 못 채운 채 끝나고, 한 번만 읽는다는 규칙 때문에
+    /// 다시 기회가 없다. 뷰의 수명과 떼어 둔다.
+    @discardableResult
+    func 처음이면_읽는다() -> Task<Void, Never> {
+        if let 처음_읽기 { return 처음_읽기 }
+        let 작업 = Task { await self.하루를_읽는다() }
+        처음_읽기 = 작업
+        return 작업
+    }
+
     /// 상태와 그 날 경로를 순서대로 한 번씩 읽는다(화면 진입 시 한 번).
     func 하루를_읽는다() async {
         guard let childUid else { return }
