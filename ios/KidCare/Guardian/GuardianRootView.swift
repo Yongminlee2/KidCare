@@ -15,6 +15,9 @@ struct GuardianRootView: View {
     @State private var controlViewModel: ControlViewModel
     /// 예약 탭 뷰모델. 지도·관리와 같은 수명(계획서 5단계 판정 기록 7).
     @State private var scheduleViewModel: ScheduleViewModel
+    /// 장소 탭 뷰모델. 지도·관리와 같은 수명(계획서 5단계 판정 기록 7) — 편집 화면을 연 채 다른 탭을
+    /// 봤다 돌아와도 편집 중인 좌표가 남는다(판정 기록 9).
+    @State private var placeViewModel: PlaceViewModel
     /// 무응답 배너의 유일한 주인(안드로이드 `GuardianMainActivity` :53-56).
     @State private var banner: DisconnectBanner
     @Environment(\.scenePhase) private var scenePhase
@@ -34,6 +37,7 @@ struct GuardianRootView: View {
         control.대답이_기록되면 = { [weak banner] in banner?.다시_판정한다() }
         _controlViewModel = State(initialValue: control)
         _scheduleViewModel = State(initialValue: ScheduleViewModel(familyId: familyId, childUid: childUid))
+        _placeViewModel = State(initialValue: PlaceViewModel(familyId: familyId, childUid: childUid))
     }
 
     var body: some View {
@@ -65,7 +69,12 @@ struct GuardianRootView: View {
                     }
                     .tabItem { Label(GuardianTab.schedule.title, systemImage: GuardianTab.schedule.systemImage) }
                     .tag(GuardianTab.schedule)
-                TabPlaceholderView(tab: .place)
+                PlaceView(viewModel: placeViewModel)
+                    // PlaceFragment.kt:232(subscribe), :290-294(onResume), :317-320(onHiddenChanged).
+                    .onAppear {
+                        placeViewModel.시작한다()
+                        placeViewModel.다시_알린다()
+                    }
                     .tabItem { Label(GuardianTab.place.title, systemImage: GuardianTab.place.systemImage) }
                     .tag(GuardianTab.place)
             }
@@ -86,16 +95,18 @@ struct GuardianRootView: View {
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             if selectedTab == .schedule { scheduleViewModel.다시_알린다() }
+            if selectedTab == .place { placeViewModel.다시_알린다() }
         }
         .onDisappear {
             mapViewModel.정리한다()
             controlViewModel.정리한다()
             scheduleViewModel.정리한다()
+            placeViewModel.정리한다()
         }
     }
 }
 
-/// 아직 이 앱에 없는 탭(알림 6단계, 장소 5단계)의 자리. 탭 바가 안드로이드와 같은
+/// 아직 이 앱에 없는 탭(알림 6단계)의 자리. 탭 바가 안드로이드와 같은
 /// 모양이 되도록 칸만 먼저 채운다.
 private struct TabPlaceholderView: View {
     let tab: GuardianTab

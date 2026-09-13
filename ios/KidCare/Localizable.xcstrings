@@ -1398,6 +1398,446 @@
         }
       }
     },
+    "place_add": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장소 추가"
+          }
+        }
+      }
+    },
+    "place_delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "삭제"
+          }
+        }
+      }
+    },
+    "place_delete_cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그대로 두기"
+          }
+        }
+      }
+    },
+    "place_delete_confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지우기"
+          }
+        }
+      }
+    },
+    "place_delete_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@\n\n지우면 이곳에 도착하거나 나서도 알림이 오지 않아요."
+          }
+        }
+      }
+    },
+    "place_delete_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 장소를 지울까요?"
+          }
+        }
+      }
+    },
+    "place_deleting": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지우는 중…"
+          }
+        }
+      }
+    },
+    "place_editor_cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "취소"
+          }
+        }
+      }
+    },
+    "place_editor_map_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지도를 움직여 가운데 십자를 이 장소에 맞춰주세요. 파란 원이 알림이 울리는 범위예요."
+          }
+        }
+      }
+    },
+    "place_editor_map_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어디인가요"
+          }
+        }
+      }
+    },
+    "place_editor_name_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "학교, 학원, 할머니 댁…"
+          }
+        }
+      }
+    },
+    "place_editor_name_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장소 이름"
+          }
+        }
+      }
+    },
+    "place_editor_name_required": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이름을 적어주세요. 알림에 '○○에 도착했어요'로 뜨는 이름이에요."
+          }
+        }
+      }
+    },
+    "place_editor_no_child_location": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아이 폰 위치를 아직 몰라서 지도가 넓게 열렸어요. 손으로 옮겨 찾아주세요."
+          }
+        }
+      }
+    },
+    "place_editor_notify_enter": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도착하면 알림"
+          }
+        }
+      }
+    },
+    "place_editor_notify_exit": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "나서면 알림"
+          }
+        }
+      }
+    },
+    "place_editor_notify_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "언제 알려드릴까요"
+          }
+        }
+      }
+    },
+    "place_editor_notify_none_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "둘 다 꺼두면 이 장소로는 알림이 오지 않아요. 장소는 그대로 남아 있어요."
+          }
+        }
+      }
+    },
+    "place_editor_radius_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "얼마나 가까이 오면"
+          }
+        }
+      }
+    },
+    "place_editor_radius_value": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "반경 %1$dm"
+          }
+        }
+      }
+    },
+    "place_editor_save": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장"
+          }
+        }
+      }
+    },
+    "place_editor_title_edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장소 고치기"
+          }
+        }
+      }
+    },
+    "place_editor_title_new": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 장소"
+          }
+        }
+      }
+    },
+    "place_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 정해둔 장소가 없어요.\n아래 '장소 추가'를 눌러\n'학교', '학원' 같은 곳을 정해 보세요.\n아이가 도착하거나 나서면 알려드릴게요."
+          }
+        }
+      }
+    },
+    "place_error_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장소를 불러오지 못했어요\n%1$@"
+          }
+        }
+      }
+    },
+    "place_limit_notice": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장소는 %1$d개까지 정할 수 있어요. 새로 만들려면 안 쓰는 장소를 먼저 지워주세요."
+          }
+        }
+      }
+    },
+    "place_no_family": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가족 정보를 찾지 못했어요. 앱을 껐다가 다시 열어주세요."
+          }
+        }
+      }
+    },
+    "place_notify_both": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도착·이탈 알림"
+          }
+        }
+      }
+    },
+    "place_notify_enter": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도착 알림만"
+          }
+        }
+      }
+    },
+    "place_notify_exit": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이탈 알림만"
+          }
+        }
+      }
+    },
+    "place_notify_none": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알림 꺼둠"
+          }
+        }
+      }
+    },
+    "place_row_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · 반경 %2$dm"
+          }
+        }
+      }
+    },
+    "place_save_slow": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장 요청은 보냈지만 아직 서버 확인이 안 됐어요. 인터넷이 연결되면 저절로 저장돼요."
+          }
+        }
+      }
+    },
+    "place_saving": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장 중…"
+          }
+        }
+      }
+    },
+    "place_summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (반경 %2$dm)"
+          }
+        }
+      }
+    },
+    "place_sync_failed_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장소는 저장했지만 아이 폰에 알리지 못했어요. 이 화면을 다시 열면 한 번 더 알릴게요.\n%1$@"
+          }
+        }
+      }
+    },
+    "place_sync_no_child": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장소를 저장했어요. 아이 폰이 연결되면 저절로 적용돼요."
+          }
+        }
+      }
+    },
+    "place_sync_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 애기폰에 전달되지 않았어요. 애기폰은 지금도 예전 장소대로 알려요."
+          }
+        }
+      }
+    },
+    "place_sync_retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 알리기"
+          }
+        }
+      }
+    },
+    "place_sync_slow": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장소는 저장했어요. 아이 폰에 알리는 것은 인터넷이 연결되면 끝나요."
+          }
+        }
+      }
+    },
     "role_child": {
       "extractionState": "manual",
       "localizations": {
