@@ -264,54 +264,50 @@ enum StatusCard {
     private static let hourMillis: Int64 = 60 * minuteMillis
     private static let dayMillis: Int64 = 24 * hourMillis
 
+    /// 마지막 신호의 **절대 시각과 그 시계의 출처**. 정본은 안드로이드
+    /// `ChildStatusDoc.lastSignal()`(GuardianMainActivity.kt:505-510) — 서버 시각이 있으면
+    /// 그것, 없으면 아이 폰 시계로 적은 옛 필드. `nil` 이면 쓸 만한 값이 없다.
+    ///
+    /// 경과(`lastSignal`)만 열어 두면 무응답 배너의 "물은 뒤에 쓰인 문서인가"
+    /// (MapTimelineFragment.kt:757) 판단을 못 한다 — 그 판단은 시각 자체가 필요하다.
+    /// 출처를 함께 들고 가는 이유는 아래 음수 경과 처리가 출처에 따라 완전히 갈리기
+    /// 때문이다(안드로이드 `ChildSignal(atMillis, fromServerClock)`).
+    static func signal(status: ChildStatusDoc) -> (atMillis: Int64, fromServerClock: Bool)? {
+        if let serverAt = status.lastSeenServerAt {
+            let millis = Int64(serverAt.dateValue().timeIntervalSince1970 * 1000)
+            if millis > 0 { return (millis, true) }
+        }
+        if status.lastSeenAt > 0 { return (status.lastSeenAt, false) }
+        return nil
+    }
+
     /// `nowMillis` 는 **반드시 [FamilyRepository.serverNow] 로 잰 값**이어야 한다.
     /// 기기 시계로 빼면 부모 폰이 뒤처진 만큼 "마지막 신호 -3분 전" 같은 문구가
     /// 나온다 — 안드로이드 `ControlFragment` 주석과 같은 함정이다.
     static func lastSignal(status: ChildStatusDoc, nowMillis: Int64) -> LastSignal {
-        let atMillis: Int64
-        let fromServerClock: Bool
-        // 서버 시각이 있으면 그것을, 없으면 아이 폰이 자기 시계로 적은 옛 필드로
-        // 물러난다 — 두 필드가 있는 이유는 [ChildStatusDoc] 주석. 신뢰도가 전혀
-        // 다른 두 시각을 여기서 갈라 **출처까지 함께** 들고 간다 — 안드로이드
-        // `ChildSignal(atMillis, fromServerClock)`과 같은 이유다. 아래 음수 경과
-        // 처리가 이 출처에 따라 완전히 갈리므로, 절대 밀리초만 남기고 출처를
-        // 버리면 그 판단 자체를 할 수 없다.
-        if let serverAt = status.lastSeenServerAt,
-           Int64(serverAt.dateValue().timeIntervalSince1970 * 1000) > 0 {
-            atMillis = Int64(serverAt.dateValue().timeIntervalSince1970 * 1000)
-            fromServerClock = true
-        } else if status.lastSeenAt > 0 {
-            atMillis = status.lastSeenAt
-            fromServerClock = false
-        } else {
-            return .never
-        }
-
-        let elapsed = nowMillis - atMillis
-
+        guard let found = signal(status: status) else { return .never }
+        let 경과 = nowMillis - found.atMillis
         // 음수 경과의 뜻은 시계 출처에 따라 다르다 — 코틀린 `LastSignalText.relativeText`
-        // 주석과 완전히 같은 갈래다.
-        if elapsed < 0 {
-            if fromServerClock {
-                // 서버 시각으로 잰 값의 음수는 [FamilyRepository.serverNow] 왕복
-                // 보정 오차(수백 밀리초)뿐이다 — 실제로 방금 신호가 온 것이므로
-                // "방금 전"이 정직하다.
-                return .minutes(0)
-            }
-            // 기기(자녀 폰) 시각으로 잰 값이 음수면 자녀 폰 시계가 부모 폰보다
-            // 앞서 있다는 뜻이고, 그 순간 우리는 신호가 얼마나 오래됐는지 **모른다.**
-            // 상대 표현("N분 전")을 쓰면 같은 화면의 다른 줄("응답하지 않아요" 등)과
-            // 서로를 부정해서 부모가 화면을 덜 믿게 된다 — 그래서 경과 대신 자녀
-            // 폰이 적어 보낸 절대 시각을 그대로 넘긴다. 화면(`lastSignalText`)이
-            // 그 값을 "부정확할 수 있다"는 말과 함께 보여준다.
-            return .skewed(atMillis: atMillis)
+        // (:543-548) 와 같은 갈래. 서버 시각의 음수는 왕복 보정 오차뿐이라 "방금 전"이
+        // 정직하고, 아이 폰 시각의 음수는 경과를 모른다는 뜻이라 절대 시각을 넘긴다 —
+        // 상대 표현을 쓰면 같은 화면의 다른 줄과 서로를 부정해 부모가 화면을 덜 믿게 된다.
+        if 경과 < 0 {
+            return found.fromServerClock ? .minutes(0) : .skewed(atMillis: found.atMillis)
         }
+        return elapsed(millis: 경과)
+    }
 
-        switch elapsed {
+    /// 0 이상의 경과를 분·시간·일로 나눈다. 정본은 `LastSignalText.elapsedText`(:551-556).
+    /// 음수의 뜻과 처리는 부르는 쪽이 정한다(:550) — 여기서는 0 으로 끌어올리기만 한다.
+    /// 무응답 배너(`DisconnectBanner`)도 이 한 곳을 지나간다 — 관리 탭의 마지막 신호와
+    /// 배너가 같은 사실을 다른 표기로 말하지 않게(:512-516).
+    static func elapsed(millis: Int64) -> LastSignal {
+        let millis = max(millis, 0)
+        switch millis {
         case ..<minuteMillis: return .minutes(0)
-        case ..<hourMillis: return .minutes(Int(elapsed / minuteMillis))
-        case ..<dayMillis: return .hours(Int(elapsed / hourMillis))
-        default: return .days(Int(elapsed / dayMillis))
+        case ..<hourMillis: return .minutes(Int(millis / minuteMillis))
+        case ..<dayMillis: return .hours(Int(millis / hourMillis))
+        default: return .days(Int(millis / dayMillis))
         }
     }
 }

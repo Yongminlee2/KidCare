@@ -106,4 +106,31 @@ struct StatusCardTests {
         )
         #expect(StatusCard.lastSignal(status: doc, nowMillis: atMillis + 60_000) == .minutes(1))
     }
+
+    @Test("경과를 분·시간·일로 나누는 경계는 안드로이드 LastSignalText.elapsedText 와 같다")
+    func 경과_경계() {
+        #expect(StatusCard.elapsed(millis: 59_999) == .minutes(0))
+        #expect(StatusCard.elapsed(millis: 60_000) == .minutes(1))
+        #expect(StatusCard.elapsed(millis: 3_599_999) == .minutes(59))
+        #expect(StatusCard.elapsed(millis: 3_600_000) == .hours(1))
+        #expect(StatusCard.elapsed(millis: 86_399_999) == .hours(23))
+        #expect(StatusCard.elapsed(millis: 86_400_000) == .days(1))
+        // 음수의 뜻은 부르는 쪽이 정한다(:550) — 여기서는 0 으로 끌어올리기만 한다.
+        #expect(StatusCard.elapsed(millis: -5_000) == .minutes(0))
+    }
+
+    @Test("signal 은 서버 시각을 먼저, 없으면 아이 폰 시각을, 둘 다 없으면 nil 을 준다")
+    func 신호_출처() {
+        let serverAt: Int64 = 1_757_000_000_000
+        let 서버 = StatusCard.signal(status: status(
+            lastSeenAt: serverAt - 3_600_000,
+            lastSeenServerAt: Timestamp(date: Date(timeIntervalSince1970: Double(serverAt) / 1000))
+        ))
+        #expect(서버?.atMillis == serverAt)
+        #expect(서버?.fromServerClock == true)
+        let 기기 = StatusCard.signal(status: status(lastSeenAt: 42))
+        #expect(기기?.atMillis == 42)
+        #expect(기기?.fromServerClock == false)
+        #expect(StatusCard.signal(status: status(lastSeenAt: 0)) == nil)
+    }
 }

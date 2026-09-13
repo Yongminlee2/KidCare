@@ -19,9 +19,9 @@ import Foundation
 /// 같은 서버 보정 시각을 섞으면 오히려 보정 오차(왕복 절반 추정)가 그대로
 /// 오차로 들어온다.
 ///
-/// `recordAnswer` 가 화면 갱신을 겸하지 않는 것에 주의할 것 — 안드로이드는
-/// `recordAnswer()` 가 `GuardianMainActivity.refreshBanner()` 도 함께 부르지만,
-/// 이 앱은 그 배너 화면 자체가 아직 없다(Phase 4 의 몫) — 여기서는 기록만 한다.
+/// `recordAnswer` 는 화면 갱신을 겸하지 않는다 — 배너를 곧바로 다시 판정하려면 부른
+/// 쪽이 `대답이_기록되면` 훅(→ `DisconnectBanner.다시_판정한다()`)도 함께 불러야 한다.
+/// 안드로이드 `recordAnswer()` 가 `refreshBanner()` 를 함께 부르는 것과 같다.
 ///
 /// `UserDefaults` 를 주입받는 이유는 `RoleStore` 와 같다 — 기본 저장소를 쓰면
 /// 테스트가 시뮬레이터에 남긴 값이 다음 실행/다른 테스트의 상태가 된다.

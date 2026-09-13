@@ -10,36 +10,58 @@ import SwiftUI
 struct GuardianRootView: View {
 
     @State private var mapViewModel: MapViewModel
+    /// 무응답 배너의 유일한 주인(안드로이드 `GuardianMainActivity` :53-56).
+    @State private var banner: DisconnectBanner
+    @Environment(\.scenePhase) private var scenePhase
     /// 안드로이드 `onSaveInstanceState` 의 `KEY_SELECTED_TAB`(:459-462) 자리. 처음엔 지도(:172).
     @SceneStorage("guardian.selectedTab") private var selectedTab: GuardianTab = .map
 
     init(familyId: String, childUid: String?) {
-        _mapViewModel = State(initialValue: MapViewModel(familyId: familyId, childUid: childUid))
+        let map = MapViewModel(familyId: familyId, childUid: childUid)
+        let banner = DisconnectBanner(childUid: childUid)
+        // 둘 다 같은 init 안에서 만들어 서로를 잇는다. SwiftUI 가 init 을 여러 번 불러도
+        // @State 는 첫 쌍만 붙들므로 살아남는 지도 뷰모델은 살아남는 배너를 가리킨다.
+        map.대답이_기록되면 = { [weak banner] in banner?.다시_판정한다() }
+        _mapViewModel = State(initialValue: map)
+        _banner = State(initialValue: banner)
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            ChildMapView(viewModel: mapViewModel)
-                .tabItem { Label(GuardianTab.map.title, systemImage: GuardianTab.map.systemImage) }
-                .tag(GuardianTab.map)
-            TabPlaceholderView(tab: .alert)
-                .tabItem { Label(GuardianTab.alert.title, systemImage: GuardianTab.alert.systemImage) }
-                .tag(GuardianTab.alert)
-            TabPlaceholderView(tab: .control)
-                .tabItem { Label(GuardianTab.control.title, systemImage: GuardianTab.control.systemImage) }
-                .tag(GuardianTab.control)
-            TabPlaceholderView(tab: .schedule)
-                .tabItem { Label(GuardianTab.schedule.title, systemImage: GuardianTab.schedule.systemImage) }
-                .tag(GuardianTab.schedule)
-            TabPlaceholderView(tab: .place)
-                .tabItem { Label(GuardianTab.place.title, systemImage: GuardianTab.place.systemImage) }
-                .tag(GuardianTab.place)
+        // 배너는 탭 컨테이너 **밖**, 위에 둔다(activity_guardian_main.xml:65-73) — 어느 탭을
+        // 보든 같은 자리에 같은 문장이다.
+        VStack(spacing: 0) {
+            if let 문구 = banner.문구 {
+                DisconnectBannerView(text: 문구)
+            }
+            TabView(selection: $selectedTab) {
+                ChildMapView(viewModel: mapViewModel)
+                    .tabItem { Label(GuardianTab.map.title, systemImage: GuardianTab.map.systemImage) }
+                    .tag(GuardianTab.map)
+                TabPlaceholderView(tab: .alert)
+                    .tabItem { Label(GuardianTab.alert.title, systemImage: GuardianTab.alert.systemImage) }
+                    .tag(GuardianTab.alert)
+                TabPlaceholderView(tab: .control)
+                    .tabItem { Label(GuardianTab.control.title, systemImage: GuardianTab.control.systemImage) }
+                    .tag(GuardianTab.control)
+                TabPlaceholderView(tab: .schedule)
+                    .tabItem { Label(GuardianTab.schedule.title, systemImage: GuardianTab.schedule.systemImage) }
+                    .tag(GuardianTab.schedule)
+                TabPlaceholderView(tab: .place)
+                    .tabItem { Label(GuardianTab.place.title, systemImage: GuardianTab.place.systemImage) }
+                    .tag(GuardianTab.place)
+            }
+            // themes.xml:186-195 — 탭 띠 바탕 paper_card, 선택 항목 sky. 지도 위에서도 탭 띠가
+            // 투명해지지 않게 바탕을 늘 보이게 둔다(안드로이드는 그림자 대신 선으로 띠를 뗀다).
+            .tint(KidCarePalette.sky)
+            .toolbarBackground(KidCarePalette.paperCard, for: .tabBar)
+            .toolbarBackground(.visible, for: .tabBar)
         }
-        // themes.xml:186-195 — 탭 띠 바탕 paper_card, 선택 항목 sky. 지도 위에서도 탭 띠가
-        // 투명해지지 않게 바탕을 늘 보이게 둔다(안드로이드는 그림자 대신 선으로 띠를 뗀다).
-        .tint(KidCarePalette.sky)
-        .toolbarBackground(KidCarePalette.paperCard, for: .tabBar)
-        .toolbarBackground(.visible, for: .tabBar)
+        // 안드로이드 onStart 에서 곧바로 한 번 판정하고 1분마다, onStop 에서 멈춘다(:395-421).
+        // scenePhase 가 바뀌면 이 task 가 취소되고 새로 시작한다.
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            await banner.주기적으로_판정한다()
+        }
         .onDisappear {
             mapViewModel.명령_추적을_정리한다()
             mapViewModel.실시간_추적을_정리한다()

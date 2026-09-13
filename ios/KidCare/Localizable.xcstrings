@@ -287,6 +287,17 @@
         }
       }
     },
+    "guardian_disconnect_banner": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 보낸 요청에 애기폰이 아직 대답하지 않았어요\n아이 폰에서 '우리아이 지킴이' 앱을 한 번 열어주세요. 그러면 다시 이어져요."
+          }
+        }
+      }
+    },
     "guardian_start_join_family": {
       "extractionState": "manual",
       "localizations": {

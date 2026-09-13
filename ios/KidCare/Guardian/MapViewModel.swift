@@ -181,7 +181,7 @@ final class MapViewModel {
     private var commandTimeoutTask: Task<Void, Never>?
 
     /// "언제 물어봤고 언제 대답을 받았나" — `DisconnectRule`(무응답 배너)의 재료.
-    /// 배너 UI 자체는 Phase 4 의 몫이라 여기서는 기록만 한다(브리프 규칙 5).
+    /// 배너는 `GuardianRootView` 의 `DisconnectBanner` 가 판정한다.
     private let requestLog: RequestLog
 
     /// 명령을 실제로 보내는 방법. 기본값은 프로덕션이 그대로 쓰는
@@ -458,6 +458,7 @@ final class MapViewModel {
             let 읽은_것 = try await dayLoad(familyId, childUid, dayKey)
             guard generation == loadGeneration else { return } // 이미 낡은 응답 — 무시
             상태 = 읽은_것.status
+            상태가_물음보다_새로우면_대답으로_친다()
             하루기록 = 읽은_것.trail
             // Task 8: 정본은 안드로이드 drawRoute 의 `hiddenRouteStarts.retainAll(validKeys)`
             // — 날짜를 넘기면(또는 다시 읽으면) 새 하루의 구간과 겹치지 않는
@@ -544,7 +545,11 @@ final class MapViewModel {
             // C1-b: 오프셋을 갱신해 둬야 `시계를_돈다()` 가 이후 60초마다 Firestore
             // 없이 이 기준으로 "지금"을 다시 계산할 수 있다.
             서버_오프셋 = 서버시각 - 이_시각의_기기시계
+            서버_오프셋을_쟀나 = true
         }
+        // 첫 상태는 오프셋을 재기 전에 읽혀 위(`상태와_그날_경로를_읽는다`)에서는 판단을
+        // 건너뛰었다 — 오프셋이 생긴 지금 한 번 더 본다.
+        상태가_물음보다_새로우면_대답으로_친다()
     }
 
     /// 화면이 떠 있는 동안 [서버기준_지금] 을 주기적으로 다시 잰다(리뷰 C1-b).
@@ -727,8 +732,8 @@ final class MapViewModel {
     }
 
     /// 60초 무응답. 정본은 안드로이드 `track`(:443-446). 여기서는 `RequestLog`
-    /// 에 응답을 적지 않는다 — 그래야 `DisconnectRule`(무응답 배너, Phase 4)이
-    /// 이 무응답을 근거로 배너를 띄울 수 있다(브리프 규칙 5).
+    /// 에 응답을 적지 않는다 — 그래야 `DisconnectRule` 이 이 무응답을 근거로 배너를
+    /// 띄울 수 있다. 배너는 `GuardianRootView` 의 `DisconnectBanner` 가 판정한다.
     ///
     /// **C1(리뷰): 서버 시각을 이 순간 새로 잰다.** 캐시된 [서버기준_지금] 을 그대로
     /// 쓰면 화면이 오래 떠 있을수록 "방금 전"이 거짓말이 된다(리뷰 shot6 —
@@ -752,6 +757,7 @@ final class MapViewModel {
         // 이 오프셋을 그대로 이어받는다.
         서버기준_지금 = 잰_시각
         서버_오프셋 = 잰_시각 - 이_시각의_기기시계
+        서버_오프셋을_쟀나 = true
         // "마지막 신호"는 항상 이 함수 하나만 거친다(`Documents.swift` 의 규율).
         let signal: LastSignal = 상태.map { StatusCard.lastSignal(status: $0, nowMillis: 잰_시각) } ?? .never
         commandProgress = .timedOut(lastSeen: signal)
@@ -878,13 +884,34 @@ final class MapViewModel {
         경로_전체_보기_요청 += 1
     }
 
-    /// 아이 폰이 대답했다는 사실을 남긴다. 정본은 안드로이드 `recordAnswer`(:682) —
-    /// 다만 배너 화면(`GuardianMainActivity.refreshBanner`) 자체는 Phase 4 의 몫이라
-    /// 여기서는 기록만 한다(브리프 "Port the recording; the banner UI itself is
-    /// Phase 4").
+    /// 대답을 적은 직후 부른다. 정본은 안드로이드 `recordAnswer` 가
+    /// `GuardianMainActivity.refreshBanner()` 를 함께 부르는 것(MapTimelineFragment.kt:682-685).
+    /// `GuardianRootView` 가 채운다 — 비어 있어도 배너의 1분 주기 판정이 결국 따라잡는다.
+    var 대답이_기록되면: (@MainActor () -> Void)?
+
+    /// 아이 폰이 대답했다는 사실을 남기고 배너를 즉시 다시 판정하게 한다.
+    /// 배너는 `GuardianRootView` 의 `DisconnectBanner` 가 판정한다.
     private func recordAnswer() {
         guard let childUid else { return }
         requestLog.recordAnswer(childUid)
+        대답이_기록되면?()
+    }
+
+    /// 서버 오프셋을 한 번이라도 쟀는가. 재기 전에는 아래 비교에 서버 시각과 기기 시각이
+    /// 섞여 들어가므로 판단하지 않는다.
+    private var 서버_오프셋을_쟀나 = false
+
+    /// 부모가 마지막으로 물어본 **뒤에** 쓰인 상태 문서라면 그 자체가 "애기폰이 살아 있다"는
+    /// 대답이다(늦게 살아난 폰의 안전 업로드일 수도 있다). 정본은 안드로이드
+    /// `renderStatus`(MapTimelineFragment.kt:750-757) — 두 시계를 직접 비교하지 않고, 서버
+    /// 기준 경과를 기기 시계로 되돌려 `RequestLog`(기기 시계)와 비교한다.
+    private func 상태가_물음보다_새로우면_대답으로_친다() {
+        guard 서버_오프셋을_쟀나, let childUid, let 상태, let 신호 = StatusCard.signal(status: 상태) else { return }
+        let 기기시계 = Int64(Date().timeIntervalSince1970 * 1000)
+        let 경과 = (기기시계 + 서버_오프셋) - 신호.atMillis
+        if 기기시계 - 경과 > requestLog.lastRequestAt(childUid: childUid) {
+            recordAnswer()
+        }
     }
 
     /// 자녀 폰이 `error` 필드에 남긴 값은 사람이 읽는 문장이 아니라 코드다. 정본은
@@ -1123,6 +1150,8 @@ final class MapViewModel {
             return
         }
         상태 = status
+        // 실시간 스냅샷도 안드로이드에서는 같은 `renderStatus`(:750-757)를 지나 대답으로 친다.
+        상태가_물음보다_새로우면_대답으로_친다()
         // M3 와 같은 신호 — 마커가 새 위치로 따라가야 한다(브리프 "the marker follows").
         카메라를_다시_맞춰야_한다 = true
         let 정확도 = max(Int(status.accuracy.rounded()), 0)
