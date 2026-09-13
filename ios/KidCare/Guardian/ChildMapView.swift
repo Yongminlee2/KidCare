@@ -66,17 +66,24 @@ struct ChildMapView: View {
                     nowMillis: viewModel.서버기준_지금,
                     hasChild: childUid != nil,
                     loadError: viewModel.오류,
-                    commandStatusText: viewModel.명령_상태_문구,
-                    isCommandBusy: viewModel.commandProgress.isInFlight
+                    // Task 7: 실시간 추적이 켜져 있는 동안(off 가 아닌 동안)에는
+                    // 그 문구가 '지금 위치 확인' 진행 문구보다 우선한다 — 두
+                    // 버튼이 인터락되어(위치확인 버튼이 실시간 추적 중엔 막힌다)
+                    // 동시에 보여줄 실제 경합이 없다.
+                    commandStatusText: viewModel.실시간_상태_문구 ?? viewModel.명령_상태_문구,
+                    isCommandBusy: viewModel.commandProgress.isInFlight || viewModel.liveTrackingState == .starting
                 )
             }
             .overlay(alignment: .bottomTrailing) {
                 // 정본은 안드로이드 `updateMapControls`(:1204) — 버튼 하단 여백을
                 // 패널의 지금 높이에 맞춰 띄운다(고정 dp 가 아니다). 패널이
                 // 접혀 있어도 뼈대(136)만큼은 항상 비켜 서 있어야 한다.
-                지금위치_버튼
-                    .padding(.trailing, 14)
-                    .padding(.bottom, 패널_전체_높이 + 12)
+                VStack(spacing: 10) {
+                    실시간_버튼
+                    지금위치_버튼
+                }
+                .padding(.trailing, 14)
+                .padding(.bottom, 패널_전체_높이 + 12)
             }
             .overlay(alignment: .bottom) {
                 // Task 6: 패널이 지도 위에 뜬다(예전의 VStack 나열이 아니다) —
@@ -95,7 +102,13 @@ struct ChildMapView: View {
         // '지금 위치 확인'의 명령 리스너·60초 타이머는 `.task` 처럼 스스로 걷히지
         // 않는다(그 값이 구독이 아니라 명시적인 `ListenerRegistration` 이라서다) —
         // 화면이 사라질 때 반드시 여기서 정리한다(브리프 "Testability").
-        .onDisappear { viewModel.명령_추적을_정리한다() }
+        .onDisappear {
+            viewModel.명령_추적을_정리한다()
+            // Task 7: 화면이 사라질 때 실시간 세션의 리스너·타이머도 반드시
+            // 뗀다(브리프 "Remove it ... when the screen disappears") — 안 하면
+            // 화면을 나가도 아이 상태 구독이 몇 초마다 계속 읽기를 태운다.
+            viewModel.실시간_추적을_정리한다()
+        }
     }
 
     /// '지금 위치 확인' 버튼. 정본은 안드로이드 `fragment_map_timeline.xml` 의
@@ -118,5 +131,34 @@ struct ChildMapView: View {
         // look disabled").
         .opacity(viewModel.위치확인_버튼_활성화 ? 1 : 0.48)
         .accessibilityLabel(Text("map_locate_now"))
+    }
+
+    /// Task 7: 실시간 보기 토글. 정본은 안드로이드 `liveTrackingButton`(:906) —
+    /// 켜짐/전환 중/꺼짐 세 배경색까지는 옮기지 않지만(이 앱은 시스템 accent
+    /// 하나로 켜짐을 표시한다), 안드로이드처럼 **보이는 문구**(`실시간_버튼_문구`)
+    /// 와 접근성 문구(`실시간_버튼_접근성_문구`)를 둘 다 옮긴다 — 아이콘 하나뿐인
+    /// '지금 위치 확인' 버튼과 달리, 이 버튼은 지금 상태(꺼짐/연결 중/켜짐)를
+    /// 문구로도 보여줘야 하는 세 갈래짜리 토글이라서다(브리프).
+    private var 실시간_버튼: some View {
+        Button {
+            Task { await viewModel.실시간_추적을_토글한다() }
+        } label: {
+            Label {
+                Text(viewModel.실시간_버튼_문구)
+                    .font(.caption.weight(.semibold))
+            } icon: {
+                Image(systemName: viewModel.liveTrackingState == .off ? "dot.radiowaves.left.and.right" : "dot.radiowaves.left.and.right.slash")
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(viewModel.liveTrackingState == .off ? Color(.systemGray5) : Color.green)
+        .foregroundStyle(viewModel.liveTrackingState == .off ? Color.primary : Color.white)
+        .disabled(childUid == nil)
+        // 비활성 상태가 눈에 보여야 한다 — 안드로이드 `renderLiveTrackingState` 의
+        // alpha 0.55 와 같은 값.
+        .opacity(childUid == nil ? 0.55 : 1)
+        .accessibilityLabel(Text(viewModel.실시간_버튼_접근성_문구))
     }
 }

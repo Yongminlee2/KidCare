@@ -420,6 +420,14 @@ enum CommandType {
     static let locateNow = "locate_now"
     /// [locateNow] 가 위치를 못 잡았을 때 자녀 폰이 [CommandDoc.error] 에 적는 코드.
     static let errorNoFix = "locate_no_fix"
+    /// Task 7(실시간 보기). 정본은 안드로이드 `CommandType.START_LIVE_TRACKING`/
+    /// `STOP_LIVE_TRACKING`/`PAYLOAD_DURATION_SECONDS`/`PAYLOAD_SESSION_ID`
+    /// (`core/model/Documents.kt:238-241`) — 값이 하나라도 다르면 자녀 폰이 이
+    /// 명령을 못 알아본다.
+    static let startLiveTracking = "start_live_tracking"
+    static let stopLiveTracking = "stop_live_tracking"
+    static let payloadDurationSeconds = "durationSeconds"
+    static let payloadSessionId = "sessionId"
 }
 
 /// [CommandDoc.state] 값들. 정본은 안드로이드 `CommandState` 오브젝트.

@@ -59,6 +59,25 @@ enum CommandProgress: Equatable {
     }
 }
 
+/// Task 7: '실시간 보기' 토글이 지금 어디에 있는지. 정본은 안드로이드
+/// `liveTrackingActive`/`liveTrackingBusy` 두 불리언(`MapTimelineFragment.kt`)을
+/// 이 열거형 하나로 합친 것 — `CommandProgress` 가 '지금 위치 확인' 왕복의 갈래를
+/// 하나의 타입으로 묶는 것과 같은 이유다.
+///
+/// `.on(until:)` 의 `until` 은 10분 세션이 자동 종료되는 예상 시각(기기 시계
+/// 기준의 추정값)이다 — 지금은 화면에 이 값을 보여주는 자리가 없다(카운트다운은
+/// Phase 4 몫), 상태 기계가 "언제 꺼지는지"를 스스로 알고 있게만 해 둔다.
+enum LiveTrackingState: Equatable {
+    case off
+    case starting
+    case on(until: Int64)
+    /// 세션을 정리하는 아주 짧은 순간(리스너·타이머를 떼고, 종료 명령을 쏘는
+    /// 자리). 안드로이드는 이 정리가 완전히 동기라 별도 상태가 없지만, 이
+    /// 열거형은 "켜짐/꺼지는 중" 둘 다 "전환 중"으로 묶어 잠그는 인터락 규칙
+    /// (브리프: "on 이거나 전환 중이면 막는다")을 표현하려고 이 갈래를 그대로 둔다.
+    case stopping
+}
+
 @Observable
 @MainActor
 final class MapViewModel {
@@ -181,9 +200,58 @@ final class MapViewModel {
     private let tickIntervalMillis: Int64
 
     /// Task 7(10분 실시간 추적)이 켜져 있거나 켜지는/꺼지는 중이면 이 버튼도 막는다는
-    /// 안드로이드 `setLocateButtonEnabled`(:709)의 세 번째 조건 자리다. 그 기능
-    /// 자체가 아직 없어 항상 false — Task 7 이 이 프로퍼티를 실제 상태로 바꿔 낀다.
-    private(set) var liveTrackingActiveOrTransitioning = false
+    /// 안드로이드 `setLocateButtonEnabled`(:709)의 세 번째 조건 자리다.
+    var liveTrackingActiveOrTransitioning: Bool { liveTrackingState != .off }
+
+    // MARK: - Task 7: 실시간 추적 상태
+
+    private(set) var liveTrackingState: LiveTrackingState = .off
+    /// Task 7 전용 세대 번호. 시작 왕복(발행 확인 15초·응답 60초)과 그 뒤 상태
+    /// 구독·10분 만료 타이머까지 **전부 이 하나**로 지킨다 — 정본인 안드로이드
+    /// `liveCommandGeneration` 이 `trackLiveStart`/`beginLiveStatusSubscription`/
+    /// 만료 타이머 세 곳 모두에서 같은 변수를 검사하는 것과 같다. `loadGeneration`·
+    /// `commandGeneration`(지금 위치 확인)과는 다른 상태 기계라 변수를 공유하지
+    /// 않는다 — 원리(세대를 올리고, 캡처해 두고, 응답이 왔을 때 최신인지 다시
+    /// 확인한다)만 재사용한다. **낡은 세대의 시작-완료 확인이 늦게 와도 이 세대가
+    /// 이미 다르면 추적을 다시 켜지 않는다** — `LiveTrackingTests` 가 이 가드를
+    /// 실제로 지워서 증명한다.
+    private var liveCommandGeneration = 0
+    private var liveSessionId: String?
+    /// 시작 명령 확인(ack)을 기다리는 리스너 — 안드로이드 `trackLiveStart`(:508) 자리.
+    private var liveCommandListener: ListenerRegistration?
+    private var liveCommandTimeoutTask: Task<Void, Never>?
+    /// 켜진 뒤 아이 상태를 구독하는 리스너 — **이 화면에서 유일하게 상시 구독이
+    /// 옳은 자리**(브리프). 끄기·만료·시작 실패·화면 사라짐 네 곳 모두에서 반드시
+    /// 뗀다 — 남겨두면 Spark 무료 읽기 한도를 몇 초마다 갉아먹는다.
+    private var liveStatusListener: ListenerRegistration?
+    private var liveSessionTimeoutTask: Task<Void, Never>?
+    /// 구독을 붙이기 **직전**의 마지막 신호 시각. 정본은 안드로이드 `liveBaselineAt`
+    /// — 구독이 처음 돌려주는(구독 이전에 이미 있던) 캐시된 문서를 실시간 신호로
+    /// 착각해 "정확도 Nm · 배터리 N%" 를 성급하게 보여주지 않게 막는다.
+    private var liveBaselineAt: Int64 = .min
+    /// `.on` 상태에서 실제로 새 신호를 받았을 때만 채워지는 상태 줄 문구
+    /// (`map_live_active_status`). `nil` 이면(구독 직후, 또는 캐시된 옛 문서만
+    /// 왔을 때) [실시간_상태_문구] 가 `map_live_waiting` 으로 물러난다 — 브리프
+    /// "받은 만큼만 보여준다" 규칙, 실제로 리스너가 배달한 신호보다 화면이 더
+    /// 신선한 척하지 않는다.
+    private var 실시간_최근_문구: String?
+
+    /// Task 7 이 켜져 있는 동안 아이 상태 구독을 붙이는 방법. 기본값은 프로덕션이
+    /// 쓰는 `FamilyRepository.observeChildStatus` 다. `commandObserve` 와 같은
+    /// 이유로 주입 가능하게 열어 뒀다 — 테스트가 실제 Firestore 없이 신호 도착
+    /// 순서를 직접 정한다.
+    private let liveStatusObserve: @Sendable (
+        _ familyId: String, _ childUid: String,
+        _ onChange: @escaping (ChildStatusDoc?) -> Void, _ onError: @escaping (Error) -> Void
+    ) -> ListenerRegistration
+    /// 10분 세션이 자동 종료되기까지 기다리는 시간(ms). 안드로이드
+    /// `LIVE_SESSION_DURATION_SECONDS`(600초)와 같은 값 — `commandSleep` 을 통해
+    /// **실제로 기다리는** 시간이라, 테스트는 이 값을 짧게 주입하거나 `commandSleep`
+    /// 가짜로 즉시 지나가게 한다.
+    private let liveSessionTimeoutMillis: Int64
+    /// 시작 명령의 `durationSeconds` 페이로드에 적을 값(초). 정본은 안드로이드
+    /// `LIVE_SESSION_DURATION_SECONDS`.
+    static let liveSessionDurationSeconds: Int64 = 600
 
     /// M3(리뷰): `done` 직후 카메라가 아이의 새 위치로 다시 움직여야 한다는 신호.
     /// 정본은 안드로이드 `focusChildOnNextLoad`(:157, :420, :807) — 마커가 이미
@@ -223,6 +291,11 @@ final class MapViewModel {
             _ familyId: String, _ uid: String?
         ) async throws -> Int64 = { familyId, uid in try await FamilyRepository.serverNow(familyId: familyId, uid: uid) },
         tickIntervalMillis: Int64 = 60_000,
+        liveStatusObserve: @escaping @Sendable (
+            _ familyId: String, _ childUid: String,
+            _ onChange: @escaping (ChildStatusDoc?) -> Void, _ onError: @escaping (Error) -> Void
+        ) -> ListenerRegistration = FamilyRepository.observeChildStatus,
+        liveSessionTimeoutMillis: Int64 = 600_000,
         dayLoad: @escaping @Sendable (
             _ familyId: String, _ childUid: String, _ dayKey: String
         ) async throws -> (status: ChildStatusDoc?, trail: TrailDoc?) = MapViewModel.기본_하루_읽기
@@ -238,6 +311,8 @@ final class MapViewModel {
         self.answerTimeoutMillis = answerTimeoutMillis
         self.commandServerNow = commandServerNow
         self.tickIntervalMillis = tickIntervalMillis
+        self.liveStatusObserve = liveStatusObserve
+        self.liveSessionTimeoutMillis = liveSessionTimeoutMillis
         self.dayLoad = dayLoad
         dayKey = DayPicker.todayKey(zone: zone, nowMillis: Int64(Date().timeIntervalSince1970 * 1000))
     }
@@ -674,6 +749,257 @@ final class MapViewModel {
     func 명령_추적을_정리한다() {
         stopCommandTracking()
         commandGeneration += 1
+    }
+
+    // MARK: - Task 7: 실시간 추적 — 동작
+
+    /// 실시간 버튼의 문구. 정본은 안드로이드 `renderLiveTrackingState`(:642) —
+    /// 색·아이콘까지는 옮기지 않는다(이 앱의 버튼은 시스템 스타일을 쓴다),
+    /// 문구·접근성 세 갈래만 옮긴다.
+    var 실시간_버튼_문구: String {
+        switch liveTrackingState {
+        case .starting: return String(localized: "map_live_button_connecting")
+        case .on, .stopping: return String(localized: "map_live_stop")
+        case .off: return String(localized: "map_live_start")
+        }
+    }
+
+    var 실시간_버튼_접근성_문구: String {
+        switch liveTrackingState {
+        case .starting, .stopping: return String(localized: "map_live_cancel_description")
+        case .on: return String(localized: "map_live_stop_description")
+        case .off: return String(localized: "map_live_start_description")
+        }
+    }
+
+    /// 실시간 추적의 상태 줄 문구. `명령_상태_문구`(지금 위치 확인)와 같은
+    /// "single status line" 규율을 따르되, 켜져 있는 동안(off 가 아닌 동안)에는
+    /// 이 문구가 우선한다 — 위치확인 버튼이 실시간 추적 중엔 이미 막혀 있어
+    /// (`위치확인_버튼_활성화`) 두 문구가 동시에 보여줄 실제 경합이 없다.
+    var 실시간_상태_문구: String? {
+        switch liveTrackingState {
+        case .off, .stopping: return nil
+        case .starting: return String(localized: "map_live_connecting")
+        case .on: return 실시간_최근_문구 ?? String(localized: "map_live_waiting")
+        }
+    }
+
+    /// 실시간 버튼. 정본은 안드로이드 `liveTrackingButton.setOnClickListener`(:906) —
+    /// 켜져 있거나 전환 중이면 끄고, 아니면 켠다.
+    func 실시간_추적을_토글한다() async {
+        if liveTrackingState == .off {
+            await 실시간_추적을_시작한다()
+        } else {
+            실시간_추적을_끈다()
+        }
+    }
+
+    /// 실시간 추적 시작. 정본은 안드로이드 `startLiveTracking`(:459). 세션마다
+    /// 새 `sessionId` 를 발급해 아이 폰이 옛 세션의 명령을 무시하게 한다(브리프).
+    func 실시간_추적을_시작한다() async {
+        guard let childUid else {
+            오류 = String(localized: "map_no_child")
+            return
+        }
+        stopLiveCommandTracking()
+        liveCommandGeneration += 1
+        let generation = liveCommandGeneration
+        let sessionId = UUID().uuidString
+        liveSessionId = sessionId
+        liveBaselineAt = 상태?.at ?? .min
+        실시간_최근_문구 = nil
+        오류 = nil
+        liveTrackingState = .starting
+
+        let familyId = self.familyId
+        let send = commandSend
+        let sleep = commandSleep
+        let sendTimeout = sendTimeoutMillis
+        let durationSeconds = Self.liveSessionDurationSeconds
+
+        do {
+            // 발행(서버 확인)을 15초 기다리다 못 받으면 큐잉이다(브리프 규칙 —
+            // '지금 위치 확인'과 같은 15초 규칙).
+            let commandId = try await Self.firstToFinish(timeoutMillis: sendTimeout, sleep: sleep) {
+                try await send(familyId, childUid, CommandType.startLiveTracking, [
+                    CommandType.payloadDurationSeconds: String(durationSeconds),
+                    CommandType.payloadSessionId: sessionId,
+                ])
+            }
+            guard generation == liveCommandGeneration else { return } // 그새 다른 요청이 시작됐다
+            guard let commandId else {
+                failLiveStart(String(localized: "control_command_queued"), generation: generation)
+                return
+            }
+            trackLiveStart(childUid: childUid, commandId: commandId, generation: generation)
+        } catch is CancellationError {
+            return
+        } catch {
+            guard generation == liveCommandGeneration else { return }
+            failLiveStart(errorMessage(error), generation: generation)
+        }
+    }
+
+    /// 시작 명령 문서 하나에 리스너를 붙이고 60초 무응답 타이머를 건다. 정본은
+    /// 안드로이드 `trackLiveStart`(:508).
+    private func trackLiveStart(childUid: String, commandId: String, generation: Int) {
+        stopLiveCommandTracking()
+        let familyId = self.familyId
+        let observe = commandObserve
+        liveCommandListener = observe(familyId, childUid, commandId, { [weak self] doc in
+            Task { @MainActor in self?.handleLiveCommandChange(doc, childUid: childUid, generation: generation) }
+        }, { [weak self] error in
+            Task { @MainActor in self?.failLiveStart(errorMessage(error), generation: generation) }
+        })
+
+        let sleep = commandSleep
+        let answerTimeout = answerTimeoutMillis
+        liveCommandTimeoutTask = Task { @MainActor [weak self] in
+            await sleep(answerTimeout)
+            guard !Task.isCancelled else { return } // stopLiveCommandTracking() 이 취소했다
+            self?.failLiveStart(String(localized: "control_command_timeout"), generation: generation)
+        }
+    }
+
+    private func handleLiveCommandChange(_ doc: CommandDoc, childUid: String, generation: Int) {
+        guard generation == liveCommandGeneration else { return } // 이미 낡은 응답 — 새 요청이 시작됐다
+        switch doc.state {
+        case CommandState.done:
+            beginLiveStatusSubscription(childUid: childUid, generation: generation)
+        case CommandState.failed:
+            failLiveStart(childErrorText(doc.error), generation: generation)
+        default:
+            break // pending/delivered — 아직 기다린다.
+        }
+    }
+
+    /// 시작 확인을 받은 뒤 아이 상태를 구독한다. 정본은 안드로이드
+    /// `beginLiveStatusSubscription`(:540) — **이 화면에서 유일하게 상시 구독이
+    /// 옳은 자리다**(브리프). 켜진 뒤 10분 자동 종료 타이머도 여기서 건다.
+    private func beginLiveStatusSubscription(childUid: String, generation: Int) {
+        stopLiveCommandTracking()
+        실시간_최근_문구 = nil
+        liveTrackingState = .on(until: 서버기준_지금 + liveSessionTimeoutMillis)
+
+        let familyId = self.familyId
+        let observe = liveStatusObserve
+        liveStatusListener?.remove()
+        liveStatusListener = observe(familyId, childUid, { [weak self] status in
+            Task { @MainActor in self?.handleLiveStatusChange(status, generation: generation) }
+        }, { [weak self] error in
+            Task { @MainActor in self?.handleLiveStatusError(error, generation: generation) }
+        })
+
+        let sleep = commandSleep
+        let duration = liveSessionTimeoutMillis
+        liveSessionTimeoutTask?.cancel()
+        liveSessionTimeoutTask = Task { @MainActor [weak self] in
+            await sleep(duration)
+            guard !Task.isCancelled else { return }
+            self?.handleLiveSessionTimeout(generation: generation)
+        }
+    }
+
+    /// 정본은 안드로이드 `beginLiveStatusSubscription` 의 `onChange` 갈래(:551-563).
+    ///
+    /// **상태 줄이 리스너가 실제로 배달한 신호보다 신선한 척하지 않는다**(브리프).
+    /// 구독 직후 되돌아오는, 구독을 붙이기 **전** 캐시된 문서([liveBaselineAt] 이하)는
+    /// 실시간 신호로 보여주지 않고 대기 문구로 물러난다. 실제로 새 신호를 받으면
+    /// [상태] 를 갱신해 둔다 — 그래야 이 세션이 끝난 뒤에도 평소 배터리·마지막
+    /// 신호 문구(`StatusCard.lastSignal` 한 곳)가 이 세션이 받은 값을 반영한다.
+    private func handleLiveStatusChange(_ status: ChildStatusDoc?, generation: Int) {
+        guard generation == liveCommandGeneration, case .on = liveTrackingState else { return }
+        guard let status, status.at > liveBaselineAt else {
+            실시간_최근_문구 = nil // 대기 문구로 되돌아간다
+            return
+        }
+        상태 = status
+        // M3 와 같은 신호 — 마커가 새 위치로 따라가야 한다(브리프 "the marker follows").
+        카메라를_다시_맞춰야_한다 = true
+        let 정확도 = max(Int(status.accuracy.rounded()), 0)
+        실시간_최근_문구 = String(format: String(localized: "map_live_active_status"), 정확도, status.battery)
+    }
+
+    private func handleLiveStatusError(_ error: Error, generation: Int) {
+        guard generation == liveCommandGeneration else { return }
+        오류 = errorMessage(error)
+    }
+
+    /// 10분 자동 종료. 정본은 안드로이드 `beginLiveStatusSubscription` 의 타이머
+    /// 갈래(:565-570).
+    private func handleLiveSessionTimeout(generation: Int) {
+        guard generation == liveCommandGeneration, case .on = liveTrackingState else { return }
+        stopLiveTrackingCore(sendCommand: true)
+        오류 = String(localized: "map_live_timeout")
+    }
+
+    /// 시작 왕복이 실패했을 때(큐잉·응답 시간 초과·아이 폰 거부·전송 오류) 전체
+    /// 세션을 정리하고 문구를 남긴다. 정본은 안드로이드 `failLiveStart`(:584) —
+    /// `stopLiveTracking()` 을 그대로 부른 뒤 자신의 메시지로 문구를 덮어쓴다.
+    private func failLiveStart(_ message: String, generation: Int) {
+        guard generation == liveCommandGeneration else { return } // 이미 다른 요청이 시작됐다 — 이 실패는 낡았다
+        stopLiveTrackingCore(sendCommand: true)
+        오류 = message
+    }
+
+    /// 실시간 버튼(끄기). 정본은 안드로이드 `stopLiveTracking()` 이 버튼에서
+    /// 불렸을 때의 경로 — 세션을 정리하고 `map_live_stopped` 를 남긴다.
+    func 실시간_추적을_끈다() {
+        let wasRunning = liveTrackingState != .off
+        stopLiveTrackingCore(sendCommand: true)
+        if wasRunning { 오류 = String(localized: "map_live_stopped") }
+    }
+
+    /// 실시간 세션을 실제로 접는다 — 리스너·타이머를 떼고(브리프 "Remove it on
+    /// stop, on session expiry, on failure, and when the screen disappears"의
+    /// 네 자리 전부가 이 함수 하나를 지나간다), 세대를 올려 늦게 오는 콜백을
+    /// 무해하게 만들고, 아이 폰에도 같은 `sessionId` 로 종료 명령을 쏜다(아이
+    /// 폰이 못 받아도 자체 10분 제한으로 돌아간다 — 안드로이드 `stopLiveTracking`
+    /// 주석과 같은 안전망).
+    ///
+    /// 안드로이드처럼 이 정리 자체는 동기다 — 종료 명령 전송은 결과를 기다리지
+    /// 않는 별도 태스크로 쏘아 보낸다(오프라인이어도 부모 쪽 상태는 곧바로
+    /// 정리된다, `stopLiveTracking` 의 `lifecycleScope.launch` 와 같다).
+    private func stopLiveTrackingCore(sendCommand: Bool) {
+        guard liveTrackingState != .off else { return }
+        let sessionId = liveSessionId
+        let targetUid = childUid
+        liveSessionId = nil
+        liveCommandGeneration += 1
+        liveTrackingState = .stopping
+        stopLiveCommandTracking()
+        liveStatusListener?.remove()
+        liveStatusListener = nil
+        liveSessionTimeoutTask?.cancel()
+        liveSessionTimeoutTask = nil
+        실시간_최근_문구 = nil
+        liveTrackingState = .off
+
+        guard sendCommand, let targetUid else { return }
+        let familyId = self.familyId
+        let send = commandSend
+        let sleep = commandSleep
+        let sendTimeout = sendTimeoutMillis
+        let payload: [String: String] = sessionId.map { [CommandType.payloadSessionId: $0] } ?? [:]
+        Task {
+            _ = try? await Self.firstToFinish(timeoutMillis: sendTimeout, sleep: sleep) {
+                try await send(familyId, targetUid, CommandType.stopLiveTracking, payload)
+            }
+        }
+    }
+
+    private func stopLiveCommandTracking() {
+        liveCommandListener?.remove()
+        liveCommandListener = nil
+        liveCommandTimeoutTask?.cancel()
+        liveCommandTimeoutTask = nil
+    }
+
+    /// 화면이 사라질 때 부른다(`명령_추적을_정리한다` 와 같은 자리, `ChildMapView
+    /// .onDisappear`). 정본은 안드로이드 `onDestroyView` 의 `stopLiveTracking()`
+    /// 호출 — 화면을 벗어나며 세션이 켜져 있었다면 아이 폰에도 종료를 알린다.
+    func 실시간_추적을_정리한다() {
+        stopLiveTrackingCore(sendCommand: true)
     }
 
     /// `withTimeoutOrNull` 같은 것. Firestore 쓰기는 취소에 응하지 않으므로

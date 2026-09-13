@@ -397,6 +397,127 @@
         }
       }
     },
+    "map_live_active_status": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 추적 중 · 정확도 약 %1$dm · 배터리 %2$d%%"
+          }
+        }
+      }
+    },
+    "map_live_button_connecting": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 위치  연결 중…"
+          }
+        }
+      }
+    },
+    "map_live_cancel_description": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 위치 연결 중. 눌러서 취소"
+          }
+        }
+      }
+    },
+    "map_live_connecting": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 연결 중…"
+          }
+        }
+      }
+    },
+    "map_live_start": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 위치  OFF"
+          }
+        }
+      }
+    },
+    "map_live_start_description": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 위치 꺼짐. 눌러서 켜기"
+          }
+        }
+      }
+    },
+    "map_live_stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 위치  ON"
+          }
+        }
+      }
+    },
+    "map_live_stop_description": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 위치 켜짐. 눌러서 끄기"
+          }
+        }
+      }
+    },
+    "map_live_stopped": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 보기를 종료했어요. 지도에는 마지막으로 받은 위치가 남아 있어요."
+          }
+        }
+      }
+    },
+    "map_live_timeout": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10분 안전 제한으로 실시간 보기를 종료했어요."
+          }
+        }
+      }
+    },
+    "map_live_waiting": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 위치를 잡는 중이에요. GPS 신호가 잡힐 때까지 잠시 기다려 주세요."
+          }
+        }
+      }
+    },
     "map_locate_no_fix": {
       "extractionState": "manual",
       "localizations": {
