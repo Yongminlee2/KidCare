@@ -158,8 +158,11 @@ ios/KidCare/
 **끝나면 `◀ 오늘 ▶` 로 어제·그제를 넘겨볼 수 있다.** 2단계의 `DayPicker` 가 여기서 처음 쓰인다 — 구조를 돌려주므로 화면이 `Localizable` 로 번역한다.
 
 **Files:**
-- Modify: `ios/KidCare/Guardian/ChildMapView.swift`, `MapViewModel.swift`
-- Test: `ios/KidCareTests/DayHeaderTextTests.swift`
+- Create: `ios/KidCare/Guardian/MapViewModel.swift` (`@Observable`. Task 1~3 이 `ChildMapView` 의 `@State` 에 쌓아 둔 로딩·상태를 여기로 옮긴다)
+- Modify: `ios/KidCare/Guardian/ChildMapView.swift` (상태를 들고 있지 않고 `MapViewModel` 을 그리기만 한다)
+- Test: `ios/KidCareTests/DayHeaderTextTests.swift`, `ios/KidCareTests/MapViewModelTests.swift`
+
+> **계획서 표류 정리.** 이 계획서는 Task 1 부터 `MapViewModel` 을 전제했지만 Task 1~3 은 상태를 `ChildMapView` 의 `@State` 에 쌓았다. Task 5(명령 왕복)·7(실시간 세션)은 상태 기계라 뷰 안에 두면 UI 없이 테스트할 수 없다. 날짜 전환이 "다시 읽기"를 한 곳에 모아야 하므로 여기서 옮긴다. **커밋을 둘로 나눈다** — ① 동작 변화 없이 상태만 옮기기(기존 테스트·화면이 그대로여야 한다), ② 날짜 이동 추가.
 
 **Interfaces:**
 - Consumes: `DayPicker.todayKey/shift/isFuture/header/range`, `DayHeader`
@@ -169,6 +172,7 @@ ios/KidCare/
 
 **미래 날짜로는 못 간다**(`DayPicker.isFuture`). 날짜를 바꾸면 그 날 문서를 다시 읽고 지도와 타임라인을 함께 갈아끼운다.
 
+- [ ] **Step 0: `MapViewModel` 로 상태를 옮긴다 (동작 변화 없음)** — `ChildMapView` 의 `상태`·`하루기록`·`오류`·`아이_이름`·`서버기준_지금` 과 `하루를_읽는다()` 를 `MapViewModel` 로 옮긴다. 뷰는 뷰모델을 그리기만 한다. 기존 테스트가 전부 초록이고 시뮬레이터 화면(경로선·상태 카드·타임라인)이 옮기기 전과 같아야 한다. **이 단계만 따로 커밋한다.**
 - [ ] **Step 1~3: `dayHeaderText` 테스트 → 구현 → 통과** — 7개 요일 이름이 `schedule_day_mon`…`sun` 키를 쓰는지 확인(2단계에서 재사용하기로 한 키).
 - [ ] **Step 4: 버튼을 붙이고 날짜를 넘겨 지도·타임라인이 바뀌는지 확인**
 - [ ] **Step 5: 커밋**
@@ -190,14 +194,18 @@ ios/KidCare/
 - Produces:
   - `CommandRepository.send(familyId:childUid:type:payload:) async throws -> String`
   - `CommandRepository.observeOne(familyId:childUid:commandId:onChange:onError:) -> ListenerRegistration`
-  - `enum CommandProgress { case idle; case sending; case delivering; case done; case failed(String); case timedOut(lastSeen: LastSignal) }`
+  - `enum CommandProgress { case idle; case sending; case queued; case delivering; case done; case failed(String); case timedOut(lastSeen: LastSignal) }`
 
 **정본:** `app/.../core/CommandRepository.kt`, `MapTimelineFragment.locateNow`(:363)와 `track`(:406).
 
-**옮겨야 할 규칙 셋:**
+**옮겨야 할 규칙 다섯** (상수는 `MapTimelineFragment.kt:1316-1320` 에서 그대로):
 1. 보낸 뒤 그 명령 문서 하나를 따라가며 `전달 중…` → `완료` 를 보여준다.
-2. **60초 안에 대답이 없으면** "애기폰이 응답하지 않아요"와 마지막 신호 시각을 함께 띄운다.
-3. `완료` 가 뜻하는 것은 **아이 폰이 done 이라고 적었다**는 것 하나뿐이다 — 코틀린 주석의 이 경고를 함께 옮긴다.
+2. **발행 자체를 `SEND_TIMEOUT_MILLIS = 15_000` 동안 기다리다 못 받으면 실패가 아니라 `.queued`** 로 `control_command_queued` 를 띄운다. 오프라인에서 Firestore 쓰기는 로컬 큐에 들어가 나중에 나가므로 "실패했다"고 말하면 거짓이다(:384-392).
+3. **응답을 `COMMAND_TIMEOUT_MILLIS = 60_000` 안에 못 받으면** `control_command_timeout` 과 마지막 신호 시각을 함께 띄운다(:443-446).
+4. **세대 번호(`commandGeneration`)** — 부모가 버튼을 다시 누르면 앞 명령의 늦게 온 콜백·제한시간을 무시한다(:374, :409, :444). 이게 없으면 두 번째 요청 도중에 첫 요청의 "응답 없음"이 뜬다.
+5. `FAILED` 는 `childErrorText(doc.error)`(:691)로 번역한다 — 예: `ERROR_NO_FIX`("locate_no_fix"). `DONE`·`FAILED` 둘 다 `recordAnswer()`(:682)를 부른다 — **실패도 대답이다**(README "아이가 앱을 강제 종료하면" 절). 이 값이 무응답 배너(`DisconnectRule`)의 재료다.
+
+`완료` 가 뜻하는 것은 **아이 폰이 done 이라고 적었다**는 것 하나뿐이다 — 코틀린 주석의 이 경고를 함께 옮긴다. 상태 기계는 `MapViewModel` 에 두고, 제한시간 두 개는 **주입 가능한 시계/수면 함수**로 받아 테스트가 60초를 실제로 기다리지 않게 한다.
 
 - [ ] **Step 1: 에뮬레이터 상대 테스트를 쓴다** — 명령이 실제로 써지는지, 상태 변화를 리스너가 받는지, 60초 제한시간 갈래(주입 가능한 시계로).
 - [ ] **Step 2: 실패 확인**
