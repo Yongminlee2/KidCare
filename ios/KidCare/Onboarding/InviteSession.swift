@@ -22,6 +22,7 @@ import Observation
 final class InviteSession {
 
     typealias Create = @Sendable (_ familyId: String, _ role: MemberRole, _ previousCode: String?) async throws -> InviteCodeInfo
+    typealias DeleteCode = @Sendable (_ code: String) async throws -> Void
     typealias Fetch = @Sendable (_ familyId: String) async throws -> [FamilyMember]
     typealias Observe = @Sendable (
         _ familyId: String, _ onChange: @escaping ([FamilyMember]) -> Void, _ onError: @escaping (Error) -> Void
@@ -43,6 +44,7 @@ final class InviteSession {
 
     private let familyId: String
     private let create: Create
+    private let deleteCode: DeleteCode
     private let fetch: Fetch
     private let observe: Observe
     private let deviceNow: @Sendable () -> Int64
@@ -68,6 +70,7 @@ final class InviteSession {
         familyId: String,
         role: MemberRole,
         create: @escaping Create = FamilyRepository.createInvite,
+        deleteCode: @escaping DeleteCode = FamilyRepository.deleteInvite,
         fetch: @escaping Fetch = FamilyRepository.fetchMembers,
         observe: @escaping Observe = FamilyRepository.observeMembers,
         deviceNow: @escaping @Sendable () -> Int64 = { Int64(Date().timeIntervalSince1970 * 1000) },
@@ -79,6 +82,7 @@ final class InviteSession {
         self.familyId = familyId
         self.role = role
         self.create = create
+        self.deleteCode = deleteCode
         self.fetch = fetch
         self.observe = observe
         self.deviceNow = deviceNow
@@ -152,6 +156,11 @@ final class InviteSession {
     }
 
     /// "새 번호 받기": 만료 전이어도 새로 발급해 이전 코드를 죽인다(:170-194). 기준 멤버와 감시는 그대로다.
+    ///
+    /// **경주에는 발급만 넣고, 이전 코드 삭제는 새 번호가 이긴 뒤에 따로 부른다**(6단계 통합 검토 I1).
+    /// `firstToFinish` 는 진 작업을 멈추지 않는다. 삭제까지 경주 안에 두면, 20초에 진 발급이 25초에 끝나며
+    /// 화면에 그대로 남은 이전 코드를 서버에서 지운다. 부모가 불러준 그 번호를 아이가 넣으면 "없는 번호"가 된다.
+    /// 안드로이드는 `withTimeout` 이 코루틴을 `set().await()` 에서 취소해 삭제가 돌지 않는다 — 결과를 맞춘다.
     private func 새_번호를_받는다() {
         guard !닫힘, 작업 == nil else { return }
         버튼_활성 = false
@@ -162,11 +171,12 @@ final class InviteSession {
         작업 = Task { [weak self] in
             do {
                 let info = try await firstToFinish(timeoutMillis: Self.setupTimeoutMillis, sleep: sleep) {
-                    try await create(familyId, role, previous)
+                    try await create(familyId, role, nil)
                 }
                 if let self, !self.닫힘, self.작업_세대 == 세대 {
                     if let info {
                         self.번호를_보인다(info)
+                        self.이전_코드를_지운다(previous, 새_코드: info.code)
                     } else {
                         self.진행중 = false
                         self.안내 = String(localized: "pairing_offline")
@@ -183,6 +193,14 @@ final class InviteSession {
             if !self.닫힘 { self.버튼_활성 = true }   // finally (:192-194)
             self.작업 = nil
         }
+    }
+
+    /// 새 번호가 화면에 올라간 뒤에만 부른다. 결과를 기다리지 않는다 — 실패해도 이전 코드는 10분 만료로 죽고,
+    /// 삭제가 매달려도 버튼과 새 번호는 이미 쓸 수 있어야 한다(`createInvite` 의 `try?` 와 같은 판단).
+    private func 이전_코드를_지운다(_ previous: String?, 새_코드: String) {
+        guard let previous, !previous.isEmpty, previous != 새_코드 else { return }
+        let deleteCode = deleteCode
+        Task { try? await deleteCode(previous) }
     }
 
     /// `showCode`(:197-215). 번호가 떴으면 기다리는 상태라 진행 표시를 끈다 — 아이가 언제 폰을 들지는 모른다.

@@ -31,7 +31,7 @@ struct InviteFlowTests {
         #expect(합류.멤버들.map(\.uid) == [child.uid])
     }
 
-    @Test("'새 번호 받기'는 새 코드를 만들고 이전 코드 문서를 지운다(FamilyRepository.createInvite previousCode)")
+    @Test("'새 번호 받기'는 새 코드를 만들고, 새 번호가 뜬 뒤 이전 코드 문서를 지운다(FamilyRepository.deleteInvite)")
     func 새_번호는_옛_코드를_지운다() async throws {
         let guardianUid = try await EmulatorHarness.freshUser()
         let familyId = try await FamilyRepository.createFamily(guardianUid: guardianUid)
@@ -43,7 +43,14 @@ struct InviteFlowTests {
         let first = try #require(session.코드)
         session.버튼을_눌렀다()
         await eventually(timeoutSeconds: 10) { session.코드 != first && session.버튼_활성 }
-        let old = try await Firestore.firestore().collection("inviteCodes").document(first).getDocument(source: .server)
-        #expect(!old.exists)
+        // 삭제는 새 번호를 띄운 뒤 기다리지 않고 쏜다(통합 검토 I1) — 서버에서 사라질 때까지 본다.
+        var 남아있다 = true
+        for _ in 0..<50 {
+            let old = try await Firestore.firestore().collection("inviteCodes").document(first).getDocument(source: .server)
+            남아있다 = old.exists
+            if !남아있다 { break }
+            try await Task.sleep(nanoseconds: 200_000_000)
+        }
+        #expect(!남아있다)
     }
 }

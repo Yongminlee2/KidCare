@@ -20,6 +20,25 @@ struct InviteSessionTests {
         func 기록(_ previous: String?) { 이전_코드들.append(previous) }
     }
 
+    /// 서버의 `inviteCodes` 흉내. 진짜 `FamilyRepository.createInvite` 처럼 발급이 `previousCode` 를 받으면
+    /// 새 코드를 쓴 **뒤에** 그 코드를 지운다 — 옛 세션(경주 안에서 이전 코드를 넘기던 코드)도 같은 가짜로 빨갛게 드러난다.
+    actor 가짜_초대_저장소 {
+        private(set) var 살아있는_코드: Set<String> = []
+        private(set) var 지운_코드: [String] = []
+        private var 순번 = 0
+        func 발급(_ previous: String?) -> String {
+            순번 += 1
+            let code = 순번 == 1 ? "ABC234" : "NEW\(순번)00"
+            살아있는_코드.insert(code)
+            if let previous { 지운다(previous) }
+            return code
+        }
+        func 지운다(_ code: String) {
+            살아있는_코드.remove(code)
+            지운_코드.append(code)
+        }
+    }
+
     @MainActor final class 합류_기록 {
         var 멤버들: [FamilyMember] = []
     }
@@ -39,17 +58,21 @@ struct InviteSessionTests {
         구독: 가짜_멤버_구독 = 가짜_멤버_구독(),
         합류: 합류_기록 = 합류_기록(),
         sleep: @escaping @Sendable (Int64) async -> Void = InviteSessionTests.오래_잔다,
-        create: InviteSession.Create? = nil
+        create: InviteSession.Create? = nil,
+        deleteCode: @escaping InviteSession.DeleteCode = { _ in }
     ) -> InviteSession {
         let now = Self.지금
         let 기준 = [멤버("g1", "guardian"), 멤버("c1", "child")]
+        let 순번 = TestCounter()
         return InviteSession(
             familyId: "fam",
             role: role,
             create: create ?? { _, role, previous in
                 await 기록.기록(previous)
-                return InviteCodeInfo(code: previous == nil ? "ABC234" : "XYZ789", expiresAt: now + expiresIn, role: role)
+                let code = await 순번.next() == 1 ? "ABC234" : "XYZ789"
+                return InviteCodeInfo(code: code, expiresAt: now + expiresIn, role: role)
             },
+            deleteCode: deleteCode,
             fetch: { _ in 기준 },
             observe: { _, onChange, onError in
                 구독.onChange.set(onChange)
@@ -149,16 +172,56 @@ struct InviteSessionTests {
         #expect(!s.진행중)
     }
 
-    @Test("'새 번호 받기'는 이전 코드를 넘겨 새로 받고, 기준 멤버와 감시는 그대로 둔다(:171-194)")
+    @Test("'새 번호 받기'는 새로 받은 번호를 띄운 뒤 이전 코드를 지우고, 기준 멤버와 감시는 그대로 둔다(:171-194)")
     func 새_번호() async {
-        let 기록 = 발급_기록(), 구독 = 가짜_멤버_구독()
-        let s = 만든다(기록: 기록, 구독: 구독)
+        let 기록 = 발급_기록(), 구독 = 가짜_멤버_구독(), 저장소 = 가짜_초대_저장소(), now = Self.지금
+        let s = 만든다(기록: 기록, 구독: 구독, create: { _, role, previous in
+            await 기록.기록(previous)
+            return InviteCodeInfo(code: await 저장소.발급(previous), expiresAt: now + 600_000, role: role)
+        }, deleteCode: { await 저장소.지운다($0) })
         s.시작한다()
         await eventually { s.코드 == "ABC234" && s.버튼_활성 }
         s.버튼을_눌렀다()
-        await eventually { s.코드 == "XYZ789" && s.버튼_활성 }
-        #expect(await 기록.이전_코드들 == [nil, "ABC234"])
+        await eventually { s.코드 == "NEW200" && s.버튼_활성 }
+        // 발급에는 이전 코드를 넘기지 않는다 — 삭제는 새 번호가 받아들여진 뒤 세션이 따로 부른다(통합 검토 I1).
+        #expect(await 기록.이전_코드들 == [nil, nil])
+        for _ in 0..<200 where await 저장소.지운_코드.isEmpty { try? await Task.sleep(nanoseconds: 1_000_000) }
+        #expect(await 저장소.지운_코드 == ["ABC234"])
+        #expect(await 저장소.살아있는_코드 == ["NEW200"])
         #expect(!구독.registration.removed)
+    }
+
+    @Test("시간 초과에 진 '새 번호'가 늦게 끝나도 화면에 떠 있는 이전 코드를 지우지 않는다(통합 검토 I1)")
+    func 늦게_끝난_새_번호는_이전_코드를_지우지_않는다() async {
+        let 저장소 = 가짜_초대_저장소(), 잠_횟수 = TestCounter(), 발급_횟수 = TestCounter()
+        let 문 = TestGate(), 늦은_발급_끝 = TestSignal(), now = Self.지금
+        let s = 만든다(
+            sleep: { _ in
+                if await 잠_횟수.next() == 2 { return }                          // '새 번호' 경주만 곧장 20초가 지난다
+                try? await Task.sleep(nanoseconds: 60_000_000_000)
+            },
+            create: { _, role, previous in
+                if await 발급_횟수.next() == 2 { await 문.wait() }               // 새 번호 발급은 느린 네트워크에 매달린다
+                let code = await 저장소.발급(previous)
+                if await 발급_횟수.value == 2 { await 늦은_발급_끝.fire() }
+                return InviteCodeInfo(code: code, expiresAt: now + 600_000, role: role)
+            },
+            deleteCode: { await 저장소.지운다($0) }
+        )
+        s.시작한다()
+        await eventually { s.코드 == "ABC234" && s.버튼_활성 }
+        s.버튼을_눌렀다()
+        await eventually { s.안내 == String(localized: "pairing_offline") && s.버튼_활성 }
+        #expect(s.코드 == "ABC234")
+
+        // 25초쯤: 매달렸던 발급이 끝나 새 코드 문서를 쓴다.
+        await 문.open()
+        await 늦은_발급_끝.wait()
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        #expect(await 저장소.지운_코드.isEmpty)
+        #expect(await 저장소.살아있는_코드.contains("ABC234"))
+        #expect(s.코드 == "ABC234")
+        #expect(s.안내 == String(localized: "pairing_offline"))
     }
 
     @Test("감시 오류는 안내 자리에 pairing_failed 한 줄, 번호는 그대로(:131-133)")

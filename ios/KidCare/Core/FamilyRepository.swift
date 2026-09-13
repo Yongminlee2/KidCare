@@ -284,9 +284,15 @@ enum FamilyRepository {
         if let previousCode, !previousCode.isEmpty, previousCode != code {
             // 실패해도 넘어간다 — 옛 코드가 남는 것은 만료로 죽지만, 여기서 던지면
             // 방금 발급한 새 코드를 화면이 못 받는다.
-            try? await db.collection("inviteCodes").document(previousCode).delete()
+            try? await deleteInvite(code: previousCode)
         }
         return InviteCodeInfo(code: code, expiresAt: expiresAt, role: role)
+    }
+
+    /// 초대 코드 문서 하나를 지운다. `InviteSession` 의 '새 번호 받기'는 발급과 이 삭제를 따로 부른다 —
+    /// 시간 초과에 진 발급이 늦게 끝나 화면에 떠 있는 코드를 지우지 않게(6단계 통합 검토 I1).
+    static func deleteInvite(code: String) async throws {
+        try await db.collection("inviteCodes").document(code).delete()
     }
 
     /// 초대 코드로 가족에 합류한다. 아이폰 보호자가 쓰는 주된 경로다.
