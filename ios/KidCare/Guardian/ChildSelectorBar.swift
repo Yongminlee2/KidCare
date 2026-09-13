@@ -55,11 +55,12 @@ struct ChildMenu<Content: View>: View {
                     }
                 }
             }
-            // 실기기 읽기 전용 확인에서는 진짜 가족에 초대 코드를 만들지 않는다(판정 기록 10).
+            // 실기기 읽기 전용 확인에서는 진짜 가족에 초대 코드를 만들지 않는다(판정 기록 10). 흐리게 하는 것은 표시용이고,
+            // 실제 차단은 `ChildSelectorModel.초대한다` 의 가드다(통합 검토 I3).
             Button("child_selector_add_child") { model.초대한다(.child) }
-                .disabled(ReadOnlyCheck.isOn)
+                .disabled(model.읽기_전용)
             Button(model.보호자_초대_문구) { model.초대한다(.guardian) }
-                .disabled(ReadOnlyCheck.isOn)
+                .disabled(model.읽기_전용)
         } label: {
             content()
         }

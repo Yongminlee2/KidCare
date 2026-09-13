@@ -22,6 +22,8 @@ final class ChildSelectorModel {
     ) -> InviteSession
 
     let familyId: String
+    /// 실기기 읽기 전용 확인(-readOnlyCheck). 켜져 있으면 `초대한다` 가 초대 세션을 만들지 않는다.
+    let 읽기_전용: Bool
     private(set) var children: [FamilyMember] = []
     private(set) var guardians: [FamilyMember] = []
     /// 멤버 구독이 실패했다(:191). 다음 스냅샷이 오면 풀린다.
@@ -41,6 +43,7 @@ final class ChildSelectorModel {
     init(
         familyId: String,
         roleStore: RoleStore,
+        읽기_전용: Bool = ReadOnlyCheck.isOn,
         membersObserve: @escaping InviteSession.Observe = FamilyRepository.observeMembers,
         inviteFactory: @escaping InviteFactory = { familyId, role, onJoined in
             InviteSession(familyId: familyId, role: role, onJoined: onJoined)
@@ -48,6 +51,7 @@ final class ChildSelectorModel {
     ) {
         self.familyId = familyId
         self.roleStore = roleStore
+        self.읽기_전용 = 읽기_전용
         self.membersObserve = membersObserve
         self.inviteFactory = inviteFactory
     }
@@ -98,8 +102,11 @@ final class ChildSelectorModel {
 
     /// '＋ 아이 추가'·'＋ 보호자 초대'(:280-286). 이미 열린 초대가 있으면 새로 열지 않는다.
     /// 세션은 여기, 버튼 액션에서 만든다 — 뷰 빌더 안에서 만들면 한 번의 표시에 여러 번 만들어진다(`NewFamilySession` 주석).
+    ///
+    /// 읽기 전용 확인에서는 메뉴 줄의 `.disabled` 에만 기대지 않고 여기서도 막는다(6단계 통합 검토 I3) — 지도 카드 메뉴
+    /// 변형이나 딥 링크처럼 이 함수를 부르는 입구가 늘어도 진짜 가족에 `inviteCodes` 문서가 생기지 않는다.
     func 초대한다(_ role: MemberRole) {
-        guard !닫힘, 초대 == nil else { return }
+        guard !닫힘, !읽기_전용, 초대 == nil else { return }
         초대_세대 += 1
         let 세대 = 초대_세대
         초대 = inviteFactory(familyId, role) { [weak self] member in

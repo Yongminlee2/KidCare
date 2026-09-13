@@ -34,10 +34,13 @@ struct ChildSelectorModelTests {
         FamilyMember(uid: uid, role: role, displayName: name, joinedAt: joined)
     }
 
-    private func 만든다(_ store: RoleStore, _ 구독: 가짜_구독, 초대: 초대_기록 = 초대_기록()) -> ChildSelectorModel {
+    private func 만든다(
+        _ store: RoleStore, _ 구독: 가짜_구독, 초대: 초대_기록 = 초대_기록(), 읽기_전용: Bool = false
+    ) -> ChildSelectorModel {
         ChildSelectorModel(
             familyId: "fam",
             roleStore: store,
+            읽기_전용: 읽기_전용,
             membersObserve: { _, onChange, onError in
                 구독.onChange.set(onChange)
                 구독.onError.set(onError)
@@ -152,6 +155,19 @@ struct ChildSelectorModelTests {
         초대.onJoined?(멤버("c9", "child", "지우", joined: 9))
         #expect(store.childUid == "c9")
         #expect(m.초대 == nil)
+    }
+
+    @Test("읽기 전용 확인에서는 초대한다 를 불러도 초대 세션을 만들지 않는다 — 메뉴의 .disabled 에만 기대지 않는다(통합 검토 I3)")
+    func 읽기_전용이면_초대하지_않는다() async {
+        let store = 저장소("c1"), 구독 = 가짜_구독(), 초대 = 초대_기록()
+        let m = 만든다(store, 구독, 초대: 초대, 읽기_전용: true)
+        m.시작한다()
+        m.초대한다(.child)
+        m.초대한다(.guardian)
+        // 팩토리가 한 번도 불리지 않았다 = InviteSession 이 없다 = 발급(inviteCodes 쓰기)으로 갈 길이 없다.
+        #expect(초대.역할들.isEmpty)
+        #expect(m.초대 == nil)
+        #expect(store.childUid == "c1")
     }
 
     @Test("보호자가 초대로 들어오면 아이 선택은 그대로 두고 닫기만 한다(GuardianPairingActivity.kt:226 은 아이일 때만 고른다)")

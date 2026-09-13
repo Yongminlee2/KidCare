@@ -42,13 +42,8 @@ struct GuardianRootView: View {
         _controlViewModel = State(initialValue: control)
         _scheduleViewModel = State(initialValue: ScheduleViewModel(familyId: familyId, childUid: childUid))
         _placeViewModel = State(initialValue: PlaceViewModel(familyId: familyId, childUid: childUid))
-        // 실기기 확인(-readOnlyCheck)에서는 진짜 가족에 읽음을 쓰지 않는다(6단계 판정 기록 10).
-        let markRead: AlertViewModel.MarkRead
-        if ReadOnlyCheck.isOn {
-            markRead = { _, _ in }
-        } else {
-            markRead = { familyId, ids in try await EventRepository.markRead(familyId: familyId, ids: ids) }
-        }
+        // 실기기 확인(-readOnlyCheck)에서는 진짜 가족에 읽음을 쓰지 않는다(6단계 판정 기록 10, 통합 검토 I2).
+        let markRead = ReadOnlyCheck.alertMarkRead(readOnly: ReadOnlyCheck.isOn)
         _alertViewModel = State(initialValue: AlertViewModel(familyId: familyId, childUid: childUid, markRead: markRead))
     }
 

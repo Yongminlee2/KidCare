@@ -15,4 +15,17 @@ enum ReadOnlyCheck {
         return false
         #endif
     }()
+
+    /// 알림 탭에 주입할 읽음 쓰기를 고른다. 읽기 전용이면 저장소를 부르지 않는 빈 동작이다.
+    /// `GuardianRootView` 안의 분기를 함수로 뺀 까닭은 테스트다(6단계 통합 검토 I2) — 누가 이 분기를 정리하다
+    /// 진짜 쓰기를 넘기면, 실기기 확인에서 알림 탭을 여는 순간 진짜 가족의 사건에 `read: true` 가 써진다.
+    static func alertMarkRead(
+        readOnly: Bool,
+        writer: @escaping AlertViewModel.MarkRead = EventRepository.markRead
+    ) -> AlertViewModel.MarkRead {
+        if readOnly {
+            return { @Sendable _, _ in }
+        }
+        return writer
+    }
 }
