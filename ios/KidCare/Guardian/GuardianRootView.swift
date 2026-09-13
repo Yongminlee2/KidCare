@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// 보호자 본 화면 — 하단 탭 다섯의 컨테이너. 정본은 안드로이드 `GuardianMainActivity`.
 ///
@@ -30,6 +31,9 @@ struct GuardianRootView: View {
     /// 탭 콜백이 명령 기록·못 보낸 알림 깃발을 지운 뒤에 다시 쓰지 못하게. 미리보기·테스트처럼 없으면 걸지 않는다.
     @Environment(LeaveFamilyModel.self) private var leave: LeaveFamilyModel?
     @State private var 정리_열쇠 = UUID()
+    /// 키보드가 올라온 동안에는 탭 띠를 숨긴다 — 예전 시스템 탭 막대가 키보드 뒤로 숨던 것과 같게.
+    /// 붙박이 띠가 `VStack` 맨 아래라 그대로 두면 키보드 위로 떠올라 입력칸을 가린다.
+    @State private var 키보드_올라옴 = false
 
     init(familyId: String, childUid: String?, selectedTab: Binding<GuardianTab>) {
         _selectedTab = selectedTab
@@ -103,8 +107,12 @@ struct GuardianRootView: View {
             // 탭 막대는 안드로이드 모양의 붙박이 띠로 따로 그린다(`KidCareTabBar` 머리 주석). `TabView` 는 선택과
             // 탭마다의 수명만 맡는다. 띠가 `TabView` 아래 칸을 차지하므로 어느 탭의 내용(밀려 들어간 편집 판 포함)도
             // 띠 밑으로 숨지 않는다.
-            KidCareTabBar(selection: $selectedTab)
+            if !키보드_올라옴 {
+                KidCareTabBar(selection: $selectedTab)
+            }
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in 키보드_올라옴 = true }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in 키보드_올라옴 = false }
         // 안드로이드 onStart 에서 곧바로 한 번 판정하고 1분마다, onStop 에서 멈춘다(:395-421).
         // scenePhase 가 바뀌면 이 task 가 취소되고 새로 시작한다.
         .task(id: scenePhase) {
