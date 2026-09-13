@@ -122,6 +122,28 @@
         }
       }
     },
+    "day_next": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음 날"
+          }
+        }
+      }
+    },
+    "day_prev": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이전 날"
+          }
+        }
+      }
+    },
     "dialog_cancel": {
       "extractionState": "manual",
       "localizations": {
@@ -470,6 +492,83 @@
           "stringUnit": {
             "state": "translated",
             "value": "누구의 폰인가요?"
+          }
+        }
+      }
+    },
+    "schedule_day_fri": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "금"
+          }
+        }
+      }
+    },
+    "schedule_day_mon": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "월"
+          }
+        }
+      }
+    },
+    "schedule_day_sat": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "토"
+          }
+        }
+      }
+    },
+    "schedule_day_sun": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일"
+          }
+        }
+      }
+    },
+    "schedule_day_thu": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "목"
+          }
+        }
+      }
+    },
+    "schedule_day_tue": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화"
+          }
+        }
+      }
+    },
+    "schedule_day_wed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "수"
           }
         }
       }

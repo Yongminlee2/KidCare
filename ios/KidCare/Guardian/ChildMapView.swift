@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// 지도 화면. 아이의 마지막 위치 마커와 그 날의 경로선을 띄운다.
-/// 타임라인·날짜 이동은 이후 Task 다.
+/// 지도 화면. 아이의 마지막 위치 마커와 그 날의 경로선, 그 날의 타임라인을 띄운다.
+/// `◀ 오늘 ▶` 로 어제·그제를 넘겨볼 수 있다.
 ///
 /// **화면이 뜰 때 한 번만 읽는다 — 구독하지 않는다.** 안드로이드
 /// `FamilyRepository.fetchChildStatus`·`TrailRepository` 주석과 같은 이유다: 아이
@@ -66,25 +66,65 @@ struct ChildMapView: View {
     /// 이 Task 의 범위는 "행이 보인다/빈 날엔 빈 상태가 보인다"까지다 — 크기
     /// 조절·접기는 다루지 않는다.
     private var 타임라인_패널: some View {
-        Group {
-            if viewModel.타임라인_행.isEmpty {
-                Text(String(localized: "timeline_empty"))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(viewModel.타임라인_행, id: \.segmentIndex) { row in
-                            TimelineRowView(row: row)
-                            Divider().padding(.leading, 50)
+        VStack(spacing: 0) {
+            날짜_이동_바
+
+            Group {
+                if viewModel.타임라인_행.isEmpty {
+                    Text(String(localized: "timeline_empty"))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 24)
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(viewModel.타임라인_행, id: \.segmentIndex) { row in
+                                TimelineRowView(row: row)
+                                Divider().padding(.leading, 50)
+                            }
                         }
                     }
                 }
             }
+            .frame(maxHeight: .infinity)
         }
         .frame(height: 220)
         .background(.regularMaterial)
+    }
+
+    /// `◀ 오늘 ▶` 날짜 이동 줄. 정본은 안드로이드 `fragment_map_timeline.xml` 의
+    /// `prev_day_button`/`day_header`/`next_day_button` + `renderDayHeader`(:867).
+    /// 접근성 라벨(`day_prev`/`day_next`)은 안드로이드가 이미 쓰던 키를 그대로
+    /// 재사용한다 — 새 키를 만들지 않는다(brief).
+    private var 날짜_이동_바: some View {
+        HStack {
+            Button {
+                Task { await viewModel.이전_날로() }
+            } label: {
+                Image(systemName: "chevron.left")
+                    .frame(width: 44, height: 44)
+            }
+            .accessibilityLabel(Text("day_prev"))
+
+            Spacer()
+
+            Text(viewModel.날짜_헤더_문구)
+                .font(.subheadline.bold())
+                .foregroundStyle(.primary)
+
+            Spacer()
+
+            Button {
+                Task { await viewModel.다음_날로() }
+            } label: {
+                Image(systemName: "chevron.right")
+                    .frame(width: 44, height: 44)
+            }
+            .disabled(!viewModel.다음_날로_갈_수_있는가)
+            .accessibilityLabel(Text("day_next"))
+        }
+        .padding(.horizontal, 10)
+        .buttonStyle(.plain)
     }
 }
