@@ -109,6 +109,9 @@
     <string name="control_section_message" formatted="false">Dire un mot</string>
     <string name="control_section_network" formatted="false">Connexion internet</string>
     <string name="control_section_ringer" formatted="false">Changer tout de suite</string>
+    <string name="day_header_date">%3$s %2$d/%1$d</string>
+    <string name="day_header_today" formatted="false">Aujourd\'hui</string>
+    <string name="day_header_yesterday" formatted="false">Hier</string>
     <string name="day_next" formatted="false">Jour suivant</string>
     <string name="day_prev" formatted="false">Jour précédent</string>
     <string name="dialog_cancel" formatted="false">Annuler</string>
@@ -139,6 +142,18 @@
     <string name="holiday_substitute" formatted="false">Jour férié de remplacement</string>
     <string name="language_follow_system" formatted="false">Suivre le réglage du système</string>
     <string name="language_picker_title" formatted="false">Langue</string>
+    <string name="leave_family_confirm" formatted="false">Retirer</string>
+    <string name="leave_family_done_message" formatted="false">Le lien parent sur le serveur et le compte anonyme ont été supprimés, et le lien familial de ce téléphone a été retiré. Les historiques, horaires et lieux de votre enfant restent dans la famille.</string>
+    <string name="leave_family_done_signed_out_message" formatted="false">Le lien parent sur le serveur a été supprimé et le lien familial de ce téléphone retiré. La suppression du compte anonyme n\'a pas pu être confirmée, ce téléphone a donc seulement été déconnecté. Si ce compte existe encore, il ne contient que son identifiant et sa date de création, sans aucune info sur la famille.</string>
+    <string name="leave_family_done_title" formatted="false">Ce téléphone a été retiré de la famille</string>
+    <string name="leave_family_failed_title" formatted="false">Impossible de retirer ce téléphone</string>
+    <string name="leave_family_in_progress" formatted="false">Retrait de la famille…</string>
+    <string name="leave_family_last_guardian_message" formatted="false">Ce téléphone est le dernier parent de la famille. Ensuite, plus personne ne pourra voir ni gérer cette famille depuis un téléphone parent, et c\'est irréversible. Le téléphone de votre enfant continuera d\'envoyer des données que personne ne verra : supprimez aussi l\'application sur son téléphone.</string>
+    <string name="leave_family_menu" formatted="false">Retirer ce téléphone de la famille</string>
+    <string name="leave_family_message" formatted="false">Le lien parent de ce téléphone et son compte anonyme seront supprimés. Les historiques, horaires et lieux de votre enfant restent dans la famille. Pour les revoir, il faudra un nouveau code d\'invitation.</string>
+    <string name="leave_family_no_account" formatted="false">Connexion de ce téléphone introuvable : impossible de le retirer sur le serveur. Rien n\'a été supprimé. Rouvrez l\'application et réessayez.</string>
+    <string name="leave_family_title" formatted="false">Retirer ce téléphone de la famille ?</string>
+    <string name="leave_family_unconfirmed_message" formatted="false">Le serveur n\'a pas confirmé, donc rien n\'a encore été supprimé. Le retrait a peut-être déjà eu lieu sur le serveur : touchez à nouveau une fois connecté.</string>
     <string name="list_loading" formatted="false">Chargement…</string>
     <string name="map_battery_info_confirm" formatted="false">OK</string>
     <string name="map_battery_info_message" formatted="false">Le niveau affiché ici est celui qu\'a signalé le téléphone de votre enfant. Android ne permet pas de lire depuis un autre téléphone quelle application a consommé combien de batterie ; cela se regarde dans Paramètres &gt; Batterie sur son téléphone.</string>
@@ -321,6 +336,13 @@
     <string name="schedule_sync_retry" formatted="false">Réessayer de prévenir</string>
     <string name="schedule_sync_slow" formatted="false">La règle est enregistrée. Prévenir le téléphone de votre enfant se terminera dès qu\'il y aura internet.</string>
     <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="segment_distance_kilometers">%1$.1f km</string>
+    <string name="segment_distance_meters">%1$d m</string>
+    <string name="segment_distance_under_ten_meters" formatted="false">Moins de 10 m</string>
+    <string name="segment_duration_hours">%1$d h</string>
+    <string name="segment_duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="segment_duration_minutes">%1$d min</string>
+    <string name="segment_duration_under_minute" formatted="false">Moins d\'1 min</string>
     <string name="tab_alert" formatted="false">Nouvelles</string>
     <string name="tab_control" formatted="false">Contrôle</string>
     <string name="tab_map" formatted="false">Carte</string>

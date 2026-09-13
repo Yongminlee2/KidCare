@@ -9885,8 +9885,8 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%3$@, %2$d.%1$d."
           }
         },
         "en": {
@@ -9897,32 +9897,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%3$@ %2$d/%1$d"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%3$@ %2$d/%1$d"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%3$@, %2$d/%1$d"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%3$@ %2$d/%1$d"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%1$d月%2$d日（%3$@）"
           }
         },
         "ko": {
@@ -9933,38 +9933,38 @@
         },
         "pt": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%3$@, %2$d/%1$d"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%3$@, %2$d.%1$d"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%3$@ %2$d/%1$d"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%3$@, %2$d/%1$d"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%1$d月%2$d日（周%3$@）"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%3$@ %1$d/%2$d"
+            "state": "translated",
+            "value": "%1$d月%2$d日（週%3$@）"
           }
         }
       }
@@ -9974,8 +9974,8 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "Heute"
           }
         },
         "en": {
@@ -9986,32 +9986,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "Hoy"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "Aujourd'hui"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "Hari ini"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "Oggi"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "今日"
           }
         },
         "ko": {
@@ -10022,38 +10022,38 @@
         },
         "pt": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "Hoje"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "Сегодня"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "วันนี้"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "Hôm nay"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "今天"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Today"
+            "state": "translated",
+            "value": "今天"
           }
         }
       }
@@ -10063,8 +10063,8 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "Gestern"
           }
         },
         "en": {
@@ -10075,32 +10075,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "Ayer"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "Hier"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "Kemarin"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "Ieri"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "昨日"
           }
         },
         "ko": {
@@ -10111,38 +10111,38 @@
         },
         "pt": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "Ontem"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "Вчера"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "เมื่อวาน"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "Hôm qua"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "昨天"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Yesterday"
+            "state": "translated",
+            "value": "昨天"
           }
         }
       }
@@ -15038,6 +15038,1074 @@
           "stringUnit": {
             "state": "translated",
             "value": "語言"
+          }
+        }
+      }
+    },
+    "leave_family_confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keluarkan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外す"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빼기"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นำออก"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xóa"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移出"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移出"
+          }
+        }
+      }
+    },
+    "leave_family_done_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Elternverbindung auf dem Server und das anonyme Konto wurden gelöscht, und die Familienverbindung auf diesem Handy wurde entfernt. Aufzeichnungen, Zeitpläne und Orte deines Kindes bleiben in der Familie."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This phone's parent link on the server and its anonymous account were deleted, and the family link on this phone was removed. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se borraron el vínculo de padre en el servidor y la cuenta anónima, y se quitó el vínculo familiar de este teléfono. Los registros, horarios y lugares de tu hijo siguen en la familia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le lien parent sur le serveur et le compte anonyme ont été supprimés, et le lien familial de ce téléphone a été retiré. Les historiques, horaires et lieux de votre enfant restent dans la famille."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tautan orang tua di server dan akun anonim sudah dihapus, dan tautan keluarga di ponsel ini sudah dihapus. Catatan, jadwal, dan tempat anak tetap ada di keluarga."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il collegamento da genitore sul server e l'account anonimo sono stati eliminati, e il collegamento familiare su questo telefono è stato rimosso. I registri, le programmazioni e i luoghi di tuo figlio restano nella famiglia."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバー上の保護者連携と匿名アカウントを削除し、このスマホから家族との連携を削除しました。お子さんの記録や予約・場所は家族にそのまま残っています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버의 보호자 연결과 익명 계정을 지우고, 이 폰에서 가족 연결을 지웠어요. 아이 폰의 기록과 예약·장소는 가족에 그대로 남아 있어요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O vínculo de responsável no servidor e a conta anônima foram apagados, e o vínculo familiar deste telefone foi removido. Os registros, horários e lugares da criança continuam na família."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Связь родителя на сервере и анонимный аккаунт удалены, связь с семьёй на этом телефоне стёрта. Записи, расписания и места ребёнка остаются в семье."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลบการเชื่อมต่อผู้ปกครองบนเซิร์ฟเวอร์และบัญชีไม่ระบุตัวตนแล้ว และลบการเชื่อมต่อครอบครัวในโทรศัพท์เครื่องนี้แล้ว บันทึก ตารางเวลา และสถานที่ของลูกยังอยู่ในครอบครัว"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xóa liên kết phụ huynh trên máy chủ và tài khoản ẩn danh, đồng thời xóa liên kết gia đình trên điện thoại này. Lịch sử, lịch hẹn và địa điểm của con vẫn ở lại trong gia đình."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已删除服务器上的家长连接和匿名账号，并清除了此手机上的家庭连接。孩子的记录、预约和地点仍保留在家庭中。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已刪除伺服器上的家長連結和匿名帳號，並清除了此手機上的家庭連結。孩子的紀錄、預約和地點仍保留在家庭中。"
+          }
+        }
+      }
+    },
+    "leave_family_done_signed_out_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Elternverbindung auf dem Server wurde gelöscht und die Familienverbindung auf diesem Handy entfernt. Das Löschen des anonymen Kontos ließ sich nicht bestätigen, daher wurde das Handy nur abgemeldet. Falls das Konto noch existiert, enthält es nur seine ID und das Erstellungsdatum, keine Familiendaten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This phone's parent link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, so this phone was only signed out. If that account remains, it keeps only its ID and creation time, with no family info."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se borró el vínculo de padre en el servidor y se quitó el vínculo familiar de este teléfono. No se pudo confirmar el borrado de la cuenta anónima, así que solo se cerró la sesión. Si la cuenta sigue existiendo, solo guarda su ID y su fecha de creación, sin datos de la familia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le lien parent sur le serveur a été supprimé et le lien familial de ce téléphone retiré. La suppression du compte anonyme n'a pas pu être confirmée, ce téléphone a donc seulement été déconnecté. Si ce compte existe encore, il ne contient que son identifiant et sa date de création, sans aucune info sur la famille."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tautan orang tua di server sudah dihapus, dan tautan keluarga di ponsel ini sudah dihapus. Penghapusan akun anonim tidak bisa dipastikan, jadi ponsel ini hanya dikeluarkan dari akun. Jika akun itu masih ada, isinya hanya ID dan waktu pembuatan, tanpa info keluarga."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il collegamento da genitore sul server è stato eliminato e il collegamento familiare su questo telefono è stato rimosso. Non è stato possibile confermare l'eliminazione dell'account anonimo, quindi è stata eseguita solo la disconnessione. Se l'account esiste ancora, contiene solo il suo ID e la data di creazione, senza dati sulla famiglia."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバー上の保護者連携を削除し、このスマホから家族との連携を削除しました。匿名アカウントは削除を確認できなかったため、ログアウトだけしました。アカウントが残っていても、家族の情報はなくアカウント番号と作成日時だけです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버의 보호자 연결을 지우고, 이 폰에서 가족 연결을 지웠어요. 익명 계정은 삭제를 확인하지 못해 로그아웃만 했어요. 계정이 남아 있더라도 가족 정보 없이 계정 번호와 만든 시각만 있어요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O vínculo de responsável no servidor foi apagado e o vínculo familiar deste telefone foi removido. Não foi possível confirmar a exclusão da conta anônima, então só foi feito o logout. Se a conta ainda existir, ela guarda apenas o ID e a data de criação, sem dados da família."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Связь родителя на сервере удалена, связь с семьёй на этом телефоне стёрта. Удаление анонимного аккаунта подтвердить не удалось, поэтому выполнен только выход. Если аккаунт остался, в нём есть только номер и время создания, без данных о семье."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลบการเชื่อมต่อผู้ปกครองบนเซิร์ฟเวอร์และลบการเชื่อมต่อครอบครัวในโทรศัพท์เครื่องนี้แล้ว ยืนยันการลบบัญชีไม่ระบุตัวตนไม่ได้ จึงออกจากระบบอย่างเดียว หากบัญชียังอยู่ ก็มีเพียงหมายเลขบัญชีและเวลาที่สร้าง ไม่มีข้อมูลครอบครัว"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xóa liên kết phụ huynh trên máy chủ và xóa liên kết gia đình trên điện thoại này. Không xác nhận được việc xóa tài khoản ẩn danh nên chỉ đăng xuất. Nếu tài khoản vẫn còn, nó chỉ có mã tài khoản và thời gian tạo, không có thông tin gia đình."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已删除服务器上的家长连接，并清除了此手机上的家庭连接。未能确认匿名账号已删除，因此只做了退出登录。即使账号仍在，也只有账号编号和创建时间，没有家庭信息。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已刪除伺服器上的家長連結，並清除了此手機上的家庭連結。無法確認匿名帳號已刪除，因此只做了登出。即使帳號仍在，也只有帳號編號和建立時間，沒有家庭資訊。"
+          }
+        }
+      }
+    },
+    "leave_family_done_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Handy wurde aus der Familie entfernt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This phone was removed from the family"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este teléfono se quitó de la familia"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce téléphone a été retiré de la famille"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ponsel ini sudah dikeluarkan dari keluarga"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo telefono è stato rimosso dalla famiglia"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このスマホを家族から外しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 폰을 가족에서 뺐어요"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este telefone foi removido da família"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот телефон удалён из семьи"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นำโทรศัพท์เครื่องนี้ออกจากครอบครัวแล้ว"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xóa điện thoại này khỏi gia đình"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已将此手机移出家庭"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已將此手機移出家庭"
+          }
+        }
+      }
+    },
+    "leave_family_failed_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernen hat nicht geklappt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't remove this phone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo quitar este teléfono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de retirer ce téléphone"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gagal mengeluarkan ponsel ini"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile rimuovere questo telefono"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "家族から外せませんでした"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가족에서 빼지 못했어요"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível remover este telefone"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось удалить этот телефон"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นำโทรศัพท์เครื่องนี้ออกไม่สำเร็จ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể xóa điện thoại này"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未能移出家庭"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未能移出家庭"
+          }
+        }
+      }
+    },
+    "leave_family_in_progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird aus der Familie entfernt…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removing from the family…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitando de la familia…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retrait de la famille…"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mengeluarkan dari keluarga…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimozione dalla famiglia…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "家族から外しています…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가족에서 빼는 중…"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removendo da família…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удаляем из семьи…"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กำลังนำออกจากครอบครัว…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang xóa khỏi gia đình…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在移出家庭…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在移出家庭…"
+          }
+        }
+      }
+    },
+    "leave_family_last_guardian_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Handy ist der letzte Elternteil der Familie. Danach kann niemand diese Familie mehr von einem Eltern-Handy aus sehen oder verwalten, und das lässt sich nicht rückgängig machen. Das Handy deines Kindes lädt weiter hoch, ohne dass es jemand sieht – bitte lösche die App auch dort."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This phone is the family's last parent. After it's removed, no one can see or manage this family from a parent phone, and this can't be undone. Your child's phone will keep uploading with no one to see it, so please delete the app on your child's phone too."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este teléfono es el último padre de la familia. Después, nadie podrá ver ni gestionar esta familia desde un teléfono de padre, y no se puede deshacer. El teléfono de tu hijo seguirá subiendo datos sin que nadie los vea, así que borra también la app de su teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce téléphone est le dernier parent de la famille. Ensuite, plus personne ne pourra voir ni gérer cette famille depuis un téléphone parent, et c'est irréversible. Le téléphone de votre enfant continuera d'envoyer des données que personne ne verra : supprimez aussi l'application sur son téléphone."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ponsel ini adalah orang tua terakhir di keluarga ini. Setelah dikeluarkan, tidak ada yang bisa melihat atau mengelola keluarga ini dari ponsel orang tua, dan tidak bisa dibatalkan. Ponsel anak akan terus mengunggah tanpa ada yang melihat, jadi hapus juga aplikasi di ponsel anak."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo telefono è l'ultimo genitore della famiglia. Dopo, nessuno potrà vedere o gestire questa famiglia da un telefono genitore, e non si può annullare. Il telefono di tuo figlio continuerà a inviare dati che nessuno vedrà: elimina l'app anche dal suo telefono."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このスマホはこの家族の最後の保護者です。外すと、どの保護者のスマホからもこの家族を見たり管理したりできなくなり、元に戻せません。お子さんのスマホは記録を送り続けますが見る人がいないので、お子さんのスマホのアプリも削除してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 폰이 이 가족의 마지막 보호자예요. 빼고 나면 누구도 보호자 폰에서 이 가족을 보거나 관리할 수 없고, 되돌릴 수 없어요. 아이 폰은 계속 기록을 올리지만 볼 사람이 없으니 아이 폰의 앱도 함께 지워 주세요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este telefone é o último responsável da família. Depois disso, ninguém poderá ver nem gerenciar esta família por um telefone de responsável, e não dá para desfazer. O telefone da criança continuará enviando registros sem ninguém para ver, então apague o app do telefone dela também."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот телефон — последний родитель в семье. После удаления никто не сможет видеть эту семью или управлять ею с родительского телефона, и это нельзя отменить. Телефон ребёнка продолжит отправлять данные, которые никто не увидит, поэтому удалите приложение и на телефоне ребёнка."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "โทรศัพท์เครื่องนี้เป็นผู้ปกครองคนสุดท้ายของครอบครัว หลังจากนำออกแล้วจะไม่มีใครดูหรือจัดการครอบครัวนี้จากโทรศัพท์ผู้ปกครองได้อีก และย้อนกลับไม่ได้ โทรศัพท์ของลูกจะยังส่งข้อมูลต่อไปโดยไม่มีใครดู โปรดลบแอปในโทรศัพท์ของลูกด้วย"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Điện thoại này là phụ huynh cuối cùng của gia đình. Sau khi xóa, không ai có thể xem hay quản lý gia đình này từ điện thoại phụ huynh và không thể hoàn tác. Điện thoại của con vẫn tiếp tục gửi dữ liệu mà không ai xem, vì vậy hãy xóa cả ứng dụng trên điện thoại của con."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此手机是该家庭的最后一位家长。移出后，任何家长手机都无法再查看或管理这个家庭，且无法恢复。孩子的手机会继续上传记录，但没有人能看到，请同时删除孩子手机上的应用。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此手機是這個家庭的最後一位家長。移出後，任何家長手機都無法再查看或管理這個家庭，且無法復原。孩子的手機會繼續上傳紀錄，但沒有人能看到，請同時刪除孩子手機上的應用程式。"
+          }
+        }
+      }
+    },
+    "leave_family_menu": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Handy aus der Familie entfernen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this phone from the family"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar este teléfono de la familia"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer ce téléphone de la famille"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keluarkan ponsel ini dari keluarga"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi questo telefono dalla famiglia"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このスマホを家族から外す"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 폰을 가족에서 빼기"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover este telefone da família"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить этот телефон из семьи"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นำโทรศัพท์เครื่องนี้ออกจากครอบครัว"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xóa điện thoại này khỏi gia đình"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将此手机移出家庭"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "將此手機移出家庭"
+          }
+        }
+      }
+    },
+    "leave_family_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Elternverbindung dieses Handys und sein anonymes Konto werden gelöscht. Aufzeichnungen, Zeitpläne und Orte deines Kindes bleiben in der Familie. Um sie wieder zu sehen, brauchst du einen neuen Einladungscode."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This deletes this phone's parent link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se borrarán el vínculo de padre de este teléfono y su cuenta anónima. Los registros, horarios y lugares de tu hijo se quedan en la familia. Para volver a verlos necesitarás un nuevo código de invitación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le lien parent de ce téléphone et son compte anonyme seront supprimés. Les historiques, horaires et lieux de votre enfant restent dans la famille. Pour les revoir, il faudra un nouveau code d'invitation."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tautan orang tua dan akun anonim ponsel ini akan dihapus. Catatan, jadwal, dan tempat anak tetap ada di keluarga. Untuk melihatnya lagi, Anda perlu kode undangan baru."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verranno eliminati il collegamento da genitore di questo telefono e il suo account anonimo. I registri, le programmazioni e i luoghi di tuo figlio restano nella famiglia. Per rivederli ti servirà un nuovo codice di invito."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このスマホの保護者としての連携と匿名アカウントを削除します。お子さんの記録や予約・場所は家族にそのまま残ります。もう一度見るには新しい招待コードが必要です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 폰의 보호자 연결과 익명 계정을 지워요. 아이 폰의 기록과 예약·장소는 가족에 그대로 남아요. 다시 보려면 새 초대 번호를 받아야 해요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O vínculo de responsável deste telefone e sua conta anônima serão apagados. Os registros, horários e lugares da criança continuam na família. Para vê-los de novo, você precisará de um novo código de convite."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Связь этого телефона как родителя и его анонимный аккаунт будут удалены. Записи, расписания и места ребёнка останутся в семье. Чтобы снова их видеть, понадобится новый код приглашения."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "จะลบการเชื่อมต่อผู้ปกครองและบัญชีไม่ระบุตัวตนของโทรศัพท์เครื่องนี้ บันทึก ตารางเวลา และสถานที่ของลูกยังอยู่ในครอบครัวเหมือนเดิม หากต้องการดูอีกครั้งต้องใช้รหัสเชิญใหม่"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liên kết phụ huynh và tài khoản ẩn danh của điện thoại này sẽ bị xóa. Lịch sử, lịch hẹn và địa điểm của con vẫn ở lại trong gia đình. Để xem lại, bạn cần mã mời mới."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将删除此手机的家长连接和匿名账号。孩子的记录、预约和地点会保留在家庭中。如需再次查看，需要新的邀请码。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "將刪除此手機的家長連結和匿名帳號。孩子的紀錄、預約和地點會保留在家庭中。如需再次查看，需要新的邀請碼。"
+          }
+        }
+      }
+    },
+    "leave_family_no_account": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Anmeldung dieses Handys wurde nicht gefunden, daher konnte es auf dem Server nicht entfernt werden. Es wurde nichts gelöscht. Bitte öffne die App neu und versuche es noch einmal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't find this phone's sign-in, so it couldn't be removed on the server. Nothing was deleted. Please reopen the app and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se encontró el inicio de sesión de este teléfono, así que no se pudo quitar en el servidor. No se borró nada. Vuelve a abrir la app e inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion de ce téléphone introuvable : impossible de le retirer sur le serveur. Rien n'a été supprimé. Rouvrez l'application et réessayez."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Info masuk ponsel ini tidak ditemukan, jadi tidak bisa dikeluarkan di server. Tidak ada yang dihapus. Buka lagi aplikasinya lalu coba lagi."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesso di questo telefono non trovato, quindi non è stato possibile rimuoverlo dal server. Non è stato eliminato nulla. Riapri l'app e riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このスマホのログイン情報が見つからず、サーバーから外せませんでした。何も削除していません。アプリを開き直してからもう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 폰의 로그인 정보를 찾지 못해 서버에서 뺄 수 없었어요. 아무것도 지우지 않았어요. 앱을 다시 켠 뒤 다시 해 주세요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não encontramos o login deste telefone, então não foi possível removê-lo no servidor. Nada foi apagado. Abra o app de novo e tente outra vez."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не найден вход этого телефона, поэтому удалить его на сервере не удалось. Ничего не удалено. Откройте приложение заново и попробуйте ещё раз."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่พบข้อมูลการเข้าสู่ระบบของโทรศัพท์เครื่องนี้ จึงนำออกที่เซิร์ฟเวอร์ไม่ได้ ยังไม่ได้ลบอะไร โปรดเปิดแอปใหม่แล้วลองอีกครั้ง"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không tìm thấy thông tin đăng nhập của điện thoại này nên không thể xóa trên máy chủ. Chưa có gì bị xóa. Hãy mở lại ứng dụng rồi thử lại."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到此手机的登录信息，无法在服务器上移出。没有删除任何内容。请重新打开应用后再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到此手機的登入資訊，無法在伺服器上移出。沒有刪除任何內容。請重新開啟應用程式後再試。"
+          }
+        }
+      }
+    },
+    "leave_family_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Handy aus der Familie entfernen?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this phone from the family?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quitar este teléfono de la familia?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer ce téléphone de la famille ?"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keluarkan ponsel ini dari keluarga?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovere questo telefono dalla famiglia?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このスマホを家族から外しますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 폰을 가족에서 뺄까요?"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover este telefone da família?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить этот телефон из семьи?"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นำโทรศัพท์เครื่องนี้ออกจากครอบครัวไหม"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xóa điện thoại này khỏi gia đình?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要将此手机移出家庭吗？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要將此手機移出家庭嗎？"
+          }
+        }
+      }
+    },
+    "leave_family_unconfirmed_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat nichts bestätigt, daher wurde noch nichts gelöscht. Auf dem Server ist es vielleicht schon entfernt – tippe bitte erneut, sobald du online bist."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No confirmation came from the server, so nothing has been deleted yet. It may already be removed on the server, so please tap again once you're connected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor no lo confirmó, así que aún no se ha borrado nada. Puede que ya se haya quitado en el servidor; vuelve a tocar cuando tengas conexión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur n'a pas confirmé, donc rien n'a encore été supprimé. Le retrait a peut-être déjà eu lieu sur le serveur : touchez à nouveau une fois connecté."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server tidak memberi konfirmasi, jadi belum ada yang dihapus. Mungkin sudah dikeluarkan di server, jadi ketuk lagi setelah tersambung ke internet."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il server non ha confermato, quindi non è stato ancora eliminato nulla. Sul server potrebbe essere già rimosso: tocca di nuovo quando sei connesso."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバーの確認が取れなかったため、まだ何も削除していません。サーバーではすでに外れている可能性があるので、インターネットにつながってからもう一度押してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버의 확인을 받지 못해 아직 아무것도 지우지 않았어요. 서버에서는 이미 빠졌을 수도 있으니 인터넷에 연결된 뒤 다시 눌러 주세요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor não confirmou, então nada foi apagado ainda. Talvez já tenha sido removido no servidor; toque de novo quando estiver conectado."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер не подтвердил, поэтому пока ничего не удалено. На сервере телефон мог уже быть удалён — нажмите ещё раз, когда появится интернет."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่ได้รับการยืนยันจากเซิร์ฟเวอร์ จึงยังไม่ได้ลบอะไรเลย เซิร์ฟเวอร์อาจนำออกไปแล้ว โปรดแตะอีกครั้งเมื่อเชื่อมต่ออินเทอร์เน็ตแล้ว"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Máy chủ chưa xác nhận nên chưa có gì bị xóa. Có thể máy chủ đã xóa rồi, hãy nhấn lại sau khi có kết nối mạng."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未收到服务器确认，因此尚未删除任何内容。服务器上可能已经移出，请在联网后再点一次。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未收到伺服器確認，因此尚未刪除任何內容。伺服器上可能已經移出，請在連上網路後再點一次。"
           }
         }
       }
@@ -31334,8 +32402,8 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$.1fkm"
+            "state": "translated",
+            "value": "%1$.1f km"
           }
         },
         "en": {
@@ -31346,31 +32414,31 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$.1fkm"
+            "state": "translated",
+            "value": "%1$.1f km"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$.1fkm"
+            "state": "translated",
+            "value": "%1$.1f km"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$.1fkm"
+            "state": "translated",
+            "value": "%1$.1f km"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$.1fkm"
+            "state": "translated",
+            "value": "%1$.1f km"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$.1fkm"
           }
         },
@@ -31382,38 +32450,38 @@
         },
         "pt": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$.1fkm"
+            "state": "translated",
+            "value": "%1$.1f km"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$.1fkm"
+            "state": "translated",
+            "value": "%1$.1f км"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$.1fkm"
+            "state": "translated",
+            "value": "%1$.1f กม."
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$.1fkm"
+            "state": "translated",
+            "value": "%1$.1f km"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$.1fkm"
+            "state": "translated",
+            "value": "%1$.1f公里"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$.1fkm"
+            "state": "translated",
+            "value": "%1$.1f公里"
           }
         }
       }
@@ -31423,8 +32491,8 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$dm"
+            "state": "translated",
+            "value": "%1$d m"
           }
         },
         "en": {
@@ -31435,31 +32503,31 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$dm"
+            "state": "translated",
+            "value": "%1$d m"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$dm"
+            "state": "translated",
+            "value": "%1$d m"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$dm"
+            "state": "translated",
+            "value": "%1$d m"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$dm"
+            "state": "translated",
+            "value": "%1$d m"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$dm"
           }
         },
@@ -31471,38 +32539,38 @@
         },
         "pt": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$dm"
+            "state": "translated",
+            "value": "%1$d m"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$dm"
+            "state": "translated",
+            "value": "%1$d м"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$dm"
+            "state": "translated",
+            "value": "%1$d ม."
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$dm"
+            "state": "translated",
+            "value": "%1$d m"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$dm"
+            "state": "translated",
+            "value": "%1$d米"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$dm"
+            "state": "translated",
+            "value": "%1$d公尺"
           }
         }
       }
@@ -31512,8 +32580,8 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "Unter 10 m"
           }
         },
         "en": {
@@ -31524,32 +32592,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "Menos de 10 m"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "Moins de 10 m"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "Kurang dari 10 m"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "Meno di 10 m"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "10m未満"
           }
         },
         "ko": {
@@ -31560,38 +32628,38 @@
         },
         "pt": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "Menos de 10 m"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "Меньше 10 м"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "ไม่ถึง 10 ม."
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "Dưới 10 m"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "不到10米"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 10m"
+            "state": "translated",
+            "value": "不到10公尺"
           }
         }
       }
@@ -31601,8 +32669,8 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d Std."
           }
         },
         "en": {
@@ -31613,32 +32681,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d h"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d h"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d jam"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d h"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d時間"
           }
         },
         "ko": {
@@ -31649,38 +32717,38 @@
         },
         "pt": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d h"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d ч"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d ชม."
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d giờ"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d小时"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr"
+            "state": "translated",
+            "value": "%1$d小時"
           }
         }
       }
@@ -31690,8 +32758,8 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d Std. %2$d Min."
           }
         },
         "en": {
@@ -31702,32 +32770,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d h %2$d min"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d h %2$d min"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d jam %2$d mnt"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d h %2$d min"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d時間%2$d分"
           }
         },
         "ko": {
@@ -31738,38 +32806,38 @@
         },
         "pt": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d h %2$d min"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d ч %2$d мин"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d ชม. %2$d นาที"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d giờ %2$d phút"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d小时%2$d分钟"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d hr %2$d min"
+            "state": "translated",
+            "value": "%1$d小時%2$d分鐘"
           }
         }
       }
@@ -31779,8 +32847,8 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d min"
+            "state": "translated",
+            "value": "%1$d Min."
           }
         },
         "en": {
@@ -31791,32 +32859,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$d min"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$d min"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d min"
+            "state": "translated",
+            "value": "%1$d mnt"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$d min"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d min"
+            "state": "translated",
+            "value": "%1$d分"
           }
         },
         "ko": {
@@ -31827,38 +32895,38 @@
         },
         "pt": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "%1$d min"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d min"
+            "state": "translated",
+            "value": "%1$d мин"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d min"
+            "state": "translated",
+            "value": "%1$d นาที"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d min"
+            "state": "translated",
+            "value": "%1$d phút"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d min"
+            "state": "translated",
+            "value": "%1$d分钟"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%1$d min"
+            "state": "translated",
+            "value": "%1$d分鐘"
           }
         }
       }
@@ -31868,8 +32936,8 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "Unter 1 Min."
           }
         },
         "en": {
@@ -31880,32 +32948,32 @@
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "Menos de 1 min"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "Moins d'1 min"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "Kurang dari 1 menit"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "Meno di 1 min"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "1分未満"
           }
         },
         "ko": {
@@ -31916,38 +32984,38 @@
         },
         "pt": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "Menos de 1 min"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "Меньше 1 мин"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "ไม่ถึง 1 นาที"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "Dưới 1 phút"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "不到1分钟"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Under 1 minute"
+            "state": "translated",
+            "value": "不到1分鐘"
           }
         }
       }

@@ -13,6 +13,7 @@ import com.kidcare.family.logic.SegmentBuilder
 import com.kidcare.family.logic.SegmentType
 import com.kidcare.family.logic.TrailCodec
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.ZoneId
 
 /**
@@ -45,7 +46,7 @@ import java.time.ZoneId
 class TrailUploader(
     context: Context,
     private val zone: ZoneId = ZoneId.systemDefault(),
-    private val placeNamer: PlaceNamer = PlaceNamer(),
+    private val placeNamer: PlaceNamer = PlaceNamer(context),
 ) {
 
     private val store = TrailStore(context)
@@ -54,9 +55,9 @@ class TrailUploader(
     private val buffer = mutableListOf<Fix>()
     private var bufferDayKey: String? = null
 
-    // 업로드가 겹치는 것을 막는다. PlaceNamer 는 점 하나당 최대 5초를 쓰고 Nominatim
-    // 정책상 프로세스 전체가 초당 1건으로 직렬화되므로, 머무름이 여럿인 날의 한 번의
-    // upload 가 수십 초를 넘길 수 있다. 그 사이 부모가 '지금 위치 확인'을 다시 누르면
+    // 업로드가 겹치는 것을 막는다. 이름 묻기는 이제 [GEOCODE_BUDGET_MILLIS] 안에서
+    // 끝나지만(buildSegments 주석), 문서 쓰기까지 합치면 한 번의 upload 가 몇 초는
+    // 걸린다. 그 사이 부모가 '지금 위치 확인'을 다시 누르면
     // 두 번째 호출이 같은 문서를 같은 내용으로 또 쓴다 — 쓰기 예산만 깎는 헛일이다.
     // tryLock 으로 "이미 도는 중이면 이번은 건너뛴다"만 한다. 대기(lock)를 쓰면
     // 큐에 쌓였다가 뒤늦게 또 한 번 나가는데, 그건 이미 최신인 문서를 다시 쓰는 것뿐이다.
@@ -153,45 +154,84 @@ class TrailUploader(
     }
 
     /**
-     * 점 목록을 구간으로 묶고 머무름에 이름을 붙인다.
+     * 구간 요약을 만든다. 머무름에는 이름을 붙인다.
      *
-     * map 의 람다는 suspend 가 아니라서 그 안에서 placeNamer.nameOf(suspend) 를
-     * 부를 수 없다 — for 루프로 풀어서 buildList 로 모은다.
+     * **이 함수가 '지금 위치 확인'의 대기 시간을 정했다(2026-09-13 고침).** 부모가 누르면
+     * 이 함수가 끝나야 명령이 "완료"가 되는데, 예전에는 그날의 머무름을 처음부터
+     * 차례로 **전부** 인터넷에 물었다 — 한 곳에 초당 1건 제한 + 최대 5초. 머무름 반경을
+     * 40m 로 줄인 뒤(2026-08-17) 하루 머무름이 크게 늘었고, 캐시도 거의 안 맞아서
+     * (PlaceNameCache 주석) 부모 화면이 수십 초씩 "확인하는 중"에 머물렀다. 60초를 넘기면
+     * 아이 폰이 멀쩡히 일하는 중인데도 "애기폰이 응답하지 않아요"가 떴다.
+     *
+     * 이제 순서가 이렇다:
+     * 1. 이미 아는 이름부터 전부 채운다 — 네트워크 없이 즉시.
+     * 2. 모르는 곳만, **가장 최근 머무름부터**, [GEOCODE_BUDGET_MILLIS] 안에서만 묻는다.
+     *    부모가 제일 궁금한 것은 방금 있던 곳이다.
+     * 3. 예산을 넘긴 곳은 이번엔 이름 없이 올린다. 다음 확인 때 또 묻고, 한 번 얻은
+     *    이름은 디스크 캐시에 남아 그 뒤로는 즉시 나온다.
+     *
+     * 이동 구간에는 이름을 붙이지 않는다 — "어디서 어디로"가 앞뒤 머무름 이름으로 이미
+     * 드러나고, 이동 중 좌표 하나를 주소로 바꿔봐야 지나가던 길 이름이다.
+     *
+     * 이름은 segment.lat/lng 가 아니라 nameLat/nameLng 로 묻는다. 앞의 둘은 지도에 찍는
+     * 좌표(단순 평균)고 뒤의 둘은 오차로 가중한 평균이다 — 도착 순간 튄 fix 한 개가
+     * 머무름 전체에 옆 건물 이름을 달아버리는 것을 막는다(SegmentBuilder.Segment.nameLat 주석).
      */
-    private suspend fun buildSegments(points: List<Fix>): List<SegmentDoc> = buildList {
-        for (segment in SegmentBuilder.build(points)) {
-            // 이동 구간에는 이름을 붙이지 않는다. 이동은 "어디서 어디로"가 앞뒤
-            // 머무름 이름으로 이미 드러나고, 이동 중 좌표 하나를 주소로 바꿔봐야
-            // 지나가던 길 이름이라 의미가 없다.
-            //
-            // 이름은 segment.lat/lng 가 아니라 segment.nameLat/nameLng 로 묻는다.
-            // 앞의 둘은 지도에 찍는 좌표(단순 평균)고, 뒤의 둘은 오차로 가중한
-            // 평균이다 — 좌표 하나를 건물 이름으로 바꾸는 일은 오차에 훨씬
-            // 민감해서, 도착 순간 튄 fix 한 개가 머무름 전체에 옆 건물 이름을
-            // 달아버릴 수 있다(SegmentBuilder.Segment.nameLat 주석). 저장하는
-            // SegmentDoc.lat/lng 는 그대로 segment.lat/lng 다 — 화면에 찍히는
-            // 위치는 하나도 안 바뀐다.
-            val placeName = if (segment.type == SegmentType.STAY) {
-                placeNamer.nameOf(segment.nameLat, segment.nameLng).orEmpty()
+    private suspend fun buildSegments(points: List<Fix>): List<SegmentDoc> {
+        val segments = SegmentBuilder.build(points)
+
+        val names = Array(segments.size) { i ->
+            val segment = segments[i]
+            if (segment.type == SegmentType.STAY) {
+                placeNamer.cachedNameOf(segment.nameLat, segment.nameLng).orEmpty()
             } else {
                 ""
             }
-            add(
-                SegmentDoc(
-                    type = segment.type.name,
-                    startAt = segment.startAt,
-                    endAt = segment.endAt,
-                    lat = segment.lat,
-                    lng = segment.lng,
-                    distanceMeters = segment.distanceMeters,
-                    pointCount = segment.pointCount,
-                    placeName = placeName,
+        }
+
+        val deadline = System.currentTimeMillis() + GEOCODE_BUDGET_MILLIS
+        var asked = 0
+        for (i in segments.indices.reversed()) {
+            val segment = segments[i]
+            if (segment.type != SegmentType.STAY || names[i].isNotEmpty()) continue
+            val left = deadline - System.currentTimeMillis()
+            if (left <= 0) break
+            asked++
+            names[i] = withTimeoutOrNull(left) {
+                placeNamer.nameOf(
+                    segment.nameLat, segment.nameLng,
+                    timeoutMillis = left.coerceAtMost(PlaceNamer.TIMEOUT_MILLIS.toLong()).toInt(),
                 )
+            }.orEmpty()
+        }
+        val unnamed = segments.indices.count { segments[it].type == SegmentType.STAY && names[it].isEmpty() }
+        if (asked > 0 || unnamed > 0) {
+            Log.i(TAG, "머무름 이름: 새로 물음 ${asked}곳 · 이번에 이름 없음 ${unnamed}곳")
+        }
+
+        return segments.mapIndexed { i, segment ->
+            SegmentDoc(
+                type = segment.type.name,
+                startAt = segment.startAt,
+                endAt = segment.endAt,
+                lat = segment.lat,
+                lng = segment.lng,
+                distanceMeters = segment.distanceMeters,
+                pointCount = segment.pointCount,
+                placeName = names[i],
             )
         }
     }
 
     private companion object {
         const val TAG = "TrailUploader"
+
+        /**
+         * 한 번의 업로드에서 새 이름을 묻는 데 쓸 수 있는 시간. 부모 화면의 60초 무응답
+         * 판정과 체감 대기를 함께 보고 정했다 — 문서 쓰기 왕복까지 더해도 부모가 몇 초
+         * 안에 답을 본다. 짧게 잡아도 이름이 영영 안 붙는 것은 아니다: 얻은 이름은
+         * 디스크에 남아 다음부터는 이 예산을 쓰지 않는다.
+         */
+        const val GEOCODE_BUDGET_MILLIS = 3_000L
     }
 }

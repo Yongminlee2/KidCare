@@ -608,7 +608,10 @@ class PlaceFragment : Fragment(), OnMapReadyCallback {
         }
         b.editorNameError.visibility = View.GONE
 
-        if (!coordinateChosen) {
+        // (0,0) 도 막는다. 아이 위치를 모르는 채 지도를 **끌지 않고 탭만** 하면 터치로
+        // coordinateChosen 은 켜지는데, 좌표를 채우는 onMapMoved 는 카메라가 안 움직여
+        // 불리지 않는다 — 그대로 저장하면 대서양 한가운데 장소가 생긴다.
+        if (!coordinateChosen || (editorLat == 0.0 && editorLng == 0.0)) {
             showEditorStatus(getString(R.string.place_editor_no_child_location))
             return
         }

@@ -109,6 +109,9 @@
     <string name="control_section_message" formatted="false">說一句話</string>
     <string name="control_section_network" formatted="false">網路連線</string>
     <string name="control_section_ringer" formatted="false">現在就改</string>
+    <string name="day_header_date">%1$d月%2$d日（週%3$s）</string>
+    <string name="day_header_today" formatted="false">今天</string>
+    <string name="day_header_yesterday" formatted="false">昨天</string>
     <string name="day_next" formatted="false">後一天</string>
     <string name="day_prev" formatted="false">前一天</string>
     <string name="dialog_cancel" formatted="false">取消</string>
@@ -139,6 +142,18 @@
     <string name="holiday_substitute" formatted="false">補假日</string>
     <string name="language_follow_system" formatted="false">跟隨系統設定</string>
     <string name="language_picker_title" formatted="false">語言</string>
+    <string name="leave_family_confirm" formatted="false">移出</string>
+    <string name="leave_family_done_message" formatted="false">已刪除伺服器上的家長連結和匿名帳號，並清除了此手機上的家庭連結。孩子的紀錄、預約和地點仍保留在家庭中。</string>
+    <string name="leave_family_done_signed_out_message" formatted="false">已刪除伺服器上的家長連結，並清除了此手機上的家庭連結。無法確認匿名帳號已刪除，因此只做了登出。即使帳號仍在，也只有帳號編號和建立時間，沒有家庭資訊。</string>
+    <string name="leave_family_done_title" formatted="false">已將此手機移出家庭</string>
+    <string name="leave_family_failed_title" formatted="false">未能移出家庭</string>
+    <string name="leave_family_in_progress" formatted="false">正在移出家庭…</string>
+    <string name="leave_family_last_guardian_message" formatted="false">此手機是這個家庭的最後一位家長。移出後，任何家長手機都無法再查看或管理這個家庭，且無法復原。孩子的手機會繼續上傳紀錄，但沒有人能看到，請同時刪除孩子手機上的應用程式。</string>
+    <string name="leave_family_menu" formatted="false">將此手機移出家庭</string>
+    <string name="leave_family_message" formatted="false">將刪除此手機的家長連結和匿名帳號。孩子的紀錄、預約和地點會保留在家庭中。如需再次查看，需要新的邀請碼。</string>
+    <string name="leave_family_no_account" formatted="false">找不到此手機的登入資訊，無法在伺服器上移出。沒有刪除任何內容。請重新開啟應用程式後再試。</string>
+    <string name="leave_family_title" formatted="false">要將此手機移出家庭嗎？</string>
+    <string name="leave_family_unconfirmed_message" formatted="false">未收到伺服器確認，因此尚未刪除任何內容。伺服器上可能已經移出，請在連上網路後再點一次。</string>
     <string name="list_loading" formatted="false">正在載入…</string>
     <string name="map_battery_info_confirm" formatted="false">好</string>
     <string name="map_battery_info_message" formatted="false">這裡顯示的電量是孩子手機回報的狀態。哪個應用程式用了多少電，依Android的安全規定無法從遠端讀取，需要在孩子手機的設定＞電池裡直接查看。</string>
@@ -321,6 +336,13 @@
     <string name="schedule_sync_retry" formatted="false">再通知一次</string>
     <string name="schedule_sync_slow" formatted="false">規則已儲存。通知孩子手機會在連上網路後完成。</string>
     <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="segment_distance_kilometers">%1$.1f公里</string>
+    <string name="segment_distance_meters">%1$d公尺</string>
+    <string name="segment_distance_under_ten_meters" formatted="false">不到10公尺</string>
+    <string name="segment_duration_hours">%1$d小時</string>
+    <string name="segment_duration_hours_minutes">%1$d小時%2$d分鐘</string>
+    <string name="segment_duration_minutes">%1$d分鐘</string>
+    <string name="segment_duration_under_minute" formatted="false">不到1分鐘</string>
     <string name="tab_alert" formatted="false">通知</string>
     <string name="tab_control" formatted="false">管理</string>
     <string name="tab_map" formatted="false">地圖</string>

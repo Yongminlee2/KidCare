@@ -109,6 +109,9 @@
     <string name="control_section_message" formatted="false">ฝากสักคำ</string>
     <string name="control_section_network" formatted="false">การเชื่อมต่ออินเทอร์เน็ต</string>
     <string name="control_section_ringer" formatted="false">เปลี่ยนเดี๋ยวนี้</string>
+    <string name="day_header_date">%3$s %2$d/%1$d</string>
+    <string name="day_header_today" formatted="false">วันนี้</string>
+    <string name="day_header_yesterday" formatted="false">เมื่อวาน</string>
     <string name="day_next" formatted="false">วันถัดไป</string>
     <string name="day_prev" formatted="false">วันก่อนหน้า</string>
     <string name="dialog_cancel" formatted="false">ยกเลิก</string>
@@ -139,6 +142,18 @@
     <string name="holiday_substitute" formatted="false">วันหยุดชดเชย</string>
     <string name="language_follow_system" formatted="false">ตามการตั้งค่าเครื่อง</string>
     <string name="language_picker_title" formatted="false">ภาษา</string>
+    <string name="leave_family_confirm" formatted="false">นำออก</string>
+    <string name="leave_family_done_message" formatted="false">ลบการเชื่อมต่อผู้ปกครองบนเซิร์ฟเวอร์และบัญชีไม่ระบุตัวตนแล้ว และลบการเชื่อมต่อครอบครัวในโทรศัพท์เครื่องนี้แล้ว บันทึก ตารางเวลา และสถานที่ของลูกยังอยู่ในครอบครัว</string>
+    <string name="leave_family_done_signed_out_message" formatted="false">ลบการเชื่อมต่อผู้ปกครองบนเซิร์ฟเวอร์และลบการเชื่อมต่อครอบครัวในโทรศัพท์เครื่องนี้แล้ว ยืนยันการลบบัญชีไม่ระบุตัวตนไม่ได้ จึงออกจากระบบอย่างเดียว หากบัญชียังอยู่ ก็มีเพียงหมายเลขบัญชีและเวลาที่สร้าง ไม่มีข้อมูลครอบครัว</string>
+    <string name="leave_family_done_title" formatted="false">นำโทรศัพท์เครื่องนี้ออกจากครอบครัวแล้ว</string>
+    <string name="leave_family_failed_title" formatted="false">นำโทรศัพท์เครื่องนี้ออกไม่สำเร็จ</string>
+    <string name="leave_family_in_progress" formatted="false">กำลังนำออกจากครอบครัว…</string>
+    <string name="leave_family_last_guardian_message" formatted="false">โทรศัพท์เครื่องนี้เป็นผู้ปกครองคนสุดท้ายของครอบครัว หลังจากนำออกแล้วจะไม่มีใครดูหรือจัดการครอบครัวนี้จากโทรศัพท์ผู้ปกครองได้อีก และย้อนกลับไม่ได้ โทรศัพท์ของลูกจะยังส่งข้อมูลต่อไปโดยไม่มีใครดู โปรดลบแอปในโทรศัพท์ของลูกด้วย</string>
+    <string name="leave_family_menu" formatted="false">นำโทรศัพท์เครื่องนี้ออกจากครอบครัว</string>
+    <string name="leave_family_message" formatted="false">จะลบการเชื่อมต่อผู้ปกครองและบัญชีไม่ระบุตัวตนของโทรศัพท์เครื่องนี้ บันทึก ตารางเวลา และสถานที่ของลูกยังอยู่ในครอบครัวเหมือนเดิม หากต้องการดูอีกครั้งต้องใช้รหัสเชิญใหม่</string>
+    <string name="leave_family_no_account" formatted="false">ไม่พบข้อมูลการเข้าสู่ระบบของโทรศัพท์เครื่องนี้ จึงนำออกที่เซิร์ฟเวอร์ไม่ได้ ยังไม่ได้ลบอะไร โปรดเปิดแอปใหม่แล้วลองอีกครั้ง</string>
+    <string name="leave_family_title" formatted="false">นำโทรศัพท์เครื่องนี้ออกจากครอบครัวไหม</string>
+    <string name="leave_family_unconfirmed_message" formatted="false">ไม่ได้รับการยืนยันจากเซิร์ฟเวอร์ จึงยังไม่ได้ลบอะไรเลย เซิร์ฟเวอร์อาจนำออกไปแล้ว โปรดแตะอีกครั้งเมื่อเชื่อมต่ออินเทอร์เน็ตแล้ว</string>
     <string name="list_loading" formatted="false">กำลังโหลด…</string>
     <string name="map_battery_info_confirm" formatted="false">ตกลง</string>
     <string name="map_battery_info_message" formatted="false">ระดับแบตที่เห็นตรงนี้คือค่าที่มือถือของลูกส่งมา ส่วนที่ว่าแอปไหนใช้แบตไปเท่าไร ระบบแอนดรอยด์ไม่อนุญาตให้อ่านจากเครื่องอื่น ต้องดูที่ตั้งค่า &gt; แบตเตอรี่ บนเครื่องของลูกเอง</string>
@@ -321,6 +336,13 @@
     <string name="schedule_sync_retry" formatted="false">บอกอีกครั้ง</string>
     <string name="schedule_sync_slow" formatted="false">บันทึกกฎแล้ว การบอกมือถือของลูกจะเสร็จเมื่อมีอินเทอร์เน็ต</string>
     <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="segment_distance_kilometers">%1$.1f กม.</string>
+    <string name="segment_distance_meters">%1$d ม.</string>
+    <string name="segment_distance_under_ten_meters" formatted="false">ไม่ถึง 10 ม.</string>
+    <string name="segment_duration_hours">%1$d ชม.</string>
+    <string name="segment_duration_hours_minutes">%1$d ชม. %2$d นาที</string>
+    <string name="segment_duration_minutes">%1$d นาที</string>
+    <string name="segment_duration_under_minute" formatted="false">ไม่ถึง 1 นาที</string>
     <string name="tab_alert" formatted="false">ข่าว</string>
     <string name="tab_control" formatted="false">จัดการ</string>
     <string name="tab_map" formatted="false">แผนที่</string>

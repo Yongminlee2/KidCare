@@ -141,7 +141,9 @@ class DesignPreviewActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun renderDay() {
-        binding.dayHeader.text = DayPicker.headerText(dayKey, zone, System.currentTimeMillis())
+        binding.dayHeader.text = TimelineText.dayHeader(
+            this, DayPicker.header(dayKey, zone, System.currentTimeMillis()),
+        )
         binding.nextDayButton.isEnabled =
             !DayPicker.isFuture(DayPicker.shift(dayKey, 1), zone, System.currentTimeMillis())
     }

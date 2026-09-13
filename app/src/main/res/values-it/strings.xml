@@ -109,6 +109,9 @@
     <string name="control_section_message" formatted="false">Manda una parola</string>
     <string name="control_section_network" formatted="false">Connessione a internet</string>
     <string name="control_section_ringer" formatted="false">Cambia subito</string>
+    <string name="day_header_date">%3$s %2$d/%1$d</string>
+    <string name="day_header_today" formatted="false">Oggi</string>
+    <string name="day_header_yesterday" formatted="false">Ieri</string>
     <string name="day_next" formatted="false">Giorno dopo</string>
     <string name="day_prev" formatted="false">Giorno prima</string>
     <string name="dialog_cancel" formatted="false">Annulla</string>
@@ -139,6 +142,18 @@
     <string name="holiday_substitute" formatted="false">Festivo sostitutivo</string>
     <string name="language_follow_system" formatted="false">Segui l\'impostazione di sistema</string>
     <string name="language_picker_title" formatted="false">Lingua</string>
+    <string name="leave_family_confirm" formatted="false">Rimuovi</string>
+    <string name="leave_family_done_message" formatted="false">Il collegamento da genitore sul server e l\'account anonimo sono stati eliminati, e il collegamento familiare su questo telefono è stato rimosso. I registri, le programmazioni e i luoghi di tuo figlio restano nella famiglia.</string>
+    <string name="leave_family_done_signed_out_message" formatted="false">Il collegamento da genitore sul server è stato eliminato e il collegamento familiare su questo telefono è stato rimosso. Non è stato possibile confermare l\'eliminazione dell\'account anonimo, quindi è stata eseguita solo la disconnessione. Se l\'account esiste ancora, contiene solo il suo ID e la data di creazione, senza dati sulla famiglia.</string>
+    <string name="leave_family_done_title" formatted="false">Questo telefono è stato rimosso dalla famiglia</string>
+    <string name="leave_family_failed_title" formatted="false">Impossibile rimuovere questo telefono</string>
+    <string name="leave_family_in_progress" formatted="false">Rimozione dalla famiglia…</string>
+    <string name="leave_family_last_guardian_message" formatted="false">Questo telefono è l\'ultimo genitore della famiglia. Dopo, nessuno potrà vedere o gestire questa famiglia da un telefono genitore, e non si può annullare. Il telefono di tuo figlio continuerà a inviare dati che nessuno vedrà: elimina l\'app anche dal suo telefono.</string>
+    <string name="leave_family_menu" formatted="false">Rimuovi questo telefono dalla famiglia</string>
+    <string name="leave_family_message" formatted="false">Verranno eliminati il collegamento da genitore di questo telefono e il suo account anonimo. I registri, le programmazioni e i luoghi di tuo figlio restano nella famiglia. Per rivederli ti servirà un nuovo codice di invito.</string>
+    <string name="leave_family_no_account" formatted="false">Accesso di questo telefono non trovato, quindi non è stato possibile rimuoverlo dal server. Non è stato eliminato nulla. Riapri l\'app e riprova.</string>
+    <string name="leave_family_title" formatted="false">Rimuovere questo telefono dalla famiglia?</string>
+    <string name="leave_family_unconfirmed_message" formatted="false">Il server non ha confermato, quindi non è stato ancora eliminato nulla. Sul server potrebbe essere già rimosso: tocca di nuovo quando sei connesso.</string>
     <string name="list_loading" formatted="false">Caricamento…</string>
     <string name="map_battery_info_confirm" formatted="false">OK</string>
     <string name="map_battery_info_message" formatted="false">Il livello mostrato qui è quello riferito dal telefono di tuo figlio. Android non permette di leggere da un altro telefono quale app ha consumato quanta batteria, quindi va guardato in Impostazioni &gt; Batteria sul suo telefono.</string>
@@ -321,6 +336,13 @@
     <string name="schedule_sync_retry" formatted="false">Prova ad avvisare di nuovo</string>
     <string name="schedule_sync_slow" formatted="false">La regola è salvata. Avvisare il telefono di tuo figlio finirà appena c\'è internet.</string>
     <string name="schedule_time_format">%1$02d:%2$02d</string>
+    <string name="segment_distance_kilometers">%1$.1f km</string>
+    <string name="segment_distance_meters">%1$d m</string>
+    <string name="segment_distance_under_ten_meters" formatted="false">Meno di 10 m</string>
+    <string name="segment_duration_hours">%1$d h</string>
+    <string name="segment_duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="segment_duration_minutes">%1$d min</string>
+    <string name="segment_duration_under_minute" formatted="false">Meno di 1 min</string>
     <string name="tab_alert" formatted="false">Novità</string>
     <string name="tab_control" formatted="false">Controllo</string>
     <string name="tab_map" formatted="false">Mappa</string>

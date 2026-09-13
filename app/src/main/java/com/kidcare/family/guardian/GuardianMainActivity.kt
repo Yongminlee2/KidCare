@@ -11,8 +11,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kidcare.family.R
+import com.kidcare.family.RouterActivity
+import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.LanguagePicker
+import com.kidcare.family.core.errorMessage
 import com.kidcare.family.core.model.ChildStatusDoc
 import com.kidcare.family.core.FamilyMember
 import com.kidcare.family.core.FamilyRepository
@@ -23,9 +27,14 @@ import com.kidcare.family.logic.ChildSelector
 import com.kidcare.family.logic.SelectableChild
 import com.kidcare.family.onboarding.GuardianPairingActivity
 import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -119,6 +128,9 @@ class GuardianMainActivity : AppCompatActivity() {
      * 못 알리는 셈이다. 그래서 시간이 흐르는 것만으로도 다시 판정한다.
      */
     private var bannerJob: Job? = null
+
+    /** 가족에서 빼기가 도는 중인가. 두 번 눌러 두 번 도는 것을 막는다. */
+    private var leaveJob: Job? = null
 
     /**
      * 상태바·내비게이션바가 차지하는 높이. 인셋 리스너가 채워 넣는다.
@@ -254,10 +266,12 @@ class GuardianMainActivity : AppCompatActivity() {
             101,
             getString(R.string.child_selector_add_guardian_count, guardians.size),
         )
+        popup.menu.add(MENU_GROUP_ACTIONS, MENU_LEAVE_FAMILY, 102, getString(R.string.leave_family_menu))
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_ADD_CHILD -> { openInvite("child"); true }
                 MENU_ADD_GUARDIAN -> { openInvite("guardian"); true }
+                MENU_LEAVE_FAMILY -> { confirmLeaveFamily(); true }
                 else -> {
                     val child = children.getOrNull(item.itemId - MENU_CHILD_BASE) ?: return@setOnMenuItemClickListener false
                     selectChild(child.uid)
@@ -283,6 +297,95 @@ class GuardianMainActivity : AppCompatActivity() {
                 .putExtra(GuardianPairingActivity.EXTRA_INVITE_ROLE, role)
                 .putExtra(GuardianPairingActivity.EXTRA_RETURN_TO_MAIN, true)
         )
+    }
+
+    // ------------------------------------------------------------ 가족에서 빼기
+
+    /**
+     * 마지막 보호자라면 막지는 않되 따로 경고한다. 초대 번호는 보호자만 만들 수 있어서
+     * 그 뒤로는 누구도 이 가족을 보거나 관리할 수 없다.
+     */
+    private fun confirmLeaveFamily() {
+        if (leaveJob?.isActive == true) return
+        val lastGuardian = guardians.size <= 1
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.leave_family_title)
+            .setMessage(
+                if (lastGuardian) R.string.leave_family_last_guardian_message
+                else R.string.leave_family_message,
+            )
+            .setNegativeButton(R.string.dialog_cancel, null)
+            .setPositiveButton(R.string.leave_family_confirm) { _, _ -> leaveFamily() }
+            .show()
+    }
+
+    private fun leaveFamily() {
+        val familyId = RoleStore(this).familyId
+        val uid = AuthGateway.currentUid()
+        if (familyId == null || uid == null) {
+            showLeaveFailed(getString(R.string.leave_family_no_account))
+            return
+        }
+        val progress = MaterialAlertDialogBuilder(this)
+            .setMessage(R.string.leave_family_in_progress)
+            .setCancelable(false)
+            .show()
+        leaveJob = lifecycleScope.launch {
+            val failure = try {
+                withTimeout(LEAVE_SERVER_TIMEOUT_MILLIS) { LeaveFamily.removeMember(familyId, uid) }
+                null
+            } catch (e: TimeoutCancellationException) {
+                getString(R.string.leave_family_unconfirmed_message)
+            } catch (e: CancellationException) {
+                progress.dismiss()
+                throw e
+            } catch (e: Exception) {
+                errorMessage(this@GuardianMainActivity, e)
+            }
+            if (failure != null) {
+                progress.dismiss()
+                showLeaveFailed(failure)
+                return@launch
+            }
+            // 서버에서 이미 빠졌다. 여기서 화면이 사라져도 계정·기록 정리는 끝까지 한다 —
+            // 반쯤 멈추면 이 폰은 가족이 없는데 가족이 있다고 믿는 상태로 남는다.
+            memberListener?.remove()
+            memberListener = null
+            val outcome = withContext(NonCancellable) {
+                LeaveFamily.deleteAccount().also { LeaveFamily.clearLocal(applicationContext) }
+            }
+            progress.dismiss()
+            if (isFinishing || isDestroyed) {
+                restartFromRouter()
+                return@launch
+            }
+            MaterialAlertDialogBuilder(this@GuardianMainActivity)
+                .setTitle(R.string.leave_family_done_title)
+                .setMessage(
+                    if (outcome == LeaveFamily.AuthOutcome.DELETED) R.string.leave_family_done_message
+                    else R.string.leave_family_done_signed_out_message,
+                )
+                .setPositiveButton(android.R.string.ok, null)
+                .setOnDismissListener { restartFromRouter() }
+                .show()
+        }
+    }
+
+    private fun showLeaveFailed(message: String) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.leave_family_failed_title)
+            .setMessage(message)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+    }
+
+    /** 첫 화면부터 다시 — 역할이 비었으니 역할 선택으로 간다. */
+    private fun restartFromRouter() {
+        applicationContext.startActivity(
+            Intent(applicationContext, RouterActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
+        )
+        finish()
     }
 
     private fun recreateTabsForSelectedChild() {
@@ -476,6 +579,10 @@ class GuardianMainActivity : AppCompatActivity() {
         private const val MENU_CHILD_BASE = 10_000
         private const val MENU_ADD_CHILD = 20_001
         private const val MENU_ADD_GUARDIAN = 20_002
+        private const val MENU_LEAVE_FAMILY = 20_003
+
+        /** 서버가 멤버 기록 삭제를 확인해 주기를 기다리는 한도. 명령 발행과 같은 15초. */
+        private const val LEAVE_SERVER_TIMEOUT_MILLIS = 15_000L
 
         /** 시간이 흐른 것만으로 다시 판정하는 간격([bannerJob] 주석 참고). 30분
          *  기준에 대해 1분 오차면 충분하고, 1분에 한 번 도는 비용은 무시할 만하다.

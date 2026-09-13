@@ -157,7 +157,7 @@ object ScheduleText {
 
     /** 1=월 … 7=일. [com.kidcare.family.logic.ScheduleRule.days] 와 같은 규칙이다
      *  (`java.time.DayOfWeek.value`). 인덱스는 요일값 - 1. */
-    private val DAY_NAME_RES = intArrayOf(
+    val DAY_NAME_RES = intArrayOf(
         R.string.schedule_day_mon,
         R.string.schedule_day_tue,
         R.string.schedule_day_wed,

@@ -365,8 +365,8 @@ class GoldenFileWriterTest {
      * **완전히 다른(대개 훨씬 긴) 변을 가진 일직선 배치**가 만들어지는데, 호출한 쪽은
      * 자기가 원한 경계값을 그대로 테스트하고 있다고 착각한다 — 실제로 팔 길이 25m 를
      * 요청했는데 95~100m 짜리 일직선이 나온 채 "25m 경계 테스트"라는 이름을 달고 있던
-     * 회귀가 있었다. `parseDurationText`/`parseDistanceText`가 모르는 형식에 `error()`
-     * 로 죽는 것과 같은 판단이다 — 불가능한 모양을 조용히 다른 모양으로 바꿔치기하지
+     * 회귀가 있었다. 예전 `parseDurationText`/`parseDistanceText`가 모르는 형식에 `error()`
+     * 로 죽던 것과 같은 판단이다 — 불가능한 모양을 조용히 다른 모양으로 바꿔치기하지
      * 않는다.
      */
     private fun triangle(firstArm: Double, secondArm: Double, bridge: Double): Triple<Pair<Double, Double>, Pair<Double, Double>, Pair<Double, Double>> {
@@ -669,10 +669,9 @@ class GoldenFileWriterTest {
         }
 
     // ==================================================================
-    // 4. SegmentSummarizer — 경계값. 스위프트는 구조를 돌려주고 코틀린은 한국어 문장을
-    // 돌려준다(Phase 2 의 의도된 차이). 그래서 코틀린이 **실제로 돌려준 문장**을 이 안에서
-    // 파싱해 구조로 바꾼 다음 JSON 에 적는다 — 그래야 "실제 함수의 출력"을 대조하는
-    // 것이지, 생성기가 로직을 다시 구현해 저 혼자와 대조하는 헛일이 되지 않는다.
+    // 4. SegmentSummarizer — 경계값. 코틀린도 이제 문장이 아니라 값(Duration·Distance)을
+    // 돌려준다(origin/main 0feb0e3). 그래서 **실제 함수가 돌려준 값**을 그대로 구조로 옮겨
+    // JSON 에 적는다 — 생성기가 로직을 다시 구현해 저 혼자와 대조하는 헛일이 되지 않는다.
     // ==================================================================
 
     @Test
@@ -681,19 +680,12 @@ class GoldenFileWriterTest {
         writeGoldenIfPresent("segmentSummarizer", toJson(payload))
     }
 
-    private fun parseDurationText(text: String): Map<String, Any?> {
-        Regex("^(\\d+)시간 (\\d+)분$").find(text)?.let {
-            val (h, m) = it.destructured
-            return linkedMapOf("millisText" to text, "case" to "hoursMinutes", "hours" to h.toInt(), "minutes" to m.toInt())
-        }
-        Regex("^(\\d+)시간$").find(text)?.let {
-            return linkedMapOf("millisText" to text, "case" to "hours", "hours" to it.groupValues[1].toInt())
-        }
-        Regex("^(\\d+)분$").find(text)?.let {
-            return linkedMapOf("millisText" to text, "case" to "minutes", "minutes" to it.groupValues[1].toInt())
-        }
-        if (text == "1분 미만") return linkedMapOf("millisText" to text, "case" to "underOneMinute")
-        error("durationText 형식을 못 읽는다: '$text'")
+    private fun durationJson(value: SegmentSummarizer.Duration): Map<String, Any?> = when (value) {
+        SegmentSummarizer.Duration.UnderMinute -> linkedMapOf("case" to "underOneMinute")
+        is SegmentSummarizer.Duration.Minutes -> linkedMapOf("case" to "minutes", "minutes" to value.minutes)
+        is SegmentSummarizer.Duration.Hours -> linkedMapOf("case" to "hours", "hours" to value.hours)
+        is SegmentSummarizer.Duration.HoursMinutes ->
+            linkedMapOf("case" to "hoursMinutes", "hours" to value.hours, "minutes" to value.minutes)
     }
 
     /**
@@ -702,12 +694,15 @@ class GoldenFileWriterTest {
      * `Map` 합치기(`+`)에서 뒤에 합쳐지는 입력값이 이 출력값을 조용히 덮어써 버린다
      * (실제로 그 버그가 있었다 — 골든 파일에 십 단위로 내림된 결과 대신 원래 입력이
      * 그대로 찍혀 있었다).
+     *
+     * 킬로미터는 화면 서식이 소수 한 자리로 자른다(SegmentSummarizer.distance 주석).
+     * 예전 골든 파일은 "%.1fkm" 문장을 파싱한 값이었으므로 같은 자리에서 반올림해 적는다.
      */
-    private fun parseDistanceText(text: String): Map<String, Any?> {
-        if (text == "10m 미만") return linkedMapOf("case" to "underTenMeters")
-        if (text.endsWith("km")) return linkedMapOf("case" to "kilometers", "kilometers" to text.removeSuffix("km").toDouble())
-        if (text.endsWith("m")) return linkedMapOf("case" to "meters", "roundedMeters" to text.removeSuffix("m").toInt())
-        error("distanceText 형식을 못 읽는다: '$text'")
+    private fun distanceJson(value: SegmentSummarizer.Distance): Map<String, Any?> = when (value) {
+        SegmentSummarizer.Distance.UnderTenMeters -> linkedMapOf("case" to "underTenMeters")
+        is SegmentSummarizer.Distance.Meters -> linkedMapOf("case" to "meters", "roundedMeters" to value.meters)
+        is SegmentSummarizer.Distance.Kilometers ->
+            linkedMapOf("case" to "kilometers", "kilometers" to String.format(java.util.Locale.ROOT, "%.1f", value.kilometers).toDouble())
     }
 
     private fun generateSegmentSummarizer(): Map<String, Any?> {
@@ -721,8 +716,7 @@ class GoldenFileWriterTest {
         repeat(30) { durationMillis += durationRandom.nextLong(0L, 100_000_000L) }
 
         val durations = durationMillis.distinct().sorted().map { millis ->
-            val text = SegmentSummarizer.durationText(millis)
-            parseDurationText(text) + mapOf("millis" to millis)
+            durationJson(SegmentSummarizer.duration(millis)) + mapOf("millis" to millis)
         }
 
         val distanceMeters = mutableListOf<Double>()
@@ -735,8 +729,7 @@ class GoldenFileWriterTest {
         repeat(30) { distanceMeters += distanceRandom.nextDouble(0.0, 5000.0) }
 
         val distances = distanceMeters.distinct().sorted().map { meters ->
-            val text = SegmentSummarizer.distanceText(meters)
-            parseDistanceText(text) + mapOf("meters" to meters)
+            distanceJson(SegmentSummarizer.distance(meters)) + mapOf("meters" to meters)
         }
 
         val zones = listOf(ZoneId.of("Asia/Seoul"), ZoneId.of("UTC"), ZoneId.of("America/New_York"))
