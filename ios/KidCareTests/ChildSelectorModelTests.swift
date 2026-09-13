@@ -108,6 +108,23 @@ struct ChildSelectorModelTests {
         #expect(m.children.map(m.라벨) == ["아이 · 1111", "아이 · 2222", "민준"])
     }
 
+    @Test("빈 저장 이름은 이 폰의 언어로 child_default_name, 옛 가족의 한국어 이름은 그대로(안드로이드 ifBlank)")
+    func 빈_이름은_기본_이름으로() async {
+        let fallback = String(localized: "child_default_name")
+        #expect(fallback != "child_default_name", "카탈로그에 키가 없다")
+        #expect(ChildSelectorModel.표시_이름("") == fallback)
+        #expect(ChildSelectorModel.표시_이름("  ") == fallback)
+        #expect(ChildSelectorModel.표시_이름("아이") == "아이")
+        #expect(ChildSelectorModel.표시_이름("민준") == "민준")
+
+        let store = 저장소("c1"), 구독 = 가짜_구독()
+        let m = 만든다(store, 구독)
+        m.시작한다()
+        구독.보낸다([멤버("c1", "child", "", joined: 1)])
+        await eventually { m.children.count == 1 }
+        #expect(m.지도_이름 == fallback)
+    }
+
     @Test("고르면 이 폰의 선택만 바뀐다 — 서버에는 쓰지 않는다(:271-278, 판정 기록 6)")
     func 고른다() async {
         let store = 저장소("c1"), 구독 = 가짜_구독()

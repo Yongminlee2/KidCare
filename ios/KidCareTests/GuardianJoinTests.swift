@@ -56,6 +56,24 @@ struct GuardianJoinTests {
         let member = try #require(MemberDoc(snap.data() ?? [:]))
         #expect(member.role == .guardian)
         #expect(member.joinCode == invite.code)
+        #expect(member.displayName == "아빠")
+    }
+
+    @Test("이름 없이 합류하면 \"보호자\" 가 아니라 빈 이름을 저장한다 — 안드로이드 joinFamily 와 같다(규칙도 빈 문자열을 받는다)")
+    func 빈_이름으로_합류() async throws {
+        let owner = try await EmulatorHarness.freshUser()
+        let familyId = try await FamilyRepository.createFamily(guardianUid: owner)
+        let invite = try await FamilyRepository.createInvite(familyId: familyId, role: .guardian, previousCode: nil)
+
+        let iphone = try await EmulatorHarness.freshUser()
+        _ = try await FamilyRepository.joinFamily(
+            code: invite.code, uid: iphone, expectedRole: .guardian, displayName: "   "
+        )
+        let snap = try await Firestore.firestore()
+            .collection("families").document(familyId)
+            .collection("members").document(iphone).getDocument()
+        let member = try #require(MemberDoc(snap.data() ?? [:]))
+        #expect(member.displayName == "")
     }
 
     @Test("합류한 보호자는 가족의 멤버 목록을 읽을 수 있다")

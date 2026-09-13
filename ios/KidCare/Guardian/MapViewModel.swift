@@ -544,7 +544,9 @@ final class MapViewModel {
         let 서버시각 = await 서버시각_작업
         let 이_시각의_기기시계 = Int64(Date().timeIntervalSince1970 * 1000)
         guard !닫혔다, generation == loadGeneration else { return } // 그사이 날짜가 바뀌었으면 이 값도 버린다
-        if let name = 멤버?.displayName, !name.isEmpty { 아이_이름 = name }
+        // 저장 이름이 비었으면(안드로이드·아이폰 모두 이제 빈 이름으로 저장한다) 이 폰의 언어로 child_default_name 을 입힌다.
+        // 옛 가족의 한국어 이름처럼 비어 있지 않은 값은 그대로 보인다(안드로이드 MapTimelineFragment 의 ifBlank 와 같다).
+        if let 멤버 { 아이_이름 = ChildSelectorModel.표시_이름(멤버.displayName) }
         if let 서버시각 {
             서버기준_지금 = 서버시각
             // C1-b: 오프셋을 갱신해 둬야 `시계를_돈다()` 가 이후 60초마다 Firestore

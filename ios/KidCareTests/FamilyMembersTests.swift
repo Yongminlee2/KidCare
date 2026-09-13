@@ -26,9 +26,13 @@ struct FamilyMembersTests {
         #expect(Set(fetched.map(\.uid)) == [guardianUid, child.uid])
         let 아이 = try #require(fetched.first { $0.uid == child.uid })
         #expect(아이.role == "child")
-        #expect(아이.displayName == "아이")
+        #expect(아이.displayName == "")
         #expect(아이.joinedAt > 0)
-        #expect(fetched.first { $0.uid == guardianUid }?.displayName == "보호자")   // Task 1 판정 기록 4
+        // 이름은 비워서 저장한다 — 안드로이드 FamilyRepository.kt createFamily 와 같다(origin/main 0feb0e3).
+        // 화면은 이 폰의 언어로 child_default_name 을 입힌다(ChildSelectorModel.표시_이름).
+        #expect(fetched.first { $0.uid == guardianUid }?.displayName == "")
+        let family = try await Firestore.firestore().collection("families").document(familyId).getDocument()
+        #expect(family.data()?["name"] as? String == "")
 
         let 기록 = 목록()
         let listener = FamilyRepository.observeMembers(

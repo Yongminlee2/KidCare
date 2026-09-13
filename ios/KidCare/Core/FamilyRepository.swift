@@ -139,14 +139,13 @@ enum FamilyRepository {
         }
 
         guard let offset = measured else {
-            // 시간 초과든 진짜 실패든 **캐시하지 않는다** — 안드로이드와 의도적으로
-            // 다른 지점이다. 안드로이드(FamilyRepository.kt)는 시간 초과는 안 캐시하지만
-            // 진짜 실패(주로 "아직 멤버가 아니라 잴 문서가 없다")는 0 으로 캐시한다.
-            // 그런데 이 실패는 가입 전 첫 호출에서 거의 항상 일어나는 경우라, 0 을
+            // 시간 초과든 진짜 실패든 **캐시하지 않는다** — 이제 안드로이드(FamilyRepository.kt
+            // serverNow, origin/main 0feb0e3)도 같다. 두 플랫폼 모두 이번 호출만 기기 시계로
+            // 물러나고 다음 호출이 다시 잰다. 진짜 실패(주로 "아직 멤버가 아니라 잴 문서가
+            // 없다")는 가입 전 첫 호출에서 거의 항상 일어나는 경우라, 이것을 0 으로
             // 굳히면 그 프로세스가 살아있는 내내 이후의 모든 초대·가입이 기기
             // 시계로 계산된다 — 오프셋이 막아야 할 "만들자마자 죽은 코드"를 오프셋
-            // 자신이 다시 만드는 셈이다. 그래서 여기서는 두 경우 다 캐시하지 않고
-            // 다음 호출이 다시 잰다.
+            // 자신이 다시 만드는 셈이다. 안드로이드가 예전에 0 을 캐시하던 것이 바로 이 결함이었다.
             return deviceNow()
         }
         serverOffsetLock.withLock { $0 = offset }
@@ -232,12 +231,13 @@ enum FamilyRepository {
         let bootTime = deviceNow()
         let familyRef = db.collection("families").document()
 
-        // 서버에 **저장되는** 기본 이름은 문구 키를 쓰지 않는다. 키 값은 언어마다 달라지고(6단계부터 14개),
-        // role_guardian 은 화면용이라 "보호자 (엄마·아빠)"다. 안드로이드는 이 값들을 글자 그대로 저장한다
-        // (FamilyRepository.kt:145, 156, 349 — README "안드로이드에 남은 다국어 구멍" 3번).
+        // 이름은 **비워서** 저장한다 — 안드로이드와 같다(FamilyRepository.kt createFamily, origin/main 0feb0e3).
+        // 예전에는 "우리 가족"·"보호자"를 한국어 그대로 넣어, 영어 폰이 만든 가족도 서버에는 한국어로 남았다.
+        // 저장된 값은 번역되지 않으므로 기본 이름은 읽는 화면이 그 폰의 언어로 입힌다(child_default_name).
+        // 이미 저장된 옛 가족의 한국어 이름은 그대로 두고, 화면도 비어 있지 않으면 그대로 보인다.
         try await familyRef.setData(
             FamilyDoc(
-                name: "우리 가족",
+                name: "",
                 createdAt: bootTime,
                 ownerUid: guardianUid,
                 schemaVersion: FamilyDoc.currentSchemaVersion
@@ -246,7 +246,7 @@ enum FamilyRepository {
         try await familyRef.collection("members").document(guardianUid).setData(
             MemberDoc(
                 role: .guardian,
-                displayName: "보호자",
+                displayName: "",
                 updatedAt: bootTime,
                 joinedAt: bootTime
             ).firestoreData
@@ -321,9 +321,8 @@ enum FamilyRepository {
 
         let familyRef = db.collection("families").document(doc.familyId)
         let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
-        // 저장 이름은 글자 그대로다 — 문구 키를 쓰지 않는 이유는 createFamily 의 주석.
-        let fallback = doc.role == .guardian ? "보호자" : "아이"
-        let name = trimmed.isEmpty ? fallback : String(trimmed.prefix(20))
+        // 비었으면 빈 채로 둔다 — 읽는 화면이 child_default_name 으로 채운다(createFamily 의 이름 주석, 안드로이드 joinFamily 와 같다).
+        let name = String(trimmed.prefix(20))
 
         do {
             try await familyRef.collection("members").document(uid).setData(

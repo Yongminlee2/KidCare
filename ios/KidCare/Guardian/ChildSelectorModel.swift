@@ -170,8 +170,15 @@ final class ChildSelectorModel {
     }
 
     private static func 이름(_ child: FamilyMember) -> String {
-        child.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        표시_이름(child.displayName)
+    }
+
+    /// 저장된 아이 이름을 화면에 쓸 이름으로. 비었으면 이 폰의 언어로 `child_default_name` 을 입힌다 — 안드로이드
+    /// `displayName.ifBlank { getString(R.string.child_default_name) }`(GuardianMainActivity.kt:246)와 같다.
+    /// 두 앱 모두 이제 빈 이름을 저장하고(FamilyRepository.createFamily·joinFamily), 옛 가족의 한국어 이름은 그대로 보인다.
+    nonisolated static func 표시_이름(_ 저장된_이름: String) -> String {
+        저장된_이름.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? String(localized: "child_default_name")
-            : child.displayName
+            : 저장된_이름
     }
 }

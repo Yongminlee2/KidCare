@@ -84,7 +84,7 @@ enum EmulatorHarness {
         try await child.db.collection("families").document(familyId)
             .collection("members").document(child.uid).setData([
                 "role": "child",
-                "displayName": "아이",
+                "displayName": "",
                 "fcmToken": "",
                 "appVersion": "",
                 "updatedAt": now,
