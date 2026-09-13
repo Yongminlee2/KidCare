@@ -30,6 +30,8 @@ enum KidCarePalette {
     static let lineSoft = Color(hex: 0xE9E1ED)
     /// colors.xml:6 — `themes.xml:29` 의 colorSurfaceVariant. 장소 상한 안내 바탕.
     static let paperFold = Color(hex: 0xF5F0FF)
+    /// colors.xml:29 — 타임라인 패널 손잡이(`bg_timeline_handle.xml`)와 경로선 끝색.
+    static let routeLavender = Color(hex: 0x9B7DE2)
 }
 
 private extension Color {

@@ -39,7 +39,14 @@ struct NaverMapView: UIViewRepresentable {
     var 경로_전체_보기_요청: Int = 0
 
     final class Coordinator {
-        let marker = NMFMarker()
+        /// 정본은 안드로이드 `renderMapStatus`(:785-794) — `ChildMarkerFactory` 가 그린
+        /// 64 새싹이 원을 아이콘으로 쓰고, 기준점은 가로 가운데·세로 맨 아래(0.5, 1).
+        let marker: NMFMarker = {
+            let marker = NMFMarker()
+            marker.iconImage = NMFOverlayImage(image: ChildMarkerImage.make())
+            marker.anchor = CGPoint(x: 0.5, y: 1)
+            return marker
+        }()
         /// 이전 경로선. 매번 새로 그리기 전에 지운다 — 안 지우면 날짜를 넘길
         /// 때마다(또는 재조회 때마다) 선이 겹겹이 쌓인다(안드로이드 `drawRoute` 주석).
         var routeOverlay: NMFMultipartPath?
@@ -155,6 +162,29 @@ struct NaverMapView: UIViewRepresentable {
         overlay.outlineWidth = 4
         overlay.mapView = map
         coordinator.routeOverlay = overlay
+    }
+}
+
+/// 지도 위 아이 마커 그림. 정본은 안드로이드 `ChildMarkerFactory.create` — 치수를
+/// dp 그대로 pt 로 옮긴다: 64×64 판, 가운데(32, 31)에 반지름 27 paper_card 원(그림자
+/// 흐림 4·아래 2·검정 0x33), 같은 원에 3 굵기 sky_soft 테두리, 그 위에 `mascot_3d` 를
+/// (7, 3)–(57, 60) 사각형에 채워 그린다(안드로이드도 비율을 맞추지 않고 사각형에 늘린다).
+enum ChildMarkerImage {
+    static func make() -> UIImage {
+        UIGraphicsImageRenderer(size: CGSize(width: 64, height: 64)).image { context in
+            let cg = context.cgContext
+            let ring = CGRect(x: 32 - 27, y: 31 - 27, width: 54, height: 54)
+            cg.saveGState()
+            cg.setShadow(offset: CGSize(width: 0, height: 2), blur: 4,
+                         color: UIColor(white: 0, alpha: 0x33 / 255.0).cgColor)
+            cg.setFillColor(UIColor(KidCarePalette.paperCard).cgColor)
+            cg.fillEllipse(in: ring)
+            cg.restoreGState()
+            cg.setStrokeColor(UIColor(KidCarePalette.skySoft).cgColor)
+            cg.setLineWidth(3)
+            cg.strokeEllipse(in: ring)
+            UIImage(named: "Mascot3D")?.draw(in: CGRect(x: 7, y: 3, width: 50, height: 57))
+        }
     }
 }
 

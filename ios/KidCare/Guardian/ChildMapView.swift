@@ -118,17 +118,23 @@ struct ChildMapView: View {
     }
 
     /// '지금 위치 확인' 버튼. 정본은 안드로이드 `fragment_map_timeline.xml` 의
-    /// `locate_button`(원형, 지도 오른쪽 아래) — `status_card` 의 일부가 아니라
-    /// 별도로 떠 있는 요소다(진행 문구·스피너만 카드 쪽, `StatusCardView` 참고).
+    /// `locate_button`(:142-168) — `status_card` 의 일부가 아니라 별도로 떠 있는
+    /// 요소다(진행 문구·스피너만 카드 쪽, `StatusCardView` 참고). 52 불투명 paper_card
+    /// 원, 1 line_soft 테두리, 그림자 5, 가운데 28 `ic_map_crosshair`(sky).
     private var 지금위치_버튼: some View {
         Button {
             Task { await viewModel.지금_위치를_확인한다() }
         } label: {
-            Image(systemName: "location.fill")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(.primary)
+            MapCrosshairIcon(color: KidCarePalette.sky)
+                .frame(width: 28, height: 28)
                 .frame(width: 52, height: 52)
-                .background(.thinMaterial, in: Circle())
+                .background(
+                    Circle()
+                        .fill(KidCarePalette.paperCard)
+                        .shadow(color: .black.opacity(0.14), radius: 5, y: 2) // cardElevation 5
+                )
+                .overlay(Circle().strokeBorder(KidCarePalette.lineSoft, lineWidth: 1))
+                .contentShape(Circle())
         }
         .buttonStyle(.plain)
         .disabled(!viewModel.위치확인_버튼_활성화)
@@ -139,32 +145,94 @@ struct ChildMapView: View {
         .accessibilityLabel(Text("map_locate_now"))
     }
 
-    /// Task 7: 실시간 보기 토글. 정본은 안드로이드 `liveTrackingButton`(:906) —
-    /// 켜짐/전환 중/꺼짐 세 배경색까지는 옮기지 않지만(이 앱은 시스템 accent
-    /// 하나로 켜짐을 표시한다), 안드로이드처럼 **보이는 문구**(`실시간_버튼_문구`)
-    /// 와 접근성 문구(`실시간_버튼_접근성_문구`)를 둘 다 옮긴다 — 아이콘 하나뿐인
-    /// '지금 위치 확인' 버튼과 달리, 이 버튼은 지금 상태(꺼짐/연결 중/켜짐)를
-    /// 문구로도 보여줘야 하는 세 갈래짜리 토글이라서다(브리프).
+    /// Task 7: 실시간 보기 토글. 정본은 안드로이드 `live_tracking_button`
+    /// (`fragment_map_timeline.xml:117-140`) + `renderLiveTrackingState`(:642-676) —
+    /// 높이 48 알약(모서리 24), 그림자 5, 14 medium 글자, 20 `ic_map_crosshair`(글자와
+    /// 7 띄움), 테두리 1. 세 갈래 색: 꺼짐 = paper_card 바탕·ink_soft 글자·line 테두리,
+    /// 연결 중 = apricot 바탕·흰 글자, 켜짐 = grass 바탕·흰 글자(둘 다 테두리는 바탕색).
+    /// **보이는 문구**(`실시간_버튼_문구`)와 접근성 문구(`실시간_버튼_접근성_문구`)를
+    /// 둘 다 옮긴다 — 지금 상태(꺼짐/연결 중/켜짐)를 문구로도 보여줘야 하는 세 갈래
+    /// 토글이라서다(브리프).
     private var 실시간_버튼: some View {
-        Button {
+        let look = LiveButtonLook(state: viewModel.liveTrackingState)
+        return Button {
             Task { await viewModel.실시간_추적을_토글한다() }
         } label: {
-            Label {
+            HStack(spacing: 7) {
+                MapCrosshairIcon(color: look.foreground)
+                    .frame(width: 20, height: 20)
                 Text(viewModel.실시간_버튼_문구)
-                    .font(.caption.weight(.semibold))
-            } icon: {
-                Image(systemName: viewModel.liveTrackingState == .off ? "dot.radiowaves.left.and.right" : "dot.radiowaves.left.and.right.slash")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(look.foreground)
+                    .lineLimit(1)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 24) // Widget.Material3.Button 좌우 여백
+            .frame(height: 48)
+            .background(
+                Capsule()
+                    .fill(look.background)
+                    .shadow(color: .black.opacity(0.14), radius: 5, y: 2) // elevation 5
+            )
+            .overlay(Capsule().strokeBorder(look.stroke, lineWidth: 1))
+            .contentShape(Capsule())
         }
-        .buttonStyle(.borderedProminent)
-        .tint(viewModel.liveTrackingState == .off ? Color(.systemGray5) : Color.green)
-        .foregroundStyle(viewModel.liveTrackingState == .off ? Color.primary : Color.white)
+        .buttonStyle(.plain)
         .disabled(viewModel.childUid == nil)
         // 비활성 상태가 눈에 보여야 한다 — 안드로이드 `renderLiveTrackingState` 의
         // alpha 0.55 와 같은 값.
         .opacity(viewModel.childUid == nil ? 0.55 : 1)
         .accessibilityLabel(Text(viewModel.실시간_버튼_접근성_문구))
+    }
+}
+
+/// 실시간 버튼의 세 갈래 색. 정본은 안드로이드 `renderLiveTrackingState` 의
+/// background/foreground/stroke `when`(:651-663) — 연결 중이 켜짐보다 먼저 이긴다.
+struct LiveButtonLook: Equatable {
+    let background: Color
+    let foreground: Color
+    let stroke: Color
+
+    init(state: LiveTrackingState) {
+        switch state {
+        case .starting:
+            background = KidCarePalette.apricot
+            foreground = KidCarePalette.onAccent
+            stroke = KidCarePalette.apricot
+        case .on:
+            background = KidCarePalette.grass
+            foreground = KidCarePalette.onAccent
+            stroke = KidCarePalette.grass
+        case .off:
+            background = KidCarePalette.paperCard
+            foreground = KidCarePalette.inkSoft
+            stroke = KidCarePalette.line
+        }
+    }
+}
+
+/// `ic_map_crosshair.xml` 을 `app:tint` 로 한 색에 물들인 모습. 틴트는 흰 밑획(6)과
+/// 잉크 윗획(2.5)을 **둘 다** 같은 색으로 칠하므로, 화면에 남는 것은 굵기 6 짜리
+/// 십자 네 획(둥근 끝)과 반지름 9 고리다(48 격자). 장소 편집 지도의 두 색 십자는
+/// `PlaceCrosshair` 가 따로 그린다 — 그쪽은 틴트하지 않는다.
+struct MapCrosshairIcon: View {
+    let color: Color
+
+    var body: some View {
+        Canvas { context, size in
+            let scale = size.width / 48
+            var 획 = Path()
+            for (from, to) in [(CGPoint(x: 24, y: 6), CGPoint(x: 24, y: 18)),
+                               (CGPoint(x: 24, y: 30), CGPoint(x: 24, y: 42)),
+                               (CGPoint(x: 6, y: 24), CGPoint(x: 18, y: 24)),
+                               (CGPoint(x: 30, y: 24), CGPoint(x: 42, y: 24))] {
+                획.move(to: from)
+                획.addLine(to: to)
+            }
+            let 크기 = CGAffineTransform(scaleX: scale, y: scale)
+            let 고리 = Path(ellipseIn: CGRect(x: 15, y: 15, width: 18, height: 18)).applying(크기)
+            context.stroke(획.applying(크기), with: .color(color), style: StrokeStyle(lineWidth: 6 * scale, lineCap: .round))
+            context.stroke(고리, with: .color(color), lineWidth: 6 * scale)
+        }
+        .accessibilityHidden(true)
     }
 }

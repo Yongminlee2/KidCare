@@ -90,7 +90,8 @@ struct TimelinePanelView: View {
             dayNavigationRow
         }
         .background(Self.panelBackground)
-        .clipShape(.rect(topLeadingRadius: 20, topTrailingRadius: 20))
+        // 정본 `ShapeAppearance.KidCare.BottomSheet`(themes.xml:102-108) — 위 두 모서리 28.
+        .clipShape(.rect(topLeadingRadius: 28, topTrailingRadius: 28))
         .shadow(color: .black.opacity(0.12), radius: 10, y: -2)
         .onAppear {
             // 이어받은 값을 곧바로 MapViewModel(→ Task 8 자리)에 알린다 — 화면이
@@ -108,14 +109,16 @@ struct TimelinePanelView: View {
     /// (Task 6 스크린샷) 모두 데이터와 무관하게 "제목만 있고 아래 줄이 빈" 행이 됐다 —
     /// 줄 간격은 두 줄짜리 그대로 남아 있었다. 바탕만 불투명 색으로 바꾸자 같은
     /// 빌드에서 상세 줄이 그대로 나타났다(`TimelinePanelRenderTests` 가 픽셀로 확인한다).
-    static var panelBackground: Color { Color(uiColor: .secondarySystemGroupedBackground) }
+    /// 색도 안드로이드와 같은 paper_card(#FFFEFC)다.
+    static var panelBackground: Color { KidCarePalette.paperCard }
 
     // MARK: - 손잡이
 
     private var dragHandle: some View {
         ZStack {
-            Capsule()
-                .fill(Color.secondary.opacity(0.4))
+            // 정본 `bg_timeline_handle.xml` — 42×5, route_lavender, 모서리 3.
+            RoundedRectangle(cornerRadius: 3)
+                .fill(KidCarePalette.routeLavender)
                 .frame(width: 42, height: 5)
         }
         .frame(maxWidth: .infinity)
@@ -181,50 +184,68 @@ struct TimelinePanelView: View {
     // MARK: - 경로 요약 + 토글
 
     private var routeSummaryRow: some View {
-        HStack(spacing: 10) {
+        // 정본 fragment_map_timeline.xml:203-264 — 줄 높이 54, 여백 시작 16·끝 8.
+        HStack(spacing: 0) {
+            // :211-218 — 38 원(`bg_route_icon`, sky_soft), 안쪽 9, `ic_route` sky.
             Image(systemName: "point.topleft.down.curvedto.point.bottomright.up")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.blue)
+                .foregroundStyle(KidCarePalette.sky)
                 .frame(width: 38, height: 38)
-                .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background(KidCarePalette.skySoft, in: Circle())
 
             Text(viewModel.경로_요약_문구)
                 .font(.headline)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 10)
 
             // Task 8: 전체 구간 숨김/보임. 정본은 안드로이드 `routeVisibilityButton`
             // + `renderRouteVisibilityState`(:1111).
             Button {
                 viewModel.전체_경로를_토글한다()
             } label: {
-                Image(systemName: viewModel.경로_전체_보임 ? "eye" : "eye.slash")
-                    .font(.system(size: 14, weight: .semibold))
+                // :231-247 — 테두리 없는 Text 버튼 42×42, 아이콘 22 sky(`ic_visibility`/`_off`, 채운 눈).
+                Image(systemName: viewModel.경로_전체_보임 ? "eye.fill" : "eye.slash.fill")
+                    .font(.system(size: 17))
+                    .foregroundStyle(KidCarePalette.sky)
+                    .frame(width: 42, height: 42)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(.bordered)
-            .tint(.blue)
+            .buttonStyle(.plain)
+            .padding(.trailing, 2)
             .disabled(!viewModel.경로_숨김_버튼_활성화)
             // 구간이 없으면 알아볼 수 있게 흐리게 — 안드로이드 alpha 0.38 과 같다(브리프).
             .opacity(viewModel.경로_숨김_버튼_활성화 ? 1 : 0.38)
             .accessibilityLabel(Text(viewModel.경로_숨김_버튼_접근성_문구))
 
             Button(action: toggle) {
+                // :249-263 — `Widget.KidCare.Button.Tonal`(sky_soft 바탕·sky 글자, 모서리 18),
+                // 높이 42, 13 medium, 끝에 18 `ic_expand_more`(4 띄움). 안드로이드
+                // `renderTimelineToggleState` 는 글자만 바꾸고 아이콘은 늘 아래 화살표다.
                 HStack(spacing: 4) {
                     Text(String(localized: expanded ? "timeline_collapse" : "timeline_view_records"))
-                        .font(.caption.weight(.semibold))
-                    Image(systemName: expanded ? "chevron.up" : "chevron.down")
-                        .font(.caption2.weight(.semibold))
+                        .font(.system(size: 13, weight: .medium))
+                        .lineLimit(1)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11, weight: .semibold))
+                        .frame(width: 18, height: 18)
                 }
+                .foregroundStyle(KidCarePalette.sky)
+                .padding(.horizontal, 24)
+                .frame(height: 42)
+                .background(KidCarePalette.skySoft, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .fixedSize(horizontal: true, vertical: false)
             }
-            .buttonStyle(.bordered)
-            .tint(.blue)
+            .buttonStyle(.plain)
             // 정본은 안드로이드 `renderTimelineToggleState`(:893) — 접혀 있으면
             // "펼치기" 설명을, 펼쳐져 있으면 "접기" 설명을 읽어준다. 기존 안드로이드
             // 키(`timeline_expand`/`timeline_collapse`)를 그대로 재사용한다 — 새
             // 키를 만들지 않는다(brief).
             .accessibilityLabel(Text(expanded ? "timeline_collapse" : "timeline_expand"))
         }
-        .padding(.horizontal, 16)
+        .padding(.leading, 16)
+        .padding(.trailing, 8)
         .frame(height: 54)
     }
 
@@ -276,35 +297,47 @@ struct TimelinePanelView: View {
     /// + `renderDayHeader`(:867). 접근성 라벨(`day_prev`/`day_next`)은 기존 안드로이드
     /// 키를 그대로 쓴다.
     private var dayNavigationRow: some View {
-        HStack {
+        // 정본 fragment_map_timeline.xml:292-338 — 줄 높이 54, 가로 여백 10. 화살표는 44 Text
+        // 버튼(sky), 가운데 날짜는 좌우 6 띄운 44 높이 sky_soft 알약(`bg_date_pill`, 모서리 22)에
+        // TitleSmall(16 medium) sky 한 줄.
+        HStack(spacing: 0) {
             Button {
                 Task { await viewModel.이전_날로() }
             } label: {
-                Image(systemName: "chevron.left")
-                    .frame(width: 44, height: 44)
+                날짜_화살표("chevron.left")
             }
             .accessibilityLabel(Text("day_prev"))
 
-            Spacer()
-
             Text(viewModel.날짜_헤더_문구)
-                .font(.subheadline.bold())
-                .foregroundStyle(.primary)
-
-            Spacer()
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(KidCarePalette.sky)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(KidCarePalette.skySoft, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .padding(.horizontal, 6)
 
             Button {
                 Task { await viewModel.다음_날로() }
             } label: {
-                Image(systemName: "chevron.right")
-                    .frame(width: 44, height: 44)
+                날짜_화살표("chevron.right")
             }
             .disabled(!viewModel.다음_날로_갈_수_있는가)
+            // 오늘에서는 못 넘어간다 — 비활성이 눈에 보이게(M3 비활성 38%).
+            .opacity(viewModel.다음_날로_갈_수_있는가 ? 1 : 0.38)
             .accessibilityLabel(Text("day_next"))
         }
         .padding(.horizontal, 10)
         .buttonStyle(.plain)
         .frame(height: 54)
+    }
+
+    private func 날짜_화살표(_ symbol: String) -> some View {
+        Image(systemName: symbol)
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(KidCarePalette.sky)
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
     }
 
     // MARK: - 상태 변화

@@ -41,62 +41,90 @@ struct StatusCardView: View {
     @State private var 배터리_설명_표시 = false
 
     var body: some View {
-        HStack(spacing: 10) {
-            if let selector {
-                // fragment_map_timeline.xml:41-69 — 이름 뒤에 하늘색 화살표, 누르면 선택기 줄과 같은 메뉴.
-                ChildMenu(model: selector) {
-                    HStack(spacing: 2) {
-                        Text(selector.지도_이름)
-                            .font(.headline)
-                            .foregroundStyle(KidCarePalette.ink)
-                            .lineLimit(1)
-                            .fixedSize(horizontal: true, vertical: false)
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(KidCarePalette.sky)
-                            .frame(width: 20, height: 20)
-                    }
-                }
-            } else {
-                Text(childName)
-                    .font(.headline)
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-            }
+        // 정본 fragment_map_timeline.xml:14-115 — `Widget.KidCare.Card.Floating`(불투명 paper_card,
+        // 모서리 28, 테두리 1 line_soft, 그림자 6), 높이 76, 안쪽 여백 시작 10·끝 12.
+        HStack(spacing: 0) {
+            // :31-39 — 54 아바타, `bg_avatar_ring`(paper_card 채움 + 2 sky_soft 테두리), 안쪽 5.
+            Image("Mascot3D")
+                .resizable()
+                .scaledToFit()
+                .padding(5)
+                .frame(width: 54, height: 54)
+                .background(Circle().fill(KidCarePalette.paperCard))
+                .overlay(Circle().strokeBorder(KidCarePalette.skySoft, lineWidth: 2))
+                .accessibilityLabel(Text("map_child_avatar"))
 
-            Divider().frame(height: 26)
+            Group {
+                if let selector {
+                    // :41-69 — 이름(TitleMedium 18 medium) 뒤에 하늘색 화살표 20, 누르면 선택기 줄과 같은 메뉴.
+                    ChildMenu(model: selector) {
+                        HStack(spacing: 2) {
+                            이름(selector.지도_이름)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(KidCarePalette.sky)
+                                .frame(width: 20, height: 20)
+                        }
+                    }
+                } else {
+                    이름(childName)
+                }
+            }
+            .padding(.leading, 10)
+            .padding(.trailing, 8)
+
+            // :71-74 — 1×36 line_soft 구분선.
+            Rectangle()
+                .fill(KidCarePalette.lineSoft)
+                .frame(width: 1, height: 36)
 
             Button {
                 배터리_설명_표시 = true
             } label: {
-                HStack(spacing: 6) {
+                // :76-113 — 배터리 22(grass), 7 띄워 BodySmall 13 ink_soft, 스피너 20(4 띄움).
+                HStack(spacing: 0) {
                     Image(systemName: "battery.100")
-                        .foregroundStyle(.green)
+                        .font(.system(size: 17))
+                        .foregroundStyle(KidCarePalette.grass)
+                        .frame(width: 22, height: 22)
                     Text(상태_문구)
-                        .font(.subheadline)
-                        .foregroundStyle(.primary)
+                        .font(.system(size: 13))
+                        .lineSpacing(3.5) // BodySmall lineHeight 19
+                        .foregroundStyle(KidCarePalette.inkSoft)
                         .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading, 7)
                         // Task 6 커밋 1(b): 시뮬레이터로 실제 화면을 찍어 보니
                         // `.lineLimit(2)` 가 무응답 문구(`control_command_timeout_format`
                         // 이 `control_last_seen_format` 을 한 번 더 감싼 두 줄짜리
-                        // 문장, 그중 둘째 줄 자체가 이 카드 너비에서 또 한 번
-                        // 줄바꿈된다)를 세 번째 줄에서 "…"로 잘랐다 — 코드만 읽고는
-                        // 안 보이던 문제다. 이 카드는 이미 배터리 아이콘·구분선·
-                        // 아이 이름까지 한 줄에 욱여넣어 안드로이드 `status_bar`
-                        // 보다 텍스트 폭이 좁으므로, 줄 수를 고정하지 않고 필요한
-                        // 만큼 감싸게 둔다(14개 언어 문구 길이가 다 다르다는 점도
-                        // 같은 이유로 고정 줄 수와 상성이 나쁘다).
+                        // 문장)를 세 번째 줄에서 "…"로 잘랐다. 안드로이드는 maxLines 2 +
+                        // 높이 76 고정이지만, 여기서는 줄 수를 고정하지 않고 필요한 만큼
+                        // 감싸게 두고 카드 높이를 76 **이상**으로 둔다 — 두 줄까지는
+                        // 안드로이드와 같은 76 이고, 더 긴 문구만 카드가 늘어난다.
                     if isCommandBusy {
-                        ProgressView().controlSize(.small)
+                        ProgressView()
+                            .controlSize(.small)
+                            .frame(width: 20, height: 20)
+                            .padding(.leading, 4)
                     }
                 }
+                .padding(.leading, 10)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(.leading, 10)
+        .padding(.trailing, 12)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
+        .background(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(KidCarePalette.paperCard)
+                .shadow(color: .black.opacity(0.14), radius: 6, y: 2) // cardElevation 6
+        )
+        .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(KidCarePalette.lineSoft, lineWidth: 1))
         .padding(.horizontal, 14)
         .padding(.top, 12)
         .alert(String(localized: "map_battery_info_title"), isPresented: $배터리_설명_표시) {
@@ -104,6 +132,15 @@ struct StatusCardView: View {
         } message: {
             Text(String(localized: "map_battery_info_message"))
         }
+    }
+
+    /// TitleMedium(18 medium) ink, 한 줄. 이름 뒤 칸이 좁아져도 이름은 잘리지 않는다.
+    private func 이름(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 18, weight: .medium))
+            .foregroundStyle(KidCarePalette.ink)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
     }
 
     /// 상태 줄 전체가 이 계산 프로퍼티 하나를 거친다(I1, 리뷰). 정본은 안드로이드
