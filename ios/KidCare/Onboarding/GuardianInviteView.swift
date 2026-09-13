@@ -12,52 +12,17 @@ struct GuardianInviteView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                Text(session.제목)
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(KidCarePalette.ink)
-                    .multilineTextAlignment(.center)
-
-                // 코드가 없을 때도 자리가 쪼그라들지 않게 자리표시자를 둔다(XML :34-36).
-                Text(session.코드 ?? String(localized: "pairing_code_placeholder"))
-                    .font(.system(size: 34, weight: .medium))
-                    .tracking(34 * 0.25)
-                    .foregroundStyle(KidCarePalette.ink)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 28)
-                    .background(KidCarePalette.skySoft, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-                    .padding(.top, 24)
-
-                Text(session.안내)
-                    .font(.system(size: 15))
-                    .foregroundStyle(KidCarePalette.inkSoft)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 24)
-
-                if let 만료 = session.만료_문구 {
-                    Text(만료)
-                        .font(.system(size: 13))
-                        .foregroundStyle(KidCarePalette.inkSoft)
-                        .padding(.top, 8)
-                }
-
-                if session.진행중 {
-                    ProgressView().padding(.top, 28)
-                }
-
-                Button { session.버튼을_눌렀다() } label: {
-                    Text(session.버튼_문구)
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(KidCarePalette.sky)
-                        .padding(.horizontal, 24)
-                        .frame(minHeight: 50)
-                        .background(KidCarePalette.skySoft, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .disabled(!session.버튼_활성)
-                .opacity(session.버튼_활성 ? 1 : 0.5)
-                .padding(.top, 24)
+                // 레이아웃은 온보딩의 새 가족 화면과 같은 한 장이다(`InviteCodePanel`).
+                InviteCodePanel(
+                    title: session.제목,
+                    code: session.코드,
+                    hint: session.안내,
+                    expiry: session.만료_문구,
+                    busy: session.진행중,
+                    buttonTitle: session.버튼_문구,
+                    buttonEnabled: session.버튼_활성,
+                    onButton: { session.버튼을_눌렀다() }
+                )
 
                 Spacer(minLength: 0)
             }

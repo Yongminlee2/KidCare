@@ -17,10 +17,9 @@ struct InviteCodeView: View {
 
     let mode: Mode
 
-    /// 이 화면이 할 일을 끝냈다고 `RouterView` 에 알린다. 아이가 실제로 들어오면
-    /// 저절로 부르고, 그때까지 안 기다리겠다면 "완료" 버튼으로 손수 부를 수도
-    /// 있다. 코드를 보여주는 것 자체는 "끝"이 아니다 — 자세한 이유는 `RouterView`
-    /// 주석 참고.
+    /// 이 화면이 할 일을 끝냈다고 `RouterView` 에 알린다. 아이가 실제로 들어오면 저절로 부른다 — 코드를 보여주는 것
+    /// 자체는 "끝"이 아니다(`GuardianPairingActivity` 머리 주석, `RouterView` 주석). 안드로이드처럼 손으로 끝내는 버튼은
+    /// 두지 않는다.
     let onDone: () -> Void
 
     /// "역할 다시 고르기" 로 세션 자체를 버릴 때, 이 화면을 띄운 쪽(`RoleSelectView`)
@@ -29,10 +28,14 @@ struct InviteCodeView: View {
 
     @Environment(\.dismiss) private var dismiss
 
+    /// '새 번호 받기'·'다시 시도' 가 끝났을 때 화면이 아직 있는지. 없으면 감시를 붙이지 않는다 — 아래 `.task` 의
+    /// 취소 확인과 같은 이유(사라진 화면이 `onDone()` 을 부를 길을 열지 않는다).
+    @State private var 보이는중 = false
+
     var body: some View {
         switch mode {
         case let .newFamily(session):
-            내용(코드: session.코드, 진행중: session.진행중, 오류: session.오류)
+            화면(session)
                 .task {
                     await session.코드를_확보한다()
                     // `.task` 는 화면이 사라지면 이 Task 를 취소한다. 취소된
@@ -45,40 +48,52 @@ struct InviteCodeView: View {
                     guard !Task.isCancelled else { return }
                     session.듣기를_시작한다()
                 }
-                .onDisappear { session.듣기를_멈춘다() }
+                .onAppear { 보이는중 = true }
+                .onDisappear {
+                    보이는중 = false
+                    session.듣기를_멈춘다()
+                }
         }
     }
 
-    @ViewBuilder
-    private func 내용(코드: String?, 진행중: Bool, 오류: String?) -> some View {
-        VStack(spacing: 16) {
-            if 진행중 {
-                ProgressView()
-            } else if let 코드 {
-                // 이 모드는 늘 자녀용 코드다(NewFamilySession 이 role: .child 로만
-                // 발급) — 안드로이드가 같은 화면(보호자가 아이 폰에 입력할 번호를
-                // 보여줌)에 쓰는 pairing_guardian_hint 를 그대로 쓴다. 10분 만료
-                // 안내는 안드로이드도 이 문구에 안 넣고 따로 보여준다(설계 §7.3 —
-                // 없는 개념을 지어내지 않고 있는 그대로 빌린다).
-                Text("pairing_guardian_hint")
-                Text(코드)
-                    .font(.system(size: 44, weight: .bold, design: .monospaced))
-                    .textSelection(.enabled)
-                // 아이가 들어오면 세션이 알아서 다음으로 넘어가지만, 지금 옆에
-                // 없는 아이를 무한정 기다리게 두지 않으려고 손으로 끝낼 길도 둔다.
-                Button("invite_code_done") { onDone() }
-                    .buttonStyle(.bordered)
-            } else if let 오류 {
-                Text(오류).foregroundStyle(.red)
-                // 재사용하던 familyId 가 죽어(가족 삭제, 멤버 제거 등) 이 화면이
-                // 막다른 골목이 될 수 있다. 안드로이드 GuardianPairingActivity 의
-                // 되돌리기(resetRoleButton)와 같은 탈출구 — 저장소를 지우고
-                // 역할 선택으로 돌려보낸다.
-                Button("pairing_reset_role_button") { 역할을_다시_고른다() }
-                    .buttonStyle(.bordered)
+    /// 정본 `activity_guardian_pairing.xml:8-103` — 제목·카드·안내·만료·진행·버튼, 그리고 맨 아래 '역할 다시 고르기'.
+    /// 이 모드는 늘 자녀용 코드다(`NewFamilySession` 이 role: .child 로만 발급) — 제목·안내도 자녀 초대 문구다.
+    private func 화면(_ session: NewFamilySession) -> some View {
+        VStack(spacing: 0) {
+            InviteCodePanel(
+                title: String(localized: "pairing_guardian_title"),
+                code: session.코드,
+                // 실패 문구는 안내 자리에 대신 적는다(`showSetupFailure` :163-168).
+                hint: session.오류 ?? String(localized: "pairing_guardian_hint"),
+                expiry: session.만료_문구,
+                busy: session.진행중,
+                buttonTitle: session.버튼_문구,
+                buttonEnabled: session.버튼_활성,
+                onButton: { 버튼을_눌렀다(session) }
+            )
+
+            // 되돌리기가 주요 동작처럼 보이지 않게 화면 맨 아래로 민다(XML :91-96).
+            Spacer(minLength: 24)
+
+            // 가족을 만들다 멈췄거나 재사용하던 familyId 가 죽어도 이 화면이 막다른 골목이 되지 않는다.
+            Button { 역할을_다시_고른다() } label: {
+                Text("pairing_reset_role_button")
             }
+            .buttonStyle(KidCareTextButtonStyle())
         }
-        .padding()
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(KidCarePalette.paper.ignoresSafeArea())
+        .toolbar(.visible, for: .navigationBar)
+        .toolbarBackground(KidCarePalette.paper, for: .navigationBar)
+    }
+
+    private func 버튼을_눌렀다(_ session: NewFamilySession) {
+        Task {
+            await session.버튼을_눌렀다()
+            guard 보이는중 else { return }
+            session.듣기를_시작한다()
+        }
     }
 
     private func 역할을_다시_고른다() {

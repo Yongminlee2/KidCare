@@ -26,16 +26,49 @@ struct RoleSelectView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                Text("role_title").font(.title2).bold()
+            // 정본 `activity_role_select.xml:12-68`: paper 바탕, 가운데 정렬, 안쪽 여백 32.
+            VStack(spacing: 0) {
+                Image("Mascot3D")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+                    .padding(.bottom, 20)
+                    .accessibilityHidden(true)
 
-                Button("role_guardian") { 보호자_갈래를_묻는다 = true }
-                    .buttonStyle(.borderedProminent)
+                // HeadlineSmall 24 medium.
+                Text("role_title")
+                    .font(.system(size: 24, weight: .medium))
+                    .tracking(-0.24)
+                    .foregroundStyle(KidCarePalette.ink)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 10)
 
-                Button("role_child") { 아이는_안된다고_알린다 = true }
-                    .buttonStyle(.bordered)
+                // BodyMedium 15, colorOnSurfaceVariant.
+                Text("role_subtitle")
+                    .font(.system(size: 15))
+                    .lineSpacing(5)
+                    .foregroundStyle(KidCarePalette.inkSoft)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 36)
+
+                // 보호자 = 하늘색 채운 버튼, 아이 = 옅은 토널 버튼(XML 머리 주석). 둘 다 폭을 꽉 채운 64,
+                // 그림 24 · 글자와 사이 10, TitleMedium 18.
+                Button { 보호자_갈래를_묻는다 = true } label: {
+                    역할_버튼_글자("role_guardian", 그림: "person.fill.badge.plus")
+                }
+                .buttonStyle(KidCareFilledButtonStyle(minHeight: 64))
+                .padding(.bottom, 12)
+
+                Button { 아이는_안된다고_알린다 = true } label: {
+                    역할_버튼_글자("role_child", 그림: "face.smiling")
+                }
+                .buttonStyle(KidCareTonalButtonStyle(minHeight: 64, fontSize: 18, fullWidth: true))
             }
-            .padding()
+            .padding(32)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(KidCarePalette.paper.ignoresSafeArea())
+            // 첫 화면에는 제목 막대가 없다(안드로이드 NoActionBar). 밀려 들어간 화면은 뒤로 버튼이 보이게 스스로 켠다.
+            .toolbar(.hidden, for: .navigationBar)
             .confirmationDialog("guardian_start_title", isPresented: $보호자_갈래를_묻는다) {
                 Button("guardian_start_new_family") {
                     // 세션은 여기, 버튼 액션에서 만든다 — `.navigationDestination`
@@ -79,11 +112,23 @@ struct RoleSelectView: View {
                 }
             }
         }
+        .tint(KidCarePalette.sky)
         .onDisappear {
             // RoleSelectView 자체가 사라지는 건 온보딩이 끝났다는 뜻이다
             // (RouterView 가 ChildMapView 로 넘어갈 때만 일어난다) — 세션이
             // 들고 있던 작업/리스너를 마저 정리한다.
             새_가족_세션?.invalidate()
+        }
+    }
+
+    private func 역할_버튼_글자(_ key: LocalizedStringKey, 그림: String) -> some View {
+        HStack(spacing: 10) {
+            // 그림은 글자를 꾸미기만 한다 — VoiceOver 가 버튼을 글자 그대로 읽게 숨긴다(UI 테스트도 글자로 찾는다).
+            Image(systemName: 그림)
+                .font(.system(size: 22))
+                .frame(width: 24, height: 24)
+                .accessibilityHidden(true)
+            Text(key)
         }
     }
 }

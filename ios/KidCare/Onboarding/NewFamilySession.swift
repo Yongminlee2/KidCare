@@ -37,6 +37,8 @@ final class NewFamilySession {
 
     private(set) var 코드: String?
     private(set) var 만료시각: Int64?
+    /// 발급 순간의 남은 분. 실시간 카운트다운이 아니다(`GuardianPairingActivity.showCode` :196-201).
+    private(set) var 만료_분: Int64?
     private(set) var 진행중 = true
     private(set) var 오류: String?
 
@@ -44,6 +46,8 @@ final class NewFamilySession {
     private var 준비_작업: Task<Void, Never>?
     private var 아이_리스너: ListenerRegistration?
     private var 무효화됨 = false
+    /// '새 번호 받기'가 눌렸다 — 들고 있는 코드가 아직 살아 있어도 새로 발급한다(`refreshCode` :170-194).
+    private var 새_번호_요청 = false
 
     private static let logger = Logger(subsystem: "com.kidcare.family", category: "NewFamilySession")
 
@@ -60,7 +64,7 @@ final class NewFamilySession {
             await 기존_작업.value
             return
         }
-        if 코드 == nil { 진행중 = true }
+        if 코드 == nil || 새_번호_요청 { 진행중 = true }
         오류 = nil
         let task = Task<Void, Never> { [weak self] in
             guard let self else { return }
@@ -73,6 +77,8 @@ final class NewFamilySession {
 
     private func 실제로_확보한다() async {
         defer { 진행중 = false }
+        let 새로_받는다 = 새_번호_요청
+        새_번호_요청 = false
         do {
             let uid = try await AuthGateway.uid()
             let familyId: String
@@ -95,7 +101,7 @@ final class NewFamilySession {
             // serverNow 가 애초에 막으려던 것과 같은 실패(known-issues 2번,
             // "만들자마자 죽은 코드")를 만료 쪽에서 다시 재현하는 셈이다.
             let now = try await FamilyRepository.serverNow(familyId: familyId, uid: uid)
-            if let 만료시각, 만료시각 > now {
+            if !새로_받는다, let 만료시각, 만료시각 > now {
                 // 들고 있는 코드가 아직 안 죽었다 — 다시 받을 필요 없다.
                 // 뒤로 나갔다 돌아온 것만으로 매번 새 코드를 발급하면, 이미
                 // 상대 폰에 불러준 코드가 화면을 나갔다 돌아오는 사이에
@@ -109,6 +115,9 @@ final class NewFamilySession {
             )
             코드 = info.code
             만료시각 = info.expiresAt
+            // 안드로이드와 같이 기기 시계로 남은 분을 올림한다(`showCode` :199-200, `InviteSession.번호를_보인다`).
+            let 기기_지금 = Int64(Date().timeIntervalSince1970 * 1000)
+            만료_분 = max(1, (info.expiresAt - 기기_지금 + 59_999) / 60_000)
         } catch is CancellationError {
             // 소유자(RoleSelectView)가 사라지며 `invalidate()` 가 이 Task 를
             // 취소한 것이다. 정상 종료지 오류가 아니다.
@@ -117,6 +126,31 @@ final class NewFamilySession {
             Self.logger.error("초대 코드 발급 실패: \(String(describing: error), privacy: .public)")
             오류 = String(localized: "error_unknown")
         }
+    }
+
+    /// 만료 줄(`pairing_code_expiry_format`). 코드가 아직 없으면 줄 자체가 없다.
+    var 만료_문구: String? {
+        guard 코드 != nil, let 만료_분 else { return nil }
+        return String(format: String(localized: "pairing_code_expiry_format"), Int(만료_분))
+    }
+
+    /// 버튼 하나가 '새 번호 받기'와 '다시 시도'를 겸한다(`showSetupFailure` :166, `showCode` :198).
+    var 버튼_문구: String {
+        코드 == nil && 오류 != nil
+            ? String(localized: "router_retry")
+            : String(localized: "pairing_new_code_button")
+    }
+
+    /// 첫 번호를 만드는 동안과 새 번호를 받는 동안에는 막는다(:74-76, :173). 실패했으면 다시 시도로 켠다.
+    var 버튼_활성: Bool {
+        !진행중 && (코드 != nil || 오류 != nil)
+    }
+
+    /// 버튼(:77-79). 번호가 아직 없으면 처음부터 다시, 있으면 만료 전이어도 새 번호.
+    func 버튼을_눌렀다() async {
+        guard !무효화됨, 준비_작업 == nil else { return }
+        if 코드 != nil { 새_번호_요청 = true }
+        await 코드를_확보한다()
     }
 
     /// 아이가 실제로 들어오는 순간을 감시한다. 화면이 보이는 동안에만

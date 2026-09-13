@@ -14,8 +14,8 @@ import SwiftUI
 /// 튕겨나가 아무도 그 코드를 못 봤다(1차 리뷰 CRITICAL). 안드로이드
 /// `RouterActivity.destination()` 이 앱을 켤 때 딱 한 번만 도는 것과 같은 이유로,
 /// 여기서도 판단은 시작할 때 한 번뿐이어야 한다 — 그 이후로는 온보딩 화면이
-/// `onGuardianReady()` 를 불러야만(합류 성공, 또는 코드 화면에서 아이가 들어오거나
-/// "완료" 를 누름) 넘어간다.
+/// `onGuardianReady()` 를 불러야만(합류 성공, 또는 코드 화면에서 아이가 들어옴)
+/// 넘어간다.
 struct RouterView: View {
 
     @State private var store = RoleStore.shared
