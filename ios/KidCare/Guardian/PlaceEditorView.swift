@@ -19,16 +19,11 @@ struct PlaceEditorView: View {
                     .foregroundStyle(KidCarePalette.ink)
 
                 항목_제목("place_editor_name_label").padding(.top, 20)
-                TextField("place_editor_name_hint", text: Binding(
-                    get: { viewModel.이름 },
-                    set: { viewModel.이름을_바꾼다($0) }
-                ))
-                .font(.system(size: 17))
-                .foregroundStyle(KidCarePalette.ink)
-                .padding(.horizontal, 16)
-                .frame(minHeight: 56)
-                // Widget.KidCare.TextField — 외곽선 상자, 모서리 12, 테두리 colorOutline(line) 1(themes.xml:196-198).
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(KidCarePalette.line, lineWidth: 1))
+                // Widget.KidCare.TextField — 외곽선 상자, 모서리 12, 떠오르는 이름표 'place_editor_name_hint'(xml :174-190).
+                KidCareOutlinedField(
+                    label: "place_editor_name_hint",
+                    text: Binding(get: { viewModel.이름 }, set: { viewModel.이름을_바꾼다($0) })
+                )
                 .padding(.top, 8)
                 if viewModel.이름_경고 {
                     Text("place_editor_name_required")
@@ -77,12 +72,14 @@ struct PlaceEditorView: View {
                     .font(.system(size: 17))
                     .foregroundStyle(KidCarePalette.ink)
                     .padding(.top, 4)
-                Slider(
+                // M3 슬라이더(막대 손잡이, 눈금) — 100~1000 m, 50 m 눈금(xml :267-274). VoiceOver 는 위아래 쓸기로 한 눈금씩.
+                KidCareSlider(
                     value: Binding(get: { viewModel.반경 }, set: { viewModel.반경 = $0 }),
-                    in: PlaceViewModel.minRadiusMeters...PlaceViewModel.maxRadiusMeters,
-                    step: PlaceViewModel.radiusStepMeters
+                    range: PlaceViewModel.minRadiusMeters...PlaceViewModel.maxRadiusMeters,
+                    step: PlaceViewModel.radiusStepMeters,
+                    accessibilityLabel: "place_editor_radius_label",
+                    accessibilityValue: viewModel.반경_문구
                 )
-                .tint(KidCarePalette.sky)
                 .padding(.top, 4)
 
                 항목_제목("place_editor_notify_label").padding(.top, 12)

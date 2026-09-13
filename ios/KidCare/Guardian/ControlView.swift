@@ -70,30 +70,36 @@ struct ControlView: View {
                         Button {
                             vm.메시지 = String(localized: 칩_문구[i])
                         } label: {
+                            // M3 `Chip.Suggestion`: 높이 32, 모서리 shapeAppearanceCornerSmall(= KidCare.Small 12,
+                            // themes.xml:82-85), 선 1 colorOutline(line), 바탕 colorSurface(paper), 글자 LabelLarge 15
+                            // medium colorOnSurfaceVariant(ink_soft), 좌 8+8 · 우 6+10. 누르는 자리는 48 이다
+                            // (`chipMinTouchTargetSize`) — 그만큼 위아래로 비워 줄 간격도 안드로이드와 같아진다.
                             Text(String(localized: 칩_문구[i]))
-                                .font(.subheadline)
-                                .foregroundStyle(KidCarePalette.ink)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .overlay(Capsule().stroke(KidCarePalette.inkSoft.opacity(0.4)))
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(KidCarePalette.inkSoft)
+                                .padding(.horizontal, 16)
+                                .frame(minHeight: 32)
+                                .background(KidCarePalette.paper, in: RoundedRectangle(cornerRadius: 카드_모서리, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 카드_모서리, style: .continuous)
+                                        .strokeBorder(KidCarePalette.line, lineWidth: 1)
+                                )
+                                .padding(.vertical, 8)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                     }
                 }
                 .padding(.top, 10)
-                TextField("control_message_hint", text: $vm.메시지, axis: .vertical)
-                    .lineLimit(1...3)
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.top, 8)
-                    .onChange(of: vm.메시지) { _, 새_값 in
-                        let 잘린_값 = ControlInput.clamp(새_값, max: ControlViewModel.messageMaxLength)
-                        if 잘린_값 != 새_값 { vm.메시지 = 잘린_값 }
-                    }
-                // counterEnabled — 100자에서 입력이 멈출 때 왜 멈췄는지 보인다(xml :349-351).
-                Text(verbatim: "\(viewModel.메시지.count)/\(ControlViewModel.messageMaxLength)")
-                    .font(.caption)
-                    .foregroundStyle(KidCarePalette.inkSoft)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                // `Widget.KidCare.TextField` + counterEnabled(xml :349-369) — 100자에서 입력이 멈출 때 왜 멈췄는지 보인다.
+                KidCareOutlinedField(
+                    label: "control_message_hint",
+                    text: $vm.메시지,
+                    lines: 1...3,
+                    maxLength: ControlViewModel.messageMaxLength,
+                    showsCounter: true
+                )
+                .padding(.top, 8)
                 옅은_버튼("control_message_send", 그림: "paperplane.fill") {
                     await viewModel.메시지를_보낸다()
                 }
@@ -111,13 +117,13 @@ struct ControlView: View {
                 }
                 알람_시각_줄
                     .padding(.top, 10)
-                TextField("control_alarm_label_hint", text: $vm.알람_이름)
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.top, 8)
-                    .onChange(of: vm.알람_이름) { _, 새_값 in
-                        let 잘린_값 = ControlInput.clamp(새_값, max: ControlViewModel.alarmLabelMaxLength)
-                        if 잘린_값 != 새_값 { vm.알람_이름 = 잘린_값 }
-                    }
+                // 20자면 아이 폰 알림 제목 한 줄이다(xml :433-450).
+                KidCareOutlinedField(
+                    label: "control_alarm_label_hint",
+                    text: $vm.알람_이름,
+                    maxLength: ControlViewModel.alarmLabelMaxLength
+                )
+                .padding(.top, 8)
                 옅은_버튼("control_alarm_set", 그림: "alarm") {
                     await viewModel.알람을_맞춘다()
                 }
