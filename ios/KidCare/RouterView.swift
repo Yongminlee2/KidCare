@@ -45,10 +45,10 @@ struct RouterView: View {
         if isRunningTests {
             Color.clear
         } else if showMain, let familyId = store.familyId {
-            GuardianRootView(familyId: familyId, childUid: store.childUid)
-                // 뷰모델은 @State 라 init 인자가 바뀌어도 첫 가족·아이를 붙든다. 둘 중 하나가
-                // 바뀌면 정체성을 바꿔 뷰모델을 새로 만든다(통합 검토 M1).
-                .id("\(familyId)|\(store.childUid ?? "")")
+            GuardianHomeView(familyId: familyId)
+                // 가족이 바뀌면 선택기까지 새로 만든다. 아이가 바뀌면 GuardianHomeView 안에서 탭만 새로 만든다
+                // (통합 검토 M1 의 .id(familyId+childUid) 를 두 겹으로 나눴다 — 6단계 판정 기록 7).
+                .id(familyId)
         } else {
             RoleSelectView(onGuardianReady: { showMain = true })
         }

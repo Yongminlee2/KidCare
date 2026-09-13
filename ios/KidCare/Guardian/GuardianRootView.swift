@@ -23,10 +23,12 @@ struct GuardianRootView: View {
     /// 무응답 배너의 유일한 주인(안드로이드 `GuardianMainActivity` :53-56).
     @State private var banner: DisconnectBanner
     @Environment(\.scenePhase) private var scenePhase
-    /// 안드로이드 `onSaveInstanceState` 의 `KEY_SELECTED_TAB`(:459-462) 자리. 처음엔 지도(:172).
-    @SceneStorage("guardian.selectedTab") private var selectedTab: GuardianTab = .map
+    /// 선택 탭. 주인은 `GuardianHomeView` 다 — 아이를 바꿔 이 뷰가 다시 만들어져도 보던 탭이 남아야 하고
+    /// (recreateTabsForSelectedChild :293-298), 바깥의 선택기 줄이 지도 탭인지 알아야 한다(:330).
+    @Binding var selectedTab: GuardianTab
 
-    init(familyId: String, childUid: String?) {
+    init(familyId: String, childUid: String?, selectedTab: Binding<GuardianTab>) {
+        _selectedTab = selectedTab
         let map = MapViewModel(familyId: familyId, childUid: childUid)
         let banner = DisconnectBanner(childUid: childUid)
         // 둘 다 같은 init 안에서 만들어 서로를 잇는다. SwiftUI 가 init 을 여러 번 불러도
@@ -116,13 +118,32 @@ struct GuardianRootView: View {
         }
         // 탭 전환은 안드로이드 onHiddenChanged(:172-175) 자리다.
         .onChange(of: selectedTab) { _, _ in 알림_보임을_맞춘다() }
+        // 아이를 바꾸면 `GuardianHomeView` 의 `.id(childUid)` 가 이 뷰를 통째로 새로 만들고, 옛 뷰의 이 자리가 불린다.
         .onDisappear {
-            mapViewModel.정리한다()
-            controlViewModel.정리한다()
-            scheduleViewModel.정리한다()
-            placeViewModel.정리한다()
-            alertViewModel.정리한다()
+            Self.탭을_모두_정리한다(
+                map: mapViewModel, control: controlViewModel, schedule: scheduleViewModel,
+                place: placeViewModel, alert: alertViewModel
+            )
         }
+    }
+
+    /// 다섯 탭 뷰모델의 리스너·명령 추적을 모두 뗀다(안드로이드 `recreateTabsForSelectedChild` 가 프래그먼트를 remove 해
+    /// `onDestroyView` 를 부르는 자리, :288-300). 하나라도 빠지면 옛 아이의 리스너가 새 아이 화면 뒤에서 계속 돈다 —
+    /// 그래서 목록을 한 함수에 두고 `GuardianChildSwitchTests` 가 이 함수를 직접 부른다.
+    ///
+    /// 옛 뷰모델은 새 뷰모델과 상태를 나누지 않는다(인스턴스가 다르다). 새 뷰의 `onAppear` 가 이 정리보다 먼저
+    /// 불려도 옛 콜백이 새 아이 화면에 값을 흘릴 길은 없고, 정리 뒤의 콜백은 각 뷰모델의 닫힘 확인이 막는다.
+    /// 예외 하나: 실시간 추적이 켜져 있었다면 지도 뷰모델이 옛 아이에게 종료 명령을 한 번 보낸다 — 안드로이드
+    /// `onDestroyView` 의 `stopLiveTracking()` 과 같고, 옛 세션을 끝내는 명령이지 살아남는 추적이 아니다.
+    static func 탭을_모두_정리한다(
+        map: MapViewModel, control: ControlViewModel, schedule: ScheduleViewModel,
+        place: PlaceViewModel, alert: AlertViewModel
+    ) {
+        map.정리한다()
+        control.정리한다()
+        schedule.정리한다()
+        place.정리한다()
+        alert.정리한다()
     }
 
     /// 알림 목록이 지금 부모 눈앞에 있는가 — 알림 탭이 골라져 있고 앱이 활성일 때뿐이다(`setVisible` :189-202).

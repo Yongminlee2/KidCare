@@ -34,14 +34,35 @@ struct StatusCardView: View {
     /// (`ProgressBar`)와 같은 자리 — 배터리 아이콘 옆에 작은 스피너를 돌린다.
     var isCommandBusy: Bool = false
 
+    /// 본 화면의 선택기. 있으면 아이 이름이 선택 메뉴가 된다(MapTimelineFragment.kt:211-213). 미리보기처럼
+    /// 선택기가 없는 곳에서는 넘겨받은 이름만 그린다.
+    @Environment(ChildSelectorModel.self) private var selector: ChildSelectorModel?
+
     @State private var 배터리_설명_표시 = false
 
     var body: some View {
         HStack(spacing: 10) {
-            Text(childName)
-                .font(.headline)
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
+            if let selector {
+                // fragment_map_timeline.xml:41-69 — 이름 뒤에 하늘색 화살표, 누르면 선택기 줄과 같은 메뉴.
+                ChildMenu(model: selector) {
+                    HStack(spacing: 2) {
+                        Text(selector.지도_이름)
+                            .font(.headline)
+                            .foregroundStyle(KidCarePalette.ink)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(KidCarePalette.sky)
+                            .frame(width: 20, height: 20)
+                    }
+                }
+            } else {
+                Text(childName)
+                    .font(.headline)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+            }
 
             Divider().frame(height: 26)
 
