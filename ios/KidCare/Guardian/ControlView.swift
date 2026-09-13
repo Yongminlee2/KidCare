@@ -129,6 +129,9 @@ struct ControlView: View {
             .padding(.top, 20)
             .padding(.bottom, 28)
         }
+        // 스크롤한 글이 상태 표시줄(시계) 밑으로 비쳐 겹치지 않게 제 영역에서 자른다 — 안드로이드는
+        // 상태 표시줄을 바탕색으로 칠해 같은 겹침이 없다. 바탕색은 잘린 뒤에 깔아 위쪽 안전 영역까지 채운다.
+        .clipped()
         .background(KidCarePalette.paper)
         .scrollDismissesKeyboard(.interactively)
     }
