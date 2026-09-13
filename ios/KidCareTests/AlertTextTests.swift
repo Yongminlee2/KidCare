@@ -30,17 +30,31 @@ struct AlertTextTests {
         #expect(AlertText.title(사건(EventType.placeEnter, place: " \n")) == "머무른 곳에 도착했어요")
     }
 
-    @Test("오늘이면 시각만, 아니면 날짜까지 — 한국어는 안드로이드 패턴과 글자까지 같다(:95-98, :151-160)")
+    /// 기대값이 안드로이드 바이트와 **일부러 다르다**: 시각 조각 안의 공백은 U+00A0 이다(6단계 판정 A1).
+    /// 아이폰에서 한 줄이 "오후 10시 / 1분" 처럼 어구 중간에서 접히지 않게 하려는 표시층 처리다. 그래서 공백을
+    /// 되돌리면 안드로이드 패턴의 결과와 글자까지 같다는 비교를 함께 남긴다 — 패턴이나 로캘이 어긋나면 그쪽이 깨진다.
+    @Test("오늘이면 시각만, 아니면 날짜까지 — 조각 안 공백은 U+00A0, 되돌리면 안드로이드와 글자까지 같다(:95-98, :151-160)")
     func 시각() {
-        #expect(AlertText.timeText(atMillis: 오후_세시, nowMillis: 오후_세시 + 60_000, zone: seoul, locale: ko) == "오후 3시 12분")
+        let 오늘 = AlertText.timeText(atMillis: 오후_세시, nowMillis: 오후_세시 + 60_000, zone: seoul, locale: ko)
+        #expect(오늘 == "오후\u{00A0}3시\u{00A0}12분")
+        #expect(오늘.replacingOccurrences(of: "\u{00A0}", with: " ") == "오후 3시 12분")
         // 자정을 막 넘긴 새벽에 어제 저녁 사건을 본다(2026-09-12 23:05 KST, 지금 09-13 00:30)
-        #expect(AlertText.timeText(atMillis: 1_789_221_900_000, nowMillis: 1_789_227_000_000, zone: seoul, locale: ko) == "9월 12일 오후 11시 5분")
+        let 어제 = AlertText.timeText(atMillis: 1_789_221_900_000, nowMillis: 1_789_227_000_000, zone: seoul, locale: ko)
+        #expect(어제 == "9월\u{00A0}12일\u{00A0}오후\u{00A0}11시\u{00A0}5분")
+        #expect(어제.replacingOccurrences(of: "\u{00A0}", with: " ") == "9월 12일 오후 11시 5분")
+        #expect(!오늘.contains(" ") && !어제.contains(" "))
     }
 
-    @Test("한 줄은 alert_row 로 제목과 시각을 잇는다(:100-102)")
+    @Test("영어 시각 조각도 U+0020 은 남지 않고, AM/PM 앞 U+202F 는 그대로다")
+    func 영어_시각() {
+        let en = AlertText.timeText(atMillis: 오후_세시, nowMillis: 오후_세시 - 86_400_000 * 3, zone: seoul, locale: Locale(identifier: "en"))
+        #expect(!en.contains(" "), "\(en.unicodeScalars.map { String($0.value, radix: 16) })")
+    }
+
+    @Test("한 줄은 alert_row 로 제목과 시각을 잇는다 — 구분자 ' · ' 의 공백은 그대로라 줄은 거기서 접힌다(:100-102)")
     func 한_줄() {
         let doc = 사건(EventType.placeEnter, place: "학교", at: 오후_세시)
-        #expect(AlertText.line(doc, nowMillis: 오후_세시, zone: seoul, locale: ko) == "학교에 도착했어요 · 오후 3시 12분")
+        #expect(AlertText.line(doc, nowMillis: 오후_세시, zone: seoul, locale: ko) == "학교에 도착했어요 · 오후\u{00A0}3시\u{00A0}12분")
     }
 
     @Test("그림과 색: 도착 풀빛, 나섬 살구빛, 배터리·권한·신호·명령 실패 자두빛, 모르는 것 하늘빛(:125-144)")

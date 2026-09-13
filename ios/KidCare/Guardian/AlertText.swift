@@ -33,6 +33,11 @@ enum AlertText {
     /// 오늘이면 시각만, 아니면 날짜까지(:146-160). 자정을 막 넘긴 새벽에 어제 저녁 사건을 볼 때 시각만 보이면
     /// 방금 일어난 일로 읽힌다. 패턴은 키에 담는다(판정 기록 5, 3단계 `control_last_seen_clock_format` 선례).
     /// 달력은 그레고리력으로 고정한다(태국어 기기의 기본 달력은 불교력이다). 오전/오후 글자는 패턴을 꺼낸 언어로 찍는다.
+    ///
+    /// **돌려주는 시각 조각 안의 공백(U+0020)은 줄바꿈 없는 공백(U+00A0)으로 바꾼다**(6단계 판정 A1). 한 줄이
+    /// `alert_row` 로 제목과 이어지므로, 그대로 두면 "오후 10시 / 1분", "9 / 월 12일" 처럼 어구 중간에서 접힌다.
+    /// 바꾸는 것은 이 조각뿐이다 — 제목과 " · " 구분자는 그대로라 줄은 구분자나 제목 안에서만 접힌다. i18n 패턴도
+    /// 그대로다(안드로이드와 공유). en 은 AM/PM 앞에 이미 U+202F 를 내므로 U+0020 만 바꾸면 된다.
     static func timeText(atMillis: Int64, nowMillis: Int64, zone: TimeZone = .current, locale: Locale = 패턴_로캘) -> String {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = zone
@@ -45,7 +50,7 @@ enum AlertText {
         formatter.dateFormat = calendar.isDate(at, inSameDayAs: now)
             ? String(localized: "alert_time_today_format")
             : String(localized: "alert_time_date_format")
-        return formatter.string(from: at)
+        return formatter.string(from: at).replacingOccurrences(of: " ", with: "\u{00A0}")
     }
 
     /// 지금 앱이 고른 언어. 패턴(`alert_time_*_format`)을 꺼낸 언어와 오전/오후 글자의 언어를 맞춘다.

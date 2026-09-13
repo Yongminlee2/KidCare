@@ -73,8 +73,17 @@ final class ChildSelectorModel {
     }
 
     /// '＋ 보호자 초대 · 현재 N명'(:251-256).
+    ///
+    /// 마지막 " · " 뒤의 수 조각 안 공백만 U+00A0 으로 바꾼다(6단계 S1, 알림 시각 A1 과 같은 처리). 메뉴 줄이 좁으면
+    /// "현재 / 1명" 처럼 어구 중간에서 접히기 때문이다. 앞쪽 문구와 구분자, i18n 원본은 그대로다 — 줄은 구분자에서 접힌다.
+    /// 구분자가 없는 번역이면 손대지 않는다.
     var 보호자_초대_문구: String {
-        String(format: String(localized: "child_selector_add_guardian_count"), guardians.count)
+        Self.수_조각을_붙인다(String(format: String(localized: "child_selector_add_guardian_count"), guardians.count))
+    }
+
+    static func 수_조각을_붙인다(_ 문구: String) -> String {
+        guard let 구분 = 문구.range(of: " · ", options: .backwards) else { return 문구 }
+        return 문구[..<구분.upperBound] + 문구[구분.upperBound...].replacingOccurrences(of: " ", with: "\u{00A0}")
     }
 
     /// 이름이 겹치는 아이는 uid 끝 네 자리로 가른다(:233-237). 두 아이가 다 "아이"면 메뉴에서 구분이 안 된다.

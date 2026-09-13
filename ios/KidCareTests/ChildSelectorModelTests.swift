@@ -140,7 +140,15 @@ struct ChildSelectorModelTests {
         m.시작한다()
         구독.보낸다([멤버("g1", "guardian"), 멤버("g2", "guardian"), 멤버("c1", "child")])
         await eventually { m.guardians.count == 2 }
-        #expect(m.보호자_초대_문구 == "＋ 보호자 초대 · 현재 2명")
+        // 수 조각 안 공백은 일부러 U+00A0 이다(6단계 S1) — "현재 / 2명" 으로 접히지 않게. 되돌리면 i18n 값과 같다.
+        #expect(m.보호자_초대_문구 == "＋ 보호자 초대 · 현재\u{00A0}2명")
+        #expect(m.보호자_초대_문구.replacingOccurrences(of: "\u{00A0}", with: " ") == "＋ 보호자 초대 · 현재 2명")
+    }
+
+    @Test("수 조각만 붙인다 — 앞 문구와 ' · ' 구분자의 공백은 그대로, 구분자가 없으면 손대지 않는다(6단계 S1)")
+    func 수_조각만_붙인다() {
+        #expect(ChildSelectorModel.수_조각을_붙인다("＋ Invite a parent · 1 now") == "＋ Invite a parent · 1\u{00A0}now")
+        #expect(ChildSelectorModel.수_조각을_붙인다("＋ 보호자 초대 현재 1명") == "＋ 보호자 초대 현재 1명")
     }
 
     @Test("초대는 한 판만 열리고, 아이가 들어오면 그 아이를 고르고 닫는다(:280-286, GuardianPairingActivity.kt:217-230)")
