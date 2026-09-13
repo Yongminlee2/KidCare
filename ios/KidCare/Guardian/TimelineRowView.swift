@@ -128,14 +128,17 @@ struct TimelineRowView: View {
     }
 
     /// 시각 범위와 기간을 한 줄로 잇는다. 두 값 다 문구 카탈로그의 서식 문자열로
-    /// 만든 뒤에도 잇는 가운뎃점(" · ")을 Swift 문자열 보간으로 박아 넣었었다 —
-    /// `SegmentSummarizer.swift` 의 "문장 조립은 화면이 문구 카탈로그로 한다" 규칙을
-    /// 접합부에서 어긴 것이다(Fix round 1 리뷰). 안드로이드 `alert_row`/`alert_child_line`
-    /// 이 이미 같은 모양("%1$s · %2$s")의 범용 접합 서식을 갖고 있어 그대로
-    /// 재사용한다 — 안드로이드가 쓰는 `timeline_detail`(줄바꿈 두 줄)로 바꾸면
-    /// 이미 화면으로 확인한 한 줄 레이아웃이 바뀌므로 새 키를 만드는 대신 이미
-    /// 있는 한 줄 접합 키를 골랐다.
+    /// 만든 뒤에도 잇는 가운뎃점(" · ")을 Swift 문자열 보간으로 박아 넣었던 것을
+    /// Fix round 1 에서 안드로이드 알림 탭(`AlertAdapter.kt`)·시스템 알림
+    /// (`AlertService.kt`) 전용 서식 키로 바꿨었는데, 그건 또 다른 잘못이었다
+    /// (Fix round 2 리뷰): 문구가 우연히 같다고 다른 화면 전용 키를 빌려 쓰면,
+    /// 알림 탭 문구를 고칠 때 이 타임라인 줄까지 말없이 따라 바뀐다 — Phase 1
+    /// 최종 리뷰가 확인 버튼 문구를 다른 화면 전용 키로 돌려썼다가 되돌린 것과
+    /// 같은 실수다. 안드로이드의 두 줄짜리 서식으로 바꾸면 이미 화면으로 확인한
+    /// 한 줄 레이아웃이 깨지므로, 그 대신 이 화면 전용 새 키
+    /// `timeline_detail_inline`("%1$s · %2$s")을 만들어 `i18n/ko.json`·`en.json`·
+    /// `Localizable.xcstrings`에 넣었다.
     private var 상세: String {
-        String(format: String(localized: "alert_row"), timeRangeText(row.detail), durationText(row.duration))
+        String(format: String(localized: "timeline_detail_inline"), timeRangeText(row.detail), durationText(row.duration))
     }
 }

@@ -230,13 +230,13 @@ struct TrailPoint {
 /// 아이 폰이 마지막으로 신호를 남긴 시각. 정본은 안드로이드 `GuardianMainActivity.kt`
 /// 의 `ChildSignal`·`ChildStatusDoc.lastSignal()`·`LastSignalText`.
 ///
-/// 코틀린은 시각(`ChildSignal`, 절대 밀리초)과 표기(`LastSignalText`, "12분 전")를
-/// 나눠 두고 그 사이에 "아이 폰 시계라 상대 표현을 못 쓰는 경우"(음수 경과)를 위한
-/// 셋째 갈래(절대 시각 노출)를 끼워 넣는다. 이 열거형은 그 갈래를 갖지 않는다 —
-/// 케이스가 절대 시각 문자열을 들고 다닐 자리가 없어서, 서버 시각·기기 시각 중
-/// 무엇으로 쟀든 경과를 0 이상으로 자른다(아래 `StatusCard.lastSignal` 주석 참고).
-/// 그래도 "서버 시각 우선, 없으면 기기 시각" 갈래는 그대로 지킨다 — 관리 탭이
-/// 아직 없는 이 앱에서 정확히 지켜야 할 갈래는 이것 하나이기 때문이다.
+/// 코틀린은 시각(`ChildSignal`, 절대 밀리초 + 출처)과 표기(`LastSignalText`, "12분 전")를
+/// 나눠 두고, "아이 폰 시계라 상대 표현을 못 쓰는 경우"(음수 경과)를 위한 셋째 갈래
+/// (절대 시각 노출)를 끼워 넣는다. 이 열거형도 그 셋째 갈래를 `.skewed` 로 그대로
+/// 갖는다(Fix round 1) — 서버 시각의 음수 경과(왕복 보정 오차 수백 밀리초)만
+/// `.minutes(0)`("방금 전")으로 보고, 기기(자녀 폰) 시각의 음수 경과는 절대 시각을
+/// 잃지 않고 `.skewed(atMillis:)`로 그대로 넘긴다 — `StatusCard.lastSignal` 주석이
+/// 이 갈래를 정한다.
 enum LastSignal: Equatable {
     case never
     case minutes(Int)

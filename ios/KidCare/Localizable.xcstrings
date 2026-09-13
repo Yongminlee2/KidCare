@@ -1,17 +1,6 @@
 {
   "sourceLanguage": "ko",
   "strings": {
-    "alert_row": {
-      "extractionState": "manual",
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ · %2$@"
-          }
-        }
-      }
-    },
     "child_default_name": {
       "extractionState": "manual",
       "localizations": {
@@ -569,6 +558,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$02d:%2$02d~%3$02d:%4$02d"
+          }
+        }
+      }
+    },
+    "timeline_detail_inline": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@"
           }
         }
       }
