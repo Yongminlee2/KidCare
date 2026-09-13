@@ -36,27 +36,29 @@ struct ChildMapView: View {
                 NaverMapView(
                     markerAt: viewModel.상태.map { (lat: $0.lat, lng: $0.lng) },
                     routeSections: viewModel.경로_구간,
-                    카메라를_한번_맞췄나: $카메라를_한번_맞췄나
+                    카메라를_한번_맞췄나: $카메라를_한번_맞췄나,
+                    카메라를_다시_맞춰야_한다: Binding(
+                        get: { viewModel.카메라를_다시_맞춰야_한다 },
+                        set: { if !$0 { viewModel.카메라_재조준을_마쳤다() } }
+                    )
                 )
                 .ignoresSafeArea()
 
-                if childUid != nil {
-                    StatusCardView(
-                        childName: viewModel.아이_이름,
-                        status: viewModel.상태,
-                        nowMillis: viewModel.서버기준_지금,
-                        commandStatusText: viewModel.명령_상태_문구,
-                        isCommandBusy: viewModel.commandProgress.isInFlight
-                    )
-                }
-
-                if let 오류 = viewModel.오류 {
-                    Text(오류).padding().background(.thinMaterial).foregroundStyle(.red)
-                } else if childUid == nil {
-                    Text("map_no_child").padding().background(.thinMaterial)
-                } else if viewModel.상태 == nil {
-                    Text("map_waiting_first_signal").padding().background(.thinMaterial)
-                }
+                // I1(리뷰): 상태 카드는 항상 그린다 — 안드로이드 `status_card` 가
+                // 아이 선택 여부와 무관하게 늘 떠 있고 그 안의 한 줄만 바뀌는 것과
+                // 같다(:222). 대기 문구·오류·명령 진행 상태를 전부 이 한 줄이
+                // 맡는다(`StatusCardView.상태_문구` 참고) — 예전처럼 지도 위에
+                // 따로 겹쳐 그리면 그 배너가 이 카드를 덮어 "전달 중…"/실패 문구가
+                // 안 보이거나 잘렸다(리뷰 shot0~shot3).
+                StatusCardView(
+                    childName: viewModel.아이_이름,
+                    status: viewModel.상태,
+                    nowMillis: viewModel.서버기준_지금,
+                    hasChild: childUid != nil,
+                    loadError: viewModel.오류,
+                    commandStatusText: viewModel.명령_상태_문구,
+                    isCommandBusy: viewModel.commandProgress.isInFlight
+                )
             }
             .overlay(alignment: .bottomTrailing) {
                 지금위치_버튼
@@ -69,6 +71,10 @@ struct ChildMapView: View {
         // `.task` 는 화면이 사라지면 스스로 취소한다 — 구독이 아니라 한 번의
         // 읽기라 onDisappear 에서 따로 걷어낼 리스너가 없다.
         .task { await viewModel.하루를_읽는다() }
+        // C1-b(리뷰): 화면이 떠 있는 동안 "지금"을 60초마다 다시 잰다(Firestore 를
+        // 새로 타지 않는다 — `MapViewModel.시계를_돈다()` 주석 참고). `.task` 라
+        // 화면이 사라지면 이 태스크도 스스로 취소된다.
+        .task { await viewModel.시계를_돈다() }
         // '지금 위치 확인'의 명령 리스너·60초 타이머는 `.task` 처럼 스스로 걷히지
         // 않는다(그 값이 구독이 아니라 명시적인 `ListenerRegistration` 이라서다) —
         // 화면이 사라질 때 반드시 여기서 정리한다(브리프 "Testability").

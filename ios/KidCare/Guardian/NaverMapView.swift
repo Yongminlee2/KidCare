@@ -16,6 +16,12 @@ struct NaverMapView: UIViewRepresentable {
     var routeSections: [RouteSection] = []
     /// 마커가 처음 생겼을 때 한 번만 카메라를 옮긴다. 그 뒤에는 부모가 옮긴 자리를 지킨다.
     @Binding var 카메라를_한번_맞췄나: Bool
+    /// M3(리뷰): `MapViewModel.카메라를_다시_맞춰야_한다` — '지금 위치 확인'이
+    /// `done` 으로 끝난 직후 true. 마커가 이미 있어도(`카메라를_한번_맞췄나` 가
+    /// 이미 true 라도) 이번 한 번은 카메라를 강제로 다시 옮긴다. 정본은 안드로이드
+    /// `renderMapStatus` 의 `shouldFocusChild = marker == null || focusChildOnNextLoad
+    /// || liveTrackingActive`(:784) — `liveTrackingActive` 는 Task 7 몫이라 아직 없다.
+    @Binding var 카메라를_다시_맞춰야_한다: Bool
 
     final class Coordinator {
         let marker = NMFMarker()
@@ -44,9 +50,15 @@ struct NaverMapView: UIViewRepresentable {
         context.coordinator.marker.position = position
         context.coordinator.marker.mapView = view.mapView
 
-        if !카메라를_한번_맞췄나 {
+        // M3(리뷰): 안드로이드 `shouldFocusChild` 와 같은 판단 — 처음 생겼을 때든,
+        // '지금 위치 확인' 이 방금 새 위치를 받아왔을 때든 카메라가 따라간다.
+        let 강제_재조준 = 카메라를_다시_맞춰야_한다
+        if !카메라를_한번_맞췄나 || 강제_재조준 {
             view.mapView.moveCamera(NMFCameraUpdate(scrollTo: position))
-            DispatchQueue.main.async { 카메라를_한번_맞췄나 = true }
+            DispatchQueue.main.async {
+                카메라를_한번_맞췄나 = true
+                if 강제_재조준 { 카메라를_다시_맞춰야_한다 = false }
+            }
         }
     }
 

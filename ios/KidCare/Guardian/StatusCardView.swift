@@ -17,6 +17,13 @@ struct StatusCardView: View {
     /// [FamilyRepository.serverNow] 로 잰 값. 기기 시계를 넘기면 부모 폰이 뒤처진
     /// 만큼 "마지막 신호 -3분 전" 이 뜬다 — brief·`StatusCard.lastSignal` 주석 참고.
     let nowMillis: Int64
+    /// 아이가 아직 선택되지 않았는가. 정본은 안드로이드 `onCreateView` 가
+    /// `statusBar.text = map_no_child` 를 상태 카드 **안에** 적어 두는 것(:222) —
+    /// 이 화면 전체를 가리는 별도 배너가 아니라 이 한 줄이 그 자리를 대신한다.
+    let hasChild: Bool
+    /// `MapViewModel.오류`(하루 읽기 실패). 정본은 안드로이드 `load()` 의 catch가
+    /// `showError(...)` 로 **같은 statusBar** 에 적는 것(:333) — 별도 배너가 아니다.
+    let loadError: String?
     /// `MapViewModel.명령_상태_문구` — '지금 위치 확인' 이 진행 중이거나 방금
     /// 끝났으면 아래 배터리·마지막 신호 문구 대신 이 문구를 보여준다. 정본은
     /// 안드로이드 `status_bar` 가 `renderLocating`/`showError` 로 같은 텍스트뷰를
@@ -44,7 +51,7 @@ struct StatusCardView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "battery.100")
                         .foregroundStyle(.green)
-                    Text(commandStatusText ?? 상태_문구)
+                    Text(상태_문구)
                         .font(.subheadline)
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.leading)
@@ -69,13 +76,30 @@ struct StatusCardView: View {
         }
     }
 
-    /// 상태 문서가 없거나(아직 확인한 적 없음) [StatusCard.lastSignal] 이 `.never`
-    /// 면 배터리 줄 자체를 안 보여준다 — 안드로이드 `renderStatus` 가
-    /// `status == null || signal == null` 일 때 `map_status_never` 하나만 보여주고
-    /// `map_status_format`(배터리+경과)을 안 쓰는 것과 같다. 신호가 없는데 배터리
-    /// 숫자만 있는 척하면 안 된다.
+    /// 상태 줄 전체가 이 계산 프로퍼티 하나를 거친다(I1, 리뷰). 정본은 안드로이드
+    /// `status_bar` — `renderLocating`/`showError`/`renderStatus` 가 전부 같은
+    /// `TextView.text` 하나를 덮어쓰지, 서로 다른 뷰를 겹쳐 쌓지 않는다. `ChildMapView`
+    /// 가 `오류`·`map_no_child`·`map_waiting_first_signal` 을 지도 위에 따로 띄우는
+    /// 배너로 겹쳐 그리자, 대기 문구는 완전히 가려지고(`shot0`) "전달 중…"은 안
+    /// 보이고(`shot1`) 실패 문구는 한 줄만 삐져나왔다(`shot2`) — 이 카드가 하나만
+    /// 그리게 합쳐 그 문제를 없앤다.
+    ///
+    /// 우선순위(안드로이드가 실제로 겹쳐 쓰는 순서를 흉내 낸다 — 명령이 최근에
+    /// 벌어진 일이라 가장 먼저 이긴다):
+    /// 1. 명령 진행·결과(`commandStatusText`) — `renderLocating`/`track` 이
+    ///    `showError` 로 statusBar 를 덮어쓰는 것과 같다.
+    /// 2. 하루 읽기 실패(`loadError`) — `load()` 의 catch 가 `showError` 를
+    ///    부르는 것과 같다(:333).
+    /// 3. 아이 미선택(`hasChild == false`) — `onCreateView` 의 기본값(:222).
+    /// 4. 상태 문서가 아직 없음(`status == nil`) — Task 4 가 이 키를 위해 이미
+    ///    쓰고 있었다(`map_waiting_first_signal`, 안드로이드엔 대응하는 분기가
+    ///    없다 — 이 화면만의 "아직 한 번도 못 읽었다" 갈래).
+    /// 5. 평소 배터리·마지막 신호(`map_status_never`/`map_status_format`).
     private var 상태_문구: String {
-        guard let status else { return String(localized: "map_status_never") }
+        if let commandStatusText { return commandStatusText }
+        if let loadError { return loadError }
+        guard hasChild else { return String(localized: "map_no_child") }
+        guard let status else { return String(localized: "map_waiting_first_signal") }
         let signal = StatusCard.lastSignal(status: status, nowMillis: nowMillis)
         if case .never = signal { return String(localized: "map_status_never") }
         return String(format: String(localized: "map_status_format"), status.battery, lastSignalText(signal))

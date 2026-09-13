@@ -76,7 +76,17 @@ final class MapViewModel {
     /// — 기기 시계를 쓰면 부모 폰이 뒤처진 만큼 음수 경과가 나온다(brief 경고).
     /// 아직 못 쟀으면 기기 시계로 시작한다 — 상태 카드가 첫 프레임에 값 없이 뜨는
     /// 것보다 오차 있는 값이라도 있는 편이 낫다.
+    ///
+    /// **Fix round 2(리뷰) C1-b: 이 값을 화면이 뜬 채로 그냥 두면 거짓말이 된다.**
+    /// 예전엔 `하루를_읽는다()`(진입·완료 뒤 재읽기)때만 갱신했는데, 그 사이 화면을
+    /// 몇 분 동안 열어 두면 "방금 전"이 그대로 몇 분째 찍혀 있었다(리뷰 shot5).
+    /// `시계를_돈다()` 가 60초마다 [서버_오프셋] 에 기기 시계를 더해 이 값을 다시
+    /// 계산한다 — Firestore 를 새로 타지 않는다.
     private(set) var 서버기준_지금 = Int64(Date().timeIntervalSince1970 * 1000)
+    /// 서버 시각 − 기기 시각. 서버 시각을 실제로 잴 때마다(`하루를_읽는다()`,
+    /// `handleCommandTimeout`) 갱신한다. `시계를_돈다()` 는 이 오프셋에 그 순간의
+    /// 기기 시계를 더하기만 해서 [서버기준_지금] 을 만든다 — 매번 다시 재지 않는다.
+    private var 서버_오프셋: Int64 = 0
     /// 지금 보고 있는 날. 정본은 안드로이드 `MapTimelineFragment.dayKey` — 처음엔
     /// 오늘로 시작한다(`changeDay` 가 불리기 전 기본값과 같다).
     private(set) var dayKey: String
@@ -158,11 +168,31 @@ final class MapViewModel {
     /// 안드로이드 `MapTimelineFragment.COMMAND_TIMEOUT_MILLIS`(:1316)와 정확히 같은
     /// 값 — 관리 탭(`ControlFragment`)의 무응답 표시와 같은 기준이다(설계서 §5).
     private let answerTimeoutMillis: Int64
+    /// C1(리뷰): 시간 초과가 실제로 벌어진 **그 순간** 서버 시각을 새로 잰다. 기본값은
+    /// `FamilyRepository.serverNow` — `하루를_읽는다()` 가 캐시해 둔 [서버기준_지금]
+    /// 을 그대로 쓰면 화면이 오래 떠 있을수록 "방금 전"이 거짓말이 된다(리뷰 shot6,
+    /// 안드로이드 `ControlFragment.onTimedOut` 이 매번 새로 재는 것과 같은 이유).
+    /// 주입 가능하게 연 이유는 `dayLoad`와 같다 — 이 await 를 테스트가 정확히
+    /// 원하는 순간에 걸어 두 번째 요청과의 경합을 결정적으로 재현한다.
+    private let commandServerNow: @Sendable (_ familyId: String, _ uid: String?) async throws -> Int64
+    /// [시계를_돈다()] 가 다시 잴 주기. 기본 60,000ms — 테스트는 짧은 값을 주거나
+    /// (동작 자체는 `commandSleep` 가짜가 정하므로) 값 자체보다 `commandSleep` 이
+    /// 이 값을 받았는지로 send/answer 시간 제한과 구분한다.
+    private let tickIntervalMillis: Int64
 
     /// Task 7(10분 실시간 추적)이 켜져 있거나 켜지는/꺼지는 중이면 이 버튼도 막는다는
     /// 안드로이드 `setLocateButtonEnabled`(:709)의 세 번째 조건 자리다. 그 기능
     /// 자체가 아직 없어 항상 false — Task 7 이 이 프로퍼티를 실제 상태로 바꿔 낀다.
     private(set) var liveTrackingActiveOrTransitioning = false
+
+    /// M3(리뷰): `done` 직후 카메라가 아이의 새 위치로 다시 움직여야 한다는 신호.
+    /// 정본은 안드로이드 `focusChildOnNextLoad`(:157, :420, :807) — 마커가 이미
+    /// 있어도(`카메라를_한번_맞췄나` 가 이미 true 라도) 이 값이 true 인 동안은
+    /// `NaverMapView` 가 카메라를 강제로 다시 옮긴다. 옮긴 뒤 [카메라_재조준을_마쳤다]
+    /// 로 스스로 꺼야 한다 — 안드로이드도 `renderMapStatus()` 끝에서 곧장 false 로
+    /// 되돌린다(계속 true 로 두면 부모가 지도를 옮겨볼 때마다 다시 아이 위치로
+    /// 끌려온다).
+    private(set) var 카메라를_다시_맞춰야_한다 = false
 
     private static let logger = Logger(subsystem: "com.kidcare.family", category: "MapViewModel")
 
@@ -183,6 +213,10 @@ final class MapViewModel {
         },
         sendTimeoutMillis: Int64 = 15_000,
         answerTimeoutMillis: Int64 = 60_000,
+        commandServerNow: @escaping @Sendable (
+            _ familyId: String, _ uid: String?
+        ) async throws -> Int64 = { familyId, uid in try await FamilyRepository.serverNow(familyId: familyId, uid: uid) },
+        tickIntervalMillis: Int64 = 60_000,
         dayLoad: @escaping @Sendable (
             _ familyId: String, _ childUid: String, _ dayKey: String
         ) async throws -> (status: ChildStatusDoc?, trail: TrailDoc?) = MapViewModel.기본_하루_읽기
@@ -196,6 +230,8 @@ final class MapViewModel {
         self.commandSleep = commandSleep
         self.sendTimeoutMillis = sendTimeoutMillis
         self.answerTimeoutMillis = answerTimeoutMillis
+        self.commandServerNow = commandServerNow
+        self.tickIntervalMillis = tickIntervalMillis
         self.dayLoad = dayLoad
         dayKey = DayPicker.todayKey(zone: zone, nowMillis: Int64(Date().timeIntervalSince1970 * 1000))
     }
@@ -339,9 +375,33 @@ final class MapViewModel {
         async let 서버시각_작업 = try? FamilyRepository.serverNow(familyId: familyId, uid: AuthGateway.currentUid())
         let 멤버 = await 멤버_작업
         let 서버시각 = await 서버시각_작업
+        let 이_시각의_기기시계 = Int64(Date().timeIntervalSince1970 * 1000)
         guard generation == loadGeneration else { return } // 그사이 날짜가 바뀌었으면 이 값도 버린다
         if let name = 멤버?.displayName, !name.isEmpty { 아이_이름 = name }
-        if let 서버시각 { 서버기준_지금 = 서버시각 }
+        if let 서버시각 {
+            서버기준_지금 = 서버시각
+            // C1-b: 오프셋을 갱신해 둬야 `시계를_돈다()` 가 이후 60초마다 Firestore
+            // 없이 이 기준으로 "지금"을 다시 계산할 수 있다.
+            서버_오프셋 = 서버시각 - 이_시각의_기기시계
+        }
+    }
+
+    /// 화면이 떠 있는 동안 [서버기준_지금] 을 주기적으로 다시 잰다(리뷰 C1-b).
+    ///
+    /// **Firestore 를 새로 타지 않는다** — 캐시해 둔 [서버_오프셋] 에 그 순간의
+    /// 기기 시계를 더할 뿐이다. 정본은 없다: 안드로이드 지도 탭은 주기적으로 다시
+    /// 그리지 않는다(`MapTimelineFragment` 에 그런 핸들러가 없다 — Task 5 report
+    /// 참고) — 화면을 오래 열어 둘수록 "방금 전"이 거짓말이 되는 실패를 막으려는
+    /// iOS 전용 판단이다.
+    ///
+    /// `ChildMapView` 가 `.task` 로 부른다 — 화면이 사라지면 그 태스크가 스스로
+    /// 취소되므로 별도로 걷어낼 리스너가 없다(`Task.isCancelled` 로 직접 검사).
+    func 시계를_돈다() async {
+        while !Task.isCancelled {
+            await commandSleep(tickIntervalMillis)
+            guard !Task.isCancelled else { return }
+            서버기준_지금 = Int64(Date().timeIntervalSince1970 * 1000) + 서버_오프셋
+        }
     }
 
     // MARK: - 지금 위치 확인
@@ -376,7 +436,13 @@ final class MapViewModel {
             // 브리프 규칙 3: 무응답 문구와 마지막 신호 시각을 함께 보여준다.
             // `lastSeen` 은 이미 `StatusCard.lastSignal` 한 곳을 거쳐 나온 값이다
             // (`handleCommandTimeout` 참고) — 여기서는 문구로만 바꾼다.
-            return String(format: String(localized: "control_command_timeout_format"), lastSignalText(lastSeen))
+            //
+            // M1(리뷰): 안드로이드 `lastSeenPhrase` 가 `control_last_seen_format`
+            // ("마지막 신호 %1$s")로 한 번 더 감싼 뒤에야 `control_command_timeout_format`
+            // 에 끼워 넣는다 — 여기서도 그 이중 감싸기를 그대로 따른다(둘 다 이미
+            // 있는 키다, 새로 만들지 않는다).
+            let 마지막_신호_문구 = String(format: String(localized: "control_last_seen_format"), lastSignalText(lastSeen))
+            return String(format: String(localized: "control_command_timeout_format"), 마지막_신호_문구)
         }
     }
 
@@ -455,7 +521,7 @@ final class MapViewModel {
         commandTimeoutTask = Task { @MainActor [weak self] in
             await sleep(answerTimeout)
             guard !Task.isCancelled else { return } // stopCommandTracking() 이 취소했다
-            self?.handleCommandTimeout(generation: generation)
+            await self?.handleCommandTimeout(generation: generation)
         }
     }
 
@@ -466,6 +532,9 @@ final class MapViewModel {
             stopCommandTracking()
             recordAnswer()
             commandProgress = .done
+            // M3(리뷰): 안드로이드 `focusChildOnNextLoad = true` 와 같다 — 마커가
+            // 이미 있어도 방금 답한 새 위치로 카메라가 다시 움직여야 한다.
+            카메라를_다시_맞춰야_한다 = true
             // 안드로이드 `reload()`(마커가 새 위치로 움직이도록 상태를 다시
             // 읽는다)와 같다 — 새 상태 기계를 만들지 않고 이미 있는 하루 읽기
             // 경로를 그대로 재사용한다(브리프 "After DONE").
@@ -499,12 +568,38 @@ final class MapViewModel {
     /// 60초 무응답. 정본은 안드로이드 `track`(:443-446). 여기서는 `RequestLog`
     /// 에 응답을 적지 않는다 — 그래야 `DisconnectRule`(무응답 배너, Phase 4)이
     /// 이 무응답을 근거로 배너를 띄울 수 있다(브리프 규칙 5).
-    private func handleCommandTimeout(generation: Int) {
-        guard generation == commandGeneration else { return }
+    ///
+    /// **C1(리뷰): 서버 시각을 이 순간 새로 잰다.** 캐시된 [서버기준_지금] 을 그대로
+    /// 쓰면 화면이 오래 떠 있을수록 "방금 전"이 거짓말이 된다(리뷰 shot6 —
+    /// 4분 지난 무응답이 "방금 전"으로 찍혔다). 안드로이드 `ControlFragment
+    /// .onTimedOut` 이 매번 `FamilyRepository.serverNow` 를 새로 부르는 것과 같다.
+    ///
+    /// 이 `await` 가 진짜 정지점이라 세대 재확인이 장식이 아니게 된다 — 이 함수에
+    /// 들어온 뒤에도 그새 새 요청이 시작될 수 있다(`MapViewModelCommandGenerationTests
+    /// .시간초과가_늦게_와도_세대가_다르면_화면을_안_건드린다` 가 그 경합을 증명한다).
+    private func handleCommandTimeout(generation: Int) async {
+        let 잰_시각: Int64
+        let 이_시각의_기기시계 = Int64(Date().timeIntervalSince1970 * 1000)
+        if let 새로_잰_시각 = try? await commandServerNow(familyId, AuthGateway.currentUid()) {
+            잰_시각 = 새로_잰_시각
+        } else {
+            잰_시각 = 이_시각의_기기시계 // 취소·실패 — 기기 시계로 물러난다(FamilyRepository.serverNow 와 같은 태도)
+        }
+        guard generation == commandGeneration else { return } // await 뒤 다시 확인 — 그새 새 요청이 시작됐을 수 있다
         stopCommandTracking()
+        // 방금 잰 시각을 카드 전체의 기준으로도 남긴다 — 이후 `시계를_돈다()` 가
+        // 이 오프셋을 그대로 이어받는다.
+        서버기준_지금 = 잰_시각
+        서버_오프셋 = 잰_시각 - 이_시각의_기기시계
         // "마지막 신호"는 항상 이 함수 하나만 거친다(`Documents.swift` 의 규율).
-        let signal: LastSignal = 상태.map { StatusCard.lastSignal(status: $0, nowMillis: 서버기준_지금) } ?? .never
+        let signal: LastSignal = 상태.map { StatusCard.lastSignal(status: $0, nowMillis: 잰_시각) } ?? .never
         commandProgress = .timedOut(lastSeen: signal)
+    }
+
+    /// `NaverMapView` 가 카메라를 다시 옮긴 뒤 부른다 — 안드로이드
+    /// `focusChildOnNextLoad = false` 와 같은 자리(M3).
+    func 카메라_재조준을_마쳤다() {
+        카메라를_다시_맞춰야_한다 = false
     }
 
     /// 아이 폰이 대답했다는 사실을 남긴다. 정본은 안드로이드 `recordAnswer`(:682) —
