@@ -43,6 +43,9 @@ struct ChildSelectorBar: View {
 struct ChildMenu<Content: View>: View {
     let model: ChildSelectorModel
     @ViewBuilder let content: () -> Content
+    /// 본 화면이 넘겨준 빼기 뷰모델. 미리보기처럼 없는 곳에서는 줄을 그리지 않는다.
+    @Environment(LeaveFamilyModel.self) private var leave: LeaveFamilyModel?
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         Menu {
@@ -61,6 +64,21 @@ struct ChildMenu<Content: View>: View {
                 .disabled(model.읽기_전용)
             Button(model.보호자_초대_문구) { model.초대한다(.guardian) }
                 .disabled(model.읽기_전용)
+            // App Store 가이드라인 5.1.1 — 처리방침 링크와 계정 삭제는 앱 안에서 닿아야 한다(7단계 판정 기록 8·9).
+            // 안드로이드 메뉴에는 없는 줄이다. 선택기 줄과 지도 카드가 이 메뉴를 함께 쓰므로 모든 탭에서 닿는다.
+            if PrivacyPolicyLink.url() != nil || leave != nil {
+                Divider()
+            }
+            // 주소가 비어 있는 동안(주인이 게시하기 전)은 줄 자체가 없다 — 지어낸 주소로 보내지 않는다.
+            if let url = PrivacyPolicyLink.url() {
+                Button { openURL(url) } label: { Text("ios_privacy_policy") }
+            }
+            if let leave {
+                // 실기기 읽기 전용 확인에서는 누를 수 없다(6단계 판정 기록 10 과 같은 자리). 흐리게 하는 것은 표시용이고,
+                // 실제 차단은 `LeaveFamilyModel.묻는다`·`뺀다` 의 가드다.
+                Button(role: .destructive) { leave.묻는다() } label: { Text("ios_leave_family_menu") }
+                    .disabled(leave.읽기_전용)
+            }
         } label: {
             content()
         }

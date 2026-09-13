@@ -41,16 +41,36 @@ struct RouterView: View {
         _showMain = State(initialValue: store.role == .guardian && store.familyId != nil)
     }
 
+    /// 가족에서 빠진 뒤 첫 화면에 한 번 띄울 결과 글(7단계 판정 기록 8). 빼기 모델은 본 화면과 함께 사라지므로 여기서 받는다.
+    @State private var 빠진_결과: String?
+
     var body: some View {
-        if isRunningTests {
-            Color.clear
-        } else if showMain, let familyId = store.familyId {
-            GuardianHomeView(familyId: familyId)
-                // 가족이 바뀌면 선택기까지 새로 만든다. 아이가 바뀌면 GuardianHomeView 안에서 탭만 새로 만든다
-                // (통합 검토 M1 의 .id(familyId+childUid) 를 두 겹으로 나눴다 — 6단계 판정 기록 7).
-                .id(familyId)
-        } else {
-            RoleSelectView(onGuardianReady: { showMain = true })
+        Group {
+            if isRunningTests {
+                Color.clear
+            } else if showMain, let familyId = store.familyId {
+                GuardianHomeView(familyId: familyId, onLeft: { outcome in
+                    빠진_결과 = outcome.map(LeaveFamilyModel.끝_문구)
+                })
+                    // 가족이 바뀌면 선택기까지 새로 만든다. 아이가 바뀌면 GuardianHomeView 안에서 탭만 새로 만든다
+                    // (통합 검토 M1 의 .id(familyId+childUid) 를 두 겹으로 나눴다 — 6단계 판정 기록 7).
+                    .id(familyId)
+            } else {
+                RoleSelectView(onGuardianReady: { showMain = true })
+            }
+        }
+        // 가족에서 빠지면 familyId 가 nil 이 된다. showMain 을 되돌려 두지 않으면, 다시 합류하는 도중 InviteCodeView 가
+        // familyId 를 쓰는 순간 코드를 보기도 전에 본 화면으로 튕긴다 — 위 머리 주석의 1차 리뷰 CRITICAL 과 같은 사고다.
+        .onChange(of: store.familyId) { _, newValue in
+            if newValue == nil { showMain = false }
+        }
+        .alert(
+            Text("ios_leave_family_done_title"),
+            isPresented: Binding(get: { 빠진_결과 != nil }, set: { if !$0 { 빠진_결과 = nil } })
+        ) {
+            Button(role: .cancel) { 빠진_결과 = nil } label: { Text("ios_leave_family_done_ok") }
+        } message: {
+            Text(verbatim: 빠진_결과 ?? "")
         }
     }
 }

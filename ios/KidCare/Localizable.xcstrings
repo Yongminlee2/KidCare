@@ -13262,6 +13262,1341 @@
         }
       }
     },
+    "ios_leave_family_cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "취소"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "ios_leave_family_confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빼기"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove"
+          }
+        }
+      }
+    },
+    "ios_leave_family_done_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버의 이 아이폰 보호자 연결과 익명 계정, 이 폰에 저장된 가족 정보를 지웠어요. 아이 폰의 기록과 예약·장소는 가족에 그대로 남아 있어요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server, its anonymous account and the family info saved on this phone were deleted. Your child's records, schedules and places stay with the family."
+          }
+        }
+      }
+    },
+    "ios_leave_family_done_ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확인"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "ios_leave_family_done_signed_out_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버의 이 아이폰 보호자 연결과 이 폰에 저장된 가족 정보를 지웠어요. 익명 계정은 서버가 삭제를 받지 않아 로그아웃만 했어요. 남은 계정에는 가족 정보 없이 계정 번호와 만든 시각만 있어요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone's guardian link on the server and the family info saved on this phone were deleted. The server didn't accept deleting the anonymous account, so this iPhone was only signed out. That account keeps only its ID and creation time, with no family info."
+          }
+        }
+      }
+    },
+    "ios_leave_family_done_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 아이폰을 가족에서 뺐어요"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone was removed from the family"
+          }
+        }
+      }
+    },
+    "ios_leave_family_failed_ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확인"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "ios_leave_family_failed_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가족에서 빼지 못했어요"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove this iPhone"
+          }
+        }
+      }
+    },
+    "ios_leave_family_in_progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removing from the family…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가족에서 빼는 중…"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Removing from the family…"
+          }
+        }
+      }
+    },
+    "ios_leave_family_last_guardian_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 아이폰이 이 가족의 마지막 보호자예요. 빼고 나면 아이 폰이 올리는 기록을 볼 사람이 없으니 아이 폰의 앱도 함께 지워 주세요.\n\n%1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This iPhone is the family's last guardian. Once it's removed, no one can see what your child's phone uploads, so please delete the app on your child's phone too.\n\n%1$@"
+          }
+        }
+      }
+    },
+    "ios_leave_family_menu": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 아이폰을 가족에서 빼기"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family"
+          }
+        }
+      }
+    },
+    "ios_leave_family_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 아이폰의 보호자 연결과 익명 계정을 지워요. 아이 폰의 기록과 예약·장소는 가족에 그대로 남아요. 다시 보려면 새 초대 번호를 받아야 해요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This deletes this iPhone's guardian link and its anonymous account. Your child's records, schedules and places stay with the family. To see them again, you'll need a new invite code."
+          }
+        }
+      }
+    },
+    "ios_leave_family_offline": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "인터넷에 연결되지 않아 빼지 못했어요. 연결된 뒤 다시 해 주세요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Couldn't remove it because you're offline. Please try again once you're connected."
+          }
+        }
+      }
+    },
+    "ios_leave_family_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 아이폰을 가족에서 뺄까요?"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Remove this iPhone from the family?"
+          }
+        }
+      }
+    },
+    "ios_privacy_policy": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인정보 처리방침"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy Policy"
+          }
+        }
+      }
+    },
     "language_follow_system": {
       "extractionState": "manual",
       "localizations": {
