@@ -19,6 +19,7 @@ final class FakeControlBackend: @unchecked Sendable {
     struct State {
         var sent: [Sent] = []
         var sendHangs = false
+        var statusHangs = false
         var sendError: Error?
         var status: ChildStatusDoc?
         var lockHangs = false
@@ -34,6 +35,8 @@ final class FakeControlBackend: @unchecked Sendable {
     /// 영영 안 열리는 문 — 오프라인 쓰기를 흉내 낸다.
     private let 멈춤 = TestGate()
     let settingsListener = TestListenerRegistration()
+    /// `statusHangs` 일 때 상태 읽기가 매달리는 문. 테스트가 연다.
+    let 상태_문 = TestGate()
 
     func update(_ body: (inout State) -> Void) { lock.withLock { body(&state) } }
     var snapshot: State { lock.withLock { state } }
@@ -46,6 +49,11 @@ final class FakeControlBackend: @unchecked Sendable {
         if hangs { await 멈춤.wait() }
         if let error { throw error }
         return id
+    }
+
+    func fetchStatus() async -> ChildStatusDoc? {
+        if snapshot.statusHangs { await 상태_문.wait() }
+        return snapshot.status
     }
 
     func observe(onChange: @escaping (CommandDoc) -> Void) -> ListenerRegistration {
@@ -114,7 +122,8 @@ struct ControlViewModelTests {
         sleep: FakeSleep = FakeSleep(),
         log: RequestLog? = nil,
         memo: AlarmMemoStore? = nil,
-        clock: TestClock? = nil
+        clock: TestClock? = nil,
+        serverNow: (@Sendable (String) async throws -> Int64)? = nil
     ) -> ControlViewModel {
         let clock = clock ?? TestClock(now)
         return ControlViewModel(
@@ -124,10 +133,10 @@ struct ControlViewModelTests {
             alarmMemoStore: memo ?? AlarmMemoStore(defaults: TestDefaults.isolated("ControlViewModelTests-memo"), now: { clock.value }),
             commandSend: { _, _, type, payload in try await backend.send(type: type, payload: payload) },
             commandObserve: { _, _, _, onChange, _ in backend.observe(onChange: onChange) },
-            statusFetch: { _, _ in backend.snapshot.status },
+            statusFetch: { _, _ in await backend.fetchStatus() },
             settingsObserve: { _, _, onChange, _ in backend.observeSettings(onChange: onChange) },
             lockSave: { _, _, enabled in try await backend.saveLock(enabled) },
-            serverNow: { _ in clock.value },
+            serverNow: serverNow ?? { _ in clock.value },
             deviceNow: { clock.value },
             commandSleep: { millis in await sleep.sleep(millis) }
         )
@@ -320,6 +329,50 @@ struct ControlViewModelTests {
         #expect(log.lastAnswerAt(childUid: "child") == 0)
     }
 
+    @Test("무응답 문구가 서버 시각을 재는 사이 done 이 오면 늦은 무응답이 '완료'를 덮지 않는다(통합 검토 I1, :612-613)")
+    func 무응답_처리_중_늦은_done() async {
+        let backend = FakeControlBackend()
+        backend.update { $0.status = 상태(lastSeenAt: now - 10 * 60_000) }
+        let sleep = FakeSleep()
+        let 서버시각_문 = TestGate()
+        let 지금 = now
+        let vm = 만든다(backend: backend, sleep: sleep, serverNow: { _ in await 서버시각_문.wait(); return 지금 })
+
+        await vm.시작한다().value // 0번 리스너는 소리 상태 조회
+        await vm.소리_모드를_보낸다(RingerMode.silent) // 1번 리스너
+        await sleep.응답.open()
+        // 임시 문구가 떴다 = 시간이_지났다 가 서버 시각을 기다리는 중이다.
+        await eventually { vm.commandUi == .failed(String(localized: "control_command_timeout")) }
+
+        backend.명령을_옮긴다(1, to: CommandState.done)
+        await eventually { vm.commandUi == .done }
+        await 서버시각_문.open()
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        #expect(vm.commandUi == .done)
+    }
+
+    @Test("무응답 문구가 서버 시각을 재는 사이 메시지가 delivered 면 '아직 안 읽음'이 남는다(통합 검토 I1, :658-669)")
+    func 무응답_처리_중_늦은_delivered() async {
+        let backend = FakeControlBackend()
+        backend.update { $0.status = 상태(lastSeenAt: now - 10 * 60_000) }
+        let sleep = FakeSleep()
+        let 서버시각_문 = TestGate()
+        let 지금 = now
+        let vm = 만든다(backend: backend, sleep: sleep, serverNow: { _ in await 서버시각_문.wait(); return 지금 })
+
+        await vm.시작한다().value
+        vm.메시지 = "밥 먹었어?"
+        await vm.메시지를_보낸다()
+        await sleep.응답.open()
+        await eventually { vm.commandUi == .failed(String(localized: "control_command_timeout")) }
+
+        backend.명령을_옮긴다(1, to: CommandState.delivered)
+        await eventually { vm.commandUi == .messageUnread }
+        await 서버시각_문.open()
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        #expect(vm.commandUi == .messageUnread)
+    }
+
     @Test("신호가 한 번도 없던 폰의 무응답은 '아직 한 번도 신호가 없었어요'(:739)")
     func 무응답_신호_없음() async {
         let backend = FakeControlBackend()
@@ -475,5 +528,31 @@ struct ControlViewModelTests {
         vm.정리한다()
         #expect(backend.settingsListener.removed)
         #expect(backend.snapshot.commandListeners[0].removed)
+    }
+
+    @Test("시작이 끝나기 전에 정리하면 리스너를 붙이지 않고 query_ringer 도 쓰지 않는다(통합 검토 M1)")
+    func 시작_도중_정리() async {
+        // 시작 Task 본문이 돌기도 전에 정리된다.
+        let 먼저 = FakeControlBackend()
+        let vm1 = 만든다(backend: 먼저)
+        let 작업1 = vm1.시작한다()
+        vm1.정리한다()
+        await 작업1.value
+        #expect(먼저.snapshot.settingsCallback == nil)
+        #expect(먼저.snapshot.sent.isEmpty)
+        #expect(먼저.snapshot.commandListeners.isEmpty)
+
+        // 상태를 읽는 await 도중 정리된다.
+        let 도중 = FakeControlBackend()
+        도중.update { $0.statusHangs = true }
+        let vm2 = 만든다(backend: 도중)
+        let 작업2 = vm2.시작한다()
+        await eventually { 도중.snapshot.settingsCallback != nil }
+        vm2.정리한다()
+        await 도중.상태_문.open()
+        await 작업2.value
+        #expect(도중.settingsListener.removed)
+        #expect(도중.snapshot.sent.isEmpty)
+        #expect(도중.snapshot.commandListeners.isEmpty)
     }
 }

@@ -274,6 +274,61 @@ struct LiveTrackingTests {
         #expect(vm.상태?.battery == 42)
     }
 
+    /// 통합 검토 I2: 안드로이드 실시간 onChange(MapTimelineFragment.kt:548-566)는 `renderStatus`·
+    /// `recordAnswer` 를 부르지 않는다. 물어본 **뒤** 쓰인 스냅샷이라도 배너 대답이 아니다.
+    /// 에뮬레이터에 기대지 않고 서버 오프셋을 먼저 재 둔다 — 위치 확인의 60초가 즉시 지나
+    /// `commandServerNow`(기기 시계)로 오프셋을 잰다. 재기 전에는 대답 규칙이 아예 판단하지
+    /// 않아 이 테스트가 아무것도 지키지 못한다.
+    @Test("I2: 실시간 상태 스냅샷은 배너 대답이 아니다 — 배너를 지우지도 대답을 적지도 않는다")
+    func 실시간_스냅샷은_배너_대답이_아니다() async throws {
+        let log = 격리된_요청_기록()
+        let 상태_상자 = StatusChangeBox()
+        let answerTimeout: Int64 = 222
+        let vm = MapViewModel(
+            familyId: "family", childUid: "child",
+            requestLog: log,
+            commandSend: { _, _, type, _ in type }, // 명령 종류를 문서 id 로 돌려준다
+            commandObserve: { _, _, commandId, onChange, _ in
+                // 위치 확인은 대답하지 않고, 실시간 시작만 곧바로 확인한다.
+                if commandId != CommandType.locateNow { onChange(CommandDoc(id: commandId, ["state": "done"])) }
+                return FakeListenerRegistration()
+            },
+            commandSleep: { millis in
+                guard millis == answerTimeout else { await Gate().wait(); return }
+            },
+            answerTimeoutMillis: answerTimeout,
+            commandServerNow: { _, _ in Int64(Date().timeIntervalSince1970 * 1000) },
+            liveStatusObserve: { _, _, onChange, _ in
+                상태_상자.set(onChange)
+                return FakeListenerRegistration()
+            },
+            dayLoad: Self.빈_하루_읽기
+        )
+
+        await vm.지금_위치를_확인한다() // 물어봤다 + 60초 무응답 → 서버 오프셋을 잰다
+        await eventually { if case .timedOut = vm.commandProgress { return true } else { return false } }
+        let 물은_시각 = log.lastRequestAt(childUid: "child")
+        #expect(물은_시각 > 0)
+
+        let 한시간_뒤 = 물은_시각 + 60 * 60_000
+        let banner = DisconnectBanner(childUid: "child", requestLog: log, deviceNow: { 한시간_뒤 })
+        var 불린_횟수 = 0
+        vm.대답이_기록되면 = { 불린_횟수 += 1; banner.다시_판정한다() }
+        banner.다시_판정한다()
+        #expect(banner.문구 != nil)
+
+        await vm.실시간_추적을_시작한다()
+        await eventually { if case .on = vm.liveTrackingState { return true } else { return false } }
+        // 물어본 뒤에 쓰인 신호 — 처음 읽기 경로라면 대답으로 쳤을 문서다.
+        상태_상자.call(Self.status(at: 물은_시각 + 5_000, battery: 42))
+        await eventually { vm.상태?.battery == 42 } // 스냅샷은 실제로 처리됐다
+        try? await Task.sleep(nanoseconds: 50_000_000)
+
+        #expect(log.lastAnswerAt(childUid: "child") == 0)
+        #expect(불린_횟수 == 0)
+        #expect(banner.문구 != nil)
+    }
+
     /// 10분(주입한 짧은 값) 뒤 자동으로 꺼지고 map_live_timeout 문구를 남기고
     /// 상태 리스너를 뗀다.
     @Test("10분 뒤 자동으로 꺼지고 map_live_timeout 문구를 남긴다")

@@ -137,6 +137,10 @@ final class ControlViewModel {
     private var statusGeneration = 0
     private var lockGeneration = 0
     private var 시작_작업: Task<Void, Never>?
+    /// `정리한다()` 가 불렸다. 시작 작업은 await 마다 이 값을 다시 본다 — 취소만으로는
+    /// 모자라다(Firestore 읽기는 취소를 모른다). 정리 뒤에 리스너를 붙이거나 자녀 폰에
+    /// `query_ringer` 를 새로 쓰면 아무도 떼지 못한다(통합 검토 M1).
+    private var 닫혔다 = false
 
     /// 메시지만 `delivered` 의 뜻이 다르다(:138-156). 필드를 따로 두지 않고 종류에서 파생한다.
     private var trackingMessage: Bool { trackingType == CommandType.message }
@@ -273,6 +277,9 @@ final class ControlViewModel {
     /// 아니라 뷰모델이 소유한 Task 인 이유는 `MapViewModel.처음이면_읽는다` 와 같다.
     @discardableResult
     func 시작한다() -> Task<Void, Never> {
+        // 정리된 뷰모델은 다시 살리지 않는다 — 가족·아이가 바뀌면 `RouterView` 의 `.id` 가
+        // 뷰모델을 새로 만든다.
+        if 닫혔다 { return Task {} }
         if let 시작_작업 { return 시작_작업 }
         let 작업 = Task { await self.구독을_시작한다() }
         시작_작업 = 작업
@@ -282,6 +289,8 @@ final class ControlViewModel {
     /// `subscribe`(:270-311). 안드로이드는 상태 읽기와 소리 조회를 나란히 띄우지만 여기서는
     /// 상태를 먼저 읽고 조회한다 — 문서 한 개 읽기만큼 조회가 늦어지는 대신 순서가 결정적이다.
     private func 구독을_시작한다() async {
+        // Task 본문이 돌기 전에 정리가 먼저 올 수 있다.
+        guard !닫혔다, !Task.isCancelled else { return }
         guard let childUid else {
             아이_안내 = String(localized: "map_no_child")
             // 안드로이드는 여기서 로딩 표시가 영영 남는다(판정 기록 5). iOS 는 끈다.
@@ -295,12 +304,17 @@ final class ControlViewModel {
             Task { @MainActor in self?.아이_안내 = errorMessage(error) }
         })
         await 상태를_읽는다(childUid: childUid, confirmedNow: false)
+        // 상태를 읽는 동안 정리됐으면 조회 명령을 쓰지 않는다 — 쓰면 리스너까지 새로 붙는다.
+        guard !닫혔다, !Task.isCancelled else { return }
         await 소리_상태를_묻는다()
     }
 
     /// 보호자 화면이 통째로 사라질 때(`GuardianRootView.onDisappear`). `onDestroyView`(:1094-1116).
     /// 세대를 올려 이미 대기열에 오른 콜백까지 무해하게 만든다.
     func 정리한다() {
+        닫혔다 = true
+        시작_작업?.cancel()
+        시작_작업 = nil
         settingsListener?.remove()
         settingsListener = nil
         stopTracking()
@@ -476,6 +490,7 @@ final class ControlViewModel {
         case CommandState.done:
             timeoutTask?.cancel()
             timeoutTask = nil
+            timedOut = false
             대답을_기록한다()
             if trackingType == CommandType.setAlarm, let childUid {
                 alarmMemoStore.recordConfirmed(childUid: childUid)
@@ -496,6 +511,7 @@ final class ControlViewModel {
         case CommandState.failed:
             timeoutTask?.cancel()
             timeoutTask = nil
+            timedOut = false
             // 알람이 안 걸렸는데 "맞춰져 있어요"가 남으면 이 기능에서 제일 나쁜 거짓말이다(:642-647).
             if trackingType == CommandType.setAlarm, let childUid {
                 alarmMemoStore.clear(childUid: childUid)
@@ -511,6 +527,7 @@ final class ControlViewModel {
                 // 대답으로 친다(:658-669).
                 timeoutTask?.cancel()
                 timeoutTask = nil
+                timedOut = false
                 대답을_기록한다()
                 commandUi = .messageUnread
             } else if !timedOut {
@@ -524,6 +541,12 @@ final class ControlViewModel {
     /// 60초 무응답(:678-708). "실패했다"가 아니라 "대답이 없다" — 리스너는 떼지 않아 늦게라도
     /// done 이 오면 "완료"로 고쳐진다. 문구를 먼저 확정하고, 서버 시각을 잰 뒤 마지막 신호를
     /// 채운다. await 뒤에는 세대를 다시 본다(:697-701).
+    ///
+    /// 세대만으로는 모자라다(통합 검토 I1): 서버 시각을 재는 사이 done·failed·메시지
+    /// delivered 가 오면 같은 세대인 채 `.done` 이 적히고 이 Task 가 취소된다. 그런데
+    /// `try?` 가 취소를 삼켜 기기 시계로 물러나므로, 취소와 "아직 대답을 기다리는가"
+    /// (`timedOut` — 대답이 온 경로가 푼다)를 함께 봐야 늦은 무응답 문구가 완료를 덮지
+    /// 않는다. 안드로이드는 `timeoutJob?.cancel()` 이 `serverNow` 정지점에서 멈춰 같은 결과다.
     private func 시간이_지났다(generation: Int) async {
         timedOut = true
         ringerQueryFinishedIfCurrent(trackingType)
@@ -533,7 +556,7 @@ final class ControlViewModel {
         if let 상태, StatusCard.signal(status: 상태) != nil {
             // 서버 시각으로 뺀다 — 부모 폰 시계가 뒤처져 있으면 "-3분 전"이 찍힌다(:717-719).
             let now = (try? await serverNow(familyId)) ?? deviceNow()
-            guard generation == commandGeneration else { return }
+            guard 아직_무응답인가(generation) else { return }
             신호_문구 = String(
                 format: String(localized: "control_last_seen_format"),
                 lastSignalText(StatusCard.lastSignal(status: 상태, nowMillis: now))
@@ -541,8 +564,12 @@ final class ControlViewModel {
         } else {
             신호_문구 = String(localized: "control_last_seen_never")
         }
-        guard generation == commandGeneration else { return }
+        guard 아직_무응답인가(generation) else { return }
         commandUi = .failed(String(format: String(localized: "control_command_timeout_format"), 신호_문구))
+    }
+
+    private func 아직_무응답인가(_ generation: Int) -> Bool {
+        !Task.isCancelled && timedOut && generation == commandGeneration
     }
 
     // MARK: - 잠금 스위치

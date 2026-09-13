@@ -51,6 +51,10 @@ struct ControlView: View {
                 }
                 .tint(KidCarePalette.sky)
                 .frame(minHeight: 48)
+                // 아이가 없으면 저장할 곳이 없다. 뷰모델이 값을 안 바꾸는 setter 라 스위치가 켜진
+                // 모양으로 남을 수 있어 아예 막는다(통합 검토 M2, 다른 보내는 버튼들과 같다).
+                .disabled(!viewModel.버튼_활성화)
+                .opacity(viewModel.버튼_활성화 ? 1 : 0.38)
                 .padding(.top, 20)
                 보조_문구("control_lock_hint")
 

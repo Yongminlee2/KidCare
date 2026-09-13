@@ -555,6 +555,48 @@ struct MapViewModelCommandGenerationTests {
         #expect(vm.commandProgress == .delivering)
     }
 
+    /// **통합 검토 I1.** 시간 초과가 서버 시각을 재는 사이 done 이 오면 같은 세대인 채
+    /// `.done` 이 적히고 타이머 Task 는 취소된다. `try?` 가 취소를 삼키므로 await 뒤에
+    /// 취소·진행 상태를 안 보면 늦은 무응답이 완료를 덮는다.
+    @Test("시간 초과가 서버 시각을 재는 동안 done 이 오면, 늦은 무응답이 완료를 덮지 않는다 (I1)")
+    func 시간초과가_서버시각을_재는_동안_done_이_오면_완료가_남는다() async throws {
+        let 서버시각_시작됨 = SingleSignal()
+        let 서버시각_문 = Gate()
+        let 하루_읽기_문 = Gate()
+        let 콜백 = TestCallbackBox<(CommandDoc) -> Void>()
+        let answerTimeout: Int64 = 222
+
+        let vm = MapViewModel(
+            familyId: "family", childUid: "child",
+            requestLog: 격리된_요청_기록(),
+            commandSend: { _, _, _, _ in "cmd" },
+            commandObserve: { _, _, _, onChange, _ in 콜백.set(onChange); return FakeListenerRegistration() },
+            commandSleep: { millis in
+                guard millis == answerTimeout else { await Gate().wait(); return }
+                // 60초는 즉시 지나간다.
+            },
+            answerTimeoutMillis: answerTimeout,
+            commandServerNow: { _, _ in
+                await 서버시각_시작됨.fire()
+                await 서버시각_문.wait()
+                return 555
+            },
+            // done 뒤 재읽기를 매달아 `.done` 이 `.idle` 로 넘어가지 않게 한다.
+            dayLoad: { _, _, _ in await 하루_읽기_문.wait(); return (nil, nil) }
+        )
+
+        await vm.지금_위치를_확인한다()
+        await 서버시각_시작됨.wait()
+        #expect(vm.commandProgress == .delivering)
+
+        콜백.value?(CommandDoc(id: "cmd", ["state": CommandState.done]))
+        await eventually { vm.commandProgress == .done }
+
+        await 서버시각_문.open()
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        #expect(vm.commandProgress == .done)
+    }
+
     @Test(".queued — 발행이 15초 안에 서버 확인을 못 받으면 실패가 아니라 대기다")
     func 발행이_시간_안에_못_끝나면_queued_다() async throws {
         let sendTimeout: Int64 = 111

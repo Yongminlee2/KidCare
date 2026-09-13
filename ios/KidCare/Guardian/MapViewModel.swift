@@ -501,6 +501,9 @@ final class MapViewModel {
 
     /// 첫 읽기 작업. `nil` 이면 아직 한 번도 시작하지 않았다.
     private var 처음_읽기: Task<Void, Never>?
+    /// `정리한다()` 가 불렸다. 첫 읽기는 await 마다 이 값을 다시 본다 — Firestore 읽기는
+    /// 취소를 모른다(통합 검토 M1, `ControlViewModel.닫혔다` 와 같다).
+    private var 닫혔다 = false
 
     /// 화면이 보일 때마다 불러도 되는 첫 읽기. 정본은 안드로이드 `MapTimelineFragment.load`
     /// 가 `onViewCreated` 에서 한 번만 도는 것 — 탭은 show/hide 라 다시 보여도 다시 읽지
@@ -512,6 +515,7 @@ final class MapViewModel {
     /// 다시 기회가 없다. 뷰의 수명과 떼어 둔다.
     @discardableResult
     func 처음이면_읽는다() -> Task<Void, Never> {
+        if 닫혔다 { return Task {} }
         if let 처음_읽기 { return 처음_읽기 }
         let 작업 = Task { await self.하루를_읽는다() }
         처음_읽기 = 작업
@@ -520,10 +524,11 @@ final class MapViewModel {
 
     /// 상태와 그 날 경로를 순서대로 한 번씩 읽는다(화면 진입 시 한 번).
     func 하루를_읽는다() async {
-        guard let childUid else { return }
+        guard !닫혔다, let childUid else { return }
         loadGeneration += 1
         let generation = loadGeneration
         await 상태와_그날_경로를_읽는다(generation: generation)
+        guard !닫혔다 else { return }
 
         // 상태 카드는 하루 기록과 실패를 공유하지 않는다 — 이름 하나, 서버 시각
         // 하나를 못 구했다고 지도·타임라인까지 오류로 덮으면 그 실패와 무관한
@@ -538,7 +543,7 @@ final class MapViewModel {
         let 멤버 = await 멤버_작업
         let 서버시각 = await 서버시각_작업
         let 이_시각의_기기시계 = Int64(Date().timeIntervalSince1970 * 1000)
-        guard generation == loadGeneration else { return } // 그사이 날짜가 바뀌었으면 이 값도 버린다
+        guard !닫혔다, generation == loadGeneration else { return } // 그사이 날짜가 바뀌었으면 이 값도 버린다
         if let name = 멤버?.displayName, !name.isEmpty { 아이_이름 = name }
         if let 서버시각 {
             서버기준_지금 = 서버시각
@@ -751,7 +756,11 @@ final class MapViewModel {
         } else {
             잰_시각 = 이_시각의_기기시계 // 취소·실패 — 기기 시계로 물러난다(FamilyRepository.serverNow 와 같은 태도)
         }
-        guard generation == commandGeneration else { return } // await 뒤 다시 확인 — 그새 새 요청이 시작됐을 수 있다
+        // await 뒤 다시 확인한다. 세대 — 그새 새 요청이 시작됐을 수 있다. 취소와 진행 상태 —
+        // 서버 시각을 재는 사이 done/failed 가 오면 세대는 그대로인 채 이 Task 가 취소되고
+        // `.done` 이 적힌다. `try?` 가 취소를 삼키므로 이 둘을 안 보면 늦은 무응답이 완료를
+        // 덮는다(통합 검토 I1).
+        guard !Task.isCancelled, generation == commandGeneration, commandProgress == .delivering else { return }
         stopCommandTracking()
         // 방금 잰 시각을 카드 전체의 기준으로도 남긴다 — 이후 `시계를_돈다()` 가
         // 이 오프셋을 그대로 이어받는다.
@@ -937,6 +946,17 @@ final class MapViewModel {
     func 명령_추적을_정리한다() {
         stopCommandTracking()
         commandGeneration += 1
+    }
+
+    /// 보호자 화면이 통째로 사라질 때(`GuardianRootView.onDisappear`). 명령·실시간 정리에 더해
+    /// 첫 읽기를 닫는다 — 정리 뒤에 끝난 첫 읽기가 사라진 화면의 상태를 채우지 않게(통합 검토 M1).
+    func 정리한다() {
+        닫혔다 = true
+        처음_읽기?.cancel()
+        처음_읽기 = nil
+        loadGeneration += 1
+        명령_추적을_정리한다()
+        실시간_추적을_정리한다()
     }
 
     // MARK: - Task 7: 실시간 추적 — 동작
@@ -1150,8 +1170,10 @@ final class MapViewModel {
             return
         }
         상태 = status
-        // 실시간 스냅샷도 안드로이드에서는 같은 `renderStatus`(:750-757)를 지나 대답으로 친다.
-        상태가_물음보다_새로우면_대답으로_친다()
+        // 실시간 스냅샷은 배너 대답으로 치지 않는다(통합 검토 I2). 안드로이드
+        // `beginLiveStatusSubscription` 의 onChange(MapTimelineFragment.kt:548-566)는 상태 줄과
+        // 지도만 그리고 `renderStatus`·`recordAnswer` 를 부르지 않는다 — 대답 규칙(:757)은
+        // `load()` 경로에만 있다. 여기서 치면 같은 가족의 안드로이드 보호자 폰과 배너가 갈린다.
         // M3 와 같은 신호 — 마커가 새 위치로 따라가야 한다(브리프 "the marker follows").
         카메라를_다시_맞춰야_한다 = true
         let 정확도 = max(Int(status.accuracy.rounded()), 0)

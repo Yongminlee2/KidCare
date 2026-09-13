@@ -73,8 +73,7 @@ struct GuardianRootView: View {
             await banner.주기적으로_판정한다()
         }
         .onDisappear {
-            mapViewModel.명령_추적을_정리한다()
-            mapViewModel.실시간_추적을_정리한다()
+            mapViewModel.정리한다()
             controlViewModel.정리한다()
         }
     }
