@@ -23,11 +23,15 @@ struct JoinFamilyView: View {
         VStack(spacing: 16) {
             Text("pairing_guardian_join_title")
             TextField("pairing_code_placeholder", text: $입력)
-                .textInputAutocapitalization(.characters)
-                .autocorrectionDisabled()
+                .inviteCodeKeyboard()
                 .multilineTextAlignment(.center)
                 .font(.system(.largeTitle, design: .monospaced))
                 .textFieldStyle(.roundedBorder)
+                // 안드로이드 maxLength=8 — 넘치는 글자는 들어오는 즉시 자른다.
+                .onChange(of: 입력) { _, 새_값 in
+                    let 잘린_값 = InviteCodeField.clamp(새_값)
+                    if 잘린_값 != 새_값 { 입력 = 잘린_값 }
+                }
 
             if let 오류 { Text(오류).foregroundStyle(.red) }
 
