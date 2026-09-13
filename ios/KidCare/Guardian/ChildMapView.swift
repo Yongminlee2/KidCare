@@ -20,6 +20,14 @@ struct ChildMapView: View {
     @State private var 하루기록: TrailDoc?
     @State private var 오류: String?
     @State private var 카메라를_한번_맞췄나 = false
+    /// 상태 카드에 쓸 아이 이름. 못 읽었으면(또는 아직 읽는 중이면) 안드로이드
+    /// `selectedChildLabelText()` 의 기본값과 같은 자리로 물러난다.
+    @State private var 아이_이름 = String(localized: "child_default_name")
+    /// [FamilyRepository.serverNow] 로 잰 "지금". 상태 카드의 "N분 전" 계산 기준이다
+    /// — 기기 시계를 쓰면 부모 폰이 뒤처진 만큼 음수 경과가 나온다(brief 경고).
+    /// 아직 못 쟀으면 기기 시계로 시작한다 — 상태 카드가 첫 프레임에 값 없이 뜨는
+    /// 것보다 오차 있는 값이라도 있는 편이 낫다.
+    @State private var 서버기준_지금 = Int64(Date().timeIntervalSince1970 * 1000)
 
     private static let logger = Logger(subsystem: "com.kidcare.family", category: "ChildMapView")
 
@@ -31,6 +39,10 @@ struct ChildMapView: View {
                 카메라를_한번_맞췄나: $카메라를_한번_맞췄나
             )
             .ignoresSafeArea()
+
+            if childUid != nil {
+                StatusCardView(childName: 아이_이름, status: 상태, nowMillis: 서버기준_지금)
+            }
 
             if let 오류 {
                 Text(오류).padding().background(.thinMaterial).foregroundStyle(.red)
@@ -80,10 +92,22 @@ struct ChildMapView: View {
             오류 = String(localized: "pairing_offline")
         } catch {
             // Firestore/네트워크 원문은 영어라 그대로 보여주면 로캘라이즈 규칙을
-            // 어긴다(JoinFamilyView 와 같은 규율). 화면에는 공용 문구만 보여주고,
-            // 실제 원인은 로그로만 남긴다.
+            // 어긴다(JoinFamilyView 와 같은 규율). `errorMessage` 가 코드별로 이미
+            // 있는 문구(서버 설정 미완료, 오프라인, 재로그인)로 좁혀주므로 여기서는
+            // 그 결과만 화면에 보여주고, 실제 원인은 로그로만 남긴다.
             Self.logger.error("하루 읽기 실패: \(String(describing: error), privacy: .public)")
-            오류 = String(localized: "error_unknown")
+            오류 = errorMessage(error)
         }
+
+        // 상태 카드는 하루 기록과 실패를 공유하지 않는다 — 이름 하나, 서버 시각
+        // 하나를 못 구했다고 지도·타임라인까지 오류로 덮으면 그 실패와 무관한
+        // 정보까지 숨는다. 각자 실패해도 카드가 물러날 기본값(아이_이름 초기값,
+        // 기기 시계로 시작한 서버기준_지금)을 이미 갖고 있어 조용히 넘어간다.
+        async let 멤버_작업 = try? FamilyRepository.fetchMember(familyId: familyId, uid: childUid)
+        async let 서버시각_작업 = try? FamilyRepository.serverNow(familyId: familyId, uid: AuthGateway.currentUid())
+        let 멤버 = await 멤버_작업
+        let 서버시각 = await 서버시각_작업
+        if let name = 멤버?.displayName, !name.isEmpty { 아이_이름 = name }
+        if let 서버시각 { 서버기준_지금 = 서버시각 }
     }
 }

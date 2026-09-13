@@ -227,6 +227,68 @@ struct TrailPoint {
     var asFix: Fix { Fix(lat: lat, lng: lng, accuracy: accuracy, at: at, speed: speed) }
 }
 
+/// 아이 폰이 마지막으로 신호를 남긴 시각. 정본은 안드로이드 `GuardianMainActivity.kt`
+/// 의 `ChildSignal`·`ChildStatusDoc.lastSignal()`·`LastSignalText`.
+///
+/// 코틀린은 시각(`ChildSignal`, 절대 밀리초)과 표기(`LastSignalText`, "12분 전")를
+/// 나눠 두고 그 사이에 "아이 폰 시계라 상대 표현을 못 쓰는 경우"(음수 경과)를 위한
+/// 셋째 갈래(절대 시각 노출)를 끼워 넣는다. 이 열거형은 그 갈래를 갖지 않는다 —
+/// 케이스가 절대 시각 문자열을 들고 다닐 자리가 없어서, 서버 시각·기기 시각 중
+/// 무엇으로 쟀든 경과를 0 이상으로 자른다(아래 `StatusCard.lastSignal` 주석 참고).
+/// 그래도 "서버 시각 우선, 없으면 기기 시각" 갈래는 그대로 지킨다 — 관리 탭이
+/// 아직 없는 이 앱에서 정확히 지켜야 할 갈래는 이것 하나이기 때문이다.
+enum LastSignal: Equatable {
+    case never
+    case minutes(Int)
+    case hours(Int)
+    case days(Int)
+}
+
+/// 상태 문서에서 "마지막 신호"를 읽는 자리를 한 곳에 모은다.
+///
+/// **읽는 쪽은 반드시 이 함수 하나만 지나가야 한다.** 안드로이드
+/// `ChildStatusDoc.lastSignal()` 의 주석이 그렇게 못 박았다 — 지도 카드·(나중에
+/// 생길) 관리 탭·연결 끊김 배너가 저마다 다른 "마지막 신호"를 말하면 그 자체가
+/// 부모를 헷갈리게 한다. `StatusCardView` 는 이 함수만 부른다.
+enum StatusCard {
+
+    private static let minuteMillis: Int64 = 60_000
+    private static let hourMillis: Int64 = 60 * minuteMillis
+    private static let dayMillis: Int64 = 24 * hourMillis
+
+    /// `nowMillis` 는 **반드시 [FamilyRepository.serverNow] 로 잰 값**이어야 한다.
+    /// 기기 시계로 빼면 부모 폰이 뒤처진 만큼 "마지막 신호 -3분 전" 같은 문구가
+    /// 나온다 — 안드로이드 `ControlFragment` 주석과 같은 함정이다.
+    static func lastSignal(status: ChildStatusDoc, nowMillis: Int64) -> LastSignal {
+        let atMillis: Int64
+        // 서버 시각이 있으면 그것을, 없으면 아이 폰이 자기 시계로 적은 옛 필드로
+        // 물러난다 — 두 필드가 있는 이유는 [ChildStatusDoc] 주석. 신뢰도가 전혀
+        // 다른 두 시각을 여기서 갈라 이후 계산은 하나의 절대 밀리초만 본다.
+        if let serverAt = status.lastSeenServerAt {
+            let serverMillis = Int64(serverAt.dateValue().timeIntervalSince1970 * 1000)
+            atMillis = serverMillis > 0 ? serverMillis : status.lastSeenAt
+        } else {
+            atMillis = status.lastSeenAt
+        }
+        guard atMillis > 0 else { return .never }
+
+        // 음수 경과의 뜻은 시계 출처에 따라 다르다(코틀린 `LastSignalText.relativeText`
+        // 주석): 서버 시각이면 `serverNow` 왕복 보정 오차(수백 밀리초)뿐이라 "방금
+        // 전"이 정직하고, 기기 시각이면 아이 폰 시계가 앞서 있다는 뜻이라 원래는
+        // 절대 시각을 따로 보여줘야 한다. 이 열거형엔 그 절대 시각을 담을 케이스가
+        // 없으므로(위 타입 주석), 두 경우 다 0 으로 잘라 "방금 전" 쪽 안전한 값으로
+        // 수렴시킨다 — 있지도 않은 정밀한 음수 경과를 보여주는 것보다 낫다.
+        let elapsed = max(0, nowMillis - atMillis)
+
+        switch elapsed {
+        case ..<minuteMillis: return .minutes(0)
+        case ..<hourMillis: return .minutes(Int(elapsed / minuteMillis))
+        case ..<dayMillis: return .hours(Int(elapsed / hourMillis))
+        default: return .days(Int(elapsed / dayMillis))
+        }
+    }
+}
+
 /// 하루를 머무름·이동으로 요약한 한 토막. 정본은 안드로이드
 /// `core/model/Documents.kt:179-189` 의 `SegmentDoc`. 이 구조체도 읽기 전용이다.
 struct SegmentDoc {

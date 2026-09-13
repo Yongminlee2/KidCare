@@ -1,391 +1,545 @@
 {
-  "sourceLanguage" : "ko",
-  "strings" : {
-    "day_header_date" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$d월 %2$d일 (%3$@)"
+  "sourceLanguage": "ko",
+  "strings": {
+    "child_default_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아이"
           }
         }
       }
     },
-    "day_header_today" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "오늘"
+    "control_last_seen_days": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d일 전"
           }
         }
       }
     },
-    "day_header_yesterday" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "어제"
+    "control_last_seen_hours": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d시간 전"
           }
         }
       }
     },
-    "dialog_cancel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "취소"
+    "control_last_seen_minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d분 전"
           }
         }
       }
     },
-    "error_unknown" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "문제가 생겼어요. 잠시 뒤 다시 시도해 주세요."
+    "control_last_seen_never": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 한 번도 신호가 없었어요"
           }
         }
       }
     },
-    "family_default_name" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "우리 가족"
+    "control_last_seen_now": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "방금 전"
           }
         }
       }
     },
-    "guardian_start_join_family" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "가족에 합류하기"
+    "day_header_date": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d월 %2$d일 (%3$@)"
           }
         }
       }
     },
-    "guardian_start_new_family" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "새 가족 만들기"
+    "day_header_today": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘"
           }
         }
       }
     },
-    "guardian_start_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "어떻게 시작할까요?"
+    "day_header_yesterday": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어제"
           }
         }
       }
     },
-    "invite_code_done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "완료"
+    "dialog_cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "취소"
           }
         }
       }
     },
-    "ios_child_unsupported_body" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "아이 폰에 필요한 소리 전환과 핸드폰 찾기는 아이폰에서 만들 수 없어요. 아이 폰에는 안드로이드용 앱을 설치해 주세요."
+    "error_generic_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결에 문제가 생겼어요\n%1$@"
           }
         }
       }
     },
-    "ios_child_unsupported_confirm" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "확인"
+    "error_server_setup": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버 설정이 아직 끝나지 않았어요. 앱을 설치해 준 사람에게 알려주세요."
           }
         }
       }
     },
-    "ios_child_unsupported_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "아이 폰은 안드로이드만 지원해요"
+    "error_unauthenticated": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인이 풀렸어요. 앱을 껐다가 다시 열어주세요."
           }
         }
       }
     },
-    "map_no_child" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "아직 연결된 아이가 없어요"
+    "error_unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "문제가 생겼어요. 잠시 뒤 다시 시도해 주세요."
           }
         }
       }
     },
-    "map_waiting_first_signal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "아직 아이 폰에서 받은 위치가 없어요"
+    "family_default_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "우리 가족"
           }
         }
       }
     },
-    "pairing_code_placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "------"
+    "guardian_start_join_family": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가족에 합류하기"
           }
         }
       }
     },
-    "pairing_child_join" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "연결하기"
+    "guardian_start_new_family": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 가족 만들기"
           }
         }
       }
     },
-    "pairing_expired" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "번호가 만료됐어요. 엄마 폰에서 새 번호를 받아주세요."
+    "guardian_start_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어떻게 시작할까요?"
           }
         }
       }
     },
-    "pairing_guardian_hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "아이 폰에서 앱을 켜고\n'아이'를 고른 뒤 이 번호를 넣으면 연결됩니다."
+    "invite_code_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료"
           }
         }
       }
     },
-    "pairing_guardian_join_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "가족 보호자에게 받은\n6자리 번호를 넣어주세요"
+    "ios_child_unsupported_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아이 폰에 필요한 소리 전환과 핸드폰 찾기는 아이폰에서 만들 수 없어요. 아이 폰에는 안드로이드용 앱을 설치해 주세요."
           }
         }
       }
     },
-    "pairing_not_found" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "그런 번호가 없어요. 다시 확인해 주세요."
+    "ios_child_unsupported_confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확인"
           }
         }
       }
     },
-    "pairing_offline" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "인터넷에 연결할 수 없어요. 와이파이나 데이터 연결 상태를 확인해 주세요."
+    "ios_child_unsupported_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아이 폰은 안드로이드만 지원해요"
           }
         }
       }
     },
-    "pairing_reset_role_button" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "역할 다시 고르기"
+    "map_battery_info_confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확인"
           }
         }
       }
     },
-    "pairing_wrong_role" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 번호는 선택한 역할의 초대 번호가 아니에요. 아이용과 보호자용 번호를 확인해주세요."
+    "map_battery_info_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "현재 잔량은 아이 휴대폰이 보낸 상태로 확인할 수 있어요. 어떤 앱이 배터리를 얼마나 사용했는지는 안드로이드 보안 정책상 원격으로 읽을 수 없으며, 아이 휴대폰의 설정 > 배터리에서 직접 확인해야 해요."
           }
         }
       }
     },
-    "role_child" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "아이"
+    "map_battery_info_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아이 휴대폰 배터리"
           }
         }
       }
     },
-    "role_guardian" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "보호자"
+    "map_no_child": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 연결된 아이가 없어요"
           }
         }
       }
     },
-    "role_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "누구의 폰인가요?"
+    "map_status_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리 %1$d%%\n%2$@ 기준"
           }
         }
       }
     },
-    "segment_distance_kilometers" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$.1fkm"
+    "map_status_never": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 위치를 확인한 적이 없어요. '지금 위치 확인'을 눌러주세요."
           }
         }
       }
     },
-    "segment_distance_meters" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$dm"
+    "map_waiting_first_signal": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 아이 폰에서 받은 위치가 없어요"
           }
         }
       }
     },
-    "segment_distance_under_ten_meters" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "10m 미만"
+    "pairing_child_join": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결하기"
           }
         }
       }
     },
-    "segment_duration_hours" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$d시간"
+    "pairing_code_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "------"
           }
         }
       }
     },
-    "segment_duration_hours_minutes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$d시간 %2$d분"
+    "pairing_expired": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번호가 만료됐어요. 엄마 폰에서 새 번호를 받아주세요."
           }
         }
       }
     },
-    "segment_duration_minutes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$d분"
+    "pairing_guardian_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아이 폰에서 앱을 켜고\n'아이'를 고른 뒤 이 번호를 넣으면 연결됩니다."
           }
         }
       }
     },
-    "segment_duration_under_minute" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1분 미만"
+    "pairing_guardian_join_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가족 보호자에게 받은\n6자리 번호를 넣어주세요"
           }
         }
       }
     },
-    "segment_time_range_format" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$02d:%2$02d~%3$02d:%4$02d"
+    "pairing_not_found": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그런 번호가 없어요. 다시 확인해 주세요."
+          }
+        }
+      }
+    },
+    "pairing_offline": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "인터넷에 연결할 수 없어요. 와이파이나 데이터 연결 상태를 확인해 주세요."
+          }
+        }
+      }
+    },
+    "pairing_reset_role_button": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "역할 다시 고르기"
+          }
+        }
+      }
+    },
+    "pairing_wrong_role": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 번호는 선택한 역할의 초대 번호가 아니에요. 아이용과 보호자용 번호를 확인해주세요."
+          }
+        }
+      }
+    },
+    "role_child": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아이"
+          }
+        }
+      }
+    },
+    "role_guardian": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보호자"
+          }
+        }
+      }
+    },
+    "role_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "누구의 폰인가요?"
+          }
+        }
+      }
+    },
+    "segment_distance_kilometers": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$.1fkm"
+          }
+        }
+      }
+    },
+    "segment_distance_meters": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$dm"
+          }
+        }
+      }
+    },
+    "segment_distance_under_ten_meters": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10m 미만"
+          }
+        }
+      }
+    },
+    "segment_duration_hours": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d시간"
+          }
+        }
+      }
+    },
+    "segment_duration_hours_minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d시간 %2$d분"
+          }
+        }
+      }
+    },
+    "segment_duration_minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d분"
+          }
+        }
+      }
+    },
+    "segment_duration_under_minute": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1분 미만"
+          }
+        }
+      }
+    },
+    "segment_time_range_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$02d:%2$02d~%3$02d:%4$02d"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

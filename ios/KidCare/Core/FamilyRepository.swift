@@ -413,6 +413,18 @@ enum FamilyRepository {
         return ChildStatusDoc(data)
     }
 
+    /// 멤버 문서 하나를 **한 번** 읽는다. 상태 카드가 아이 이름을 보여주는 데만
+    /// 쓴다(안드로이드 `child_name` 텍스트뷰와 같은 자리). 목록 전체를 구독하는
+    /// `applyMembers`(안드로이드) 수준의 기능은 아직 이 화면에 없다 — 다중 자녀
+    /// 선택기·이름 중복 처리는 이 Task 의 범위 밖이라, 문서가 없으면(또는 아직
+    /// 안 읽었으면) 화면이 `child_default_name` 으로 물러난다.
+    static func fetchMember(familyId: String, uid: String) async throws -> MemberDoc? {
+        let snap = try await db.collection("families").document(familyId)
+            .collection("members").document(uid).getDocument()
+        guard let data = snap.data() else { return nil }
+        return MemberDoc(data)
+    }
+
     /// 아이 상태 문서를 구독한다. 돌려받은 등록은 화면이 사라질 때 반드시 remove 한다.
     ///
     /// **1단계 지도(`ChildMapView`)는 이제 이 함수를 쓰지 않는다** — 위
