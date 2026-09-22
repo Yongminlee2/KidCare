@@ -76,7 +76,7 @@ struct ReleaseConfigTests {
         #expect(userDefaults?["NSPrivacyAccessedAPITypeReasons"] as? [String] == ["CA92.1"])
     }
 
-    @Test("출시 Info.plist — 수출 규정, 1.0 (1), 아이폰 세로 전용, 권한 문구·배경 모드 없음(판정 기록 3·4·5·10·15)")
+    @Test("출시 Info.plist — 수출 규정, 1.0 (1), 아이폰 세로 전용, 위치 문구 둘·배경 모드 location 하나(7단계 판정 기록 3·4·5·15, 아이 1단계 판정 기록 12)")
     func 출시_Info() throws {
         let info = try #require(Bundle.main.infoDictionary)
         #expect(info["ITSAppUsesNonExemptEncryption"] as? Bool == false)
@@ -85,9 +85,18 @@ struct ReleaseConfigTests {
         #expect(info["LSRequiresIPhoneOS"] as? Bool == true)
         #expect(info["UIDeviceFamily"] as? [Int] == [1])
         #expect(info["UISupportedInterfaceOrientations"] as? [String] == ["UIInterfaceOrientationPortrait"])
-        #expect(info.keys.filter { $0.hasSuffix("UsageDescription") }.sorted() == [],
-                "권한 문구가 생겼다 — 설계서 §1 '이 앱이 요청하는 권한은 0개다'")
-        #expect(info["UIBackgroundModes"] == nil, "배경 모드가 생겼다 — 가이드라인 2.5.4(판정 기록 10)")
+        // 7단계까지 이 앱은 권한을 하나도 요청하지 않았다("권한 0개"가 자랑이었다 —
+        // `2026-09-12-kidcare-ios-design.md` §1). 아이 역할이 그 성질을 **일부러** 깬다:
+        // 같은 바이너리가 백그라운드 위치를 요구하게 되므로 심사에서 가이드라인 2.5.4 를
+        // 정면으로 만난다(아이 설계서 §15-7). 그래서 단언을 지우지 않고 **뒤집는다** —
+        // 셋째 문구나 둘째 배경 모드가 생기면 그 자리에서 빨개진다.
+        #expect(
+            info.keys.filter { $0.hasSuffix("UsageDescription") }.sorted()
+                == ["NSLocationAlwaysAndWhenInUseUsageDescription", "NSLocationWhenInUseUsageDescription"],
+            "권한 문구가 위치 둘 말고 더 생겼다 — 늘릴 때는 심사 근거를 먼저 적는다"
+        )
+        #expect(info["UIBackgroundModes"] as? [String] == ["location"],
+                "배경 모드는 location 하나여야 한다 — 가이드라인 2.5.4 는 실제로 쓰는 것만 허용한다")
         #expect(info["KidCarePrivacyPolicyURL"] is String, "Task 2 의 처리방침 줄이 읽는 키")
     }
 

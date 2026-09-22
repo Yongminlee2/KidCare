@@ -25,7 +25,13 @@ CATALOG = os.path.join(ROOT, 'ios/KidCare/Localizable.xcstrings')
 GAPS = os.path.join(ROOT, 'tools/i18n-untranslated.json')
 INFOPLIST = os.path.join(ROOT, 'ios/KidCare/InfoPlist.xcstrings')
 # Info.plist 키 → i18n 키. 안드로이드 런처 이름이 app_name 이다.
-INFOPLIST_KEYS = {'CFBundleDisplayName': 'app_name'}
+# 위치 설명 둘은 아이 역할(iOS 아이 1단계 Task 3)이 더한 것이고, 앱스토어 심사가 직접 읽는
+# 문장이다(설계서 §8.5·§17-10). 여기 매핑이 있어야 InfoPlist.xcstrings 에 14개 언어로 실린다.
+INFOPLIST_KEYS = {
+    'CFBundleDisplayName': 'app_name',
+    'NSLocationWhenInUseUsageDescription': 'ios_perm_location_when_in_use',
+    'NSLocationAlwaysAndWhenInUseUsageDescription': 'ios_perm_location_always',
+}
 # (i18n 파일 이름, 카탈로그 언어 태그). 태그는 안드로이드 AppLanguage.kt:23-36 의 tag 와 같다.
 LANGS = [
     ('ko', 'ko'), ('en', 'en'), ('ja', 'ja'), ('zh', 'zh-Hans'), ('zh_Hant', 'zh-Hant'),

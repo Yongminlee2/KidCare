@@ -84,6 +84,15 @@ targets:
           - UIInterfaceOrientationPortrait
         # 네이버 SDK 가 이 이름 그대로 읽는다. 값은 Base.xcconfig → Secrets.xcconfig 에서 온다.
         NMFNcpKeyId: $(NAVER_MAP_NCP_KEY_ID)
+        # 아이 역할(설계서 §5.2). 이 배열이 있고 startUpdatingLocation() 이 돌고 있으면 iOS 가 앱을
+        # 서스펜드하지 않는다 — 안드로이드 포그라운드 서비스에 가장 가까운 것이다.
+        # **하나만 둔다.** 배경 모드를 더 넣으면 가이드라인 2.5.4("실제로 쓰는 것만")를 정면으로
+        # 만난다(ReleaseConfigTests.출시_Info 가 막는다).
+        UIBackgroundModes: [location]
+        # 문장 자체는 i18n 에 있고 InfoPlist.xcstrings 로 14개 언어가 실린다
+        # (tools/ios-strings.py 의 INFOPLIST_KEYS). 여기에는 기본(한국어) 값이 들어간다.
+        NSLocationWhenInUseUsageDescription: 엄마 아빠가 지금 어디 있는지 볼 수 있게 위치를 보냅니다.
+        NSLocationAlwaysAndWhenInUseUsageDescription: 엄마 아빠가 지금 어디 있는지 볼 수 있게 위치를 보냅니다. 화면이 꺼져 있을 때도 보내야 길을 잃었을 때 찾을 수 있어요.
     dependencies:
       - package: Firebase
         product: FirebaseAuth

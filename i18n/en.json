@@ -152,6 +152,8 @@
   "ios_leave_family_done_ok": "OK",
   "ios_leave_family_failed_ok": "OK",
   "ios_leave_family_unconfirmed_title": "Couldn't confirm the removal",
+  "ios_perm_location_always": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost.",
+  "ios_perm_location_when_in_use": "Sends your location so your parents can see where you are.",
   "ios_privacy_policy": "Privacy Policy",
   "language_follow_system": "Follow the system setting",
   "language_picker_title": "Language",

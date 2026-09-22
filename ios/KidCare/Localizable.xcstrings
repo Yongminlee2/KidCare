@@ -13618,6 +13618,184 @@
         }
       }
     },
+    "ios_perm_location_always": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "엄마 아빠가 지금 어디 있는지 볼 수 있게 위치를 보냅니다. 화면이 꺼져 있을 때도 보내야 길을 잃었을 때 찾을 수 있어요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are. It has to keep sending while the screen is off so they can find you if you get lost."
+          }
+        }
+      }
+    },
+    "ios_perm_location_when_in_use": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "엄마 아빠가 지금 어디 있는지 볼 수 있게 위치를 보냅니다."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sends your location so your parents can see where you are."
+          }
+        }
+      }
+    },
     "ios_privacy_policy": {
       "extractionState": "manual",
       "localizations": {
