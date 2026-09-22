@@ -53,8 +53,12 @@ class GoldenFileWriterTest {
         is Boolean -> value.toString()
         is Int -> value.toString()
         is Long -> value.toString()
-        is Float -> value.toDouble().toString()
-        is Double -> value.toString()
+        is Float -> toJson(value.toDouble())
+        // JSON 에는 무한대·NaN 리터럴이 없다(RFC 8259). 그대로 적으면 `Infinity` 라는 맨몸
+        // 토큰이 나와 파일 전체가 파싱 불가가 된다 — 스위프트 `JSONSerialization` 이 실제로
+        // 그렇게 죽었다. 문자열로 적고 읽는 쪽(`GoldenComparisonTests.double`)이 되돌린다.
+        // `Fix.speedAccuracy` 의 기본값이 바로 이 경우다(무한대 = "모른다").
+        is Double -> if (value.isFinite()) value.toString() else jsonString(value.toString())
         is Map<*, *> -> value.entries.joinToString(",", "{", "}") { (k, v) -> "${jsonString(k.toString())}:${toJson(v)}" }
         is List<*> -> value.joinToString(",", "[", "]") { toJson(it) }
         else -> error("골든 JSON 라이터가 ${value::class} 를 모른다")
@@ -835,6 +839,282 @@ class GoldenFileWriterTest {
             addCase("random_set_$setIndex", moves)
         }
 
+        return cases
+    }
+
+    // ==================================================================
+    // 6. LocationFilter — 정확도 두 문턱, 완화 창, 25m·10분, 순간이동
+    // ==================================================================
+
+    @Test
+    fun `골든 - LocationFilter`() {
+        val payload = linkedMapOf(
+            "constants" to locationFilterConstants(),
+            "cases" to generateLocationFilter(),
+            "distances" to generateDistances(),
+        )
+        writeGoldenIfPresent("locationFilter", toJson(payload))
+    }
+
+    /** 스위프트가 상수를 그대로 옮겼는지 기계가 보게 한다(1단계 계획서 공통 절차 C-2). */
+    private fun locationFilterConstants(): Map<String, Any?> = linkedMapOf(
+        "maxAccuracyMeters" to LocationFilter.MAX_ACCURACY_METERS.toDouble(),
+        "fallbackMaxAccuracyMeters" to LocationFilter.FALLBACK_MAX_ACCURACY_METERS.toDouble(),
+        "staleFallbackMillis" to LocationFilter.STALE_FALLBACK_MILLIS,
+        "minMoveMeters" to LocationFilter.MIN_MOVE_METERS,
+        "maxSpeedMps" to LocationFilter.MAX_SPEED_MPS,
+        "heartbeatMillis" to LocationFilter.HEARTBEAT_MILLIS,
+    )
+
+    /** `Fix` 한 점을 골든 JSON 으로. `Float` 필드는 전부 `Double` 로 넓혀 적는다(설계서 §4.1). */
+    private fun fixJson(f: Fix?): Any? = f?.let {
+        linkedMapOf(
+            "lat" to it.lat, "lng" to it.lng,
+            "accuracy" to it.accuracy.toDouble(), "speed" to it.speed.toDouble(),
+            "at" to it.at, "speedAccuracy" to it.speedAccuracy.toDouble(),
+        )
+    }
+
+    private fun generateLocationFilter(): List<Map<String, Any?>> {
+        val t0 = 1_700_000_000_000L
+        val cases = mutableListOf<Map<String, Any?>>()
+
+        fun add(name: String, previous: Fix?, candidate: Fix) {
+            cases += linkedMapOf(
+                "name" to name,
+                "previous" to fixJson(previous),
+                "candidate" to fixJson(candidate),
+                "decision" to LocationFilter.decide(previous, candidate).name,
+            )
+        }
+
+        fun at(meters: Double, afterMillis: Long, accuracy: Float, speed: Float = 0f): Fix {
+            val (lat, lng) = offsetLatLng(baseLat to baseLng, 0.0, meters)
+            return Fix(lat, lng, accuracy, t0 + afterMillis, speed)
+        }
+
+        val base = Fix(baseLat, baseLng, 10f, t0)
+
+        // previous == null — 완화 창이 열린 것과 같다.
+        // 정확도는 Float 로 정확히 표현되는 값만 쓴다(설계서 §4.1): 49.5 / 50 / 50.5 / 99.5 / 100 / 100.5
+        listOf(49.5f, 50f, 50.5f, 99.5f, 100f, 100.5f).forEach {
+            add("first_fix_accuracy_$it", null, Fix(baseLat, baseLng, it, t0))
+        }
+
+        // 평소 창(15분 미만): 50 위는 전부 거절. 거리를 이동 문턱(25m) 위로 둬서 **정확도만**
+        // 판정을 가르게 한다 — 5m 로 두면 통과한 점도 SKIP_TOO_CLOSE 가 되어 경계가 안 보인다.
+        listOf(49.5f, 50f, 50.5f, 60f, 100f).forEach {
+            add("fresh_accuracy_$it", base, at(30.0, 60_000L, it))
+        }
+
+        // 완화 창 경계(15분 = 900_000ms) 양옆. 같은 60m 점이 갈려야 한다.
+        listOf(899_999L, 900_000L, 900_001L).forEach {
+            add("stale_window_$it", base, at(5.0, it, 60f))
+        }
+
+        // 25m 이동 문턱 양옆. 시간은 하트비트(10분)보다 짧게 둬 거리만 갈리게 한다.
+        listOf(24.0, 25.0, 26.0).forEach {
+            add("move_threshold_$it", base, at(it, 60_000L, 10f))
+        }
+
+        // 하트비트(10분) 양옆. 거리는 항상 1m 로 두어 시간만 갈린다.
+        listOf(599_999L, 600_000L, 600_001L).forEach {
+            add("heartbeat_$it", base, at(1.0, it, 10f))
+        }
+
+        // 순간이동(55.6 m/s) 양옆. 1초 사이 이동 거리로 속도를 맞춘다.
+        listOf(55.0, 56.0, 60.0).forEach {
+            add("teleport_$it", base, at(it, 1_000L, 10f))
+        }
+
+        // elapsed <= 0 (시계 역행·동일 시각).
+        add("elapsed_zero", base, at(5.0, 0L, 10f))
+        add("elapsed_negative", base, at(5.0, -1_000L, 10f))
+
+        // 완화 승인은 순간이동 검사를 **지난 뒤**여야 한다 — 15분 뒤에 1000km 를 간 60m 점.
+        run {
+            val (lat, lng) = offsetLatLng(baseLat to baseLng, 0.0, 1_000_000.0)
+            add("stale_but_teleport", base, Fix(lat, lng, 60f, t0 + 900_000L))
+        }
+
+        // 자체 점검: 문턱 양옆이 실제로 갈리는가.
+        fun decisionOf(name: String) = cases.first { it["name"] == name }["decision"]
+        check(decisionOf("fresh_accuracy_50.0") == "UPLOAD" && decisionOf("fresh_accuracy_50.5") == "REJECT_INACCURATE") {
+            "정확도 50m 경계가 안 갈린다 — 생성기가 경계에 도달하지 못했다"
+        }
+        check(decisionOf("stale_window_899999") == "REJECT_INACCURATE" && decisionOf("stale_window_900000") == "UPLOAD_STALE_FALLBACK") {
+            "완화 창 15분 경계가 안 갈린다"
+        }
+        check(decisionOf("move_threshold_24.0") == "SKIP_TOO_CLOSE" && decisionOf("move_threshold_26.0") == "UPLOAD") {
+            "25m 이동 문턱이 안 갈린다"
+        }
+        check(decisionOf("heartbeat_599999") == "SKIP_TOO_CLOSE" && decisionOf("heartbeat_600000") == "UPLOAD") {
+            "하트비트 10분 경계가 안 갈린다"
+        }
+        check(decisionOf("teleport_55.0") != "REJECT_IMPOSSIBLE" && decisionOf("teleport_56.0") == "REJECT_IMPOSSIBLE") {
+            "순간이동 문턱이 안 갈린다"
+        }
+        check(decisionOf("stale_but_teleport") == "REJECT_IMPOSSIBLE") {
+            "완화 승인이 순간이동 검사를 건너뛰었다 — LocationFilter.kt:134-138 의 순서가 깨졌다"
+        }
+        return cases
+    }
+
+    /** distanceMeters 자체도 따로 쓸어본다 — 위·경도 양방향, 적도·극지, 같은 점. */
+    private fun generateDistances(): List<Map<String, Any?>> {
+        val cases = mutableListOf<Map<String, Any?>>()
+        val anchors = listOf(37.5665 to 126.9780, 0.0 to 0.0, 0.0 to 179.9, 89.0 to 10.0, -33.86 to 151.21)
+        for ((lat, lng) in anchors) {
+            for (meters in listOf(0.0, 1.0, 25.0, 50.0, 150.0, 1_000.0, 100_000.0)) {
+                for (bearing in listOf(0.0, 90.0, 180.0, 270.0, 45.0)) {
+                    // offsetLatLng 은 (동쪽, 북쪽) 미터를 받는다 — 방위각을 그 둘로 푼다.
+                    val radians = Math.toRadians(bearing)
+                    val (toLat, toLng) = offsetLatLng(lat to lng, meters * kotlin.math.sin(radians), meters * cos(radians))
+                    val a = Fix(lat, lng, 10f, 0L)
+                    val b = Fix(toLat, toLng, 10f, 1_000L)
+                    cases += linkedMapOf(
+                        "aLat" to lat, "aLng" to lng, "bLat" to toLat, "bLng" to toLng,
+                        "meters" to LocationFilter.distanceMeters(a, b),
+                    )
+                }
+            }
+        }
+        check(cases.count { (it["meters"] as Double) > 0.0 } >= cases.size - anchors.size * 5) {
+            "거리 케이스 대부분이 0 이다 — offsetLatLng 가 안 움직였다"
+        }
+        return cases
+    }
+
+    // ==================================================================
+    // 7. MovementTrailFilter — 5초 간격, 50m 정확도, 속도 근거, 변위 증거
+    // ==================================================================
+
+    @Test
+    fun `골든 - MovementTrailFilter`() {
+        val payload = linkedMapOf(
+            "constants" to linkedMapOf<String, Any?>(
+                "minIntervalMillis" to MovementTrailFilter.MIN_INTERVAL_MILLIS,
+                "maxAccuracyMeters" to MovementTrailFilter.MAX_ACCURACY_METERS.toDouble(),
+                "displacementEvidenceMeters" to MovementTrailFilter.DISPLACEMENT_EVIDENCE_METERS,
+                "displacementEvidenceNoiseMultiplier" to MovementTrailFilter.DISPLACEMENT_EVIDENCE_NOISE_MULTIPLIER,
+                "movingSpeedMps" to MovementTrailFilter.MOVING_SPEED_MPS.toDouble(),
+                "minDisplacementMeters" to MovementTrailFilter.MIN_DISPLACEMENT_METERS,
+                "speedTrustMaxAccuracyMeters" to MovementTrailFilter.SPEED_TRUST_MAX_ACCURACY_METERS.toDouble(),
+                "minConfidentSpeedMps" to MovementTrailFilter.MIN_CONFIDENT_SPEED_MPS.toDouble(),
+                "minSpeedEvidenceDisplacementMeters" to MovementTrailFilter.MIN_SPEED_EVIDENCE_DISPLACEMENT_METERS,
+            ),
+            "shouldRecord" to generateShouldRecord(),
+            "displacementEvidence" to generateDisplacementEvidence(),
+        )
+        writeGoldenIfPresent("movementTrailFilter", toJson(payload))
+    }
+
+    private fun generateShouldRecord(): List<Map<String, Any?>> {
+        val t0 = 1_700_000_000_000L
+        val cases = mutableListOf<Map<String, Any?>>()
+
+        fun add(name: String, previous: Fix?, candidate: Fix, moving: Boolean) {
+            // Float 산술과 Double 산술이 갈리는 입력은 골든에 싣지 않는다(1단계 판정 기록 3).
+            if (candidate.speedAccuracy.isFinite()) {
+                val f = (candidate.speed - candidate.speedAccuracy) >= MovementTrailFilter.MIN_CONFIDENT_SPEED_MPS
+                val d = (candidate.speed.toDouble() - candidate.speedAccuracy.toDouble()) >=
+                    MovementTrailFilter.MIN_CONFIDENT_SPEED_MPS.toDouble()
+                check(f == d) {
+                    "$name: 속도 근거가 Float(${f})와 Double(${d})에서 갈린다 — 이 입력은 두 언어가 같은 답을 못 낸다"
+                }
+            }
+            cases += linkedMapOf(
+                "name" to name, "previous" to fixJson(previous), "candidate" to fixJson(candidate),
+                "reportedMoving" to moving,
+                "shouldRecord" to MovementTrailFilter.shouldRecord(previous, candidate, moving),
+            )
+        }
+
+        fun at(meters: Double, afterMillis: Long, accuracy: Float, speed: Float = 0f, speedAccuracy: Float = Float.POSITIVE_INFINITY): Fix {
+            val (lat, lng) = offsetLatLng(baseLat to baseLng, meters, 0.0)
+            return Fix(lat, lng, accuracy, t0 + afterMillis, speed, speedAccuracy)
+        }
+
+        val previous = Fix(baseLat, baseLng, 5f, t0, 0f, Float.POSITIVE_INFINITY)
+
+        // reportedMoving = false 는 언제나 false.
+        add("not_moving", previous, at(100.0, 10_000L, 5f), moving = false)
+        // previous == null 은 정확도만 본다.
+        listOf(49.5f, 50f, 50.5f).forEach { add("first_accuracy_$it", null, at(0.0, 0L, it), moving = true) }
+        // 5초 간격 양옆.
+        listOf(4_999L, 5_000L, 5_001L).forEach { add("interval_$it", previous, at(10.0, it, 5f), moving = true) }
+        // 3m 최소 변위 양옆(속도 근거 없음).
+        listOf(2.0, 3.0, 4.0).forEach { add("displacement_$it", previous, at(it, 10_000L, 5f), moving = true) }
+        // 속도 근거 갈래: 정확도 15m 양옆 × 속도오차 유무.
+        listOf(14.5f, 15f, 15.5f).forEach {
+            add("speed_trust_accuracy_$it", Fix(baseLat, baseLng, it, t0), at(3.0, 10_000L, it, speed = 1.5f, speedAccuracy = 0.5f), moving = true)
+        }
+        // 속도 정확도가 없을 때의 옛 문턱(0.7f) 양옆.
+        listOf(0.5f, 0.75f, 1.0f).forEach {
+            add("legacy_speed_$it", Fix(baseLat, baseLng, 5f, t0), at(3.0, 10_000L, 5f, speed = it), moving = true)
+        }
+        // previous 가 있는 상태에서의 정확도 상한 양옆.
+        listOf(49.5f, 50f, 50.5f).forEach { add("cand_accuracy_$it", previous, at(10.0, 10_000L, it), moving = true) }
+        // 속도 오차를 뺀 값이 0.35f 문턱 양옆에 앉는 입력. shouldRecord 에서는 MIN_SPEED_EVIDENCE_
+        // DISPLACEMENT_METERS 와 MIN_DISPLACEMENT_METERS 가 둘 다 3.0 이라 이 갈래가 최종 답을
+        // 혼자 뒤집지는 못하지만, 위 add() 의 Float/Double 일치 검사를 실제로 돌리는 것이 목적이다
+        // (판정 기록 3 — 같은 식을 AdaptiveMovementDetector 는 혼자 판정에 쓴다).
+        listOf(0.8f to 0.5f, 0.85f to 0.5f, 1.0f to 0.5f).forEach { (speed, speedAccuracy) ->
+            add(
+                "confident_speed_${speed}_$speedAccuracy",
+                Fix(baseLat, baseLng, 5f, t0),
+                at(4.0, 10_000L, 5f, speed = speed, speedAccuracy = speedAccuracy),
+                moving = true,
+            )
+        }
+        // 순간이동(candidate.speed 자체가 55.6 초과 / impliedSpeed 초과).
+        add("speed_over_max", previous, at(10.0, 10_000L, 5f, speed = 60f), moving = true)
+        add("implied_over_max", previous, at(600_000.0, 10_000L, 5f), moving = true)
+
+        fun recordOf(name: String) = cases.first { it["name"] == name }["shouldRecord"]
+        check(recordOf("interval_4999") == false && recordOf("interval_5000") == true) { "5초 간격 경계가 안 갈린다" }
+        check(recordOf("displacement_2.0") == false && recordOf("displacement_4.0") == true) { "3m 변위 경계가 안 갈린다" }
+        check(recordOf("first_accuracy_50.0") == true && recordOf("first_accuracy_50.5") == false) { "50m 정확도 경계가 안 갈린다" }
+        check(recordOf("cand_accuracy_50.0") == true && recordOf("cand_accuracy_50.5") == false) { "previous 가 있을 때의 50m 정확도 경계가 안 갈린다" }
+        return cases
+    }
+
+    private fun generateDisplacementEvidence(): List<Map<String, Any?>> {
+        val t0 = 1_700_000_000_000L
+        val cases = mutableListOf<Map<String, Any?>>()
+
+        fun add(name: String, previous: Fix?, candidate: Fix) {
+            cases += linkedMapOf(
+                "name" to name,
+                "previous" to previous?.let { linkedMapOf("lat" to it.lat, "lng" to it.lng, "accuracy" to it.accuracy.toDouble(), "at" to it.at) },
+                "candidate" to linkedMapOf("lat" to candidate.lat, "lng" to candidate.lng, "accuracy" to candidate.accuracy.toDouble(), "at" to candidate.at),
+                "isEvidence" to MovementTrailFilter.isDisplacementEvidence(previous, candidate),
+            )
+        }
+
+        fun moved(meters: Double, accuracy: Float, afterMillis: Long = 60_000L): Fix {
+            val (lat, lng) = offsetLatLng(baseLat to baseLng, meters, 0.0)
+            return Fix(lat, lng, accuracy, t0 + afterMillis)
+        }
+
+        add("no_previous", null, moved(100.0, 5f))
+        // 고정 문턱 50m 양옆(오차가 작아 hypot × 1.5 가 50 을 못 넘는다: hypot(5,5)*1.5 ≈ 10.6).
+        listOf(49.0, 50.0, 51.0).forEach { add("fixed_threshold_$it", Fix(baseLat, baseLng, 5f, t0), moved(it, 5f)) }
+        // 잡음 비례 문턱: 오차 40m 두 점 → hypot(40,40)*1.5 ≈ 84.9. 양옆을 쓴다.
+        listOf(80.0, 90.0).forEach { add("noise_threshold_$it", Fix(baseLat, baseLng, 40f, t0), moved(it, 40f)) }
+        // 정확도 상한(LocationFilter 50m) 양옆 — 한쪽만 나빠도 거절이다.
+        listOf(49.5f, 50f, 50.5f).forEach {
+            add("prev_accuracy_$it", Fix(baseLat, baseLng, it, t0), moved(200.0, 5f))
+            add("cand_accuracy_$it", Fix(baseLat, baseLng, 5f, t0), moved(200.0, it))
+        }
+        // elapsed <= 0, 순간이동.
+        add("elapsed_zero", Fix(baseLat, baseLng, 5f, t0), moved(200.0, 5f, afterMillis = 0L))
+        add("teleport", Fix(baseLat, baseLng, 5f, t0), moved(200.0, 5f, afterMillis = 1L))
+
+        fun evidenceOf(name: String) = cases.first { it["name"] == name }["isEvidence"]
+        check(evidenceOf("fixed_threshold_49.0") == false && evidenceOf("fixed_threshold_51.0") == true) { "고정 50m 문턱이 안 갈린다" }
+        check(evidenceOf("noise_threshold_80.0") == false && evidenceOf("noise_threshold_90.0") == true) { "잡음 비례 문턱이 안 갈린다" }
+        check(evidenceOf("cand_accuracy_50.0") == true && evidenceOf("cand_accuracy_50.5") == false) { "정확도 상한이 안 갈린다" }
         return cases
     }
 }

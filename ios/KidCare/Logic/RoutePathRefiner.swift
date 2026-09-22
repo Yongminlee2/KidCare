@@ -3,12 +3,12 @@ import Foundation
 /// 정본은 안드로이드 `logic/RoutePathRefiner.kt` 다. 지도에 경로를 그리기 전에 GPS
 /// 흔들림과 위치 공백을 정리한다.
 ///
-/// 거리 계산(`LocationFilter.distanceMeters`)과 순간이동 문턱(`MAX_SPEED_MPS`)은
-/// 안드로이드에서 `LocationFilter` 가 갖고 있지만, 그 타입 자체는 아이 폰(안드로이드)
-/// 전용이라 옮기지 않는다(`Fix.swift`, `Segment.swift` 와 같은 이유) — 대신 이
-/// 파일이 실제로 쓰는 두 값(하버사인 공식·55.6m/s)만 그대로 복사해 이 파일 안에
-/// 둔다. 문턱 숫자 하나만 어긋나도 지도 위의 선이 달라지므로, 아래 상수는 전부
-/// 코틀린 원본의 리터럴을 그대로 옮긴 값이다.
+/// 거리 계산과 순간이동 문턱은 이 파일이 사본으로 갖고 있었다 — `LocationFilter` 타입
+/// 자체는 아이 폰 전용이라 안 옮긴다는 전제였다. 아이 역할 1단계가 `LocationFilter` 를
+/// 옮겨 오면서 그 전제가 사라졌으므로 사본을 지우고 그쪽을 부른다(코틀린
+/// `RoutePathRefiner.kt:82-103` 도 `LocationFilter.distanceMeters`·`MAX_SPEED_MPS` 를
+/// 부른다). 사본을 남기면 문턱 하나가 한쪽에서만 바뀌는 날이 오고, 그때 두 폰은 같은
+/// 점 목록에서 다른 선을 그린다(1단계 판정 기록 4).
 struct Leg {
     let points: [Fix]
 }
@@ -30,22 +30,6 @@ enum RoutePathRefiner {
     private static let spikeMinArmMeters: Double = 25.0
     private static let spikeMaxBridgeMeters: Double = 15.0
     private static let spikeMinDetourRatio: Double = 4.0
-
-    /// 시속 200km. 이보다 빠르면 GPS 오류로 본다. 코틀린 `LocationFilter.MAX_SPEED_MPS` 그대로.
-    private static let maxSpeedMps: Double = 55.6
-
-    /// 하버사인 공식에 쓰는 지구 반지름(m). 코틀린 `LocationFilter.EARTH_RADIUS_METERS` 그대로 —
-    /// 다른 반지름이나 다른 공식을 쓰면 모든 거리 문턱 비교가 같이 어긋난다.
-    private static let earthRadiusMeters: Double = 6_371_000.0
-
-    /// 하버사인 거리(m). 코틀린 `LocationFilter.distanceMeters` 를 그대로 옮긴 것이다.
-    private static func distanceMeters(_ a: Fix, _ b: Fix) -> Double {
-        let dLat = (b.lat - a.lat) * .pi / 180
-        let dLng = (b.lng - a.lng) * .pi / 180
-        let h = pow(sin(dLat / 2), 2)
-            + cos(a.lat * .pi / 180) * cos(b.lat * .pi / 180) * pow(sin(dLng / 2), 2)
-        return 2 * earthRadiusMeters * asin(sqrt(h))
-    }
 
     /// 정확도가 좋은 점은 거의 그대로 두고, 오차가 큰 점일수록 앞선 위치와 더 강하게
     /// 합친다. 이동 속도가 빠를 때는 필터가 즉시 따라가도록 과정 잡음을 높여 자동차나
@@ -107,10 +91,10 @@ enum RoutePathRefiner {
     private static func isIsolatedSpike(_ previous: Fix, _ candidate: Fix, _ next: Fix) -> Bool {
         let span = next.at - previous.at
         if span <= 0 || span > spikeMaxSpanMillis { return false }
-        let firstArm = distanceMeters(previous, candidate)
-        let secondArm = distanceMeters(candidate, next)
+        let firstArm = LocationFilter.distanceMeters(previous, candidate)
+        let secondArm = LocationFilter.distanceMeters(candidate, next)
         if firstArm < spikeMinArmMeters || secondArm < spikeMinArmMeters { return false }
-        let bridge = distanceMeters(previous, next)
+        let bridge = LocationFilter.distanceMeters(previous, next)
         if bridge > spikeMaxBridgeMeters { return false }
         let detourRatio = (firstArm + secondArm) / max(bridge, 1.0)
         return detourRatio >= spikeMinDetourRatio
@@ -126,9 +110,9 @@ enum RoutePathRefiner {
     private static func shouldBreak(_ previous: Fix, _ candidate: Fix) -> Bool {
         let elapsed = candidate.at - previous.at
         if elapsed <= 0 { return false }
-        let distance = distanceMeters(previous, candidate)
+        let distance = LocationFilter.distanceMeters(previous, candidate)
         let impliedSpeed = distance / (Double(elapsed) / 1_000.0)
-        if impliedSpeed > maxSpeedMps { return true }
+        if impliedSpeed > LocationFilter.maxSpeedMps { return true }
         return elapsed > gapBreakMillis && distance > gapBreakDistanceMeters
     }
 
@@ -173,7 +157,8 @@ enum RoutePathRefiner {
             at = fix.at
             // 코틀린의 `fix.copy(lat = lat, lng = lng)` 와 같다 — 좌표만 평활하고
             // speed 를 포함한 나머지 필드는 원본 그대로 들고 간다.
-            return Fix(lat: lat, lng: lng, accuracy: fix.accuracy, at: fix.at, speed: fix.speed)
+            return Fix(lat: lat, lng: lng, accuracy: fix.accuracy, at: fix.at, speed: fix.speed,
+                       speedAccuracy: fix.speedAccuracy)
         }
 
         private func normalizedAccuracy(_ fix: Fix) -> Double {

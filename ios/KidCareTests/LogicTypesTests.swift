@@ -23,6 +23,11 @@ struct LogicTypesTests {
         #expect(f.speed == 7.5)
     }
 
+    @Test("Fix.speedAccuracy 의 기본값은 '모름'(무한대)이다 — 0 이면 모든 속도가 신뢰할 만한 것이 된다")
+    func fix_속도오차_기본값() {
+        #expect(Fix(lat: 0, lng: 0, accuracy: 10, at: 0).speedAccuracy == .infinity)
+    }
+
     @Test("Segment 는 머무름과 이동을 구분한다")
     func segment_종류() {
         let s = Segment(type: .stay, startAt: 1, endAt: 2, lat: 37.5, lng: 127.0,

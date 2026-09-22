@@ -58,12 +58,33 @@ struct GoldenComparisonTests {
 
         let routeWindows = try readArray("routeWindows")
         #expect(routeWindows.count >= 15, "routeWindows 케이스가 너무 적다")
+
+        let locationFilter = try readObject("locationFilter")
+        #expect((locationFilter["cases"] as? [[String: Any]])?.count ?? 0 >= 25, "locationFilter.cases 케이스가 너무 적다")
+        #expect((locationFilter["distances"] as? [[String: Any]])?.count ?? 0 >= 100, "locationFilter.distances 케이스가 너무 적다")
+
+        let movementTrailFilter = try readObject("movementTrailFilter")
+        #expect((movementTrailFilter["shouldRecord"] as? [[String: Any]])?.count ?? 0 >= 20, "movementTrailFilter.shouldRecord 케이스가 너무 적다")
+        #expect((movementTrailFilter["displacementEvidence"] as? [[String: Any]])?.count ?? 0 >= 12, "movementTrailFilter.displacementEvidence 케이스가 너무 적다")
     }
 
     // MARK: - 공통 파싱
 
     private func int64(_ any: Any?) -> Int64 { (any as! NSNumber).int64Value }
-    private func double(_ any: Any?) -> Double { (any as! NSNumber).doubleValue }
+    /// 코틀린 생성기는 유한하지 않은 수를 JSON **문자열**("Infinity"/"-Infinity"/"NaN")로 적는다 —
+    /// JSON 에는 그 리터럴이 없어서다(RFC 8259, `GoldenFileWriterTest.toJson`). `Fix.speedAccuracy`
+    /// 의 기본값(무한대 = "모른다")이 실제로 이 경로를 탄다.
+    private func double(_ any: Any?) -> Double {
+        if let text = any as? String {
+            switch text {
+            case "Infinity": return .infinity
+            case "-Infinity": return -.infinity
+            case "NaN": return .nan
+            default: break
+            }
+        }
+        return (any as! NSNumber).doubleValue
+    }
     private func int(_ any: Any?) -> Int { (any as! NSNumber).intValue }
     private func bool(_ any: Any?) -> Bool { (any as! NSNumber).boolValue }
     private func string(_ any: Any?) -> String { any as! String }
@@ -303,6 +324,103 @@ struct GoldenComparisonTests {
 
             let actual = RouteWindows.partition(moves: moves)
             #expect(actual == expected, "\(name)")
+        }
+    }
+
+    // ==================================================================
+    // 6. LocationFilter — 상수·판정·거리
+    // ==================================================================
+
+    /// 골든 파일에 실린 `Fix` 한 점을 되돌린다. `speed`/`speedAccuracy` 가 없는 절(변위 증거)은
+    /// 코틀린 기본값과 같은 0 / 무한대로 채운다.
+    private func fix(_ any: Any?) -> Fix? {
+        guard let d = any as? [String: Any] else { return nil }
+        return Fix(
+            lat: double(d["lat"]), lng: double(d["lng"]),
+            accuracy: double(d["accuracy"]), at: int64(d["at"]),
+            speed: d["speed"].map(double) ?? 0,
+            speedAccuracy: d["speedAccuracy"].map(double) ?? .infinity
+        )
+    }
+
+    /// **이 테스트가 설계서 §4 상수 대조표를 사람 대신 지킨다.** 코틀린 `Float` 상수를 스위프트에
+    /// 십진 리터럴로 옮기면(0.35f → 0.35) 문턱이 미세하게 높아져 경계에서 두 폰이 갈린다
+    /// (1단계 판정 기록 2). 비트까지 같은지 본다 — 허용치를 두지 않는다.
+    @Test("LocationFilter 상수가 코틀린과 비트까지 같다")
+    func 위치필터_상수가_같다() throws {
+        let c = try #require(try readObject("locationFilter")["constants"] as? [String: Any])
+        #expect(LocationFilter.maxAccuracyMeters == double(c["maxAccuracyMeters"]))
+        #expect(LocationFilter.fallbackMaxAccuracyMeters == double(c["fallbackMaxAccuracyMeters"]))
+        #expect(LocationFilter.staleFallbackMillis == int64(c["staleFallbackMillis"]))
+        #expect(LocationFilter.minMoveMeters == double(c["minMoveMeters"]))
+        #expect(LocationFilter.maxSpeedMps == double(c["maxSpeedMps"]))
+        #expect(LocationFilter.heartbeatMillis == int64(c["heartbeatMillis"]))
+    }
+
+    @Test("LocationFilter.decide 가 안드로이드와 같은 판정을 낸다")
+    func 위치필터_판정_대조() throws {
+        for 사례 in try #require(try readObject("locationFilter")["cases"] as? [[String: Any]]) {
+            let name = string(사례["name"])
+            let expected = try #require(Decision(rawValue: string(사례["decision"])), "\(name): 모르는 판정 이름")
+            let actual = LocationFilter.decide(previous: fix(사례["previous"]), candidate: try #require(fix(사례["candidate"])))
+            #expect(actual == expected, "\(name)")
+        }
+    }
+
+    @Test("LocationFilter.distanceMeters 가 안드로이드와 같다 (허용치 1e-9m)")
+    func 거리_대조() throws {
+        for 사례 in try #require(try readObject("locationFilter")["distances"] as? [[String: Any]]) {
+            let a = Fix(lat: double(사례["aLat"]), lng: double(사례["aLng"]), accuracy: 10, at: 0)
+            let b = Fix(lat: double(사례["bLat"]), lng: double(사례["bLng"]), accuracy: 10, at: 1_000)
+            let expected = double(사례["meters"])
+            let actual = LocationFilter.distanceMeters(a, b)
+            // 라디안 변환식이 자바와 한 비트 다를 수 있다(1단계 판정 기록 5). 절대 허용치만 쓰면
+            // 100km 케이스에서 2~3 ULP(1.2e-9m)가 그대로 튀어나와 빨개진다 — 오차는 거리에
+            // 비례하므로 상대 허용치를 함께 둔다. 1e-12 상대는 100km 에서 0.1µm 라, 로직이 실제로
+            // 갈렸을 때 생기는 차이(최소 수 cm)는 절대 이 안에 못 들어온다.
+            let tolerance = max(1e-9, abs(expected) * 1e-12)
+            #expect(abs(actual - expected) <= tolerance, "(\(a.lat),\(a.lng))→(\(b.lat),\(b.lng)) 실제=\(actual) 기대=\(expected)")
+        }
+    }
+
+    // ==================================================================
+    // 7. MovementTrailFilter
+    // ==================================================================
+
+    @Test("MovementTrailFilter 상수가 코틀린과 비트까지 같다")
+    func 경로필터_상수가_같다() throws {
+        let c = try #require(try readObject("movementTrailFilter")["constants"] as? [String: Any])
+        #expect(MovementTrailFilter.minIntervalMillis == int64(c["minIntervalMillis"]))
+        #expect(MovementTrailFilter.maxAccuracyMeters == double(c["maxAccuracyMeters"]))
+        #expect(MovementTrailFilter.displacementEvidenceMeters == double(c["displacementEvidenceMeters"]))
+        #expect(MovementTrailFilter.displacementEvidenceNoiseMultiplier == double(c["displacementEvidenceNoiseMultiplier"]))
+        #expect(MovementTrailFilter.movingSpeedMps == double(c["movingSpeedMps"]))
+        #expect(MovementTrailFilter.minDisplacementMeters == double(c["minDisplacementMeters"]))
+        #expect(MovementTrailFilter.speedTrustMaxAccuracyMeters == double(c["speedTrustMaxAccuracyMeters"]))
+        #expect(MovementTrailFilter.minConfidentSpeedMps == double(c["minConfidentSpeedMps"]))
+        #expect(MovementTrailFilter.minSpeedEvidenceDisplacementMeters == double(c["minSpeedEvidenceDisplacementMeters"]))
+    }
+
+    @Test("MovementTrailFilter.shouldRecord 가 안드로이드와 같다")
+    func 경로필터_기록_대조() throws {
+        for 사례 in try #require(try readObject("movementTrailFilter")["shouldRecord"] as? [[String: Any]]) {
+            let actual = MovementTrailFilter.shouldRecord(
+                previous: fix(사례["previous"]),
+                candidate: try #require(fix(사례["candidate"])),
+                reportedMoving: bool(사례["reportedMoving"])
+            )
+            #expect(actual == bool(사례["shouldRecord"]), "\(string(사례["name"]))")
+        }
+    }
+
+    @Test("MovementTrailFilter.isDisplacementEvidence 가 안드로이드와 같다")
+    func 경로필터_변위증거_대조() throws {
+        for 사례 in try #require(try readObject("movementTrailFilter")["displacementEvidence"] as? [[String: Any]]) {
+            let actual = MovementTrailFilter.isDisplacementEvidence(
+                previous: fix(사례["previous"]),
+                candidate: try #require(fix(사례["candidate"]))
+            )
+            #expect(actual == bool(사례["isEvidence"]), "\(string(사례["name"]))")
         }
     }
 }

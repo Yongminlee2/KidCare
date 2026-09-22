@@ -2,15 +2,10 @@ import Foundation
 
 /// 위치 한 점. 안드로이드 Location 에 의존하지 않는 값 객체다.
 ///
-/// 정본은 안드로이드 `logic/LocationFilter.kt` 의 `Fix` 다. 이 타입을 담는
-/// `LocationFilter`·`SegmentBuilder` 자체는 아이 폰(안드로이드) 전용이라 옮기지
-/// 않는다 — 여기서는 두 로직이 주고받는 값 모양만 가져온다. 그래서 `accuracy` 는
-/// 코틀린의 `Float` 대신 스위프트 쪽 표준인 `Double` 로 넓힌다. `speedAccuracy` 는
-/// 아예 없다 — `LocationFilter` 의 판정 로직에서만 쓰이는데 그 로직이 여기 없어서다.
-/// `accuracy` 는 사정이 다르다: `RoutePathRefiner.swift` 가 50m 게이트(:111)·12m
-/// 종점 게이트(:133)·칼만 측정 분산(:171, 제곱해서 쓴다) 세 곳에서 그대로 쓰므로
-/// 여기 있어야 한다 — 다만 그 계산들도 `Float` 정밀도로 갈릴 값이 아니라서 `Double`
-/// 로 넓혀도 안전하다.
+/// 정본은 안드로이드 `logic/LocationFilter.kt` 의 `Fix`(:10-29) 다. `accuracy`·`speed`·
+/// `speedAccuracy` 는 코틀린의 `Float` 대신 스위프트 쪽 표준인 `Double` 로 넓힌다 —
+/// 설계서 §4.1 이 "넓히는 것이 두 언어의 유일한 차이"라고 못박았고, `Float` 상수가
+/// 실제로 담고 있는 값과 어긋나지 않는지는 골든 파일의 `constants` 가 기계로 지킨다.
 struct Fix {
     let lat: Double
     let lng: Double
@@ -34,11 +29,27 @@ struct Fix {
     /// 여전히 0 을 받고, 실제 속도가 있는 문서는 그 값을 그대로 넣을 수 있다.
     let speed: Double
 
-    init(lat: Double, lng: Double, accuracy: Double, at: Int64, speed: Double = 0) {
+    /// 기기가 보고한 속도 오차(1-sigma, m/s). 정본은 코틀린 `Fix.speedAccuracy`(`LocationFilter.kt:28`).
+    ///
+    /// 보호자 앱만 있던 시절에는 **일부러 뺐다** — 이 값을 읽는 로직(`AdaptiveMovementDetector`,
+    /// `MovementTrailFilter`)이 아이 폰에만 있었고, 채울 수 없는 자리를 남기면 거기 들어가는 값은
+    /// 지어낸 것뿐이기 때문이다. 아이 역할이 그 두 로직을 가져오면서 자리가 생겼다.
+    ///
+    /// 기본값이 `.infinity`("모른다")인 이유는 코틀린과 같다 — 0 으로 두면 `speed - speedAccuracy`
+    /// 가 곧 `speed` 라, 실내에서 정지한 폰이 2~5m/s 로 잘못 보고하는 실기기 사례가 전부
+    /// "확실한 보행"으로 통과한다(`MovementTrailFilter.kt:124-132`).
+    ///
+    /// **`init` 의 마지막 기본값 매개변수**로 두는 것이 중요하다. `let speedAccuracy: Double = .infinity`
+    /// 처럼 선언부에 기본값을 주면 Swift 가 그 프로퍼티를 memberwise 초기화 목록에서 빼버려
+    /// 영원히 무한대로 굳는다 — `speed` 에서 이미 한 번 겪은 사고다(그 프로퍼티 주석).
+    let speedAccuracy: Double
+
+    init(lat: Double, lng: Double, accuracy: Double, at: Int64, speed: Double = 0, speedAccuracy: Double = .infinity) {
         self.lat = lat
         self.lng = lng
         self.accuracy = accuracy
         self.at = at
         self.speed = speed
+        self.speedAccuracy = speedAccuracy
     }
 }
