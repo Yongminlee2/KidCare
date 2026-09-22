@@ -43,9 +43,9 @@ struct ChildDocumentsTests {
             Fix(lat: 37.5, lng: 127, accuracy: 10, at: 0),
             Fix(lat: 37.5, lng: 127, accuracy: 10, at: 10 * 60_000),
         ]
-        let segments = TrailUploader.buildSegments(points)
+        let segments = TrailUploader.segmentDocs(SegmentBuilder.build(points: points))
         #expect(segments.first?.type == "STAY")
-        // 1단계에는 역지오코딩이 없다 — placeName 은 전부 빈 문자열이다(2단계가 채운다).
+        // 이름은 `TrailUploader.buildSegments` 가 따로 채운다 — 이 변환 자체는 받은 것만 싣는다.
         #expect(segments.allSatisfy { $0.placeName.isEmpty })
     }
 

@@ -16,6 +16,14 @@ struct TrailUploaderTests {
         var 하루: [(familyId: String, childUid: String, doc: TrailDoc)] = []
     }
 
+    /// 아무것도 안 하는 이름표. **이 파일의 어떤 테스트도 네트워크를 타면 안 된다** — 기본값은
+    /// 진짜 `PlaceNamer`(Nominatim) 라서 반드시 넣어 준다. 이름 붙이기는 `TrailUploaderNamingTests` 몫이다.
+    @MainActor
+    final class 이름없음: PlaceNaming {
+        func cachedName(lat: Double, lng: Double) async -> String? { nil }
+        func name(lat: Double, lng: Double, timeout: TimeInterval, budgetLeftMillis: Int64?) async -> String? { nil }
+    }
+
     private func 만든다(_ 기록장: 기록, 배터리: Float = 0.77, 충전: Bool = false, 통신: String = NetworkKind.wifi) -> TrailUploader {
         TrailUploader(
             device: DeviceState(battery: { (배터리, 충전 ? .charging : .unplugged) }, network: { 통신 }),
@@ -26,7 +34,8 @@ struct TrailUploaderTests {
                 await MainActor.run { 기록장.하루.append((familyId, childUid, doc)) }
             },
             uid: { "child-uid" },
-            now: { self.t0 + 1 }
+            now: { self.t0 + 1 },
+            namer: 이름없음()
         )
     }
 
@@ -83,7 +92,7 @@ struct TrailUploaderTests {
         try await 만든다(기록장).upload(familyId: "F1", fix: points[0], points: points, dayKey: "2026-09-22")
         let doc = try #require(기록장.하루.first?.doc)
         #expect(doc.points.count == TrailCodec.maxPoints, "점은 2000개로 솎는다")
-        #expect(doc.segments.count == TrailUploader.buildSegments(points).count, "구간은 원본 전체로 만든다")
+        #expect(doc.segments.count == SegmentBuilder.build(points: points).count, "구간은 원본 전체로 만든다")
         #expect(doc.segments.first?.type == "STAY")
     }
 
@@ -99,7 +108,8 @@ struct TrailUploaderTests {
             },
             saveTrail: { _, _, _ in },
             uid: { "child-uid" },
-            now: { 0 }
+            now: { 0 },
+            namer: 이름없음()
         )
         async let 첫째: Void = uploader.upload(familyId: "F1", fix: fix(t0), points: [fix(t0)], dayKey: "2026-09-22")
         async let 둘째: Void = uploader.upload(familyId: "F1", fix: fix(t0), points: [fix(t0)], dayKey: "2026-09-22")
@@ -111,12 +121,16 @@ struct TrailUploaderTests {
         #expect(기록장.상태.count == 2)
     }
 
-    @Test("머무름에 이름을 안 붙인다 — 역지오코딩은 2단계다")
-    func 이름은_2단계() {
+    @Test("이름표가 모르는 곳은 빈 이름으로 올라간다 — 이름 하나 때문에 하루 문서가 막히면 안 된다")
+    func 이름을_못_얻으면_빈_칸() async throws {
+        let 기록장 = 기록()
         let points = [
             Fix(lat: 37.5, lng: 127, accuracy: 10, at: t0),
             Fix(lat: 37.5, lng: 127, accuracy: 10, at: t0 + 600_000),
         ]
-        #expect(TrailUploader.buildSegments(points).allSatisfy { $0.placeName.isEmpty })
+        try await 만든다(기록장).upload(familyId: "F1", fix: points[0], points: points, dayKey: "2026-09-22")
+        let segments = try #require(기록장.하루.first?.doc.segments)
+        #expect(segments.first?.type == "STAY")
+        #expect(segments.allSatisfy { $0.placeName.isEmpty })
     }
 }

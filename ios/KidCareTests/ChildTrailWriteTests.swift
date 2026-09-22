@@ -20,7 +20,7 @@ struct ChildTrailWriteTests {
         TrailDoc(
             dayKey: dayKey,
             points: 원본.map { TrailPoint($0) },
-            segments: TrailUploader.buildSegments(원본),
+            segments: TrailUploader.segmentDocs(SegmentBuilder.build(points: 원본)),
             updatedAt: t0 + 1
         )
     }
