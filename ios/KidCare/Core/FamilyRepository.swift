@@ -77,6 +77,10 @@ enum FamilyRepository {
 
     private static var db: Firestore { Firestore.firestore() }
 
+    /// `EventRepository` 와 같은 모양이다 — 조용히 실패하는 읽기의 단서가 어디에도 안 남는 것이
+    /// 이 앱에서 제일 흔한 실패였다.
+    private static let logger = Logger(subsystem: "com.kidcare.family", category: "FamilyRepository")
+
     private static let inviteTtlMillis: Int64 = 10 * 60 * 1000
     /// 서버 시각 보정을 포기하기까지. 안드로이드 예약 화면의 쓰기 제한시간
     /// (`ScheduleFragment.WRITE_TIMEOUT_MILLIS`)과 일부러 같은 숫자다 — 둘 다
@@ -441,6 +445,42 @@ enum FamilyRepository {
             .collection("members").document(uid).getDocument()
         guard let data = snap.data() else { return nil }
         return MemberDoc(data)
+    }
+
+    /// 서버가 아직 이 기기를 이 가족의 멤버로 아는가. 정본 `core/FamilyRepository.kt:422-433`.
+    ///
+    /// **모르면 `nil` 이다.** 캐시에서 온 "없음"은 아직 서버에 못 물어본 것이고(`:408-411`),
+    /// 그것을 `false` 로 뭉개면 비행기 모드인 아이 화면이 "가족에서 빠졌어요"라고 거짓말한다 —
+    /// 이 앱이 제일 두려워하는 거짓말이다.
+    ///
+    /// `PERMISSION_DENIED` 만 `false` 인 이유(`:412-415`): 이 문서의 read 규칙은
+    /// `memberOf(familyId)` 하나뿐이고 그 함수가 검사하는 것이 바로 `members/{내 uid}` 의
+    /// 존재다(`firestore.rules`). 즉 **이 읽기의 거부는 "내가 이 가족에 없다"와 같은 말**이다.
+    /// 대가 하나: 규칙을 아직 안 게시한 경우도 같은 거부라 구분할 수 없다(`:417-420`).
+    ///
+    /// 기존 `fetchMember` 를 안 쓰는 이유는 그쪽이 "없다"와 "못 읽었다"를 같은 값(`nil`)으로
+    /// 돌려주기 때문이다 — 이 화면이 필요한 구분이 정확히 그것이다.
+    static func isStillMember(familyId: String, uid: String) async -> Bool? {
+        do {
+            let snap = try await db.collection("families").document(familyId)
+                .collection("members").document(uid).getDocument()
+            if snap.metadata.isFromCache && !snap.exists { return nil }
+            return snap.exists
+        } catch is CancellationError {
+            // 코틀린은 CancellationException 을 그대로 다시 던진다(`:426-427`). 여기는 던지지
+            // 않는 함수라 **모름으로 돌려주고**, 아래 일반 catch 가 취소를 실패로 적는 일이
+            // 없게 이 갈래를 먼저 둔다. 모름은 화면의 어떤 문장도 바꾸지 않으므로(ChildHomeModel)
+            // 취소된 읽기가 화면에 남기는 자국이 없다 — 부르는 쪽은 그 위에 `Task.isCancelled`
+            // 를 한 번 더 본다.
+            return nil
+        } catch let error as NSError where error.domain == FirestoreErrorDomain
+            && error.code == FirestoreErrorCode.permissionDenied.rawValue {
+            return false
+        } catch {
+            // 화면은 아무 말도 하지 않는다(`:430-432`).
+            logger.warning("가족 멤버 확인 실패 — 화면은 아무 말도 하지 않는다: \(String(describing: error), privacy: .public)")
+            return nil
+        }
     }
 
     /// 아이 상태 문서를 구독한다. 돌려받은 등록은 화면이 사라질 때 반드시 remove 한다.
