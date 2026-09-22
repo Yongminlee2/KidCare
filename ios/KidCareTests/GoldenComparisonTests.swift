@@ -39,7 +39,7 @@ struct GoldenComparisonTests {
     /// 재현했다). 그래서 각 파일을 실제로 디코드해서 케이스 수를 세고, 지금 개수보다
     /// 살짝 낮춘 하한과 비교한다 — 하나라도 없어지면 잡되, 생성기가 케이스를 한둘
     /// 더 보태는 정상적인 변화에는 안 흔들리게.
-    @Test("golden 파일 다섯 개가 번들에 있고 스윕이라 부를 만큼 케이스를 담고 있다")
+    @Test("golden 파일 열두 개가 번들에 있고 스윕이라 부를 만큼 케이스를 담고 있다")
     func 골든_리소스가_번들에_있다() throws {
         let scheduleResolver = try readObject("scheduleResolver")
         #expect((scheduleResolver["resolve"] as? [[String: Any]])?.count ?? 0 >= 100, "scheduleResolver.resolve 케이스가 너무 적다")
@@ -76,6 +76,14 @@ struct GoldenComparisonTests {
         let trailCodec = try readObject("trailCodec")
         #expect((trailCodec["capped"] as? [[String: Any]])?.count ?? 0 >= 4, "trailCodec.capped 가 너무 적다")
         #expect((trailCodec["decode"] as? [[String: Any]])?.count ?? 0 >= 8, "trailCodec.decode 가 너무 적다")
+
+        let geofenceEvaluator = try readArray("geofenceEvaluator")
+        #expect(geofenceEvaluator.count >= 55, "geofenceEvaluator 케이스가 너무 적다")
+
+        let placeNameCache = try readObject("placeNameCache")
+        #expect((placeNameCache["find"] as? [[String: Any]])?.count ?? 0 >= 5, "placeNameCache.find 케이스가 너무 적다")
+        #expect((placeNameCache["put"] as? [[String: Any]])?.count ?? 0 >= 4, "placeNameCache.put 케이스가 너무 적다")
+        #expect((placeNameCache["decode"] as? [[String: Any]])?.count ?? 0 >= 4, "placeNameCache.decode 케이스가 너무 적다")
     }
 
     // MARK: - 공통 파싱
@@ -578,6 +586,98 @@ struct GoldenComparisonTests {
                 // 여기서는 허용치를 두지 않는다. 허용치를 두면 그 규율이 조용히 풀린다.
                 #expect(point == expected[i], "\(name) 점 \(i): 실제=\(point) 기대=\(expected[i])")
             }
+        }
+    }
+
+    // ==================================================================
+    // 6. GeofenceEvaluator — 히스테리시스·5분 중복 억제·정확도 문턱
+    // ==================================================================
+
+    private func place(_ raw: [String: Any]) -> Place {
+        Place(id: string(raw["id"]), name: string(raw["name"]),
+              lat: double(raw["lat"]), lng: double(raw["lng"]),
+              radiusMeters: double(raw["radiusMeters"]),
+              notifyEnter: bool(raw["notifyEnter"]), notifyExit: bool(raw["notifyExit"]))
+    }
+
+    private func placeState(_ raw: [String: Any]) -> PlaceState {
+        PlaceState(placeId: string(raw["placeId"]), inside: bool(raw["inside"]), lastEventAt: int64(raw["lastEventAt"]))
+    }
+
+    @Test("장소 도착·이탈 판정이 안드로이드와 같다 (반경 경계·이탈 여유 50m·5분 억제·정확도 100m)")
+    func 지오펜스_판정_대조() throws {
+        for 사례 in try readArray("geofenceEvaluator") {
+            let 이름 = string(사례["name"])
+            let places = try #require(사례["places"] as? [[String: Any]]).map(place)
+            let states = try #require(사례["states"] as? [[String: Any]]).map(placeState)
+            let raw = try #require(사례["fix"] as? [String: Any])
+            let fix = Fix(lat: double(raw["lat"]), lng: double(raw["lng"]),
+                          accuracy: double(raw["accuracy"]), at: int64(raw["at"]))
+
+            let (hits, next) = GeofenceEvaluator.evaluate(places: places, states: states, fix: fix)
+
+            let 기대_hits = try #require(사례["hits"] as? [[String: Any]]).map {
+                GeofenceHit(placeId: string($0["placeId"]), placeName: string($0["placeName"]),
+                            entering: bool($0["entering"]), at: int64($0["at"]))
+            }
+            let 기대_states = try #require(사례["nextStates"] as? [[String: Any]]).map(placeState)
+            #expect(hits == 기대_hits, "\(이름): 알림이 다르다")
+            #expect(next == 기대_states, "\(이름): 다음 상태가 다르다")
+        }
+    }
+
+    // ==================================================================
+    // 7. PlaceNameCache — 30m 경계·300개 상한·망가진 줄
+    // ==================================================================
+
+    /// 코틀린이 적어 둔 항목 목록과 스위프트 캐시가 같은지 본다. **encode 문자열이 아니라 값으로**
+    /// 비교한다 — 두 언어의 Double 문자열 표현이 다를 수 있다(설계서 §4.5 의 규율).
+    private func 항목_비교(_ cache: PlaceNameCache, _ expected: [[Any]], _ 이름: String) {
+        let actual = cache.encode()
+            .split(separator: "\n", omittingEmptySubsequences: true)
+            .map { line -> (Double, Double, String) in
+                let tab = line.firstIndex(of: "\t")!
+                let coordinates = line[line.startIndex..<tab].split(separator: ",")
+                return (Double(coordinates[0])!, Double(coordinates[1])!, String(line[line.index(after: tab)...]))
+            }
+        #expect(actual.count == expected.count, "\(이름): 항목 수가 다르다")
+        for (i, 기대) in expected.enumerated() where i < actual.count {
+            #expect(actual[i].0 == double(기대[0]), "\(이름)[\(i)] 위도")
+            #expect(actual[i].1 == double(기대[1]), "\(이름)[\(i)] 경도")
+            #expect(actual[i].2 == (기대[2] as? String), "\(이름)[\(i)] 이름")
+        }
+    }
+
+    @Test("장소 이름 캐시가 안드로이드와 같다 (30m 경계·교체·300개 상한·망가진 줄)")
+    func 장소이름_캐시_대조() throws {
+        let payload = try readObject("placeNameCache")
+
+        for 사례 in try #require(payload["find"] as? [[String: Any]]) {
+            let 이름 = string(사례["name"])
+            var cache = PlaceNameCache()
+            for put in try #require(사례["puts"] as? [[Any]]) {
+                // 좌표가 NaN 인 케이스가 있다 — 생성기가 그것을 JSON 문자열로 적으므로
+                // NSNumber 로 바로 캐스팅하면 그 자리에서 죽는다(`double` 이 되돌린다).
+                cache.put(lat: double(put[0]), lng: double(put[1]), name: put[2] as? String ?? "")
+            }
+            #expect(cache.find(lat: double(사례["lat"]), lng: double(사례["lng"])) == 사례["found"] as? String, "find \(이름)")
+        }
+
+        for 사례 in try #require(payload["put"] as? [[String: Any]]) {
+            let 이름 = string(사례["name"])
+            var cache = PlaceNameCache(matchRadiusMeters: double(사례["matchRadiusMeters"]), maxEntries: int(사례["maxEntries"]))
+            for put in try #require(사례["puts"] as? [[Any]]) {
+                cache.put(lat: double(put[0]), lng: double(put[1]), name: put[2] as? String ?? "")
+            }
+            #expect(cache.size == int(사례["size"]), "put \(이름): 개수")
+            항목_비교(cache, try #require(사례["entries"] as? [[Any]]), "put \(이름)")
+        }
+
+        for 사례 in try #require(payload["decode"] as? [[String: Any]]) {
+            let 이름 = string(사례["name"])
+            let cache = PlaceNameCache.decode(string(사례["text"]))
+            #expect(cache.size == int(사례["size"]), "decode \(이름): 개수")
+            항목_비교(cache, try #require(사례["entries"] as? [[Any]]), "decode \(이름)")
         }
     }
 }

@@ -1571,4 +1571,318 @@ class GoldenFileWriterTest {
         check(cases.size >= 8) { "decode 케이스가 ${cases.size}개뿐이다" }
         return cases
     }
+
+    // ==================================================================
+    // 6. GeofenceEvaluator — 히스테리시스·5분 중복 억제·정확도 문턱
+    // ==================================================================
+
+    /** 남북으로 정확히 [meters] 만큼 떨어진 위도 차이. distanceMeters 와 같은 반지름에서 나온다. */
+    private fun latOffset(meters: Double): Double = meters / (PI / 180.0 * 6_371_000.0)
+
+    private fun placeJson(p: Place) = linkedMapOf<String, Any?>(
+        "id" to p.id, "name" to p.name, "lat" to p.lat, "lng" to p.lng,
+        "radiusMeters" to p.radiusMeters, "notifyEnter" to p.notifyEnter, "notifyExit" to p.notifyExit,
+    )
+
+    private fun stateJson(s: PlaceState) = linkedMapOf<String, Any?>(
+        "placeId" to s.placeId, "inside" to s.inside, "lastEventAt" to s.lastEventAt,
+    )
+
+    @Test
+    fun `골든 - GeofenceEvaluator`() {
+        val cases = generateGeofenceEvaluator()
+        writeGoldenIfPresent("geofenceEvaluator", toJson(cases))
+    }
+
+    private fun generateGeofenceEvaluator(): List<Map<String, Any?>> {
+        val cases = mutableListOf<Map<String, Any?>>()
+        val hitsByName = mutableMapOf<String, List<GeofenceHit>>()
+        val baseLat = 37.5665
+        val baseLng = 126.9780
+        val now = 10_000_000L
+
+        fun add(name: String, places: List<Place>, states: List<PlaceState>, fix: Fix) {
+            val (hits, next) = GeofenceEvaluator.evaluate(places, states, fix)
+            hitsByName[name] = hits
+            cases += linkedMapOf(
+                "name" to name,
+                "places" to places.map(::placeJson),
+                "states" to states.map(::stateJson),
+                "fix" to linkedMapOf<String, Any?>(
+                    "lat" to fix.lat, "lng" to fix.lng, "accuracy" to fix.accuracy, "at" to fix.at,
+                ),
+                "hits" to hits.map {
+                    linkedMapOf<String, Any?>(
+                        "placeId" to it.placeId, "placeName" to it.placeName,
+                        "entering" to it.entering, "at" to it.at,
+                    )
+                },
+                "nextStates" to next.map(::stateJson),
+            )
+        }
+
+        fun place(id: String, radius: Double, enter: Boolean = true, exit: Boolean = true) =
+            Place(id, "장소 $id", baseLat, baseLng, radius, enter, exit)
+
+        // 정확도는 Float 로 정확히 표현되는 값만 쓴다(설계서 §4.1) — 안 그러면 두 언어가 같은
+        // 함수인데도 문턱 바로 위에서 갈린다.
+        fun fix(meters: Double, accuracy: Float, at: Long = now) =
+            Fix(baseLat + latOffset(meters), baseLng, accuracy, at)
+
+        val outside = listOf(PlaceState("a", false, 0L))
+        val inside = listOf(PlaceState("a", true, 0L))
+
+        // --- 반경 경계(도착) ---
+        add("enter_just_inside", listOf(place("a", 100.0)), outside, fix(99.5, 10f))
+        add("enter_exact_radius", listOf(place("a", 100.0)), outside, fix(100.0, 10f))
+        add("enter_just_outside", listOf(place("a", 100.0)), outside, fix(100.5, 10f))
+
+        // --- 이탈 여유 50m ---
+        add("exit_inside_margin", listOf(place("a", 100.0)), inside, fix(149.5, 10f))
+        add("exit_exact_margin", listOf(place("a", 100.0)), inside, fix(150.0, 10f))
+        add("exit_beyond_margin", listOf(place("a", 100.0)), inside, fix(150.5, 10f))
+
+        // --- 정확도 문턱(참조가 FALLBACK 100m 인지) ---
+        add("accuracy_ok_99_5", listOf(place("a", 100.0)), outside, fix(0.0, 99.5f))
+        add("accuracy_exact_100", listOf(place("a", 100.0)), outside, fix(0.0, 100f))
+        add("accuracy_over_100_5", listOf(place("a", 100.0)), outside, fix(0.0, 100.5f))
+        add("accuracy_over_keeps_state", listOf(place("a", 100.0)), inside, fix(1_000.0, 200f))
+
+        // --- 처음 보는 장소 ---
+        add("unseen_inside", listOf(place("a", 100.0)), emptyList(), fix(0.0, 10f))
+        add("unseen_outside", listOf(place("a", 100.0)), emptyList(), fix(500.0, 10f))
+
+        // --- 5분 중복 억제 ---
+        add("dedupe_just_under", listOf(place("a", 100.0)), listOf(PlaceState("a", true, now - 299_999)), fix(500.0, 10f))
+        add("dedupe_exact", listOf(place("a", 100.0)), listOf(PlaceState("a", true, now - 300_000)), fix(500.0, 10f))
+        add("dedupe_over", listOf(place("a", 100.0)), listOf(PlaceState("a", true, now - 300_001)), fix(500.0, 10f))
+        add("dedupe_never_notified", listOf(place("a", 100.0)), listOf(PlaceState("a", true, 0L)), fix(500.0, 10f))
+        add("dedupe_clock_went_back", listOf(place("a", 100.0)), listOf(PlaceState("a", true, now + 60_000)), fix(500.0, 10f))
+
+        // --- 알림 스위치 ---
+        add("notify_enter_off", listOf(place("a", 100.0, enter = false)), outside, fix(0.0, 10f))
+        add("notify_exit_off", listOf(place("a", 100.0, exit = false)), inside, fix(500.0, 10f))
+
+        // --- 지워진 장소 정리·여러 장소·빈 목록 ---
+        add(
+            "stale_state_dropped",
+            listOf(place("a", 100.0)),
+            listOf(PlaceState("a", true, 5L), PlaceState("gone", true, 7L)),
+            fix(0.0, 10f),
+        )
+        add(
+            "two_places_one_hit",
+            listOf(place("a", 100.0), Place("b", "장소 b", baseLat + latOffset(1_000.0), baseLng, 100.0)),
+            listOf(PlaceState("a", false, 0L), PlaceState("b", false, 0L)),
+            fix(0.0, 10f),
+        )
+        // 상태에 같은 placeId 가 둘 — associateBy 는 뒤엣것을 남긴다.
+        add(
+            "duplicate_state_last_wins",
+            listOf(place("a", 100.0)),
+            listOf(PlaceState("a", false, 0L), PlaceState("a", true, now - 1_000)),
+            fix(0.0, 10f),
+        )
+        add("empty_places", emptyList(), inside, fix(0.0, 10f))
+        add("zero_radius", listOf(place("a", 0.0)), outside, fix(0.0, 10f))
+
+        // --- 고정 시드 무작위: 생각 못 한 조합 ---
+        val random = Random(20260922)
+        repeat(40) { i ->
+            val count = random.nextInt(1, 4)
+            val places = (0 until count).map { k ->
+                Place(
+                    "r$k", "무작위 $k",
+                    baseLat + latOffset(random.nextDouble(-300.0, 300.0)),
+                    baseLng,
+                    listOf(25.0, 50.0, 100.0, 200.0, 0.0)[random.nextInt(5)],
+                    random.nextBoolean(), random.nextBoolean(),
+                )
+            }
+            val states = places.filter { random.nextBoolean() }.map {
+                PlaceState(
+                    it.id, random.nextBoolean(),
+                    listOf(0L, now - 10_000, now - 400_000, now + 5_000)[random.nextInt(4)],
+                )
+            }
+            val accuracy = listOf(5f, 10f, 49.5f, 50f, 99.5f, 100f, 100.5f)[random.nextInt(7)]
+            add(
+                "random_$i", places, states,
+                Fix(baseLat + latOffset(random.nextDouble(-400.0, 400.0)), baseLng, accuracy, now),
+            )
+        }
+
+        // 자체 점검 — "경계값"이라 이름 붙인 케이스가 실제로 경계를 가르는지 확인한다.
+        // 2단계에서 경계 케이스가 경계 근처에 가지도 못한 사고가 있었다(README 2026-09-13).
+        check(hitsByName.getValue("enter_just_inside").size == 1 && hitsByName.getValue("enter_just_outside").isEmpty()) {
+            "반경 경계 케이스가 같은 답을 낸다 — 생성기가 경계 근처에 못 갔다"
+        }
+        check(hitsByName.getValue("exit_inside_margin").isEmpty() && hitsByName.getValue("exit_beyond_margin").size == 1) {
+            "이탈 여유 50m 케이스가 같은 답을 낸다"
+        }
+        check(hitsByName.getValue("accuracy_exact_100").size == 1 && hitsByName.getValue("accuracy_over_100_5").isEmpty()) {
+            "정확도 문턱 케이스가 같은 답을 낸다 — MAX_ACCURACY_METERS 참조가 끊겼을 수 있다"
+        }
+        check(hitsByName.getValue("dedupe_just_under").isEmpty() && hitsByName.getValue("dedupe_exact").size == 1) {
+            "5분 중복 억제 경계 케이스가 같은 답을 낸다"
+        }
+        check(hitsByName.getValue("unseen_inside").isEmpty()) { "처음 보는 장소에서 알림이 나갔다" }
+
+        return cases
+    }
+
+    // ==================================================================
+    // 7. PlaceNameCache — 30m 경계·300개 상한·망가진 줄
+    // ==================================================================
+
+    @Test
+    fun `골든 - PlaceNameCache`() {
+        val payload = linkedMapOf(
+            "find" to generatePlaceNameCacheFind(),
+            "put" to generatePlaceNameCachePut(),
+            "decode" to generatePlaceNameCacheDecode(),
+        )
+        writeGoldenIfPresent("placeNameCache", toJson(payload))
+    }
+
+    /** 캐시 하나를 (lat, lng, name) 세 칸 줄 목록으로 적는다 — 스위프트가 값으로 대조한다. */
+    private fun cacheEntriesJson(cache: PlaceNameCache): List<List<Any?>> =
+        cache.encode().lineSequence().filter { it.isNotEmpty() }.map { line ->
+            val tab = line.indexOf('\t')
+            val coordinates = line.substring(0, tab).split(',')
+            listOf<Any?>(coordinates[0].toDouble(), coordinates[1].toDouble(), line.substring(tab + 1))
+        }.toList()
+
+    private fun generatePlaceNameCacheFind(): List<Map<String, Any?>> {
+        val cases = mutableListOf<Map<String, Any?>>()
+        val results = mutableMapOf<String, String?>()
+        val baseLat = 37.5665
+        val baseLng = 126.9780
+
+        fun add(name: String, puts: List<Triple<Double, Double, String>>, lat: Double, lng: Double) {
+            val cache = PlaceNameCache()
+            puts.forEach { cache.put(it.first, it.second, it.third) }
+            val found = cache.find(lat, lng)
+            results[name] = found
+            cases += linkedMapOf(
+                "name" to name,
+                "puts" to puts.map { listOf<Any?>(it.first, it.second, it.third) },
+                "lat" to lat, "lng" to lng, "found" to found,
+            )
+        }
+
+        add("empty", emptyList(), baseLat, baseLng)
+        add("just_inside_29_9", listOf(Triple(baseLat + latOffset(29.9), baseLng, "가까운 곳")), baseLat, baseLng)
+        add("exact_30", listOf(Triple(baseLat + latOffset(30.0), baseLng, "딱 30m")), baseLat, baseLng)
+        add("just_outside_30_1", listOf(Triple(baseLat + latOffset(30.1), baseLng, "먼 곳")), baseLat, baseLng)
+        add(
+            "nearest_wins",
+            listOf(
+                Triple(baseLat + latOffset(25.0), baseLng, "먼 쪽"),
+                Triple(baseLat + latOffset(5.0), baseLng, "가까운 쪽"),
+            ),
+            baseLat, baseLng,
+        )
+        add("not_a_number_coordinate", listOf(Triple(Double.NaN, baseLng, "망가진 좌표")), baseLat, baseLng)
+
+        check(results["just_inside_29_9"] != null && results["just_outside_30_1"] == null) {
+            "30m 경계 케이스가 같은 답을 낸다 — 생성기가 경계 근처에 못 갔다"
+        }
+        return cases
+    }
+
+    private fun generatePlaceNameCachePut(): List<Map<String, Any?>> {
+        val cases = mutableListOf<Map<String, Any?>>()
+        val sizes = mutableMapOf<String, Int>()
+        val baseLat = 37.5665
+        val baseLng = 126.9780
+
+        fun add(name: String, matchRadius: Double, maxEntries: Int, puts: List<Triple<Double, Double, String>>) {
+            val cache = PlaceNameCache(matchRadius, maxEntries)
+            puts.forEach { cache.put(it.first, it.second, it.third) }
+            sizes[name] = cache.size
+            cases += linkedMapOf(
+                "name" to name,
+                "matchRadiusMeters" to matchRadius,
+                "maxEntries" to maxEntries,
+                "puts" to puts.map { listOf<Any?>(it.first, it.second, it.third) },
+                "size" to cache.size,
+                "entries" to cacheEntriesJson(cache),
+            )
+        }
+
+        add(
+            "replace_same_spot", 30.0, 300,
+            listOf(Triple(baseLat, baseLng, "옛 이름"), Triple(baseLat + latOffset(10.0), baseLng, "새 이름")),
+        )
+        add(
+            "sanitize", 30.0, 300,
+            listOf(
+                Triple(baseLat, baseLng, "  가\t나\n다\r라  "),
+                Triple(baseLat + latOffset(200.0), baseLng, "   "),
+                // 여기 셋이 코틀린 trim() 과 스위프트 기본 집합이 갈리는 자리다. 코틀린
+                // Char.isWhitespace() 는 `Character.isWhitespace || Character.isSpaceChar` 라
+                // 비분리 공백(U+00A0)은 **자르고** NEL(U+0085)은 **안 자른다**.
+                Triple(baseLat + latOffset(400.0), baseLng, " 카페 "),
+                Triple(baseLat + latOffset(600.0), baseLng, "NEL"),
+                // 자바 isWhitespace 가 true 인 제어문자 — 스위프트 .whitespacesAndNewlines 에는 없다.
+                Triple(baseLat + latOffset(800.0), baseLng, "집"),
+            ),
+        )
+        add("overflow_drops_oldest", 30.0, 3, (0 until 5).map { Triple(baseLat + latOffset(it * 100.0), baseLng, "곳$it") })
+        add("overflow_at_limit", 30.0, 300, (0 until 302).map { Triple(baseLat + latOffset(it * 100.0), baseLng, "많은 곳 $it") })
+
+        check(sizes.getValue("overflow_drops_oldest") == 3 && sizes.getValue("replace_same_spot") == 1) {
+            "상한·교체 케이스가 기대한 모양이 아니다 — 생성기가 그 갈래에 못 갔다"
+        }
+        // 갈리는 세 글자가 실제로 어느 쪽으로 갈렸는지 여기서 못박는다. 이 검사가 죽으면
+        // 스위프트 `PlaceNameCache.자바_공백` 집합을 그 결과대로 다시 맞춘다.
+        val sanitized = (cases.first { it["name"] == "sanitize" }["entries"] as List<*>)
+            .map { (it as List<*>)[2] as String }
+        check(sanitized.contains("NEL")) { "코틀린 trim() 이 NEL(U+0085)을 잘랐다" }
+        check(sanitized.contains("카페")) { "코틀린 trim() 이 비분리 공백(U+00A0)을 안 잘랐다" }
+        check(sanitized.contains("집")) { "코틀린 trim() 이 U+001C~U+001F 를 안 잘랐다" }
+        return cases
+    }
+
+    private fun generatePlaceNameCacheDecode(): List<Map<String, Any?>> {
+        val cases = mutableListOf<Map<String, Any?>>()
+
+        fun add(name: String, text: String) {
+            val cache = PlaceNameCache.decode(text)
+            cases += linkedMapOf(
+                "name" to name, "text" to text,
+                "size" to cache.size, "entries" to cacheEntriesJson(cache),
+            )
+        }
+
+        add("empty", "")
+        add("one_line", "1.5,2.5\t좋은 줄")
+        add(
+            "broken_lines",
+            listOf(
+                "1.5,2.5\t좋은 줄",
+                "탭이없다",
+                "\t앞이비었다",
+                "1.5\t칸이하나",
+                "1.5,2.5,3.5\t칸이셋",
+                "a,2.5\t위도가숫자아님",
+                "1.5,b\t경도가숫자아님",
+                "",
+                "3.5,4.5\t또 좋은 줄",
+                "5.5,6.5\t이름에\t탭이 들어 있다",
+            ).joinToString("\n"),
+        )
+        add(
+            "round_trip_from_encode",
+            PlaceNameCache().also {
+                it.put(37.5665, 126.9780, "집")
+                it.put(37.5700, 126.9800, "학교 앞")
+            }.encode(),
+        )
+        // 줄 나누기가 `\r` 도 줄바꿈으로 세는지(코틀린 lineSequence). 스위프트가 `\n` 하나로만
+        // 나누면 여기서 갈린다.
+        add("carriage_return_lines", "1.5,2.5\t첫 줄\r\n3.5,4.5\t둘째 줄\r5.5,6.5\t셋째 줄")
+        return cases
+    }
 }
