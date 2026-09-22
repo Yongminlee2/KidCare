@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 시뮬레이터로 장소 경계를 넘긴다(설계서 §12.4 "시뮬레이터로 되는 것").
+     기준 장소: lat 37.5665 / lng 126.9780 / 반경 100m.
+     첫 점은 밖(약 167m 남쪽), 가운데는 안(0m), 마지막은 이탈 여유 50m 까지 넘은 북쪽 189m.
+     한 점에 약 5초씩 나아가면 MovementTrailFilter.MIN_INTERVAL_MILLIS(5초)에 맞는다. -->
+<gpx version="1.1" creator="KidCare dev">
+  <wpt lat="37.5650" lon="126.9780"><name>밖-출발</name></wpt>
+  <wpt lat="37.5655" lon="126.9780"><name>다가감</name></wpt>
+  <wpt lat="37.5660" lon="126.9780"><name>경계 근처</name></wpt>
+  <wpt lat="37.5665" lon="126.9780"><name>안-도착</name></wpt>
+  <wpt lat="37.5665" lon="126.9780"><name>안-머무름</name></wpt>
+  <wpt lat="37.5670" lon="126.9780"><name>나가는 중</name></wpt>
+  <wpt lat="37.5676" lon="126.9780"><name>여유 안</name></wpt>
+  <wpt lat="37.5682" lon="126.9780"><name>밖-이탈</name></wpt>
+</gpx>
