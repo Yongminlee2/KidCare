@@ -45,6 +45,8 @@ final class TrailUploader: ChildUploading {
         saveTrail: @escaping TrailSave = TrailRepository.save,
         uid: @escaping UidProvider = AuthGateway.uid,
         now: @escaping () -> Int64 = { Int64(Date().timeIntervalSince1970 * 1000) },
+        // 기본값이 **실제** 이름표다. 이 인자를 안 넘긴 테스트가 진짜 Nominatim 을 부르는 사고는
+        // `PlaceNamer.urlSessionFetch` 가 테스트 프로세스에서 막는다(`PlaceNamer.테스트_중`).
         namer: PlaceNaming = PlaceNamer.shared,
         geocodeBudgetMillis: Int64 = PlaceNamer.geocodeBudgetMillis
     ) {

@@ -181,4 +181,26 @@ struct PlaceNamerTests {
         #expect(await 다시.cachedName(lat: 37.5, lng: 127.0) == "집")
         #expect(await 서버2.횟수 == 0)
     }
+
+    /// 이 파일의 다른 테스트들은 `fetch` 를 **주입해서** 네트워크를 피한다. 이 테스트는 그 주입을
+    /// 잊었을 때를 본다 — 앞으로 누가 `PlaceNamer()` 나 `TrailUploader()` 를 기본값 그대로 쓰는
+    /// 테스트를 하나 쓰면, 그 테스트가 OpenStreetMap 공개 서버를 실제로 두드린다(사용 정책 위반이고,
+    /// 요청이 조용히 성공해서 아무도 못 알아챈다). `PlaceNamer.urlSessionFetch` 의 첫 줄이 그 문이다.
+    @Test("테스트 프로세스에서는 진짜 요청이 아예 못 나간다 — 주입을 잊은 미래의 테스트가 Nominatim 을 부르는 사고를 막는다")
+    func 테스트에서는_네트워크가_막힌다() async throws {
+        #expect(PlaceNamer.테스트_중, "여기가 거짓이면 아래 두 확인이 통째로 무의미해진다")
+
+        await #expect(throws: PlaceNamerError.테스트에서는_네트워크를_안_탄다) {
+            _ = try await PlaceNamer.urlSessionFetch(
+                try #require(URL(string: PlaceNamer.endpoint)), PlaceNamer.timeoutSeconds)
+        }
+
+        // 주입을 하나도 안 한 진짜 `PlaceNamer` — `fetch` 기본값이 위의 문이다.
+        let suite = "test-\(UUID().uuidString)"
+        defer { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
+        let namer = PlaceNamer(suiteName: suite)
+        #expect(await namer.name(lat: 37.5665, lng: 126.9780) == nil, "이름을 못 얻는다")
+        // 실패는 캐시하지 않는다 — 막힌 요청도 마찬가지다.
+        #expect(await namer.cachedName(lat: 37.5665, lng: 126.9780) == nil)
+    }
 }

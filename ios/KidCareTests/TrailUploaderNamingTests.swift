@@ -168,4 +168,28 @@ struct TrailUploaderNamingTests {
         #expect(doc.segments.first?.pointCount == 2_500, "이름도 원본 전체의 가중 평균으로 묻는다")
         #expect(이름표.물어본_순서 == [열쇠(37.5)])
     }
+
+    /// `namer:` 를 **일부러 안 넘긴다.** 기본값은 실제 `PlaceNamer.shared` 라 이 업로드는 진짜
+    /// 이름표를 탄다 — 그런데도 요청이 못 나가야 한다(`PlaceNamer.테스트_중`). 이 테스트가 빨개지면
+    /// 그것은 곧 "이 테스트 묶음이 OpenStreetMap 공개 서버를 두드리고 있다"는 뜻이다.
+    @Test("namer 를 안 넘긴 TrailUploader 도 네트워크를 못 탄다 — 이름 없이 올라갈 뿐이다")
+    func 기본_이름표는_테스트에서_묻지_못한다() async throws {
+        let 기록장 = 기록()
+        // 머무름 하나짜리 하루 — 물어볼 곳이 한 곳이라 속도 제한으로 자는 일도 없다.
+        let points = [
+            Fix(lat: 37.5, lng: 127.0, accuracy: 10, at: t0),
+            Fix(lat: 37.5, lng: 127.0, accuracy: 10, at: t0 + 360_000),
+        ]
+        let uploader = TrailUploader(
+            device: DeviceState(battery: { (0.5, .unplugged) }, network: { NetworkKind.wifi }),
+            report: { _, _, _ in },
+            saveTrail: { _, _, doc in await MainActor.run { 기록장.하루.append(doc) } },
+            uid: { "child-uid" },
+            now: { self.t0 })
+        try await uploader.upload(familyId: "F1", fix: points[0], points: points, dayKey: "2026-09-22")
+
+        let 머무름 = try #require(기록장.하루.first).segments.filter { $0.type == "STAY" }
+        #expect(머무름.count == 1)
+        #expect(머무름.first?.placeName == "", "네트워크가 막혔으니 이름 없이 올라간다")
+    }
 }

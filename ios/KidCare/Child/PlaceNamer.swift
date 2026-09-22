@@ -19,6 +19,12 @@ protocol PlaceNaming: Sendable {
     func name(lat: Double, lng: Double, timeout: TimeInterval, budgetLeftMillis: Int64?) async -> String?
 }
 
+/// `PlaceNamer` 가 스스로 거절할 때 쓰는 오류.
+enum PlaceNamerError: Error, Equatable {
+    /// 테스트 프로세스에서 진짜 요청을 하려고 했다. 자세한 근거는 `PlaceNamer.테스트_중`.
+    case 테스트에서는_네트워크를_안_탄다
+}
+
 /// 좌표를 사람이 읽는 주소로 바꾼다. 정본 `child/PlaceNamer.kt`(전체).
 ///
 /// **OpenStreetMap Nominatim 을 쓴다. `CLGeocoder` 가 아니다**(계획서 판정 기록 8) — 설계서 §4.10 이
@@ -170,6 +176,21 @@ actor PlaceNamer: PlaceNaming {
         return region
     }
 
+    /// 지금 이 프로세스가 테스트인가.
+    ///
+    /// **왜 있나.** `TrailUploader` 의 `namer:` 기본값이 ``shared`` 이고 `PlaceNamer()` 의 `fetch:`
+    /// 기본값이 ``urlSessionFetch`` 라, 앞으로 누가 그 인자를 **안 넘긴 채** 테스트를 하나 쓰면
+    /// 그 테스트가 OpenStreetMap 공개 서버를 실제로 두드린다. 그것은 그 자체로 Nominatim 사용
+    /// 정책 위반이고(호의성 서비스다), CI 가 남의 서버 사정에 따라 빨개지며, 아무도 그 사고를
+    /// 알아채지 못한다 — 요청이 **조용히 성공**하기 때문이다. `FirebaseBootstrap.configureForApp`
+    /// 이 같은 판단으로 같은 환경변수를 보고 있다(`:31-33`).
+    ///
+    /// 둘 다 보는 이유: 환경변수는 `xcodebuild test` 가 넣고, `XCTestCase` 는 테스트 번들이
+    /// 실제로 적재됐는지를 말한다. 어느 한쪽만 참인 실행 방식이 있어도 막힌다.
+    static let 테스트_중: Bool =
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        || NSClassFromString("XCTestCase") != nil
+
     /// 단조 시계(밀리초). 벽시계가 아니다 — 사용자가 시각을 바꾸거나 NTP 가 뒤로 돌려도 요청
     /// 간격이 무너지면 안 된다.
     static func uptimeMillis() -> Int64 {
@@ -180,6 +201,10 @@ actor PlaceNamer: PlaceNaming {
     /// 판단). 제한시간은 `URLRequest.timeoutInterval` 로 건다 — 코틀린이 소켓 제한시간
     /// (`connectTimeout`/`readTimeout`, `:99-100`)으로 예산을 지킨 것과 같은 자리다.
     static func urlSessionFetch(_ url: URL, _ timeout: TimeInterval) async throws -> Data {
+        // **테스트에서는 여기서 끝난다.** 이 앱이 바깥 서버로 나가는 유일한 자리라 문을 여기 건다 —
+        // 주입을 잊은 테스트가 하나 생겨도 요청이 못 나간다(``테스트_중`` 주석). 부르는 쪽(`name`)은
+        // 이 오류를 다른 실패와 똑같이 nil 로 받으므로 테스트는 "이름을 못 얻었다"로 진행한다.
+        if 테스트_중 { throw PlaceNamerError.테스트에서는_네트워크를_안_탄다 }
         var request = URLRequest(url: url, timeoutInterval: timeout)
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: request)
