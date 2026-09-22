@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 시뮬레이터에 먹이는 도보 경로(1단계 계획서 Task 5). 서울시청 → 광화문, 약 600m.
+     재생은 이 파일을 그대로 넘기는 것이 아니라 좌표만 뽑아
+     `xcrun simctl location <UDID> start --speed=1.3 --interval=1 <lat,lon> ...` 로 넘긴다
+     (이 Xcode 의 simctl 은 GPX 경로를 안 받는다 — 1단계 계획서 Task 5 Step 5·6).
+     시뮬레이터가 두 점 사이를 보간한다.
+     <time> 을 일부러 안 넣는다 — 넣으면 재생 시각이 파일에 박혀 며칠 뒤 돌릴 때
+     "몇 년 전 점"이 들어오고, LocationFilter 가 시계 역행으로 읽는다. -->
+<gpx version="1.1" creator="KidCare" xmlns="http://www.topografix.com/GPX/1/1">
+  <wpt lat="37.56650" lon="126.97800"/>
+  <wpt lat="37.56695" lon="126.97791"/>
+  <wpt lat="37.56740" lon="126.97782"/>
+  <wpt lat="37.56785" lon="126.97773"/>
+  <wpt lat="37.56830" lon="126.97764"/>
+  <wpt lat="37.56875" lon="126.97755"/>
+  <wpt lat="37.56920" lon="126.97746"/>
+  <wpt lat="37.56965" lon="126.97737"/>
+  <wpt lat="37.57010" lon="126.97728"/>
+  <wpt lat="37.57055" lon="126.97719"/>
+  <wpt lat="37.57100" lon="126.97710"/>
+  <wpt lat="37.57145" lon="126.97701"/>
+  <wpt lat="37.57190" lon="126.97692"/>
+</gpx>

@@ -57,4 +57,24 @@ struct DeviceStateTests {
         // 유선·기타 인터페이스는 코틀린의 `else -> NONE` 자리다.
         #expect(DeviceState.networkKind(satisfied: true, wifi: false, cellular: false) == NetworkKind.none)
     }
+
+    @Test("경로 감시의 첫 갱신 전에는 빈 값(모름)이다 — '연결 없음'이라고 거짓말하지 않는다")
+    func 경로_첫_갱신_전() {
+        let 상자 = NetworkPathBox()
+        #expect(상자.kind == NetworkKind.unknown)
+        #expect(상자.kind.isEmpty, "빈 값이어야 부모 화면이 '모름'으로 접는다")
+        #expect(상자.kind != NetworkKind.none, "붙어 있지 않다(none)와 아직 모른다는 다른 말이다")
+
+        상자.update(NetworkKind.wifi)
+        #expect(상자.kind == "wifi")
+        상자.update(NetworkKind.none)
+        #expect(상자.kind == "none", "갱신이 오면 그때부터 진짜 값이다")
+    }
+
+    @Test("모르는 통신 상태로도 업로드는 그대로 나간다 — 읽느라 쓰기를 미루지 않는다(NetworkState.kt 는 동기로 읽는다)")
+    func 모름도_그대로_올린다() {
+        let state = DeviceState(battery: { (0.5, .unplugged) }, network: { NetworkKind.unknown })
+        #expect(state.snapshot().network == "")
+        #expect(state.snapshot().batteryPercent == 50, "통신을 몰라도 나머지는 정상으로 실린다")
+    }
 }

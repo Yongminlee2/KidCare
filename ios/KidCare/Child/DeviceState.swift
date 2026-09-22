@@ -1,6 +1,28 @@
 import Foundation
 import Network
+import os
 import UIKit
+
+/// `NWPathMonitor` 가 알려 준 **마지막** 통신 종류를 들고 있는 상자.
+///
+/// `pathUpdateHandler` 는 `@Sendable` 이라 `@MainActor` 인 [DeviceState] 를 붙잡을 수 없다.
+/// 그래서 경로 자체(`NWPath` 는 `Sendable` 이 아니다)가 아니라 **글자 하나**만 잠금에 담아
+/// 건네받는다 — `@unchecked Sendable` 을 새로 만들지 않는 방법이기도 하다(Global Constraints).
+///
+/// **첫 갱신이 오기 전에는 빈 값(모름)이다.** `start(queue:)` 직후의 `currentPath` 는 아직
+/// 확정값이 아니라, 그때 읽으면 페어링 직후 처음 뜨는 부모 화면이 "연결 없음"이라고 **거짓말**한다
+/// — `ringerMode` 를 굳이 빈 값으로 쓴 이유(`Documents.swift:235-239`)와 같은 기준이다.
+/// 모름이어도 **업로드는 그대로 나간다**(안드로이드가 통신 상태를 읽느라 쓰기를 미루지 않는 것과 같다).
+final class NetworkPathBox: Sendable {
+
+    private let latest = OSAllocatedUnfairLock<String?>(initialState: nil)
+
+    /// `wifi` · `cell` · `none`, 그리고 **첫 갱신 전에는 빈 값**이다.
+    /// 빈 값(모름)과 `none`(붙어 있지 않음)은 다른 말이다.
+    var kind: String { latest.withLock { $0 } ?? NetworkKind.unknown }
+
+    func update(_ kind: String) { latest.withLock { $0 = kind } }
+}
 
 /// 아이 폰의 지금 상태. **읽기만 한다** — 안드로이드 `child/NetworkState.kt:8-20` 머리 주석과
 /// 같은 이유로 끄고 켜는 기능이 없다(아이폰은 읽는 것조차 더 적다).
@@ -32,9 +54,9 @@ final class DeviceState {
     private let readNetwork: NetworkReader
     private let monitor: NWPathMonitor?
 
-    /// 경로 감시는 한 번 켜 두고 `currentPath` 를 그때그때 읽는다. `pathUpdateHandler` 를 안 쓰는
-    /// 이유는 그 콜백이 `@Sendable` 이라 `@MainActor` 인 이 객체를 붙잡을 수 없어서다 —
-    /// 상태 문서를 쓰는 순간의 값만 필요하므로 읽어 가는 쪽이 더 단순하다.
+    /// 경로 감시는 한 번 켜 두고 [NetworkPathBox] 가 받아 둔 마지막 값을 읽는다.
+    /// `currentPath` 를 동기로 읽지 **않는다** — `start(queue:)` 가 첫 경로를 큐로 넘기기 전에는
+    /// 확정값이 아니라, 그 사이에 나간 첫 상태 문서가 "연결 없음"으로 거짓말한다(그 상자 주석).
     private static let monitorQueue = DispatchQueue(label: "com.kidcare.family.network-path")
 
     /// **시뮬레이터는 배터리를 안 준다**(`batteryLevel` 이 -1, `batteryState` 가 `.unknown`;
@@ -48,10 +70,12 @@ final class DeviceState {
             readNetwork = network
             monitor = nil
         } else {
+            let box = NetworkPathBox()
             let monitor = NWPathMonitor()
+            monitor.pathUpdateHandler = { path in box.update(DeviceState.networkKind(of: path)) }
             monitor.start(queue: Self.monitorQueue)
             self.monitor = monitor
-            readNetwork = { DeviceState.networkKind(of: monitor.currentPath) }
+            readNetwork = { box.kind }
         }
     }
 
@@ -82,7 +106,9 @@ final class DeviceState {
         return (UIDevice.current.batteryLevel, UIDevice.current.batteryState)
     }
 
-    static func networkKind(of path: NWPath) -> String {
+    /// 순수 함수라 `nonisolated` 다 — `NWPathMonitor` 의 `@Sendable` 콜백이 이것을 부른다
+    /// (`LocationCollector.fix(from:)` 와 같은 모양).
+    nonisolated static func networkKind(of path: NWPath) -> String {
         networkKind(
             satisfied: path.status == .satisfied,
             wifi: path.usesInterfaceType(.wifi),
@@ -95,7 +121,7 @@ final class DeviceState {
     ///
     /// **붙어 있지 않으면 `none` 이다.** 와이파이 스위치가 켜져 있어도 공유기가 인터넷에 못
     /// 나가면 `none` 이라는 것이 코틀린 주석(:17-19)이 굳이 적어 둔 구분이다.
-    static func networkKind(satisfied: Bool, wifi: Bool, cellular: Bool) -> String {
+    nonisolated static func networkKind(satisfied: Bool, wifi: Bool, cellular: Bool) -> String {
         guard satisfied else { return NetworkKind.none }
         if wifi { return NetworkKind.wifi }
         if cellular { return NetworkKind.cell }

@@ -607,6 +607,9 @@ enum NetworkKind {
     static let wifi = "wifi"
     static let cell = "cell"
     static let none = "none"
+    /// **모른다.** 아직 한 번도 못 읽었다는 뜻이고 `none`(붙어 있지 않다)과 다른 말이다 —
+    /// 부모 화면이 이 값을 "모름"으로 접는다(`ControlViewModel.인터넷_문구` 의 `default`).
+    static let unknown = ""
 }
 
 /// children/{childUid}/settings/ringer. 정본은 `Documents.kt:466-482`. 보호자 앱은 이 문서를

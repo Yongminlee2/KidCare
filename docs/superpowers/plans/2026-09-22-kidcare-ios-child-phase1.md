@@ -2923,10 +2923,14 @@ curl -s -X PATCH -H "$AUTH" -H "Content-Type: application/json" "$EMU/families/$
 
 `ios/Fixtures/child-sim-seoul-walk.gpx` — 서울시청 앞에서 광화문 쪽으로 약 600m 를 걷는 경로다. 좌표는 **50m 간격 13점**이라 5초 게이트(이동 확정 시)와 3m 거리 필터를 넉넉히 넘긴다.
 
+**이 Xcode 의 `xcrun simctl location start` 는 GPX 파일 경로를 안 받는다.** `lat,lon` 인자 나열(또는 `-` 로 표준입력)만 받는다(`simctl help location` 으로 확인). 그래서 이 파일은 **경로의 정본**으로 두고, 재생할 때 좌표만 뽑아 넘긴다 — Step 6 의 `WALK` 가 그 한 줄이다. 파일을 없애고 좌표를 명령에 박지 않는 이유는 경로를 고칠 자리가 하나여야 하기 때문이다(보호자 화면에서 무엇이 그려져야 하는지도 이 파일이 말한다).
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 시뮬레이터에 먹이는 도보 경로(1단계 계획서 Task 5). 서울시청 → 광화문, 약 600m.
-     xcrun simctl location <UDID> start --speed=1.3 이 두 점 사이를 보간한다.
+     재생은 이 파일을 그대로 넘기는 것이 아니라 좌표만 뽑아
+     `xcrun simctl location <UDID> start --speed=1.3 --interval=1 <lat,lon> …` 로 넘긴다
+     (simctl 은 GPX 경로를 안 받는다). 시뮬레이터가 두 점 사이를 보간한다.
      <time> 을 일부러 안 넣는다 — 넣으면 재생 시각이 파일에 박혀 며칠 뒤 돌릴 때
      "몇 년 전 점"이 들어오고, LocationFilter 가 시계 역행으로 읽는다. -->
 <gpx version="1.1" creator="KidCare" xmlns="http://www.topografix.com/GPX/1/1">
@@ -2950,9 +2954,28 @@ curl -s -X PATCH -H "$AUTH" -H "Content-Type: application/json" "$EMU/families/$
 
 **시간이 실제로 든다.** 머무름은 `MIN_STAY_MILLIS`(5분)와 `STAY_ANCHOR_INTERVAL_MILLIS`(5분)가 정하므로 줄일 방법이 없고, 줄이려고 상수를 만지지 않는다. 항목마다 `xcrun simctl io "$CHILD" screenshot /tmp/p1-<번호>.png` 로 남긴다.
 
-1. **출발 머무름(약 6분).** 고정 좌표를 준다.
+**먼저 이 두 가지를 알고 시작한다(실제로 겪은 것이다).**
+
+- **`location set`(정적 좌표)으로는 머무름을 재현할 수 없다.** 좌표가 **한 번만** 전달되고 그 뒤 콜백이 끊긴다. 실제 폰은 가만히 있어도 GPS 가 ±몇 m 씩 흔들려 콜백이 계속 오므로, 제자리를 아주 느리게(`--speed=0.06`) 도는 웨이포인트로 흉내 내야 같은 모양이 된다.
+- **`location start` 는 GPX 파일을 안 받는다.** `lat,lon` 을 나열하거나 `-` 로 표준입력에서 한 줄에 하나씩 읽는다. 아래 `WALK` 가 Step 5 의 GPX 에서 좌표를 뽑는다.
+
+```bash
+# Step 5 의 GPX 가 경로의 정본이다 — 여기서 좌표만 뽑아 simctl 인자로 만든다.
+WALK=$(python3 - <<'EOF'
+import re
+src = open('/Users/com/work/KidCare/ios/Fixtures/child-sim-seoul-walk.gpx').read()
+print(' '.join(f'{lat},{lon}' for lat, lon in re.findall(r'lat="([-0-9.]+)"\s+lon="([-0-9.]+)"', src)))
+EOF
+)
+echo "$WALK"   # 13쌍이 한 줄로 나온다
+# 제자리 흔들림(약 ±3m 사각형 한 바퀴). 0.06m/s 로 돌면 한 바퀴가 약 5분이다.
+JITTER_START="37.566527,126.978000 37.566519,126.978024 37.566500,126.978034 37.566481,126.978024 37.566473,126.978000 37.566481,126.977976 37.566500,126.977966 37.566519,126.977976 37.566527,126.978000"
+JITTER_END="37.571927,126.976920 37.571919,126.976944 37.571900,126.976954 37.571881,126.976944 37.571873,126.976920 37.571881,126.976896 37.571900,126.976886 37.571919,126.976896 37.571927,126.976920"
+```
+
+1. **출발 머무름(약 12분).** 제자리 흔들림을 재생한다. 한 바퀴가 약 5분이라 **두 번 건다**(두 번째는 첫 번째가 끝난 뒤에 건다 — 새 `start` 가 이전 재생을 덮어쓴다).
    ```bash
-   xcrun simctl location "$CHILD" set 37.56650,126.97800
+   xcrun simctl location "$CHILD" start --speed=0.06 --interval=1 $JITTER_START
    ```
    - 아이 화면의 버퍼 점 개수가 **1** 이 된다(첫 점은 `forceNextStayPoint` 라 무조건 남는다).
    - **곧바로 업로드가 한 번 나간다**(`lastUploadAt == 0`, 설계서 §10.1). 확인:
@@ -2963,19 +2986,21 @@ curl -s -X PATCH -H "$AUTH" -H "Content-Type: application/json" "$EMU/families/$
    - 5분이 지나면 점 개수가 **2** 가 된다(5분 기준점).
    - 수집 모드가 `slowProbe` → 5분 뒤 `still` 로 내려가는 것을 화면에서 본다(`STILL_ESCALATE_MILLIS`).
 
-2. **걷기(약 8분).**
+2. **걷기(약 8분).** 보행 속도 1.3m/s, 갱신은 1초에 한 번(실제 폰과 같은 밀도로 들어오고, 5초 게이트가 솎는다).
    ```bash
-   xcrun simctl location "$CHILD" start --speed=1.3 /Users/com/work/KidCare/ios/Fixtures/child-sim-seoul-walk.gpx
+   xcrun simctl location "$CHILD" start --speed=1.3 --interval=1 $WALK
    ```
    - 모드가 `still`/`slowProbe` → `fastProbe` → `moving` 으로 올라간다. 30초 안에 `moving` 이 돼야 한다(판정기 확인 창).
    - 버퍼 점이 **5초에 하나씩** 는다 — 이것이 "밀도가 안드로이드와 같다"의 눈으로 보는 증거다.
    - 15분째에 주기 업로드가 나간다. 기다리지 않으려면 **'지금 올리기'** 를 누른다.
+   - 약 600m 를 1.3m/s 로 걸으므로 재생 자체가 **약 8분**이다. 끝나면 마지막 점에서 좌표가 멎는다.
 
-3. **도착 머무름(약 6분).**
+3. **도착 머무름(약 12분).** 끝점에서 같은 흔들림을 건다(`set` 은 쓰지 않는다 — 위 두 가지 참고).
    ```bash
-   xcrun simctl location "$CHILD" set 37.57190,126.97692
+   xcrun simctl location "$CHILD" start --speed=0.06 --interval=1 $JITTER_END
    ```
    - 5분 뒤 두 번째 머무름이 생긴다. '지금 올리기'를 누른다.
+   - **여기서 시계(`TrackingTicker`)도 함께 본다.** 재생이 끝나 좌표가 완전히 멎어도 모드가 `moving` 에 남지 않고 60초 안에 내려간다 — 좌표 없이 도는 시계가 없으면 걸리던 자리다(통합 리뷰 I1). 확인하려면 흔들림을 걸지 말고 `xcrun simctl location "$CHILD" clear` 로 좌표를 끊은 뒤 화면의 수집 모드를 본다.
 
 4. **하루 문서를 본다.**
    ```bash
