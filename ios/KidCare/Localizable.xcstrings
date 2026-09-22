@@ -12995,6 +12995,807 @@
         }
       }
     },
+    "ios_child_force_quit_notice": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱을 완전히 닫으면(앱 전환기에서 위로 밀기) 위치가 멈춰요. 다시 열 때까지 엄마 아빠가 볼 수 없어요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again."
+          }
+        }
+      }
+    },
+    "ios_child_low_power_notice": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저전력 모드가 켜져 있어 위치가 드문드문 올 수 있어요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Low Power Mode is on, so your location may arrive less often."
+          }
+        }
+      }
+    },
+    "ios_child_open_settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정 열기"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Open Settings"
+          }
+        }
+      }
+    },
+    "ios_child_perm_always_reason": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "'앱을 사용하는 동안'으로 되어 있어요. 화면을 벗어나면 위치가 멈춰요. 설정에서 '항상'으로 바꿔주세요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings."
+          }
+        }
+      }
+    },
+    "ios_child_perm_always_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location 'Always'"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위치 '항상 허용'"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Location 'Always'"
+          }
+        }
+      }
+    },
+    "ios_child_perm_precise_reason": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정확한 위치가 꺼져 있어요. 이러면 위치가 너무 흐릿해서 아무것도 전달되지 않아요. 설정에서 켜주세요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings."
+          }
+        }
+      }
+    },
+    "ios_child_perm_precise_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precise Location"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정확한 위치"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Precise Location"
+          }
+        }
+      }
+    },
+    "ios_child_perm_refresh_reason": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이게 꺼져 있으면 앱을 보고 있을 때만 위치가 전달돼요. 설정에서 켜주세요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+          }
+        }
+      }
+    },
+    "ios_child_perm_refresh_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background App Refresh"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백그라운드 앱 새로고침"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Background App Refresh"
+          }
+        }
+      }
+    },
     "ios_child_unsupported_body": {
       "extractionState": "manual",
       "localizations": {
