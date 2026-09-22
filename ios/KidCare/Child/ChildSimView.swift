@@ -43,10 +43,14 @@ final class ChildSimModel {
         let device = launch.battery.map { value in
             DeviceState(battery: { (Float(value) / 100, .unplugged) })
         } ?? DeviceState()
+        // **빼면 안 된다.** 좌표가 끊긴 폰이 `.moving` 에 갇혀 하루 종일 조용해진다
+        // (`TrackingTicker` 머리 주석). 3단계 `ChildRootView` 도 같은 인자를 넘겨야 한다.
+        let ticker = TrackingTicker()
         let coordinator = TrackingCoordinator(
             familyId: launch.familyId,
             uploader: TrailUploader(device: device),
-            source: collector
+            source: collector,
+            ticker: ticker
         )
         // 되살아난 직후 오늘 걸어온 길을 되찾는다. 복구한 점은 상태 문서로 안 나간다.
         coordinator.restore()
@@ -54,6 +58,11 @@ final class ChildSimModel {
         // 판정 코드는 그대로 부른다.
         collector.onFix = { [weak self] fix in
             coordinator.handle(fix)
+            self?.refresh()
+        }
+        // 같은 이유로 덮어쓴다 — 좌표 없이 모드가 내려가는 것을 **화면에서 봐야** 확인이 된다.
+        ticker.onTick = { [weak self] now in
+            coordinator.tick(now)
             self?.refresh()
         }
         self.collector = collector

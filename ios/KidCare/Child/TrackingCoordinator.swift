@@ -31,6 +31,8 @@ final class TrackingCoordinator {
     private let store: TrailStore
     private let uploader: ChildUploading
     private weak var source: LocationSource?
+    /// 좌표가 없을 때 시계를 미는 유일한 입력([tick]). **이 객체가 갖고 있다** — 다른 주인이 없다.
+    private let ticker: Ticking?
 
     private(set) var lastFix: Fix?
     private(set) var lastTrailFix: Fix?
@@ -48,8 +50,11 @@ final class TrackingCoordinator {
     private var lastRouteWasMoving = false
     private var forceNextStayPoint = true
     /// 마지막으로 **들어온** 점의 시각. `lastFix` 와 다르다 — 거절된 점도 시계를 민다.
-    /// [mode] 가 "지금이 언제인가"로 쓴다.
+    /// [tick] 이 "좌표가 얼마나 끊겼나"를 재는 기준이다.
     private var lastHandledAt: Int64 = 0
+    /// 이 코디네이터가 마지막으로 본 시각. 좌표([handle])와 시계([tick])가 **함께** 민다.
+    /// [mode] 가 "지금이 언제인가"로 쓴다 — 좌표가 끊겨도 정지 승격 시계가 흘러야 한다.
+    private var clockAt: Int64 = 0
 
     /// 마지막으로 시작한 업로드. 화면(`ChildSimView`)이 "올리는 중"을 알고, 테스트가 기다린다.
     private(set) var uploadTask: Task<Void, Never>?
@@ -68,7 +73,8 @@ final class TrackingCoordinator {
         buffer: TrailBuffer = TrailBuffer(),
         store: TrailStore = TrailStore(),
         uploader: ChildUploading = TrailUploader(),
-        source: LocationSource? = nil
+        source: LocationSource? = nil,
+        ticker: Ticking? = nil
     ) {
         self.familyId = familyId
         self.zone = zone
@@ -76,7 +82,14 @@ final class TrackingCoordinator {
         self.store = store
         self.uploader = uploader
         self.source = source
+        self.ticker = ticker
         source?.onFix = { [weak self] fix in self?.handle(fix) }
+        // **진짜 파이프라인은 이 인자를 반드시 넘겨야 한다**(1단계는 `ChildSimView`, 3단계는
+        // `ChildRootView`). 안 넘기면 좌표가 끊긴 폰이 `.moving` 에 갇힌다 — 그 고리를 푸는
+        // 입력이 이것 하나뿐이다([TrackingTicker] 머리 주석). 기본값이 nil 인 것은 테스트가
+        // 시계를 **직접** 돌리기 위해서다(벽시계를 기다리는 테스트를 만들지 않는다).
+        ticker?.onTick = { [weak self] now in self?.tick(now) }
+        ticker?.start()
     }
 
     /// 지금 걸려야 할 수집 모드. 화면과 테스트가 읽는다.
@@ -85,7 +98,7 @@ final class TrackingCoordinator {
             state: detector.state,
             insideKnownPlace: insideKnownPlace,
             slowProbeSince: slowProbeSince,
-            now: lastHandledAt
+            now: clockAt
         )
     }
 
@@ -103,6 +116,7 @@ final class TrackingCoordinator {
         //    점이라도 "이 폰이 아직 살아 있고 지금 배터리가 이렇다"는 사실은 똑같이 유효하다.
         onCondition?(fix.at)
         lastHandledAt = fix.at
+        clockAt = max(clockAt, fix.at)
 
         // 아이폰의 `!activityMoving` 자리다. 활동 인식이 없어 '정지 모드'가 그 비트를 대신한다
         // (설계서 §4.8, 계획서 판정 기록의 STILL_ESCALATE_MILLIS). **판정기를 돌리기 전에** 읽는다
@@ -117,6 +131,9 @@ final class TrackingCoordinator {
         // 2. 시계 역행 감지 → 기준점 초기화(:552-568). 안 하면 `elapsed <= 0` 이라 그 뒤의 모든
         //    정상 점이 영영 REJECT_IMPOSSIBLE 로 막히는데, 로그도 조용해서 알아챌 방법이 없다.
         if let previous = lastFix, fix.at < previous.at {
+            // 시계가 거꾸로 갔으면 [tick] 이 밀어 둔 시각도 함께 버린다 — 안 그러면 [mode] 가
+            // 미래를 '지금'으로 읽어 정지 승격이 한 주기 이르게 걸린다.
+            clockAt = fix.at
             lastFix = nil
             lastTrailFix = nil
             detector.reset()
@@ -135,12 +152,10 @@ final class TrackingCoordinator {
         //    권한이 없을 때 이미 도는 길이다(`AdaptiveMovementDetector` 머리 주석).
         let update = detector.onFix(fix)
         slowProbeSince = (update.state == .slowProbe) ? (slowProbeSince ?? fix.at) : nil
-        source?.updateMode(
-            state: update.state,
-            insideKnownPlace: insideKnownPlace,
-            slowProbeSince: slowProbeSince,
-            now: fix.at
-        )
+        // **수집기에 미는 것은 여기가 아니다.** 5·6번이 판정기와 `slowProbeSince` 를 더 바꾸므로
+        // 여기서 밀면 수집기가 한 박자 옛 모드를 들고 다음 좌표까지(정지 주기면 60초) 기다린다.
+        // 안드로이드는 `onActivityMovingChanged(true)` 가 **그 자리에서** `collector` 를 다시 건다
+        // (`TrackingService.kt:473-477`) — 그 "그 자리"가 6번 뒤다. 아래 `pushMode` 가 그것이다.
 
         // 5. MOVING 이면 경로점 선별, 아니면 5분 기준점(:586-615).
         let routeMoving = update.state == .moving
@@ -180,6 +195,10 @@ final class TrackingCoordinator {
             forceNextStayPoint = true
         }
 
+        // 6-1. **이제야** 수집 모드를 수집기에 건다(위 4번 주석). 판정기와 `slowProbeSince` 가
+        //      더 안 바뀐 뒤라야 수집기가 최종 모드를 받는다.
+        pushMode(now: fix.at)
+
         // 7. 올릴지 말지(:629).
         let decision = LocationFilter.decide(previous: lastFix, candidate: fix)
 
@@ -209,8 +228,68 @@ final class TrackingCoordinator {
         }
     }
 
-    /// 설계서 §6.4 의 규칙 셋. 점이 들어올 때마다 판정한다 — 따로 타이머를 걸지 않는다
-    /// (안드로이드가 같은 이유로 알람을 안 건다).
+    /// 좌표가 **하나도 안 들어오는 동안** 도는 유일한 길이다([Ticking], 기본 60초).
+    ///
+    /// `handle()` 안의 시계 셋(정지 확인 60초·하트비트 10분·유휴 업로드 4시간)은 전부 좌표가
+    /// 있어야 만난다. 이동 확정(`.moving`)은 3m 거리 필터를 걸므로 폰이 완전히 멈추면 그 좌표가
+    /// 끊기고, 끊기면 세 시계가 함께 굶는다 — 자기를 가두는 고리다. 안드로이드는 활동 인식의
+    /// STILL 전환이 그 고리를 밖에서 끊어 준다(`TrackingService.kt:473-477`). 여기가 그 자리다.
+    ///
+    /// **새 좌표를 지어내지 않는다.** 버퍼에 점을 넣지 않고 `lastFix`·`lastTrailFix` 를 건드리지
+    /// 않는다 — 이 함수가 만질 수 있는 것은 "지금 몇 시인가"에서 따라 나오는 것뿐이다.
+    func tick(_ now: Int64) {
+        // 좌표를 한 번도 못 받았으면 내릴 모드도 올릴 것도 없다. 시계가 거꾸로 간 tick 도 버린다
+        // — 시계 역행 복구는 좌표가 있을 때만 한다(`handle` 의 2번).
+        guard lastHandledAt > 0, now > clockAt else { return }
+        clockAt = now
+
+        // 1. 상태 검사. 좌표와 무관하게 유효하다 — 안드로이드도 `checkConditions` 를 60초
+        //    간격으로 돌리고(`TrackingService.kt:399-403`), 그 간격이 이 시계의 주기와 같다.
+        onCondition?(now)
+
+        // 2. 좌표가 정지 확인 시간만큼 끊겼다 = 안드로이드에서 활동 인식이 STILL 을 보고한 것과
+        //    같은 사실이다. `onActivityMovingChanged(false)`(:473-477) 를 그대로 한다 — 판정기를
+        //    느린 확인으로 내리고 다음 기준점을 강제한다. 모드가 내려가면 3m 거리 필터가 풀려
+        //    좌표가 다시 흐르고, 그때부터 하트비트(10분)도 정상으로 돈다.
+        //    **움직이는 동안에는 절대 안 걸린다** — 5초마다 좌표가 들어오므로 끊긴 적이 없다.
+        if now - lastHandledAt >= AdaptiveMovementDetector.stopConfirmMillis, detector.state != .slowProbe {
+            detector.reset(fast: false)
+            lastRouteWasMoving = false
+            forceNextStayPoint = true
+        }
+
+        // 3. 좌표 변위로 켠 이동 확인의 만료(`handle` 의 6번). 이것도 좌표를 기다리면 안 된다 —
+        //    킥을 켜 놓고 폰이 멈추면 5초 확인이 영영 안 풀려 배터리가 계속 샌다.
+        if let expiry = coordinateKickExpiresAt, now > expiry {
+            coordinateKickExpiresAt = nil
+            detector.reset(fast: false)
+            forceNextStayPoint = true
+        }
+
+        // 4. `handle` 의 4번과 같은 식이다. 느린 확인에 있으면 정지 승격 시계를 **좌표 없이도** 민다.
+        slowProbeSince = (detector.state == .slowProbe) ? (slowProbeSince ?? now) : nil
+        pushMode(now: now)
+
+        // 5. 유휴 업로드(설계서 §6.4 규칙 2). 마지막으로 **실제로 받은** 점을 다시 올릴 뿐이다 —
+        //    거리가 0 이라 규칙 1(15분 **그리고** 25m)은 여기서 절대 안 걸리고, 4시간 규칙만 만난다.
+        //    올라가는 `at` 은 그 점의 진짜 시각이라 부모 화면이 위치를 "방금"으로 속이지 않는다.
+        guard let fix = lastFix, shouldUpload(now: now, fix: fix, eventJustWritten: false) else { return }
+        lastUploadAt = now
+        lastUploadedFix = fix
+        uploadTask = Task { [weak self] in await self?.uploadNow() }
+    }
+
+    /// 지금 모드를 좌표원에 건다. 모드가 실제로 바뀔 때만 매니저를 다시 거는 것은 저쪽 몫이다.
+    private func pushMode(now: Int64) {
+        source?.updateMode(
+            state: detector.state,
+            insideKnownPlace: insideKnownPlace,
+            slowProbeSince: slowProbeSince,
+            now: now
+        )
+    }
+
+    /// 설계서 §6.4 의 규칙 셋. 점이 들어올 때마다, 그리고 [tick] 마다 판정한다.
     ///
     /// 규칙 1·2 는 지금 쓰이고, 규칙 3(사건 직후)은 **판정만** 지금 있다 — 부르는 쪽(장소 이벤트)은
     /// 2단계다(1단계 판정 기록 14). 인자를 지금 두지 않으면 2단계가 이 함수의 모양을 바꾸게 된다.

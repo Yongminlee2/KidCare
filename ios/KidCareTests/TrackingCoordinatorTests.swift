@@ -14,6 +14,31 @@ final class 가짜_좌표원: LocationSource {
     func updateMode(state: AdaptiveMovementState, insideKnownPlace: Bool, slowProbeSince: Int64?, now: Int64) {
         모드_요청.append((state, insideKnownPlace, slowProbeSince, now))
     }
+
+    /// 마지막 요청으로 **수집기가 실제로 걸게 되는** 모드. `CollectionMode.select` 는
+    /// `LocationCollector.updateMode` 가 부르는 바로 그 함수다.
+    var 걸린_모드: CollectionMode? {
+        guard let last = 모드_요청.last else { return nil }
+        return CollectionMode.select(
+            state: last.state,
+            insideKnownPlace: last.inside,
+            slowProbeSince: last.since,
+            now: last.now
+        )
+    }
+}
+
+/// 테스트가 **직접 돌리는** 시계. 벽시계를 기다리지 않는다 — `tick` 을 손으로 부른다.
+@MainActor
+final class 가짜_시계: Ticking {
+    var onTick: ((Int64) -> Void)?
+    private(set) var 시작됨 = false
+
+    func start() { 시작됨 = true }
+    func stop() { 시작됨 = false }
+
+    /// 한 주기가 지났다고 알린다.
+    func 친다(_ now: Int64) { onTick?(now) }
 }
 
 /// 쓰기를 세기만 하는 가짜 업로더.
@@ -69,6 +94,7 @@ struct TrackingCoordinatorTests {
     private func 만든다(
         업로더: 가짜_업로더 = 가짜_업로더(),
         좌표원: 가짜_좌표원? = nil,
+        시계: 가짜_시계? = nil,
         onCondition: ((Int64) -> Void)? = nil,
         onPlaceFix: ((Fix) -> Void)? = nil,
         updateKnownPlace: ((Fix) -> Bool?)? = nil
@@ -78,7 +104,8 @@ struct TrackingCoordinatorTests {
             zone: zone,
             store: TrailStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)),
             uploader: 업로더,
-            source: 좌표원
+            source: 좌표원,
+            ticker: 시계
         )
         c.onCondition = onCondition
         c.onPlaceFix = onPlaceFix
@@ -156,7 +183,8 @@ struct TrackingCoordinatorTests {
     @Test("정지 주기 사이의 큰 변위는 이동 확인을 켠다 — 5분 뒤 만료되면 되돌아간다(COORDINATE_KICK_WINDOW_MILLIS)")
     func 좌표_변위_킥() {
         #expect(TrackingCoordinator.coordinateKickWindowMillis == 5 * 60_000)
-        let c = 만든다()
+        let 좌표원 = 가짜_좌표원()
+        let c = 만든다(좌표원: 좌표원)
         // 1분 간격으로 가만히 있으면 30초 뒤 SLOW_PROBE, 거기서 5분을 더 채우면 정지 모드다.
         c.handle(fix(at: t0))
         for step in 1...6 {
@@ -168,12 +196,42 @@ struct TrackingCoordinatorTests {
         c.handle(fix(at: t0 + 420_000, meters: 200))
         #expect(c.coordinateKickExpiresAt == t0 + 420_000 + TrackingCoordinator.coordinateKickWindowMillis)
         #expect(c.mode == .fastProbe, "이동 확인(5초)으로 올라가야 그 구간이 안 빈다")
+        // **계산값이 아니라 수집기에 실제로 간 것**을 본다 — 코디네이터만 알고 수집기가 옛 모드를
+        // 들고 있으면 거리 필터·정확도가 안 바뀌어 켠 모드가 다음 좌표까지 미뤄진다.
+        #expect(좌표원.모드_요청.last?.state == .fastProbe)
         #expect(c.buffer.points.map(\.at).contains(t0 + 420_000), "변위 증거 점은 강제로 남긴다")
 
         // 이동 확정 없이 창이 다 가면 스스로 되돌아간다 — 안 그러면 배터리가 계속 샌다.
         c.handle(fix(at: t0 + 420_000 + TrackingCoordinator.coordinateKickWindowMillis + 1, meters: 201))
         #expect(c.coordinateKickExpiresAt == nil)
         #expect(c.mode == .slowProbe)
+        #expect(좌표원.모드_요청.last?.state == .slowProbe,
+                "만료가 판정기를 되돌린 **뒤**에 밀어야 한다 — 먼저 밀면 수집기가 5초·최고정확도에 남는다")
+        #expect(좌표원.모드_요청.last?.since == nil)
+    }
+
+    @Test("변위 킥이 수집기까지 간다 — 판정기 표본으로는 15m 미만이지만 5분 기준점 대비 50m 인 구간")
+    func 변위_킥이_수집기에_걸린다() {
+        let 좌표원 = 가짜_좌표원()
+        let c = 만든다(좌표원: 좌표원)
+        // 1분 간격 정지 → 6분 뒤 정지 모드.
+        c.handle(fix(at: t0))
+        for step in 1...6 {
+            c.handle(fix(at: t0 + Int64(step) * 60_000, meters: 1))
+        }
+        #expect(c.mode == .still)
+
+        // 분당 13m 로 아주 느리게 옮겨간다. 판정기의 직전 표본(1분 전)과는 13m 라 이동 힌트
+        // 문턱(15m)을 못 넘어 판정기는 계속 느린 확인이다 — 5분 기준점 대비 52m 가 되는 순간에만
+        // 변위 증거가 선다. 이 구간이 I2 가 60초를 잃던 자리다.
+        for (index, meters) in [14.0, 27.0, 40.0, 53.0].enumerated() {
+            c.handle(fix(at: t0 + 420_000 + Int64(index) * 60_000, meters: meters))
+        }
+        #expect(c.coordinateKickExpiresAt != nil, "5분 기준점 대비 50m 가 변위 증거다")
+        #expect(c.mode == .fastProbe)
+        #expect(좌표원.모드_요청.last?.state == .fastProbe,
+                "킥이 켠 5초 확인이 수집기에 안 가면 다음 좌표(정지 주기 60초)까지 그대로 잔다")
+        #expect(좌표원.모드_요청.last?.since == nil, "저주기 시계도 함께 풀려야 한다")
     }
 
     @Test("수집 모드 변경은 좌표원에게 그대로 넘어간다 — 판정기 상태와 저주기 시계까지")
@@ -314,5 +372,118 @@ struct TrackingCoordinatorTests {
         c.handle(fix(at: t0 + 60_000, meters: 100))   // 25m 는 넘었지만 15분이 안 됐다
         await c.uploadTask?.value
         #expect(업로드.횟수 == 1, "실패를 곧바로 재시도하면 같은 비용을 반복해서 문다")
+    }
+
+    // MARK: 좌표 없이 도는 시계 — 안드로이드 활동 인식 STILL 전환의 자리
+
+    /// 이동 확정(`.moving`)까지 올린다. `승격_버퍼` 와 같은 입력이다.
+    private func 이동까지_올린다(_ c: TrackingCoordinator) {
+        c.handle(fix(at: t0))
+        c.handle(fix(at: t0 + 5_000, meters: 10))
+        c.handle(fix(at: t0 + 10_000, meters: 20))
+    }
+
+    @Test("시계 주기는 정지 확인 시간과 같다 — 확인 창보다 촘촘할 이유도, 성길 이유도 없다")
+    func 시계_주기() {
+        #expect(TrackingTicker.periodMillis == AdaptiveMovementDetector.stopConfirmMillis)
+        #expect(TrackingTicker.periodMillis == 60_000)
+    }
+
+    @Test("이동 중에 완전히 멈춘 폰이 좌표 없이도 이동에서 내려온다 — 3m 거리 필터가 자기를 가두지 않는다")
+    func 멈춘_폰이_이동에서_내려온다() {
+        let 좌표원 = 가짜_좌표원()
+        let 시계 = 가짜_시계()
+        let c = 만든다(좌표원: 좌표원, 시계: 시계)
+        #expect(시계.시작됨, "코디네이터가 시계를 켜야 한다")
+        이동까지_올린다(c)
+        #expect(c.mode == .moving)
+        #expect(좌표원.걸린_모드 == .moving, "이때만 3m 거리 필터가 걸린다")
+
+        // 아이가 교실 책상에 폰을 둔다. 3m 를 안 넘는 콜백은 전부 버려져 `handle()` 이 안 돈다.
+        시계.친다(t0 + 10_000 + AdaptiveMovementDetector.stopConfirmMillis)
+        #expect(c.mode == .slowProbe, "정지 확인 시간이 지나면 좌표 없이도 내려와야 한다")
+        #expect(좌표원.걸린_모드 == .slowProbe, "수집기까지 가야 거리 필터가 실제로 풀린다")
+
+        // 그 뒤로도 조용하면 정지 승격 시계가 좌표 없이 흐른다(STILL_ESCALATE_MILLIS).
+        시계.친다(t0 + 70_000 + CollectionMode.stillEscalateMillis)
+        #expect(c.mode == .still)
+        #expect(좌표원.걸린_모드 == .still)
+    }
+
+    @Test("시계는 좌표를 지어내지 않는다 — 점도, 기준점도, 상태 문서도 안 만든다")
+    func 시계는_좌표를_지어내지_않는다() async {
+        let 업로드 = 가짜_업로더()
+        let 좌표원 = 가짜_좌표원()
+        let 시계 = 가짜_시계()
+        let c = 만든다(업로더: 업로드, 좌표원: 좌표원, 시계: 시계)
+
+        // 좌표를 한 번도 못 받은 폰(권한 직후·실내)에서는 시계가 아무것도 안 한다.
+        시계.친다(t0)
+        시계.친다(t0 + 10 * 60_000)
+        await c.uploadTask?.value
+        #expect(업로드.횟수 == 0, "위치를 한 번도 못 잡았으면 올리지 않는다")
+        #expect(좌표원.모드_요청.isEmpty)
+        #expect(c.lastFix == nil)
+        #expect(c.buffer.points.isEmpty)
+
+        이동까지_올린다(c)
+        let 점들 = c.buffer.points.map(\.at)
+        let 기준점 = c.lastTrailFix?.at
+        let 마지막_좌표 = c.lastFix?.at
+        for step in 1...10 {
+            시계.친다(t0 + 10_000 + Int64(step) * 60_000)
+        }
+        #expect(c.buffer.points.map(\.at) == 점들, "시계가 경로에 점을 더하면 없던 길이 생긴다")
+        #expect(c.lastTrailFix?.at == 기준점)
+        #expect(c.lastFix?.at == 마지막_좌표, "마지막 좌표는 실제로 받은 그 점 그대로다")
+    }
+
+    @Test("안 움직여도 4시간이 지나면 시계가 유휴 업로드를 낸다 — 좌표가 안 와도 '마지막 신호'가 멎지 않는다")
+    func 시계가_유휴_업로드를_낸다() async {
+        let 업로드 = 가짜_업로더()
+        let 시계 = 가짜_시계()
+        let c = 만든다(업로더: 업로드, 시계: 시계)
+        c.handle(fix(at: t0))                       // 첫 좌표에서 한 번(설계서 §10.1)
+        await c.uploadTask?.value
+        #expect(업로드.횟수 == 1)
+
+        시계.친다(t0 + TrackingCoordinator.uploadIdleIntervalMillis - 60_000)
+        await c.uploadTask?.value
+        #expect(업로드.횟수 == 1, "4시간이 안 됐다")
+
+        시계.친다(t0 + TrackingCoordinator.uploadIdleIntervalMillis)
+        await c.uploadTask?.value
+        #expect(업로드.횟수 == 2)
+        #expect(업로드.마지막_점?.at == t0, "지어낸 좌표가 아니라 마지막으로 **실제로 받은** 점이다")
+        #expect(c.lastUploadAt == t0 + TrackingCoordinator.uploadIdleIntervalMillis)
+
+        // 15분 **그리고** 25m 규칙은 좌표가 안 움직였으므로 여기서 절대 안 걸린다.
+        시계.친다(t0 + TrackingCoordinator.uploadIdleIntervalMillis + 20 * 60_000)
+        await c.uploadTask?.value
+        #expect(업로드.횟수 == 2, "거리가 0 인데 15분마다 올리면 하루 96번 쓴다")
+    }
+
+    @Test("앱이 잠들었다 깨어나면 밀린 주기를 한 번에 정산한다 — 몰아치지도, 건너뛰지도 않는다")
+    func 잠들었다_깨어난다() async {
+        let 업로드 = 가짜_업로더()
+        let 좌표원 = 가짜_좌표원()
+        let 시계 = 가짜_시계()
+        let c = 만든다(업로더: 업로드, 좌표원: 좌표원, 시계: 시계)
+        이동까지_올린다(c)
+        let 잠들기_전_요청 = 좌표원.모드_요청.count
+
+        // 세 시간을 잠들어 있었다 — iOS 는 그동안 실행 시간을 주지 않으므로 tick 이 한 번도 안 온다.
+        // 깨어난 뒤의 첫 한 번이 세 시간을 그대로 본다(주기 수가 아니라 **시각**으로 판정한다).
+        let 깨어남 = t0 + 10_000 + 3 * 60 * 60_000
+        시계.친다(깨어남)
+        #expect(c.mode == .slowProbe, "한 번의 tick 으로 정지 확인이 끝난다")
+        #expect(좌표원.모드_요청.count == 잠들기_전_요청 + 1, "밀린 주기만큼 몰아서 걸지 않는다")
+
+        // 같은 시각(또는 과거)의 tick 이 한 번 더 와도 두 번 세지 않는다.
+        시계.친다(깨어남)
+        시계.친다(깨어남 - 60_000)
+        await c.uploadTask?.value
+        #expect(좌표원.모드_요청.count == 잠들기_전_요청 + 1)
+        #expect(업로드.횟수 == 1, "깨어난 것만으로 업로드가 두 번 나가지 않는다")
     }
 }
