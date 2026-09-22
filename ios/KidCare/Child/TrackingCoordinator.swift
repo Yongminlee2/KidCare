@@ -205,6 +205,8 @@ final class TrackingCoordinator {
         // 8. 거절(정확도·순간이동)이 아니면 장소 판정(:631-639).
         //    **7번의 결과에 안 묶인다** — SKIP_TOO_CLOSE 도 넘긴다. 경계에서 몇 걸음 옮겨 안으로
         //    들어간 순간이 정확히 그 모양이다.
+        //    이 훅은 **동기**라 사건을 실제로 썼는지 여기서 기다리지 않는다. 쓰기가 끝나면 그쪽이
+        //    [eventWritten] 으로 되돌아와 §6.4-3 규칙을 켠다(2단계 배선).
         if decision != .rejectInaccurate, decision != .rejectImpossible { onPlaceFix?(fix) }
 
         // 9. UPLOAD / UPLOAD_STALE_FALLBACK 이면 lastFix = fix(:641-672).
@@ -274,6 +276,21 @@ final class TrackingCoordinator {
         //    거리가 0 이라 규칙 1(15분 **그리고** 25m)은 여기서 절대 안 걸리고, 4시간 규칙만 만난다.
         //    올라가는 `at` 은 그 점의 진짜 시각이라 부모 화면이 위치를 "방금"으로 속이지 않는다.
         guard let fix = lastFix, shouldUpload(now: now, fix: fix, eventJustWritten: false) else { return }
+        lastUploadAt = now
+        lastUploadedFix = fix
+        uploadTask = Task { [weak self] in await self?.uploadNow() }
+    }
+
+    /// `events/` 에 사건을 실제로 쓴 직후에 부른다 — 설계서 §6.4 규칙 3("사건 직후에는 1·2번을
+    /// 무시하고 올린다. 다만 1분 안이면 건너뛴다").
+    ///
+    /// 왜 `handle` 안이 아니라 되돌아오는 문인가: 장소 판정([onPlaceFix])은 Firestore 쓰기라
+    /// 비동기인데 `handle` 은 동기다. 여기서 `await` 하려고 `handle` 을 비동기로 바꾸면 좌표
+    /// 하나가 통과하는 순서(설계서 §6.1 의 10단계)가 위치 콜백과 엇갈릴 수 있다 — 1단계가 그
+    /// 순서를 계약으로 못박았으므로 건드리지 않고, 쓰기가 끝난 쪽이 이 문으로 돌아온다.
+    /// 안드로이드는 `handle` 이 코루틴이라 그 자리에서 기다린다(`TrackingService.kt:631-639`).
+    func eventWritten(at now: Int64) {
+        guard let fix = lastFix, shouldUpload(now: now, fix: fix, eventJustWritten: true) else { return }
         lastUploadAt = now
         lastUploadedFix = fix
         uploadTask = Task { [weak self] in await self?.uploadNow() }

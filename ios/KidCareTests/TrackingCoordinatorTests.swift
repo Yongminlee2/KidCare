@@ -324,6 +324,46 @@ struct TrackingCoordinatorTests {
         #expect(업로드.횟수 == 2)
     }
 
+    @Test("사건을 쓴 뒤 되돌아오는 문도 같은 규칙 셋을 쓴다 — 장소 쓰기는 비동기라 handle 이 못 기다린다")
+    func 사건_쓰고_되돌아오기() async {
+        let 업로드 = 가짜_업로더()
+        let c = 만든다(업로더: 업로드)
+        c.handle(fix(at: t0))                       // 첫 점에서 1회
+        await c.uploadTask?.value
+        #expect(업로드.횟수 == 1)
+
+        c.eventWritten(at: t0 + 30_000)             // 1분 안 → 건너뛴다
+        await c.uploadTask?.value
+        #expect(업로드.횟수 == 1)
+
+        c.eventWritten(at: t0 + 61_000)             // 1분 지남 → 올린다
+        await c.uploadTask?.value
+        #expect(업로드.횟수 == 2)
+        #expect(업로드.마지막_점?.at == t0, "올리는 점은 **실제로 받은** 마지막 점이다 — 사건 시각으로 지어내지 않는다")
+    }
+
+    @Test("좌표를 한 번도 못 잡았으면 사건을 써도 안 올린다 — 지어낼 점이 없다")
+    func 사건만으로는_안_올린다() async {
+        let 업로드 = 가짜_업로더()
+        let c = 만든다(업로더: 업로드)
+        c.eventWritten(at: t0)
+        await c.uploadTask?.value
+        #expect(업로드.횟수 == 0)
+    }
+
+    @Test("등록 장소 안/밖이 수집기까지 그대로 간다 — 3m 거리 필터가 그 값으로 갈린다(1단계 리뷰 M4)")
+    func 등록장소_표시가_수집기까지_간다() {
+        let 좌표원 = 가짜_좌표원()
+        var 안에_있다: Bool? = false
+        let c = 만든다(좌표원: 좌표원, updateKnownPlace: { _ in 안에_있다 })
+        c.handle(fix(at: t0))
+        #expect(좌표원.모드_요청.last?.inside == false)
+        안에_있다 = true
+        c.handle(fix(at: t0 + 60_000, meters: 30))
+        #expect(좌표원.모드_요청.last?.inside == true,
+                "이 비트가 안 가면 집·학교 안에서만 아이폰이 3m 미만 콜백을 버린다")
+    }
+
     @Test("판정 함수만 따로 봐도 규칙 셋이 그대로다")
     func 업로드_판정_직접() {
         let c = 만든다()

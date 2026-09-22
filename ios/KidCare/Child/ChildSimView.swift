@@ -1,4 +1,6 @@
+import FirebaseFirestore
 import Foundation
+import os
 import SwiftUI
 import UIKit
 
@@ -22,8 +24,13 @@ final class ChildSimModel {
 
     let launch: ChildSimHarness.Launch
 
+    private(set) var placeCount = 0
+
     private var collector: LocationCollector?
     private var coordinator: TrackingCoordinator?
+    private var placeWatcher: PlaceWatcher?
+    private var placesListener: ListenerRegistration?
+    private let logger = Logger(subsystem: "com.kidcare.family", category: "ChildSim")
 
     init(launch: ChildSimHarness.Launch) {
         self.launch = launch
@@ -65,12 +72,60 @@ final class ChildSimModel {
             coordinator.tick(now)
             self?.refresh()
         }
+
+        // 2단계 배선. 장소 판정은 `LocationCollector` 를 지역 감시자로 쓰고(매니저가 하나여야 한다),
+        // 지역 전환 콜백은 그 수집기가 다시 `PlaceWatcher` 로 돌려준다.
+        let placeWatcher = PlaceWatcher(stateStore: PlaceStateStore(), monitor: collector)
+        collector.placeWatcher = placeWatcher
+        // 3번 단계. 안/밖/모름 셋을 그대로 넘긴다 — `Bool` 로 좁히면 "모른다" 갈래가 사라진다.
+        coordinator.updateKnownPlace = { [weak placeWatcher] fix in placeWatcher?.isInsideKnownPlace(fix) }
+        // 8번 단계. 쓰기는 비동기라 `handle` 이 기다리지 않고, 끝난 뒤 `eventWritten` 으로 돌아와
+        // 설계서 §6.4-3(사건 직후 업로드)을 켠다.
+        let familyId = launch.familyId
+        let childUid = uid
+        coordinator.onPlaceFix = { [weak self, weak coordinator, weak placeWatcher] fix in
+            Task { @MainActor in
+                guard let placeWatcher else { return }
+                do {
+                    let written = try await placeWatcher.onFix(familyId: familyId, childUid: childUid, fix: fix)
+                    if written > 0 { coordinator?.eventWritten(at: fix.at) }
+                } catch is CancellationError {
+                    // 취소는 실패가 아니다(1단계 `uploadNow` 와 같은 규율).
+                } catch {
+                    // 이벤트 하나를 못 쓴 것 때문에 위치 수집이 멈추면 안 된다(`PlaceWatcher.kt:110-112`).
+                    self?.logger.warning("장소 이벤트 쓰기 실패 — 다음 점에서 다시 한다: \(String(describing: error), privacy: .public)")
+                }
+                self?.refresh()
+            }
+        }
+        // 부모가 장소를 고친 것을 알 다른 길이 없다 — `sync_rules` 를 못 받기 때문이다(설계서 §7.3).
+        // 이 구독이 없으면 지운 장소의 알림이 영영 계속 울린다. 첫 스냅샷이 안드로이드의 `refresh`
+        // 자리(= 지역 등록)이고, 그 뒤의 스냅샷이 `sync_rules` 자리다.
+        placesListener = PlaceRepository.observePlaces(
+            familyId: familyId, childUid: childUid,
+            onChange: { [weak self] docs, _ in
+                Task { @MainActor in
+                    placeWatcher.apply(placeDocs: docs)
+                    self?.refresh()
+                }
+            },
+            onError: { [weak self] error in
+                self?.logger.warning("장소 구독 실패: \(String(describing: error), privacy: .public)")
+            })
+
         self.collector = collector
         self.coordinator = coordinator
+        self.placeWatcher = placeWatcher
 
         collector.requestAuthorization()
         collector.start()
         refresh()
+    }
+
+    /// 리스너를 떼는 길(Global Constraints — 새 Firestore 리스너에는 떼는 길이 있다).
+    func stop() {
+        placesListener?.remove()
+        placesListener = nil
     }
 
     /// '지금 올리기'. `TrackingCoordinator` 의 업로드 **판정을 건너뛰고** 직접 부른다 —
@@ -88,6 +143,7 @@ final class ChildSimModel {
         pointCount = coordinator.buffer.points.count
         mode = coordinator.mode
         lastUploadAt = coordinator.lastUploadAt
+        placeCount = placeWatcher?.places.count ?? 0
     }
 }
 
@@ -108,7 +164,7 @@ struct ChildSimView: View {
                 .font(.system(.title3, design: .monospaced))
                 .textSelection(.enabled)
             Text(verbatim: "가족 \(model.launch.familyId)")
-            Text(verbatim: "수집 모드 \(model.mode.rawValue) · 오늘 점 \(model.pointCount)개")
+            Text(verbatim: "수집 모드 \(model.mode.rawValue) · 오늘 점 \(model.pointCount)개 · 장소 \(model.placeCount)곳")
             Text(verbatim: model.lastUploadAt == 0
                  ? "아직 안 올렸다"
                  : "마지막 업로드 판정 시각 \(model.lastUploadAt)")
@@ -129,6 +185,7 @@ struct ChildSimView: View {
         }
         .padding()
         .task { await model.start() }
+        .onDisappear { model.stop() }
     }
 }
 #endif

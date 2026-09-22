@@ -3,8 +3,11 @@ import Foundation
 
 /// 장소(places/). 정본은 안드로이드 `core/PlaceRepository.kt` — `ScheduleRepository` 와 같은 모양이다.
 ///
-/// 보호자 화면만 구독한다. 자녀 폰은 한 번 읽기만 하는데(:14-27), 그 갈래는 이 앱(보호자 전용)에 없다.
-/// 쓰기는 보호자만 허용된다(firestore.rules:216-222).
+/// 보호자 화면과 **아이 폰**이 같은 `observePlaces` 를 쓴다. 아이 폰은 자기 uid 로 상시 구독한다
+/// (설계서 §7.3): `sync_rules` 명령을 못 받으므로 부모가 장소를 고친 것을 알 다른 길이 없고, 이게
+/// 없으면 **지운 장소의 알림이 영영 계속 울린다.** 1회 읽기용 함수를 따로 두지 않는 이유는 구독의
+/// 첫 스냅샷이 곧 그 1회 읽기라 두 벌이 되기 때문이다(설계서 §3.3). 읽기 비용은 장소가 바뀔 때만
+/// 든다(known-issues 12번 4항). 쓰기는 보호자만 허용된다(firestore.rules:216-222).
 enum PlaceRepository {
 
     private static var db: Firestore { Firestore.firestore() }

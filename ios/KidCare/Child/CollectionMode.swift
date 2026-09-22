@@ -43,10 +43,24 @@ enum CollectionMode: String, Equatable, CaseIterable {
     /// **정지에 거리 필터를 안 거는 근거**: 걸면 완전히 멈춘 폰이 콜백을 하나도 못 받아 하트비트
     /// (10분)가 굶고 상태 문서의 `at` 이 멈춘다 — 안드로이드가 정확히 같은 이유로 이동 확정일
     /// 때만 걸었다(`LocationCollector.kt:109-121`, `known-issues.md` 11번).
-    var settings: Settings {
+    /// 등록 장소 안/밖과 **무관한** 값. 간격은 어느 모드에서도 이 축에 안 묶여서, 간격만 필요한
+    /// 자리(`IntervalGate`)는 이것을 읽는다. 매니저에 실제로 거는 값은 아래 `settings(insideKnownPlace:)` 다.
+    var settings: Settings { settings(insideKnownPlace: false) }
+
+    /// 거리 필터 하나가 등록 장소 안/밖에 따라 갈린다(1단계 리뷰 M4).
+    ///
+    /// 안드로이드는 `activityMoving && !liveTracking && !insideKnownPlace && MOVING` 일 때만 3m 를
+    /// 건다(`LocationCollector.kt:109-112`). **주기(5초)는 등록 장소 안에서도 그대로 쓰지만 거리
+    /// 필터는 안 건다** — 집·학교 반경 안에서 이동이 확정된 동안 3m 미만 콜백까지 버리면 완전히
+    /// 멈춘 폰의 콜백이 굶어(`:117-119`) 하트비트와 상태 검사가 기회를 잃는다. 1단계는 이 항이
+    /// 빠진 채였고 `insideKnownPlace` 가 늘 false 라 드러나지 않았다 — 2단계가 `PlaceWatcher` 를
+    /// 이으면서 그날부터 갈리므로 여기서 채운다.
+    func settings(insideKnownPlace: Bool) -> Settings {
         switch self {
         case .moving:
-            return Settings(desiredAccuracy: kCLLocationAccuracyBest, distanceFilterMeters: 3, intervalMillis: 5_000)
+            return Settings(desiredAccuracy: kCLLocationAccuracyBest,
+                            distanceFilterMeters: insideKnownPlace ? nil : 3,
+                            intervalMillis: 5_000)
         case .fastProbe:
             return Settings(desiredAccuracy: kCLLocationAccuracyBest, distanceFilterMeters: nil, intervalMillis: 5_000)
         case .slowProbe:
@@ -96,10 +110,16 @@ enum CollectionMode: String, Equatable, CaseIterable {
 /// 시계를 밀면 간격이 실제보다 길어져 밀도가 안드로이드보다 성글어진다.
 struct IntervalGate {
     private var lastAcceptedAt: Int64?
+    private var bypassNext = false
 
     /// 시간이 거꾸로 온 점은 **통과시킨다.** 여기서 막으면 시계 역행 뒤의 모든 점이 영영 막히는데,
     /// 그 상황을 푸는 것은 `TrackingCoordinator` 의 시계 역행 감지다(`TrackingService.kt:552-568`).
     mutating func accept(at: Int64, interval: Int64) -> Bool {
+        if bypassNext {
+            bypassNext = false
+            lastAcceptedAt = at
+            return true
+        }
         guard let last = lastAcceptedAt else {
             lastAcceptedAt = at
             return true
@@ -109,5 +129,16 @@ struct IntervalGate {
         return true
     }
 
-    mutating func reset() { lastAcceptedAt = nil }
+    /// 다음 한 점만 간격을 안 본다(2단계 판정 기록 5).
+    ///
+    /// 지역 전환으로 OS 가 앱을 깨웠을 때 부탁하는 좌표 한 점을 위한 문이다. 이 게이트는
+    /// **아이폰에만 있는 장치**라(설계서 §5.1 — 안드로이드는 간격이 요청 매개변수다) 정지 60초
+    /// 게이트가 그 한 점을 삼키면 OS 가 깨워 준 사건이 통째로 사라진다. 안드로이드에 대응이 없어
+    /// 골든 대조 대상이 아니고 `CollectionModeTests` 가 고정한다.
+    mutating func bypassOnce() { bypassNext = true }
+
+    mutating func reset() {
+        lastAcceptedAt = nil
+        bypassNext = false
+    }
 }

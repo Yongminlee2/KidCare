@@ -737,10 +737,20 @@ struct PlaceDoc: Equatable {
     }
 }
 
+extension PlaceDoc {
+    /// `PlaceDoc`(Firestore 문서 표현) → `Place`(판정 모델). 정본 `core/PlaceRepository.kt:102-114`.
+    /// 변환을 여러 곳에 흩어 놓으면 한쪽만 고치고 잊는다 — `ScheduleDoc.asRule` 과 같은 자리·같은 이유다.
+    var asPlace: Place {
+        Place(id: id, name: name, lat: lat, lng: lng, radiusMeters: radiusMeters,
+              notifyEnter: notifyEnter, notifyExit: notifyExit)
+    }
+}
+
 /// families/{familyId}/events/{id} — 아이 폰이 만들고 보호자가 읽는다. 정본은 `Documents.kt:420-428`.
 ///
-/// `firestoreData` 가 없다. 보호자가 이 문서에 쓰는 것은 `read` 한 필드뿐이고(규칙 `hasOnly(['read'])`,
-/// firestore.rules:315-318), 그 계약은 `EventRepository.markRead` 안에 갇혀 있다(설계서 §5).
+/// 보호자는 `read` 한 필드만 쓴다(규칙 `hasOnly(['read'])`, firestore.rules:315-318) — 그 계약은
+/// `EventRepository.markRead` 안에 갇혀 있다(설계서 §5). **아이 폰만** 이 문서를 만들고(설계서 §1),
+/// 그때 싣는 본문이 아래 `firestoreData` 다.
 struct EventDoc: Equatable, Sendable {
     var id: String
     var type: String
@@ -771,6 +781,29 @@ struct EventDoc: Equatable, Sendable {
             detail: data["detail"] as? String ?? "",
             read: data["read"] as? Bool ?? false
         )
+    }
+}
+
+extension EventDoc {
+    /// 아이 폰이 사건 하나를 만들 때 싣는 본문. 정본 `core/EventRepository.kt:53-58`
+    /// (`ref.set(doc.copy(id = ""))` — @Exclude 가 없어 본문에 `"id": ""` 가 실린다).
+    ///
+    /// ## 규칙과의 계약 셋 (`firestore.rules:306-310`)
+    /// 하나라도 어기면 **쓰기가 조용히 거부되고 부모는 그 사건이 없었던 것으로 읽는다**(`:18-27`).
+    /// 1. `childUid` 는 반드시 지금 로그인한 uid — 부르는 쪽이 넣는다.
+    /// 2. `read` 는 반드시 false. **그래서 여기서는 `self.read` 를 아예 안 읽는다**(`:24`).
+    /// 3. `at` 은 **밀리초 정수**이고 서버 시각 기준 과거 7일 ~ 미래 1시간 안. `Timestamp` 로 쓰면 안 된다.
+    ///    (코틀린 주석 `:25`·`PlaceWatcher.kt:131` 은 아직 "24시간"이라고 적혀 있다 — 규칙이 맞다.)
+    var firestoreData: [String: Any] {
+        [
+            "id": "",
+            "type": type,
+            "at": at,
+            "childUid": childUid,
+            "placeName": placeName,
+            "detail": detail,
+            "read": false,
+        ]
     }
 }
 

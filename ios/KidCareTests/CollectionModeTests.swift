@@ -63,6 +63,21 @@ struct CollectionModeTests {
         #expect(CollectionMode.moving.settings.distanceFilterMeters == 3)
     }
 
+    @Test("등록 장소 안에서는 이동 확정이어도 3m 거리 필터를 안 건다(LocationCollector.kt:109-112, 1단계 리뷰 M4)")
+    func 등록장소_안에서는_거리필터_없음() {
+        #expect(CollectionMode.moving.settings(insideKnownPlace: true).distanceFilterMeters == nil,
+                "집·학교 안에서 3m 미만 콜백을 버리면 완전히 멈춘 폰의 하트비트가 굶는다")
+        #expect(CollectionMode.moving.settings(insideKnownPlace: false).distanceFilterMeters == 3)
+        // 주기는 이 축에 안 묶인다 — 안드로이드도 MOVING 이면 등록 장소 안에서도 5초다(`:63-70`).
+        #expect(CollectionMode.moving.settings(insideKnownPlace: true).intervalMillis == 5_000)
+        #expect(CollectionMode.moving.settings(insideKnownPlace: true).desiredAccuracy
+                == CollectionMode.moving.settings.desiredAccuracy)
+        // 나머지 넷은 원래 거리 필터가 없어 이 축과 무관하다.
+        for mode in [CollectionMode.fastProbe, .slowProbe, .knownPlace, .still] {
+            #expect(mode.settings(insideKnownPlace: true) == mode.settings, "\(mode)")
+        }
+    }
+
     // MARK: 분기 순서 — LocationCollector.kt:63-70
 
     @Test("등록 장소 분기는 이동 판정보다 **아래**다 — 위에 두면 집 반경 안의 놀이터 경로가 통째로 빈다")
@@ -136,6 +151,29 @@ struct CollectionModeTests {
         #expect(gate.accept(at: t0 + 1, interval: 60_000) == false)
         gate.reset()
         #expect(gate.accept(at: t0 + 1, interval: 60_000) == true)
+    }
+
+    @Test("지역 전환으로 부탁한 점은 간격을 **한 번만** 건너뛴다(2단계 판정 기록 5)")
+    func 게이트_한번_건너뛰기() {
+        var gate = IntervalGate()
+        _ = gate.accept(at: t0, interval: 60_000)
+        #expect(gate.accept(at: t0 + 1, interval: 60_000) == false)
+        gate.bypassOnce()
+        #expect(gate.accept(at: t0 + 2, interval: 60_000) == true,
+                "이 한 점을 삼키면 OS 가 깨워 준 지역 전환이 통째로 사라진다")
+        #expect(gate.accept(at: t0 + 3, interval: 60_000) == false, "문은 한 번만 열린다")
+        // 건너뛴 점이 기준이 된다 — 그래야 그 뒤 60초가 그 점부터 흐른다.
+        #expect(gate.accept(at: t0 + 60_002, interval: 60_000) == true)
+    }
+
+    @Test("reset 은 열어 둔 문도 닫는다 — 수집을 멈췄다 켰는데 옛 부탁이 남아 있으면 안 된다")
+    func 게이트_초기화가_문도_닫는다() {
+        var gate = IntervalGate()
+        _ = gate.accept(at: t0, interval: 60_000)
+        gate.bypassOnce()
+        gate.reset()
+        _ = gate.accept(at: t0 + 1, interval: 60_000)   // reset 뒤 첫 점(항상 통과)
+        #expect(gate.accept(at: t0 + 2, interval: 60_000) == false, "문이 남아 있으면 여기서 통과한다")
     }
 
     // MARK: CoreLocation → Fix (1단계 판정 기록 19)

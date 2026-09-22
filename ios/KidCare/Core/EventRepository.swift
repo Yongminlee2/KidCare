@@ -2,8 +2,10 @@ import FirebaseFirestore
 import Foundation
 import os
 
-/// events/ 의 보호자 쪽 절반 — 구독과 읽음 표시. 정본은 안드로이드 `core/EventRepository.kt`.
-/// 만드는 쪽(`add`)은 아이 폰 전용이라 옮기지 않는다(설계서 §1).
+/// events/ 는 방향이 반대인 컬렉션이다 — **아이 폰이 만들고 보호자가 읽는다.** 정본은 안드로이드
+/// `core/EventRepository.kt`. 만드는 쪽(`add`)은 아이 폰이, 읽는 쪽과 읽음 표시는 보호자가 쓴다.
+/// 한 파일에 둔 이유는 규칙 계약이 세 함수에 걸쳐 있기 때문이다(`:11-27`) — 흩어 놓으면 한쪽만
+/// 고치고 잊는다.
 enum EventRepository {
 
     /// 한 번에 들고 오는 최근 사건 수(`EventRepository.kt:45`). 목록 화면과 안드로이드 상시 수신 서비스가
@@ -45,6 +47,19 @@ enum EventRepository {
                 let docs = snapshot?.documents.map { EventDoc(id: $0.documentID, $0.data()) } ?? []
                 onChange(docs, snapshot?.metadata.isFromCache ?? true)
             }
+    }
+
+    /// 사건 하나를 남긴다. 만들어진 문서 ID 를 돌려준다. 정본 `:52-58`.
+    ///
+    /// **실패를 삼키지 않는다.** 부르는 쪽(`PlaceWatcher.onFix` → `TrackingCoordinator`)이 로그로
+    /// 남기고 다음 위치 점에서 다시 시도한다 — 이벤트 하나를 못 썼다고 위치 수집이 멈추면 안 된다
+    /// (`PlaceWatcher.kt:110-112`). 오프라인 재시도는 Firestore SDK 의 큐가 이미 한다(설계서 §6.5).
+    @discardableResult
+    static func add(familyId: String, doc: EventDoc) async throws -> String {
+        let ref = events(familyId).document()
+        // id 는 문서 ID 로만 쓴다(`:55`, PlaceRepository.savePlace 와 같은 규율).
+        try await ref.setData(doc.firestoreData)
+        return ref.documentID
     }
 
     /// 읽음 표시. **`read` 필드 하나만** 쓴다(:114-130). `readAt` 같은 것을 함께 적으면 쓰기가 통째로 거부되고
