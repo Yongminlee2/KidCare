@@ -1,9 +1,10 @@
 import FirebaseFirestore
 import Foundation
 
-/// 하루치 이동 기록(`children/{childUid}/trails/{dayKey}`)을 읽는다. 정본은 안드로이드
-/// `core/TrailRepository.kt`. **쓰기는 없다** — 보호자 앱은 이 문서들을 읽기만 한다
-/// (자녀 폰만 쓴다, `firestore.rules` 의 trails 규칙도 그 방향으로 막혀 있다).
+/// 하루치 이동 기록(`children/{childUid}/trails/{dayKey}`)을 읽고 쓴다. 정본은 안드로이드
+/// `core/TrailRepository.kt`. **방향이 역할마다 다르다** — 보호자 역할은 [fetch] 로 읽기만 하고,
+/// 쓰는 것은 아이 역할의 [save] 하나뿐이다(`firestore.rules:163-166` 의 trails 규칙이 그
+/// 방향을 강제한다).
 ///
 /// **구독(addSnapshotListener)을 두지 않는다.** 보호자가 화면을 열 때와 '지금 위치
 /// 확인'을 눌렀을 때만 [fetch] 로 한 번씩 읽는다 — 안드로이드 `TrailRepository`
@@ -40,6 +41,19 @@ enum TrailRepository {
         }
         guard let data = snapshot.data() else { return nil }
         return TrailDoc(data)
+    }
+
+    /// 그 날 문서를 통째로 덮어쓴다. **쓰기 한 번**이다. 정본은 `core/TrailRepository.kt:31`.
+    ///
+    /// **아이 역할일 때만 부른다.** 규칙이 `request.auth.uid == childUid` 로 막고 있어
+    /// (`firestore.rules:165`) 보호자 세션이 부르면 조용히 거부된다 — 그 거부를 테스트로 박아
+    /// 두었다(`ChildTrailWriteTests.보호자는_못_쓴다`).
+    ///
+    /// 재시도를 새로 만들지 않는다. Firestore SDK 의 오프라인 큐가 이미 한다
+    /// (`known-issues.md` 19번) — `setData` 는 로컬에 즉시 반영되고 연결이 돌아오면 저절로 나간다.
+    /// 하루 문서는 같은 문서를 덮어쓰므로 큐에 여러 번 쌓여도 마지막 것만 의미가 있다(설계서 §6.5).
+    static func save(familyId: String, childUid: String, doc: TrailDoc) async throws {
+        try await trailRef(familyId: familyId, childUid: childUid, dayKey: doc.dayKey).setData(doc.firestoreData)
     }
 }
 

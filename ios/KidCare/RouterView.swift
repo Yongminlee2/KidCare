@@ -45,6 +45,18 @@ struct RouterView: View {
     @State private var 빠진_결과: String?
 
     var body: some View {
+        #if DEBUG
+        // 아이 1단계 판정 기록 9·20. **`isRunningTests` 갈래보다 위다** — 사람이 일부러 준 인자가
+        // 테스트 분기보다 먼저 이긴다. 3단계가 `ChildRootView` 를 만들면 이 세 줄을 지운다.
+        // 출시 빌드에는 `#if DEBUG` 밖이라 존재 자체가 없다.
+        if let sim = ChildSimHarness.launch {
+            return AnyView(ChildSimView(launch: sim))
+        }
+        #endif
+        return AnyView(본_화면)
+    }
+
+    private var 본_화면: some View {
         Group {
             if isRunningTests {
                 Color.clear

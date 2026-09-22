@@ -180,6 +180,11 @@ struct ChildStatusDoc {
     /// 있어 옵셔널이다.
     var lastSeenServerAt: Timestamp?
 
+    /// 아이 폰이 아이폰인가. `"ios"` 면 아이폰, **빈 값이면 안드로이드로 본다**(설계서 §10.1).
+    /// 지금 서버에 있는 모든 아이 문서에 이 필드가 없고, 모르는 아이의 기능을 조용히 없애면 안 된다.
+    /// 읽는 쪽(보호자 화면 잠금)은 4단계다 — 1단계는 아이 폰이 [ChildStatusWrite] 로 **심기만** 한다.
+    var platform: String
+
     init?(_ data: [String: Any]) {
         guard let lat = double(data["lat"]), let lng = double(data["lng"]) else { return nil }
         self.lat = lat
@@ -194,12 +199,65 @@ struct ChildStatusDoc {
         wifiOn = data["wifiOn"] as? Bool
         lastSeenAt = millis(data["lastSeenAt"]) ?? 0
         lastSeenServerAt = data["lastSeenServerAt"] as? Timestamp
+        platform = data["platform"] as? String ?? ""
+    }
+}
+
+/// `children/{childUid}` 에 덮어쓸 값. 읽기용 [ChildStatusDoc] 과 따로 두는 이유는 두 모양이
+/// 실제로 다르기 때문이다 — `lastSeenServerAt` 은 읽을 때 `Timestamp` 지만 쓸 때는
+/// `FieldValue.serverTimestamp()` 고, `wifiOn` 은 아이폰이 아예 안 쓴다.
+/// 정본은 안드로이드 `child/StatusReporter.kt:33-68` 이 채우는 `ChildStatusDoc` 이다.
+struct ChildStatusWrite {
+    let fix: Fix
+    let battery: Int
+    let charging: Bool
+    let network: String
+    /// 아이 폰 자기 시계. 테스트가 고정할 수 있게 인자로 둔다(`StatusReporter.kt:60`).
+    let lastSeenAt: Int64
+
+    init(fix: Fix, battery: Int, charging: Bool, network: String,
+         lastSeenAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000)) {
+        self.fix = fix
+        self.battery = battery
+        self.charging = charging
+        self.network = network
+        self.lastSeenAt = lastSeenAt
+    }
+
+    var firestoreData: [String: Any] {
+        [
+            "lat": fix.lat,
+            "lng": fix.lng,
+            "accuracy": fix.accuracy,
+            "at": fix.at,
+            "battery": battery,
+            "charging": charging,
+            // **빈 값을 명시적으로 쓴다**(아이 1단계 판정 기록 10). 아이폰은 소리 모드를 읽을 API 가
+            // 없고, 필드를 빼면 코틀린·스위프트 양쪽의 기본값 "normal"(`Documents.kt:95`)이 살아나
+            // 부모 화면이 "벨소리"라고 거짓말한다. 빈 값이 "모른다"다 — `RingerMode.isKnown("")`
+            // 이 false 라 아이폰 보호자 화면은 그 줄을 접는다.
+            "ringerMode": "",
+            "dnd": "",
+            "network": network,
+            // `wifiOn` 은 **안 쓴다.** 아이폰은 와이파이 스위치를 못 읽고, false(꺼짐)와 없음(모름)은
+            // 다른 말이다(`Documents.kt:108-110`).
+            //
+            // 옛 필드는 그대로 계속 쓴다 — 아직 새 버전을 못 깐 보호자 폰이 있을 수 있고,
+            // 이 값이 없으면 그 화면은 "마지막 신호"를 아예 못 만든다(`StatusReporter.kt:58-60`).
+            "lastSeenAt": lastSeenAt,
+            // 서버가 자기 시각으로 채운다. 여기서 아이 폰 시계로 채우면 이 필드를 만든 이유가
+            // 사라진다(`StatusReporter.kt:61-65` 의 @ServerTimestamp 자리).
+            "lastSeenServerAt": FieldValue.serverTimestamp(),
+            // 설계서 §10.1. 규칙에 `hasOnly` 가 없어(`firestore.rules:145-148`) 새 필드가 이미 허용된다.
+            "platform": "ios",
+        ]
     }
 }
 
 /// children/{childUid}/trails/{dayKey} 의 원소. 정본은 안드로이드
-/// `core/model/Documents.kt:157-167` 의 `TrailPoint`. 이 구조체는 **읽기 전용이다**
-/// — 보호자 앱은 이 문서를 쓰지 않는다(자녀 폰만 쓴다, TrailRepository.swift 참고).
+/// `core/model/Documents.kt:157-167` 의 `TrailPoint`. **보호자 역할일 때는 읽기만 한다** —
+/// 쓰기는 아이 역할(`Child/TrailUploader`)만 하고, 규칙도 그 방향으로 막혀 있다
+/// (`firestore.rules:165`).
 ///
 /// `battery` 를 안 옮긴 것도 코틀린과 같은 이유다 — 읽는 곳이 없고, 배열 원소마다
 /// 필드 이름이 같이 저장되므로 안 쓰는 필드 하나가 하루 문서 크기를 그대로 키운다.
@@ -223,8 +281,27 @@ struct TrailPoint {
         at = millis(data["at"]) ?? 0
     }
 
+    /// 아이 폰이 [Fix] 하나를 하루 문서의 원소로 만든다. `TrailUploader.kt:144-147` 그대로다.
+    init(_ fix: Fix) {
+        lat = fix.lat
+        lng = fix.lng
+        accuracy = fix.accuracy
+        speed = fix.speed
+        at = fix.at
+    }
+
     /// `RoutePathRefiner.refine(points:)` 가 요구하는 값 모양으로 바꾼다.
     var asFix: Fix { Fix(lat: lat, lng: lng, accuracy: accuracy, at: at, speed: speed) }
+
+    /// 정본은 코틀린 `TrailPoint`(`Documents.kt:163-167`). **다섯 필드뿐이다** — `battery` 를 넣지
+    /// 않는다(배열 원소마다 필드 이름이 같이 저장돼 안 쓰는 필드 하나가 하루 문서 크기를 그대로 키운다).
+    ///
+    /// 안드로이드는 `Float` 를 넣으므로 서버에 `Double(Float(12.3))` 이 저장되고 아이폰은 `12.3` 이
+    /// 저장된다. 둘 다 Firestore 의 `double` 이고 보호자 코드는 `double(_:)` 하나로 읽는다 —
+    /// 마지막 비트 차이는 지도·타임라인 어디서도 안 보인다(아이 1단계 판정 기록 11).
+    var firestoreData: [String: Any] {
+        ["lat": lat, "lng": lng, "accuracy": accuracy, "speed": speed, "at": at]
+    }
 }
 
 /// 아이 폰이 마지막으로 신호를 남긴 시각. 정본은 안드로이드 `GuardianMainActivity.kt`
@@ -313,7 +390,8 @@ enum StatusCard {
 }
 
 /// 하루를 머무름·이동으로 요약한 한 토막. 정본은 안드로이드
-/// `core/model/Documents.kt:179-189` 의 `SegmentDoc`. 이 구조체도 읽기 전용이다.
+/// `core/model/Documents.kt:179-189` 의 `SegmentDoc`. 보호자 역할일 때는 읽기만 하고,
+/// 아이 역할(`Child/TrailUploader`)이 만들어 하루 문서 안에 넣는다.
 struct SegmentDoc {
     /// "STAY" | "MOVE". 코틀린 `SegmentType` 의 `name` 그대로다 — enum 으로
     /// 좁히지 않는 이유는 옛 문서에 다른 값이 있어도(예: 앞으로 새 타입이 추가돼도)
@@ -340,6 +418,36 @@ struct SegmentDoc {
         pointCount = Int(millis(data["pointCount"]) ?? 0)
         placeName = data["placeName"] as? String ?? ""
     }
+
+    init(type: String, startAt: Int64, endAt: Int64, lat: Double, lng: Double,
+         distanceMeters: Double, pointCount: Int, placeName: String) {
+        self.type = type
+        self.startAt = startAt
+        self.endAt = endAt
+        self.lat = lat
+        self.lng = lng
+        self.distanceMeters = distanceMeters
+        self.pointCount = pointCount
+        self.placeName = placeName
+    }
+
+    /// 필드는 **여덟이다.** `dayKey` 가 없는 것은 담고 있는 문서 ID 가 이미 말하기 때문이다
+    /// (`Documents.kt:171-178`).
+    ///
+    /// `nameLat`/`nameLng`(`Segment` 의 오차 가중 평균)는 **문서에 안 나간다** — 이름을 묻는 데만
+    /// 쓰는 값이고, 그 일(역지오코딩)은 아이 폰에서 끝난다(`TrailUploader.kt:176-178`).
+    var firestoreData: [String: Any] {
+        [
+            "type": type,
+            "startAt": startAt,
+            "endAt": endAt,
+            "lat": lat,
+            "lng": lng,
+            "distanceMeters": distanceMeters,
+            "pointCount": pointCount,
+            "placeName": placeName,
+        ]
+    }
 }
 
 /// children/{childUid}/trails/{dayKey} — 하루가 문서 하나다. 정본은 안드로이드
@@ -358,9 +466,26 @@ struct TrailDoc {
 
     init(_ data: [String: Any]) {
         dayKey = data["dayKey"] as? String ?? ""
-        points = (data["points"] as? [[String: Any]] ?? []).compactMap(TrailPoint.init)
-        segments = (data["segments"] as? [[String: Any]] ?? []).compactMap(SegmentDoc.init)
+        points = (data["points"] as? [[String: Any]] ?? []).compactMap { TrailPoint($0) }
+        segments = (data["segments"] as? [[String: Any]] ?? []).compactMap { SegmentDoc($0) }
         updatedAt = millis(data["updatedAt"]) ?? 0
+    }
+
+    init(dayKey: String, points: [TrailPoint], segments: [SegmentDoc], updatedAt: Int64) {
+        self.dayKey = dayKey
+        self.points = points
+        self.segments = segments
+        self.updatedAt = updatedAt
+    }
+
+    /// 필드는 **넷뿐이다**(`Documents.kt:148-155`). 하루가 문서 하나이고 쓰기도 한 번이다.
+    var firestoreData: [String: Any] {
+        [
+            "dayKey": dayKey,
+            "points": points.map(\.firestoreData),
+            "segments": segments.map(\.firestoreData),
+            "updatedAt": updatedAt,
+        ]
     }
 }
 
