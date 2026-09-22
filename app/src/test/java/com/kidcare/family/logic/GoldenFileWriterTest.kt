@@ -866,8 +866,15 @@ class GoldenFileWriterTest {
         "heartbeatMillis" to LocationFilter.HEARTBEAT_MILLIS,
     )
 
-    /** `Fix` 한 점을 골든 JSON 으로. `Float` 필드는 전부 `Double` 로 넓혀 적는다(설계서 §4.1). */
-    private fun fixJson(f: Fix?): Any? = f?.let {
+    /**
+     * `Fix` 한 점을 골든 JSON 으로. `Float` 필드는 전부 `Double` 로 넓혀 적는다(설계서 §4.1).
+     *
+     * 이름이 [fixJson] 이 아닌 이유: 그 이름으로 두면 위의 `fixJson(Fix)`(경로 다듬기용, 5개 필드)와
+     * **오버로드**가 되고, 인자가 non-null `Fix` 일 때 코틀린이 더 구체적인 옛 것을 골라
+     * `speedAccuracy` 가 조용히 빠진다 — 실제로 판정기 골든이 그렇게 만들어졌고 스위프트 대조가
+     * 잡아냈다. 이름을 갈라 그 갈래를 아예 없앤다.
+     */
+    private fun fullFixJson(f: Fix?): Any? = f?.let {
         linkedMapOf(
             "lat" to it.lat, "lng" to it.lng,
             "accuracy" to it.accuracy.toDouble(), "speed" to it.speed.toDouble(),
@@ -882,8 +889,8 @@ class GoldenFileWriterTest {
         fun add(name: String, previous: Fix?, candidate: Fix) {
             cases += linkedMapOf(
                 "name" to name,
-                "previous" to fixJson(previous),
-                "candidate" to fixJson(candidate),
+                "previous" to fullFixJson(previous),
+                "candidate" to fullFixJson(candidate),
                 "decision" to LocationFilter.decide(previous, candidate).name,
             )
         }
@@ -1024,7 +1031,7 @@ class GoldenFileWriterTest {
                 }
             }
             cases += linkedMapOf(
-                "name" to name, "previous" to fixJson(previous), "candidate" to fixJson(candidate),
+                "name" to name, "previous" to fullFixJson(previous), "candidate" to fullFixJson(candidate),
                 "reportedMoving" to moving,
                 "shouldRecord" to MovementTrailFilter.shouldRecord(previous, candidate, moving),
             )
@@ -1115,6 +1122,453 @@ class GoldenFileWriterTest {
         check(evidenceOf("fixed_threshold_49.0") == false && evidenceOf("fixed_threshold_51.0") == true) { "고정 50m 문턱이 안 갈린다" }
         check(evidenceOf("noise_threshold_80.0") == false && evidenceOf("noise_threshold_90.0") == true) { "잡음 비례 문턱이 안 갈린다" }
         check(evidenceOf("cand_accuracy_50.0") == true && evidenceOf("cand_accuracy_50.5") == false) { "정확도 상한이 안 갈린다" }
+        return cases
+    }
+
+    // ==================================================================
+    // 8. AdaptiveMovementDetector — 점 시퀀스를 통째로 먹이고 매 점의 상태를 기록한다
+    // ==================================================================
+
+    @Test
+    fun `골든 - AdaptiveMovementDetector`() {
+        val payload = linkedMapOf(
+            "constants" to linkedMapOf<String, Any?>(
+                "maxAccuracyMeters" to AdaptiveMovementDetector.MAX_ACCURACY_METERS.toDouble(),
+                "fastProbeMillis" to AdaptiveMovementDetector.FAST_PROBE_MILLIS,
+                "stopConfirmMillis" to AdaptiveMovementDetector.STOP_CONFIRM_MILLIS,
+                "minConfirmMillis" to AdaptiveMovementDetector.MIN_CONFIRM_MILLIS,
+                "minConfirmPoints" to AdaptiveMovementDetector.MIN_CONFIRM_POINTS,
+                "speedTrustMaxAccuracyMeters" to AdaptiveMovementDetector.SPEED_TRUST_MAX_ACCURACY_METERS.toDouble(),
+                "minConfidentSpeedMps" to AdaptiveMovementDetector.MIN_CONFIDENT_SPEED_MPS.toDouble(),
+                "minSpeedDisplacementMeters" to AdaptiveMovementDetector.MIN_SPEED_DISPLACEMENT_METERS,
+                "minNetDisplacementMeters" to AdaptiveMovementDetector.MIN_NET_DISPLACEMENT_METERS,
+                "slowProbeMinDisplacementMeters" to AdaptiveMovementDetector.SLOW_PROBE_MIN_DISPLACEMENT_METERS,
+                "stopRadiusMeters" to AdaptiveMovementDetector.STOP_RADIUS_METERS,
+                "noiseMultiplier" to AdaptiveMovementDetector.NOISE_MULTIPLIER,
+                "minProgressRatio" to AdaptiveMovementDetector.MIN_PROGRESS_RATIO,
+            ),
+            "cases" to generateAdaptiveMovement(),
+        )
+        writeGoldenIfPresent("adaptiveMovementDetector", toJson(payload))
+    }
+
+    /**
+     * `speed - speedAccuracy >= MIN_CONFIDENT_SPEED_MPS` 는 코틀린에서 Float 뺄셈이고 스위프트에서
+     * Double 뺄셈이다(판정 기록 3). 두 산술이 갈리는 입력은 골든에 싣지 않는다 — 실으면 두 언어가
+     * 같은 답을 낼 수 없는 케이스를 "회귀"라고 부르게 된다.
+     */
+    private fun checkSpeedEvidenceAgrees(name: String, f: Fix, threshold: Float) {
+        if (!f.speedAccuracy.isFinite()) return
+        val asFloat = (f.speed - f.speedAccuracy) >= threshold
+        val asDouble = (f.speed.toDouble() - f.speedAccuracy.toDouble()) >= threshold.toDouble()
+        check(asFloat == asDouble) {
+            "$name: 속도 근거가 Float($asFloat)와 Double($asDouble)에서 갈린다 — 두 언어가 같은 답을 못 낸다"
+        }
+    }
+
+    private fun generateAdaptiveMovement(): List<Map<String, Any?>> {
+        val cases = mutableListOf<Map<String, Any?>>()
+
+        /** 기준점에서 동쪽으로 [metersEast] 만큼, [seconds] 초의 점. */
+        fun mv(
+            seconds: Long,
+            metersEast: Double = 0.0,
+            accuracy: Float = 5f,
+            speed: Float = 0f,
+            speedAccuracy: Float = Float.POSITIVE_INFINITY,
+            lat: Double? = null,
+        ): Fix {
+            val (la, ln) = offsetLatLng(baseLat to baseLng, metersEast, 0.0)
+            return Fix(lat ?: la, ln, accuracy, seconds * 1_000L, speed, speedAccuracy)
+        }
+
+        /** 점 목록을 통째로 먹이고 **매 점마다** 상태와 승격 버퍼를 기록한다. */
+        fun addCase(name: String, resetFast: Boolean, points: List<Fix>) {
+            points.forEach { checkSpeedEvidenceAgrees(name, it, AdaptiveMovementDetector.MIN_CONFIDENT_SPEED_MPS) }
+            val detector = AdaptiveMovementDetector()
+            detector.reset(fast = resetFast)
+            val steps = points.map { p ->
+                val u = detector.onFix(p)
+                linkedMapOf<String, Any?>(
+                    "state" to u.state.name,
+                    "promotionBufferSize" to u.promotionBuffer.size,
+                    "promotionBufferAts" to u.promotionBuffer.map { it.at },
+                )
+            }
+            cases += linkedMapOf(
+                "name" to name,
+                "resetFast" to resetFast,
+                "points" to points.map { fullFixJson(it) },
+                "steps" to steps,
+            )
+        }
+
+        // 걷는 아이: 30초 동안 1.2m/s 직선. 이 판정기의 존재 이유다.
+        addCase("walking_1_2mps", true, (0L..30L step 5L).map { mv(it, it * 1.2, accuracy = 10f) })
+        // 제자리 흔들림(고정 시드): 오차 20m 안에서 무작위. 끝까지 MOVING 이 안 돼야 한다.
+        run {
+            val random = Random(20260922)
+            addCase(
+                "jitter_in_place",
+                true,
+                (0L..60L step 5L).map { mv(it, random.nextDouble(-6.0, 6.0), accuracy = 20f) },
+            )
+        }
+        // 확인 창(30초) 양옆 — 마지막 점을 29·30·31초에 둔다. 흔들림이라 확정은 안 되고,
+        // 30초가 지나야 SLOW_PROBE 로 내려간다.
+        listOf(29L, 30L, 31L).forEach { last ->
+            addCase("fast_probe_window_$last", true, listOf(mv(0), mv(10, 2.0), mv(20, -1.0), mv(last, 1.0)))
+        }
+        // 최소 표본(3점) 양옆: 두 점만으로는 아무리 멀어도 확정하지 않는다.
+        addCase("min_points_2", true, listOf(mv(0, 0.0, accuracy = 7f), mv(12, 40.0, accuracy = 7f)))
+        addCase("min_points_3", true, listOf(mv(0, 0.0, accuracy = 7f), mv(6, 20.0, accuracy = 7f), mv(12, 40.0, accuracy = 7f)))
+        // 최소 시간(10초) 양옆: 세 점이 9초·10초 안에 들어온 경우.
+        listOf(9L, 10L, 11L).forEach { span ->
+            addCase(
+                "min_confirm_millis_$span",
+                true,
+                listOf(mv(0, 0.0, accuracy = 7f), mv(span / 2, 20.0, accuracy = 7f), mv(span, 40.0, accuracy = 7f)),
+            )
+        }
+        // 진행률 0.6 양옆: 오차 7m 두 점의 문턱은 max(15, hypot(7,7)) = 15m. 중간 점을 15×0.55·
+        // 0.60·0.65 지점에 두고 마지막 점은 문턱을 넉넉히 넘긴다.
+        listOf(0.55, 0.60, 0.65).forEach { ratio ->
+            addCase(
+                "progress_ratio_$ratio",
+                true,
+                listOf(mv(0, 0.0, accuracy = 7f), mv(6, 15.0 * ratio, accuracy = 7f), mv(12, 40.0, accuracy = 7f)),
+            )
+        }
+        // 속도 근거 갈래: 정확도 15m 이하 + speedAccuracy 유한 → 최근 두 점만으로 확정한다.
+        addCase(
+            "speed_evidence_confident",
+            true,
+            (0L..10L step 5L).map { mv(it, it * 1.2, accuracy = 10f, speed = 1.2f, speedAccuracy = 0.2f) },
+        )
+        // 그 반대: 같은 속도인데 오차가 커서 속도를 못 믿는다.
+        addCase(
+            "speed_evidence_distrusted",
+            true,
+            (0L..10L step 5L).map { mv(it, it * 0.2, accuracy = 20f, speed = 1.2f, speedAccuracy = 0.2f) },
+        )
+        // 못 쓰는 점이 섞여 들어온다(오차 51m, 속도 60m/s, 위도 91, at 음수).
+        addCase("unusable_accuracy", true, listOf(mv(0), mv(5, 10.0, accuracy = 51f), mv(10, 20.0), mv(15, 30.0)))
+        addCase("unusable_speed", true, listOf(mv(0), mv(5, 10.0, speed = 60f), mv(10, 20.0), mv(15, 30.0)))
+        addCase("unusable_latitude", true, listOf(mv(0), mv(5, 10.0, lat = 91.0), mv(10, 20.0), mv(15, 30.0)))
+        addCase("unusable_negative_at", true, listOf(mv(0), Fix(baseLat, baseLng, 5f, -1_000L), mv(10, 20.0), mv(15, 30.0)))
+        // 오차가 계속 나쁘면 30초 뒤 FAST_PROBE 가 SLOW_PROBE 로 내려간다(onFix 의 !isUsable 갈래).
+        addCase("unusable_for_whole_window", true, (0L..35L step 5L).map { mv(it, it * 8.0, accuracy = 55f) })
+        // 시각이 뒤로 가거나 같은 점.
+        addCase("time_goes_back", true, listOf(mv(0), mv(10, 12.0), mv(5, 24.0), mv(20, 24.0)))
+        addCase("time_repeats", true, listOf(mv(0), mv(10, 12.0), mv(10, 24.0), mv(20, 24.0)))
+        // SLOW_PROBE 에서 hasMovementHint 로 FAST_PROBE 로 되올라가는 갈래.
+        addCase("slow_probe_hint", false, listOf(mv(0, 0.0, accuracy = 15f), mv(30, 36.0, accuracy = 15f)))
+        // 힌트가 부족해 SLOW_PROBE 에 머무는 갈래.
+        addCase("slow_probe_no_hint", false, listOf(mv(0, 0.0, accuracy = 15f), mv(30, 5.0, accuracy = 15f)))
+        // trimBefore 가 마지막 한 점은 남기는가 — 창(30초)보다 훨씬 긴 공백 뒤의 점 하나.
+        addCase("trim_keeps_last", true, listOf(mv(0), mv(5, 3.0), mv(600, 5.0), mv(605, 8.0), mv(610, 11.0)))
+        // 정지 확인(60초) 양옆. 승격은 **속도 근거 없이** 변위로만 시킨다 — 속도 근거로 올리면
+        // 그 점들이 looksStationary 에서 "보행 중"으로 계속 걸려 창이 60초여도 안 내려간다.
+        // 승격 마지막 점이 10초이므로 정지 확인 창은 55·60·65초 뒤(=65·70·75초)에서 갈린다.
+        listOf(55L, 60L, 65L).forEach { hold ->
+            val promote = listOf(mv(0, 0.0, accuracy = 7f), mv(5, 20.0, accuracy = 7f), mv(10, 40.0, accuracy = 7f))
+            val stay = (15L..(10L + hold) step 5L).map { mv(it, 40.0 + (it % 3), accuracy = 10f) }
+            addCase("stop_confirm_$hold", true, promote + stay)
+        }
+
+        // 자체 점검: 승격이 적어도 한 번은 일어나야 하고, 흔들림 시나리오는 한 번도 안 일어나야 한다.
+        fun statesOf(name: String): List<Any?> {
+            @Suppress("UNCHECKED_CAST")
+            val steps = cases.first { it["name"] == name }["steps"] as List<Map<String, Any?>>
+            return steps.map { it["state"] }
+        }
+        val promoted = cases.filter { c ->
+            @Suppress("UNCHECKED_CAST")
+            (c["steps"] as List<Map<String, Any?>>).any { it["state"] == "MOVING" }
+        }
+        check(promoted.isNotEmpty()) { "어떤 시나리오도 MOVING 에 도달하지 못했다 — 생성기가 이동을 못 만든다" }
+        check(promoted.size < cases.size) { "모든 시나리오가 MOVING 이다 — 흔들림 시나리오가 실제로 흔들리지 않는다" }
+        check(statesOf("walking_1_2mps").contains("MOVING")) { "걷는 아이가 이동으로 확정되지 않는다" }
+        check(!statesOf("jitter_in_place").contains("MOVING")) { "제자리 흔들림이 이동으로 승격됐다" }
+        check(statesOf("min_points_2").none { it == "MOVING" } && statesOf("min_points_3").contains("MOVING")) {
+            "최소 표본(3점) 경계가 안 갈린다"
+        }
+        check(statesOf("min_confirm_millis_9").none { it == "MOVING" } && statesOf("min_confirm_millis_10").contains("MOVING")) {
+            "최소 확인 시간(10초) 경계가 안 갈린다"
+        }
+        check(statesOf("progress_ratio_0.55").none { it == "MOVING" } && statesOf("progress_ratio_0.65").contains("MOVING")) {
+            "진행률 0.6 경계가 안 갈린다"
+        }
+        check(statesOf("stop_confirm_55").last() == "MOVING" && statesOf("stop_confirm_60").last() == "SLOW_PROBE") {
+            "정지 확인(60초) 경계가 안 갈린다: 55=${statesOf("stop_confirm_55").last()} 60=${statesOf("stop_confirm_60").last()}"
+        }
+        check(statesOf("slow_probe_hint").last() == "FAST_PROBE" && statesOf("slow_probe_no_hint").last() == "SLOW_PROBE") {
+            "SLOW_PROBE 복귀 갈래가 안 갈린다"
+        }
+        check(cases.size >= 15) { "판정기 케이스가 ${cases.size}개뿐이다 — 스윕이라 부르기에 모자란다" }
+        return cases
+    }
+
+    // ==================================================================
+    // 9. SegmentBuilder — 40m 반경, 5분, 연속 2점 이탈, 오차 가중 이름 좌표
+    // ==================================================================
+
+    @Test
+    fun `골든 - SegmentBuilder`() {
+        val payload = linkedMapOf(
+            "constants" to linkedMapOf<String, Any?>(
+                "stayRadiusMeters" to SegmentBuilder.STAY_RADIUS_METERS,
+                "minStayMillis" to SegmentBuilder.MIN_STAY_MILLIS,
+                "exitConfirmPoints" to SegmentBuilder.EXIT_CONFIRM_POINTS,
+                "minWeightAccuracyMeters" to SegmentBuilder.MIN_WEIGHT_ACCURACY_METERS,
+            ),
+            "cases" to generateSegmentBuilder(),
+        )
+        writeGoldenIfPresent("segmentBuilder", toJson(payload))
+    }
+
+    private fun generateSegmentBuilder(): List<Map<String, Any?>> {
+        val t0 = 1_700_000_000_000L
+        val cases = mutableListOf<Map<String, Any?>>()
+
+        /** 기준점에서 북쪽으로 [meters], [minutes] 분 뒤. */
+        fun sp(meters: Double, minutes: Long, accuracy: Float = 10f): Fix {
+            val (la, ln) = offsetLatLng(baseLat to baseLng, 0.0, meters)
+            return Fix(la, ln, accuracy, t0 + minutes * 60_000L)
+        }
+
+        fun segmentJson(s: Segment): Map<String, Any?> = linkedMapOf(
+            "type" to s.type.name,
+            "startAt" to s.startAt, "endAt" to s.endAt,
+            "lat" to s.lat, "lng" to s.lng,
+            "distanceMeters" to s.distanceMeters, "pointCount" to s.pointCount,
+            "nameLat" to s.nameLat, "nameLng" to s.nameLng,
+        )
+
+        fun add(name: String, points: List<Fix>) {
+            // 같은 at 이 둘 이상이면 코틀린 sortedBy(안정)와 스위프트 sorted(불안정)가 갈릴 수 있다.
+            // 생성기가 그런 입력을 아예 안 만든다(브리프 Step 5).
+            check(points.map { it.at }.toSet().size == points.size) {
+                "$name: 같은 at 을 가진 점이 있다 — 정렬 순서가 두 언어에서 갈릴 수 있는 입력이다"
+            }
+            cases += linkedMapOf(
+                "name" to name,
+                "points" to points.map { fullFixJson(it) },
+                "segments" to SegmentBuilder.build(points).map(::segmentJson),
+            )
+        }
+
+        add("empty", emptyList())
+        add("single_point", listOf(sp(0.0, 0)))
+        add("all_day_same_place", (0..20).map { sp(it * 2.0, it * 10L) })
+        // 40m 반경 양옆. 반경 밖 점을 **마지막**에 둔다 — 가운데 두면 EXIT_CONFIRM_POINTS(연속 2)
+        // 규칙이 한 점 이탈을 흡수해서 반경 자체가 판정을 안 가른다(그게 그 규칙의 존재 이유다).
+        // 마지막 점이면 lastInside 가 달라져 pointCount·endAt 이 갈린다.
+        listOf(39.0, 40.0, 41.0).forEach { radius ->
+            add("stay_radius_$radius", listOf(sp(0.0, 0), sp(5.0, 5), sp(radius, 10)))
+        }
+        // 5분 최소 양옆 — 4분·5분·6분 뒤에 떠난다.
+        listOf(4L, 5L, 6L).forEach { minutes ->
+            add("min_stay_$minutes", listOf(sp(0.0, 0), sp(5.0, minutes), sp(3000.0, 30), sp(6000.0, 40)))
+        }
+        // 이탈이 1점(튐)과 2점(진짜 이탈).
+        add("single_outlier", listOf(sp(0.0, 0), sp(10.0, 10), sp(500.0, 20), sp(15.0, 30), sp(20.0, 40)))
+        add("two_outliers", listOf(sp(0.0, 0), sp(10.0, 10), sp(20.0, 20), sp(3000.0, 30), sp(6000.0, 40), sp(9000.0, 50), sp(12000.0, 60)))
+        // 오차 가중 이름 좌표: 정확한 점들 + 나쁜 점 하나(반경 안).
+        add("weighted_name", listOf(sp(30.0, 0, accuracy = 90f), sp(0.0, 10), sp(0.0, 20), sp(0.0, 30)))
+        // 오차 0 인 옛 점(무한 가중치 방지 floor).
+        add("zero_accuracy", listOf(sp(30.0, 0, accuracy = 0f), sp(0.0, 10), sp(0.0, 20), sp(0.0, 30)))
+        // 오차가 모두 같으면 가중 평균 = 산술 평균.
+        add("uniform_accuracy", listOf(sp(0.0, 0), sp(30.0, 5), sp(3000.0, 30), sp(6000.0, 40)))
+        // 100m 초과 점 제외 / 완화 문턱(50~100m) 점 유지 — 이 두 개가 build 첫 필터의 경계다.
+        add("over_fallback_accuracy", listOf(sp(0.0, 0), sp(5.0, 10), sp(5000.0, 15, accuracy = 500f), sp(10.0, 20), sp(15.0, 30)))
+        listOf(99.5f, 100f, 100.5f).forEach { accuracy ->
+            add("fallback_accuracy_$accuracy", listOf(sp(0.0, 0), sp(5.0, 10, accuracy = accuracy), sp(10.0, 20), sp(15.0, 30)))
+        }
+        // 머무름 → 이동 → 머무름.
+        add(
+            "stay_move_stay",
+            (0..4).map { sp(it * 5.0, it * 10L) } +
+                listOf(sp(1500.0, 50), sp(3000.0, 60)) +
+                (0..5).map { sp(3000.0 + it * 5.0, 70 + it * 10L) },
+        )
+        // 처음부터 끝까지 이동만.
+        add("move_only", (0..6).map { sp(it * 500.0, it * 10L) })
+        // 뒤섞인 입력(정렬 확인). at 이 전부 다르다.
+        add("shuffled_input", listOf(sp(6.0, 30), sp(0.0, 0), sp(4.0, 20), sp(2.0, 10), sp(8.0, 40)))
+
+        fun typesOf(name: String): List<Any?> {
+            @Suppress("UNCHECKED_CAST")
+            val segments = cases.first { it["name"] == name }["segments"] as List<Map<String, Any?>>
+            return segments.map { it["type"] }
+        }
+        fun segmentsOf(name: String): List<Map<String, Any?>> {
+            @Suppress("UNCHECKED_CAST")
+            return cases.first { it["name"] == name }["segments"] as List<Map<String, Any?>>
+        }
+        check(
+            segmentsOf("stay_radius_39.0").first()["pointCount"] == 3 &&
+                segmentsOf("stay_radius_41.0").first()["pointCount"] == 2,
+        ) {
+            "40m 반경 경계가 안 갈린다: 39m=${segmentsOf("stay_radius_39.0")} 41m=${segmentsOf("stay_radius_41.0")}"
+        }
+        check(!typesOf("min_stay_4").contains("STAY") && typesOf("min_stay_5").contains("STAY")) {
+            "5분 최소 머무름 경계가 안 갈린다"
+        }
+        check(typesOf("single_outlier") == listOf("STAY")) { "한 점 튐이 머무름을 깼다" }
+        check(typesOf("two_outliers").contains("MOVE")) { "연속 2점 이탈이 머무름을 안 끝냈다" }
+        check(segmentsOf("over_fallback_accuracy").first()["pointCount"] == 4) { "100m 초과 점이 계산에 섞였다" }
+        check(segmentsOf("fallback_accuracy_100.0").first()["pointCount"] == 4) { "완화 문턱(100m) 점이 빠졌다" }
+        check(segmentsOf("fallback_accuracy_100.5").first()["pointCount"] == 3) { "완화 문턱 바로 위 점이 안 빠졌다" }
+        run {
+            val stay = segmentsOf("weighted_name").first { it["type"] == "STAY" }
+            check(stay["nameLat"] != stay["lat"]) { "가중 평균이 단순 평균과 같다 — 가중치가 안 걸렸다" }
+            val good = baseLat
+            val nameOffset = kotlin.math.abs(stay["nameLat"] as Double - good)
+            val meanOffset = kotlin.math.abs(stay["lat"] as Double - good)
+            check(nameOffset < meanOffset) { "이름 좌표가 단순 평균보다 좋은 점에 가깝지 않다" }
+        }
+        check(typesOf("move_only").all { it == "MOVE" } && typesOf("move_only").isNotEmpty()) { "이동만 있는 하루가 MOVE 를 안 낸다" }
+        check(cases.size >= 15) { "구간 케이스가 ${cases.size}개뿐이다" }
+        return cases
+    }
+
+    // ==================================================================
+    // 10. TrailCodec — 2000점 LTTB 솎기, 깨진 줄 복구
+    // ==================================================================
+
+    @Test
+    fun `골든 - TrailCodec`() {
+        val payload = linkedMapOf(
+            "constants" to linkedMapOf<String, Any?>("maxPoints" to TrailCodec.MAX_POINTS),
+            "capped" to generateCapped(),
+            "decode" to generateDecode(),
+        )
+        writeGoldenIfPresent("trailCodec", toJson(payload))
+    }
+
+    /**
+     * `capped` 케이스의 점을 만드는 **결정적 레시피**. 스위프트 테스트가 같은 식으로 같은 점을 다시
+     * 만든다 — 점 11,000개를 JSON 에 적으면 파일이 수백 KB 가 되기 때문이다(브리프 Step 6).
+     *
+     * 32비트 LCG 정수 연산과 1e7 나눗셈만 쓴다. 두 언어의 32비트 곱셈은 같은 자리에서 넘치고
+     * Double 나눗셈은 IEEE-754 라 결과가 비트까지 같다. **삼각함수를 안 쓰는 것이 중요하다** —
+     * sin/cos 의 1 ULP 차이가 LTTB 의 면적 비교를 뒤집어 다른 인덱스를 고르게 할 수 있다.
+     *
+     * 같은 이유로 **첫 점의 위도를 정확히 0.0** 으로 둔다. `capped` 의 longitudeScale 은
+     * `cos(첫 점 위도 × PI/180)` 인데, 0 이면 `cos(0.0) = 1.0` 이라 어떤 libm 에서도 같다.
+     *
+     * `at` 은 인덱스 그대로다 — 그래서 골든에 적는 출력 `at` 목록이 곧 **출력 인덱스 목록**이다.
+     */
+    private fun cappedPoints(count: Int): List<Fix> {
+        var state = 20260922
+        fun next(): Int {
+            state = (state * 1103515245 + 12345) and 0x7FFFFFFF
+            return state
+        }
+        var latMicro = 0L
+        var lngMicro = 0L
+        val points = ArrayList<Fix>(count)
+        for (i in 0 until count) {
+            points += Fix(latMicro / 1e7, lngMicro / 1e7, 10f, i.toLong(), 0f)
+            latMicro += (next() % 2001 - 1000).toLong()
+            lngMicro += (next() % 2001 - 1000).toLong()
+        }
+        check(points.first().lat == 0.0) { "첫 점의 위도가 정확히 0.0 이 아니다 — longitudeScale 이 결정적이지 않다" }
+        return points
+    }
+
+    private fun generateCapped(): List<Map<String, Any?>> {
+        val cases = mutableListOf<Map<String, Any?>>()
+        for (count in listOf(1_999, 2_000, 2_001, 5_000)) {
+            val points = cappedPoints(count)
+            cases += linkedMapOf(
+                "name" to "count_$count",
+                "count" to count,
+                "outputAts" to TrailCodec.capped(points).map { it.at },
+            )
+        }
+        fun outputOf(name: String): List<*> = cases.first { it["name"] == name }["outputAts"] as List<*>
+        check(outputOf("count_1999").size == 1_999 && outputOf("count_2000").size == 2_000) {
+            "상한 이하인데 개수가 바뀌었다"
+        }
+        check(outputOf("count_2001").size == TrailCodec.MAX_POINTS && outputOf("count_5000").size == TrailCodec.MAX_POINTS) {
+            "상한을 넘겼는데 정확히 ${TrailCodec.MAX_POINTS}개가 아니다"
+        }
+        check(outputOf("count_5000").first() == 0L && outputOf("count_5000").last() == 4_999L) {
+            "출발점·도착점이 안 남았다"
+        }
+        check(outputOf("count_5000").distinct().size == TrailCodec.MAX_POINTS) { "같은 점이 두 번 뽑혔다" }
+        return cases
+    }
+
+    /** 십진 정수·소수·지수만 허용한다. 자바 전용 표기(`1d`·`1f`·`0x1p3`·`Infinity`)를 걸러내려는 것이다. */
+    private val decimalNumber = Regex("^[+-]?\\d+(\\.\\d+)?([eE][+-]?\\d+)?$")
+    private val decimalInteger = Regex("^[+-]?\\d+$")
+
+    private fun generateDecode(): List<Map<String, Any?>> {
+        val cases = mutableListOf<Map<String, Any?>>()
+
+        fun add(name: String, text: String) {
+            // 코틀린과 스위프트의 숫자 파싱이 갈리는 글자를 골든에 싣지 않는다(판정 기록 3 의 사촌).
+            //  - `"1d".toDoubleOrNull()` 은 코틀린에서 1.0 이지만 Swift `Double("1d")` 는 nil 이다.
+            //  - 코틀린은 앞뒤 공백·`Infinity`·16진 부동소수도 받는다. Swift 는 아니다.
+            //  - accuracy/speed 는 코틀린이 Float 로 읽으므로, Float 로 반올림되면서 값이 달라지는
+            //    글자(예: "12.345")도 실으면 안 된다.
+            check(!text.contains('\r')) { "$name: 말뭉치에 \\r 이 있다 — 코틀린 lineSequence 만 줄로 취급한다" }
+            for (line in text.split("\n")) {
+                val parts = line.split(',')
+                if (parts.size != 5) continue
+                for (i in 0..3) {
+                    check((parts[i].toDoubleOrNull() != null) == decimalNumber.matches(parts[i])) {
+                        "$name: 칸 $i 의 '${parts[i]}' 는 두 언어의 숫자 파싱이 갈릴 수 있는 글자다"
+                    }
+                }
+                check((parts[4].toLongOrNull() != null) == decimalInteger.matches(parts[4])) {
+                    "$name: 시각 칸의 '${parts[4]}' 는 두 언어의 정수 파싱이 갈릴 수 있는 글자다"
+                }
+                for (i in 2..3) {
+                    val asFloat = parts[i].toFloatOrNull()?.toDouble()
+                    check(asFloat == parts[i].toDoubleOrNull()) {
+                        "$name: 칸 $i 의 '${parts[i]}' 는 Float($asFloat)와 Double(${parts[i].toDoubleOrNull()})이 갈린다"
+                    }
+                }
+            }
+            cases += linkedMapOf(
+                "name" to name,
+                "text" to text,
+                "points" to TrailCodec.decode(text).map { fullFixJson(it) },
+            )
+        }
+
+        val good = listOf(
+            Fix(37.5665, 126.9780, 12.5f, 1_754_500_000_000L, 1.25f),
+            Fix(0.0, 0.0, 5.0f, 1L, 0.0f),
+            Fix(-33.86, 151.21, 25.0f, 1_700_000_000_123L, 3.5f),
+        )
+        val encoded = good.map { TrailCodec.encodeLine(it) }
+
+        add("empty", "")
+        add("single", encoded[0])
+        add("three_lines", encoded.joinToString("\n"))
+        add("trailing_newline", encoded.joinToString("\n") + "\n")
+        add("leading_blank_line", "\n" + encoded.joinToString("\n"))
+        add("blank_line_between", encoded[0] + "\n\n" + encoded[1])
+        add("truncated_last_line", encoded[0] + "\n37.5,126.9,10.0")
+        add("too_many_fields", encoded[0] + "\n37.5,126.9,10.0,0.0,100,200\n" + encoded[1])
+        add("non_numeric", "abc,def,ghi,jkl,mno\n" + encoded[0])
+        add("empty_fields", ",,,,\n" + encoded[0])
+        add("partially_empty_field", "37.5,,10.0,0.0,100\n" + encoded[0])
+        add("fractional_time", "37.5,126.9,10.0,0.0,1.5\n" + encoded[0])
+        add("all_broken", "one\ntwo,three\nfour,five,six,seven")
+        add("negative_and_exponent", "-33.86,151.21,5.0,0.0,-100\n1.5e2,-1.25e1,10.0,0.5,200")
+
+        fun pointsOf(name: String): List<*> = cases.first { it["name"] == name }["points"] as List<*>
+        check(pointsOf("empty").isEmpty() && pointsOf("all_broken").isEmpty()) { "빈 입력·전부 깨진 입력이 점을 냈다" }
+        check(pointsOf("three_lines").size == 3) { "정상 세 줄이 세 점으로 안 돌아왔다" }
+        check(pointsOf("trailing_newline").size == 3) { "끝 줄바꿈이 점을 하나 더 만들었다" }
+        check(pointsOf("truncated_last_line").size == 1) { "잘린 줄이 안 버려졌거나 멀쩡한 줄까지 버렸다" }
+        check(cases.size >= 8) { "decode 케이스가 ${cases.size}개뿐이다" }
         return cases
     }
 }

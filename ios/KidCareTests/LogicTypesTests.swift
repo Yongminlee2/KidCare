@@ -36,15 +36,26 @@ struct LogicTypesTests {
         #expect(s.distanceMeters == 0)
     }
 
-    @Test("Segment 의 필드 집합은 nameLat/nameLng 없이 고정된다")
+    @Test("Segment 의 필드 집합이 고정된다 — 이제 nameLat/nameLng 를 포함한다")
     func segment_필드집합() {
         // DocumentsTests 가 firestoreData.keys 로 내보내는 필드를 못박듯, 여기서는
-        // Segment 가 값 타입 자체에 어떤 필드를 갖는지 못박는다. nameLat/nameLng 를
-        // 도로 넣는 것은(코드 리뷰가 지적했듯 SegmentDoc 에 없는 값을 지어내게 되므로)
-        // 실수로 일어나면 안 되고, 넣는다면 이 테스트를 고치는 의식적인 행위여야 한다.
+        // Segment 가 값 타입 자체에 어떤 필드를 갖는지 못박는다.
+        //
+        // 예전에는 이 목록에 nameLat/nameLng 가 **없었다** — 보호자 앱만 있던 시절에는
+        // 서버 문서 SegmentDoc 에 그 필드가 없고 원본 점도 없어 채울 방법이 없었기 때문이다.
+        // 아이 역할 1단계가 SegmentBuilder 를 옮겨 오면서 그 둘을 계산하는 쪽이 생겼으므로
+        // 목록을 늘린다(계획서가 예고한 "의식적인 행위"가 이것이다). 더 늘어나는 것은
+        // 여전히 실수로 일어나면 안 된다.
         let s = Segment(type: .move, startAt: 1, endAt: 2, lat: 37.5, lng: 127.0,
                         distanceMeters: 10, pointCount: 2)
         let fields = Set(Mirror(reflecting: s).children.compactMap(\.label))
-        #expect(fields == ["type", "startAt", "endAt", "lat", "lng", "distanceMeters", "pointCount"])
+        #expect(fields == ["type", "startAt", "endAt", "lat", "lng", "distanceMeters", "pointCount",
+                           "nameLat", "nameLng"])
+    }
+
+    @Test("Segment 의 이름 좌표는 안 넘기면 lat/lng 다 — 보호자 쪽 기존 호출부가 안 깨지는 근거")
+    func segment_이름좌표_기본값() {
+        let s = Segment(type: .move, startAt: 0, endAt: 1, lat: 37.5, lng: 127.0, distanceMeters: 10, pointCount: 2)
+        #expect(s.nameLat == 37.5 && s.nameLng == 127.0)
     }
 }

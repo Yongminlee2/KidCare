@@ -6,7 +6,9 @@ import Foundation
 /// `speedAccuracy` 는 코틀린의 `Float` 대신 스위프트 쪽 표준인 `Double` 로 넓힌다 —
 /// 설계서 §4.1 이 "넓히는 것이 두 언어의 유일한 차이"라고 못박았고, `Float` 상수가
 /// 실제로 담고 있는 값과 어긋나지 않는지는 골든 파일의 `constants` 가 기계로 지킨다.
-struct Fix {
+/// `Equatable` 인 이유는 코틀린 `Fix` 가 `data class` 라서다 — `TrailCodec` 의 왕복 테스트와
+/// 골든 대조가 점 목록을 통째로 비교한다.
+struct Fix: Equatable {
     let lat: Double
     let lng: Double
     let accuracy: Double

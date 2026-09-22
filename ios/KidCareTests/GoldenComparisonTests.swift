@@ -66,6 +66,16 @@ struct GoldenComparisonTests {
         let movementTrailFilter = try readObject("movementTrailFilter")
         #expect((movementTrailFilter["shouldRecord"] as? [[String: Any]])?.count ?? 0 >= 20, "movementTrailFilter.shouldRecord 케이스가 너무 적다")
         #expect((movementTrailFilter["displacementEvidence"] as? [[String: Any]])?.count ?? 0 >= 12, "movementTrailFilter.displacementEvidence 케이스가 너무 적다")
+
+        let detector = try readObject("adaptiveMovementDetector")
+        #expect((detector["cases"] as? [[String: Any]])?.count ?? 0 >= 15, "adaptiveMovementDetector.cases 가 너무 적다")
+
+        let segmentBuilder = try readObject("segmentBuilder")
+        #expect((segmentBuilder["cases"] as? [[String: Any]])?.count ?? 0 >= 15, "segmentBuilder.cases 가 너무 적다")
+
+        let trailCodec = try readObject("trailCodec")
+        #expect((trailCodec["capped"] as? [[String: Any]])?.count ?? 0 >= 4, "trailCodec.capped 가 너무 적다")
+        #expect((trailCodec["decode"] as? [[String: Any]])?.count ?? 0 >= 8, "trailCodec.decode 가 너무 적다")
     }
 
     // MARK: - 공통 파싱
@@ -421,6 +431,153 @@ struct GoldenComparisonTests {
                 candidate: try #require(fix(사례["candidate"]))
             )
             #expect(actual == bool(사례["isEvidence"]), "\(string(사례["name"]))")
+        }
+    }
+
+    // ==================================================================
+    // 8. AdaptiveMovementDetector — 매 점마다 상태를 본다
+    // ==================================================================
+
+    @Test("AdaptiveMovementDetector 상수가 코틀린과 비트까지 같다")
+    func 판정기_상수가_같다() throws {
+        let c = try #require(try readObject("adaptiveMovementDetector")["constants"] as? [String: Any])
+        #expect(AdaptiveMovementDetector.maxAccuracyMeters == double(c["maxAccuracyMeters"]))
+        #expect(AdaptiveMovementDetector.fastProbeMillis == int64(c["fastProbeMillis"]))
+        #expect(AdaptiveMovementDetector.stopConfirmMillis == int64(c["stopConfirmMillis"]))
+        #expect(AdaptiveMovementDetector.minConfirmMillis == int64(c["minConfirmMillis"]))
+        #expect(AdaptiveMovementDetector.minConfirmPoints == int(c["minConfirmPoints"]))
+        #expect(AdaptiveMovementDetector.speedTrustMaxAccuracyMeters == double(c["speedTrustMaxAccuracyMeters"]))
+        #expect(AdaptiveMovementDetector.minConfidentSpeedMps == double(c["minConfidentSpeedMps"]))
+        #expect(AdaptiveMovementDetector.minSpeedDisplacementMeters == double(c["minSpeedDisplacementMeters"]))
+        #expect(AdaptiveMovementDetector.minNetDisplacementMeters == double(c["minNetDisplacementMeters"]))
+        #expect(AdaptiveMovementDetector.slowProbeMinDisplacementMeters == double(c["slowProbeMinDisplacementMeters"]))
+        #expect(AdaptiveMovementDetector.stopRadiusMeters == double(c["stopRadiusMeters"]))
+        #expect(AdaptiveMovementDetector.noiseMultiplier == double(c["noiseMultiplier"]))
+        #expect(AdaptiveMovementDetector.minProgressRatio == double(c["minProgressRatio"]))
+    }
+
+    /// **매 점마다** 본다 — 마지막 상태만 보면 중간에 한 번 잘못 승격했다가 돌아온 구현이 통과한다.
+    @Test("AdaptiveMovementDetector 가 매 점마다 안드로이드와 같은 상태를 낸다")
+    func 판정기_대조() throws {
+        for 사례 in try #require(try readObject("adaptiveMovementDetector")["cases"] as? [[String: Any]]) {
+            let name = string(사례["name"])
+            let detector = AdaptiveMovementDetector()
+            detector.reset(fast: bool(사례["resetFast"]))
+            let points = try #require(사례["points"] as? [[String: Any]]).compactMap { fix($0) }
+            let steps = try #require(사례["steps"] as? [[String: Any]])
+            #expect(points.count == steps.count, "\(name): 점 수와 단계 수가 다르다")
+            for (i, point) in points.enumerated() {
+                let update = detector.onFix(point)
+                #expect(update.state.rawValue == string(steps[i]["state"]), "\(name) 점 \(i)")
+                #expect(update.promotionBuffer.count == int(steps[i]["promotionBufferSize"]), "\(name) 점 \(i) 승격 버퍼 크기")
+                #expect(update.promotionBuffer.map(\.at) == (steps[i]["promotionBufferAts"] as? [Any] ?? []).map(int64), "\(name) 점 \(i) 승격 버퍼 내용")
+            }
+        }
+    }
+
+    // ==================================================================
+    // 9. SegmentBuilder — nameLat/nameLng 를 **반드시** 포함해 본다
+    // ==================================================================
+
+    @Test("SegmentBuilder 상수가 코틀린과 비트까지 같다")
+    func 구간_상수가_같다() throws {
+        let c = try #require(try readObject("segmentBuilder")["constants"] as? [String: Any])
+        #expect(SegmentBuilder.stayRadiusMeters == double(c["stayRadiusMeters"]))
+        #expect(SegmentBuilder.minStayMillis == int64(c["minStayMillis"]))
+        #expect(SegmentBuilder.exitConfirmPoints == int(c["exitConfirmPoints"]))
+        #expect(SegmentBuilder.minWeightAccuracyMeters == double(c["minWeightAccuracyMeters"]))
+    }
+
+    @Test("SegmentBuilder.build 가 안드로이드와 같은 구간을 낸다 (nameLat/nameLng 포함)")
+    func 구간_대조() throws {
+        // 좌표·거리는 하버사인 합이라 마지막 비트가 갈릴 수 있다(판정 기록 5). 거리는 구간 전체
+        // 합이라 절대 허용치 하나로는 부족해 상대분을 함께 쓴다.
+        for 사례 in try #require(try readObject("segmentBuilder")["cases"] as? [[String: Any]]) {
+            let name = string(사례["name"])
+            let points = try #require(사례["points"] as? [[String: Any]]).compactMap { fix($0) }
+            let expected = try #require(사례["segments"] as? [[String: Any]])
+            let actual = SegmentBuilder.build(points: points)
+
+            #expect(actual.count == expected.count, "\(name): 구간 개수가 다르다")
+            guard actual.count == expected.count else { continue }
+            for (i, segment) in actual.enumerated() {
+                let e = expected[i]
+                let context = "\(name) 구간 \(i)"
+                #expect(segment.type == (string(e["type"]) == "STAY" ? .stay : .move), "\(context) type")
+                #expect(segment.startAt == int64(e["startAt"]), "\(context) startAt")
+                #expect(segment.endAt == int64(e["endAt"]), "\(context) endAt")
+                #expect(segment.pointCount == int(e["pointCount"]), "\(context) pointCount")
+                #expect(abs(segment.lat - double(e["lat"])) < 1e-9, "\(context) lat")
+                #expect(abs(segment.lng - double(e["lng"])) < 1e-9, "\(context) lng")
+                // **이 두 줄이 이 Task 가 Segment 를 고친 이유다.**
+                #expect(abs(segment.nameLat - double(e["nameLat"])) < 1e-9, "\(context) nameLat")
+                #expect(abs(segment.nameLng - double(e["nameLng"])) < 1e-9, "\(context) nameLng")
+                let expectedDistance = double(e["distanceMeters"])
+                #expect(abs(segment.distanceMeters - expectedDistance) <= max(1e-9, abs(expectedDistance) * 1e-12), "\(context) distanceMeters")
+            }
+        }
+    }
+
+    // ==================================================================
+    // 10. TrailCodec — 2000점 솎기와 깨진 줄 복구
+    // ==================================================================
+
+    /// 코틀린 `GoldenFileWriterTest.cappedPoints` 와 **글자 그대로 같은 레시피**다. 점 11,000개를
+    /// 골든에 적으면 파일이 수백 KB 가 되므로 양쪽이 같은 식으로 다시 만든다. 32비트 LCG 정수
+    /// 연산과 1e7 나눗셈만 쓰고 삼각함수를 안 쓰는 이유, 첫 점의 위도를 정확히 0.0 으로 두는
+    /// 이유는 그쪽 주석에 적혀 있다(`cos(0.0) = 1.0` 은 어떤 libm 에서도 같다).
+    private func cappedPoints(_ count: Int) -> [Fix] {
+        var state: Int32 = 20_260_922
+        func next() -> Int32 {
+            state = (state &* 1_103_515_245 &+ 12_345) & 0x7FFF_FFFF
+            return state
+        }
+        var latMicro: Int64 = 0
+        var lngMicro: Int64 = 0
+        var points: [Fix] = []
+        points.reserveCapacity(count)
+        for i in 0..<count {
+            points.append(Fix(lat: Double(latMicro) / 1e7, lng: Double(lngMicro) / 1e7,
+                              accuracy: 10, at: Int64(i), speed: 0))
+            latMicro += Int64(next() % 2001 - 1000)
+            lngMicro += Int64(next() % 2001 - 1000)
+        }
+        return points
+    }
+
+    @Test("TrailCodec 상수가 코틀린과 같다")
+    func 코덱_상수가_같다() throws {
+        let c = try #require(try readObject("trailCodec")["constants"] as? [String: Any])
+        #expect(TrailCodec.maxPoints == int(c["maxPoints"]))
+    }
+
+    @Test("TrailCodec.capped 의 LTTB 솎기가 안드로이드와 같은 점을 고른다")
+    func 솎기_대조() throws {
+        for 사례 in try #require(try readObject("trailCodec")["capped"] as? [[String: Any]]) {
+            let name = string(사례["name"])
+            let points = cappedPoints(int(사례["count"]))
+            let expected = try #require(사례["outputAts"] as? [Any]).map(int64)
+            // 레시피가 양쪽에서 같은 점을 만드는지 먼저 본다 — 여기서 갈리면 capped 가 아니라
+            // 레시피 문제이고, 그걸 구분 못 하면 원인을 엉뚱한 데서 찾게 된다.
+            #expect(points.count == int(사례["count"]), "\(name): 레시피가 다른 개수를 만들었다")
+            #expect(points.first?.lat == 0.0, "\(name): 첫 점의 위도가 0.0 이 아니다")
+            #expect(TrailCodec.capped(points).map(\.at) == expected, "\(name)")
+        }
+    }
+
+    @Test("TrailCodec.decode 가 깨진 줄을 안드로이드와 똑같이 버린다")
+    func 복호_대조() throws {
+        for 사례 in try #require(try readObject("trailCodec")["decode"] as? [[String: Any]]) {
+            let name = string(사례["name"])
+            let expected = try #require(사례["points"] as? [[String: Any]]).compactMap { fix($0) }
+            let actual = TrailCodec.decode(string(사례["text"]))
+            #expect(actual.count == expected.count, "\(name): 살아남은 점 수가 다르다")
+            guard actual.count == expected.count else { continue }
+            for (i, point) in actual.enumerated() {
+                // 생성기가 Float/Double 파싱이 갈리는 글자를 안 싣는다(그쪽 check) — 그러니
+                // 여기서는 허용치를 두지 않는다. 허용치를 두면 그 규율이 조용히 풀린다.
+                #expect(point == expected[i], "\(name) 점 \(i): 실제=\(point) 기대=\(expected[i])")
+            }
         }
     }
 }
