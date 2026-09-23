@@ -505,6 +505,19 @@ final class ScheduleViewModel {
 
     // MARK: - 아이 폰에 알리기 (:894-969)
 
+    /// 예약 탭은 아이 상태 문서를 안 읽는 **유일한 탭**이다. 그래서 여기만 기억에 기댄다
+    /// (판정 기록 3). 기억이 없으면 `.unknown` 이고 `.unknown` 은 아무것도 안 잠근다 —
+    /// 못 맞혔을 때의 대가가 "지금 동작 그대로"라서 되는 설계다.
+    var 플랫폼: ChildPlatform {
+        guard let childUid else { return .unknown }
+        return platforms.platform(childUid: childUid)
+    }
+
+    /// 탭 맨 위의 한 줄을 띄울까. **규칙 저장·수정·삭제·기본 모드·공휴일은 하나도 안 막는다**
+    /// (설계서 §10.2) — 그 아이가 나중에 안드로이드 폰으로 바뀌면 그대로 동작해야 한다.
+    /// 막는 것은 `sync_rules` 명령 하나다.
+    var 아이폰이라_규칙이_안_걸린다: Bool { 플랫폼.못_한다고_말할까 }
+
     /// 세대는 **글자를 쓸지만** 가른다. 명령은 늘 보낸다(:894-901).
     ///
     /// 닫힘 확인은 겹쳐 둔다(5단계 통합 검토 M1):
@@ -519,6 +532,21 @@ final class ScheduleViewModel {
             // 보낼 곳이 없다. 아이 폰이 연결되면 저절로 규칙을 읽으므로 깃발을 내린다(:905-912).
             깃발을_바꾼다(false)
             if 글자를_쓸_수_있나(generation) { 상태_줄 = String(localized: "schedule_sync_no_child") }
+            return
+        }
+        // 아이폰 아이는 `commands/` 를 구독하지 않는다(설계서 §1). 여기서 보내면 그 문서는 쓰기
+        // 하나를 태우고 아무도 안 읽는 자리에 영원히 남고, 깃발이 영영 안 내려가 '아이 폰에
+        // 알리기' 바가 "아직 못 알렸어요"를 계속 띄운다 — 부모는 그것을 **일시적인 실패**로 읽고
+        // 계속 다시 누른다. 알릴 것이 없다는 사실은 버튼이 아니라 탭 맨 위의 문장이 말한다
+        // (판정 기록 5).
+        //
+        // **규칙 자체는 이미 저장됐고 그대로 둔다** — 그 아이가 나중에 안드로이드 폰으로 바뀌면
+        // 그 폰이 읽어 간다(설계서 §10.2).
+        //
+        // `상태_줄` 은 **안 건드린다.** 방금 저장에 성공한 일을 "못 알렸어요"류로 덮으면 된 일이
+        // 실패처럼 읽힌다. `깃발을_바꾼다(false)` 는 옛 버전이 올려 둔 깃발까지 여기서 치운다.
+        guard 플랫폼.명령을_받을_수_있나 else {
+            깃발을_바꾼다(false)
             return
         }
         let (fid, send) = (familyId, commandSend)
@@ -561,6 +589,11 @@ final class ScheduleViewModel {
 
     private func 깃발을_바꾼다(_ value: Bool) {
         guard let childUid else { return }
+        // 아이폰 아이에게는 깃발을 **애초에 안 올린다**(판정 기록 5). 다섯 쓰기 갈래가 쓰기
+        // **전에** 여기로 올리는데, 그중 쓰기가 실패한 갈래는 `아이에게_알린다` 까지 가지도
+        // 못한다(catch 로 빠진다) — 입구 guard 하나만으로는 그 갈래에서 깃발이 남는다.
+        // **내리는 것은 언제나 한다** — 옛 버전이 올려 둔 깃발을 치워야 하기 때문이다.
+        if value, !플랫폼.명령을_받을_수_있나 { return }
         syncStore.setPendingSync(childUid: childUid, value)
         pendingSync = value
     }

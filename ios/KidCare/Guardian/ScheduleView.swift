@@ -50,6 +50,18 @@ struct ScheduleView: View {
 
     private var 목록_판: some View {
         VStack(spacing: 0) {
+            // 탭 맨 위에 **늘** 있는 한 줄. 그 아래로 규칙 목록·추가 버튼·기본 모드 넷·공휴일
+            // 스위치가 전부 평소처럼 눌리고 평소처럼 저장된다 — 그 아이가 나중에 안드로이드
+            // 폰으로 바뀌면 그 폰이 읽어 간다(설계서 §10.2, 판정 기록 5).
+            if viewModel.아이폰이라_규칙이_안_걸린다 {
+                Text("ios_child_schedule_not_applied")
+                    .font(.subheadline)
+                    .foregroundStyle(KidCarePalette.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+            }
             기본_모드_카드
                 .padding(.horizontal, 20)
                 .padding(.top, 12)
@@ -60,7 +72,12 @@ struct ScheduleView: View {
             if let 줄 = viewModel.상태_줄 {
                 RuleStateLine(text: 줄)
             }
-            if viewModel.pendingSync {
+            // 아이폰 아이에게는 이 바가 **한 번도** 안 뜬다. 깃발이 안 올라가므로 조건만으로도
+            // 안 뜨지만, 옛 버전이 올려 둔 깃발이 `UserDefaults` 에 남아 있을 수 있어 화면에서도
+            // 한 겹 막는다(`아이에게_알린다` 의 `깃발을_바꾼다(false)` 가 그것을 치우기 **전에**
+            // 한 번 그려질 수 있다). 끄지 않고 **숨기는** 이유는 판정 기록 5·7 이다 — 흐려진
+            // "아직 못 알렸어요"는 일시적 실패로 읽혀 부모가 계속 다시 누른다.
+            if viewModel.pendingSync && !viewModel.아이폰이라_규칙이_안_걸린다 {
                 SyncPendingBar(text: String(localized: "schedule_sync_pending"),
                                retryTitle: String(localized: "schedule_sync_retry")) {
                     viewModel.다시_알린다()

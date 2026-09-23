@@ -221,4 +221,112 @@ struct GuardianPlatformGateTests {
 
         #expect(vm.liveTrackingState == .off)
     }
+
+    // MARK: - 예약 탭
+
+    /// 절대 안 열리는 문 — 제한시간 쪽이 이기지 않게 해서 진짜 쓰기·보내기가 늘 이기게 한다
+    /// (`LiveTrackingTests.Gate` 와 같은 발상).
+    private actor 영원한_문 {
+        func wait() async { await withCheckedContinuation { (_: CheckedContinuation<Void, Never>) in } }
+    }
+
+    private func 예약_뷰모델(
+        _ 플랫폼: [String: ChildPlatform],
+        기록: 보낸_것,
+        저장된: 보낸_것 = 보낸_것(),
+        syncStore: RuleSyncStore? = nil
+    ) -> ScheduleViewModel {
+        ScheduleViewModel(
+            familyId: "f1",
+            childUid: "c1",
+            syncStore: syncStore ?? RuleSyncStore(kind: .schedule,
+                                                  defaults: UserDefaults(suiteName: "GuardianPlatformGateTests-sync-\(UUID())")!),
+            platforms: 저장소(플랫폼),
+            schedulesObserve: { _, _, _, _ in 가짜_리스너() },
+            settingsObserve: { _, _, _, _ in 가짜_리스너() },
+            scheduleSave: { _, _, doc in 저장된.적는다("save:\(doc.mode)"); return doc.id },
+            scheduleDelete: { _, _, id in 저장된.적는다("delete:\(id)") },
+            defaultModeSave: { _, _, mode in 저장된.적는다("default:\(mode)") },
+            holidayOffSave: { _, _, enabled in 저장된.적는다("holiday:\(enabled)") },
+            commandSend: { _, _, type, _ in 기록.적는다(type); return "cmd" },
+            writeSleep: { _ in await 영원한_문().wait() }
+        )
+    }
+
+    /// **저장은 되고 알림만 안 간다.** 이 두 줄이 같은 테스트에 있어야 한 쪽만 고치는 사고가
+    /// 잡힌다. 그리고 **다섯 쓰기 갈래를 다 돌려야** 한 갈래만 우회하는 사고가 잡힌다 —
+    /// 다섯이 각자 `아이에게_알린다` 를 부른다.
+    @Test("아이폰 아이면 다섯 쓰기 갈래가 전부 저장되고 sync_rules 는 한 번도 안 나간다")
+    func 아이폰이면_규칙은_저장되고_알림만_안_간다() async {
+        let 기록 = 보낸_것()
+        let 저장된 = 보낸_것()
+        let vm = 예약_뷰모델(["c1": .iOS], 기록: 기록, 저장된: 저장된)
+        let 규칙 = ScheduleDoc(id: "r1", days: [1], startMinute: 540, endMinute: 600,
+                             mode: RingerMode.silent, enabled: true, priority: 1)
+
+        vm.편집을_연다(nil)
+        await vm.겹쳐도_저장한다()
+        await vm.켬끔을_바꾼다(규칙, enabled: false)
+        await vm.삭제를_확인했다(규칙)
+        await vm.기본_모드를_고른다(RingerMode.silent)
+        await vm.공휴일을_바꾼다(true)
+
+        #expect(기록.types.isEmpty)                      // sync_rules 가 한 번도 안 나갔다
+        #expect(저장된.types.count == 5)                  // 다섯 갈래가 전부 진짜로 저장됐다
+        #expect(저장된.types.contains("delete:r1"))
+        #expect(저장된.types.contains("default:\(RingerMode.silent)"))
+        #expect(저장된.types.contains("holiday:true"))
+        #expect(vm.pendingSync == false)                  // 깃발이 애초에 안 올라갔다
+        #expect(vm.아이폰이라_규칙이_안_걸린다 == true)
+    }
+
+    @Test("안드로이드 아이면 예약 탭도 지금과 똑같다 — 다섯 갈래가 전부 sync_rules 를 보낸다")
+    func 안드로이드면_예약_탭도_지금과_똑같다() async {
+        let 기록 = 보낸_것()
+        let vm = 예약_뷰모델(["c1": .android], 기록: 기록)
+        let 규칙 = ScheduleDoc(id: "r1", days: [1], startMinute: 540, endMinute: 600,
+                             mode: RingerMode.silent, enabled: true, priority: 1)
+
+        vm.편집을_연다(nil)
+        await vm.겹쳐도_저장한다()
+        await vm.켬끔을_바꾼다(규칙, enabled: false)
+        await vm.삭제를_확인했다(규칙)
+        await vm.기본_모드를_고른다(RingerMode.silent)
+        await vm.공휴일을_바꾼다(true)
+
+        #expect(기록.types == Array(repeating: CommandType.syncRules, count: 5))
+        #expect(vm.아이폰이라_규칙이_안_걸린다 == false)
+    }
+
+    /// 기종을 모르면 예약 탭도 지금 그대로다 — 예약 탭은 상태 문서를 안 읽는 유일한 탭이라
+    /// 기억이 비는 일이 실제로 흔하다(판정 기록 3).
+    @Test("기종을 모르면 예약 탭도 지금과 똑같다")
+    func 모르면_예약_탭도_지금과_똑같다() async {
+        let 기록 = 보낸_것()
+        let vm = 예약_뷰모델([:], 기록: 기록)
+
+        await vm.기본_모드를_고른다(RingerMode.silent)
+
+        #expect(기록.types == [CommandType.syncRules])
+        #expect(vm.아이폰이라_규칙이_안_걸린다 == false)
+        #expect(vm.플랫폼 == .unknown)
+    }
+
+    /// 옛 버전이 올려 둔 깃발이 남아 있어도 아이폰 아이에게는 명령이 안 나가고 깃발이 내려간다.
+    @Test("남아 있던 깃발도 내려가고 sync_rules 는 안 나간다")
+    func 남아_있던_깃발도_내려간다() async {
+        let 기록 = 보낸_것()
+        let store = RuleSyncStore(kind: .schedule,
+                                  defaults: UserDefaults(suiteName: "GuardianPlatformGateTests-stale-\(UUID())")!)
+        store.setPendingSync(childUid: "c1", true)
+        let vm = 예약_뷰모델(["c1": .iOS], 기록: 기록, syncStore: store)
+
+        vm.시작한다()
+        #expect(vm.pendingSync == true)   // 옛 깃발을 읽어 왔다
+        await vm.다시_알린다()?.value
+
+        #expect(기록.types.isEmpty)
+        #expect(vm.pendingSync == false)
+        #expect(store.pendingSync(childUid: "c1") == false)
+    }
 }
