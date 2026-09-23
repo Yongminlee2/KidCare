@@ -85,6 +85,8 @@ final class ScheduleViewModel {
     @ObservationIgnored private var syncRetryTask: Task<Void, Never>?
 
     private let syncStore: RuleSyncStore
+    /// 예약 탭은 아이 상태 문서를 안 읽는 **유일한 탭**이라 여기만 기억에 기댄다(판정 기록 3).
+    private let platforms: ChildPlatformStore
     private let schedulesObserve: @Sendable (String, String, @escaping ([ScheduleDoc], Bool) -> Void, @escaping (Error) -> Void) -> ListenerRegistration
     private let settingsObserve: @Sendable (String, String, @escaping (RingerSettingsDoc) -> Void, @escaping (Error) -> Void) -> ListenerRegistration
     private let scheduleSave: @Sendable (String, String, ScheduleDoc) async throws -> String
@@ -101,6 +103,7 @@ final class ScheduleViewModel {
         familyId: String,
         childUid: String?,
         syncStore: RuleSyncStore = RuleSyncStore(kind: .schedule),
+        platforms: ChildPlatformStore = ChildPlatformStore(),
         schedulesObserve: @escaping @Sendable (
             _ familyId: String, _ childUid: String,
             _ onChange: @escaping ([ScheduleDoc], Bool) -> Void, _ onError: @escaping (Error) -> Void
@@ -124,6 +127,7 @@ final class ScheduleViewModel {
         self.familyId = familyId
         self.childUid = childUid
         self.syncStore = syncStore
+        self.platforms = platforms
         self.schedulesObserve = schedulesObserve
         self.settingsObserve = settingsObserve
         self.scheduleSave = scheduleSave

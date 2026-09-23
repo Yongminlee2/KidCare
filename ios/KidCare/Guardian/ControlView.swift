@@ -32,13 +32,31 @@ struct ControlView: View {
                         .padding(.bottom, 16)
                 }
 
+                // `아이_안내` 를 재사용하지 않는다 — 그것은 오류 문구 자리라 구독이 지우고 덮는다.
+                // 이 줄은 아이폰 아이를 고른 동안 **늘** 있어야 한다(판정 기록 6·7).
+                if viewModel.아이폰이라_못_한다고_말할까 {
+                    Text("ios_child_no_remote_control")
+                        .font(.subheadline)
+                        .foregroundStyle(KidCarePalette.inkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.bottom, 16)
+                }
+
                 구역_제목("control_section_network").padding(.top, 4)
                 인터넷_카드.padding(.top, 8)
 
                 구역_제목("control_section_ringer")
-                소리_상태_카드.padding(.top, 8)
-                if viewModel.방해금지_안내를_보이는가 {
-                    보조_문구("control_ringer_dnd_note").padding(.top, 6)
+                // 아이폰 아이는 `ringerMode` 를 일부러 빈 값으로 쓴다(`Documents.swift:239`). 그래서 이
+                // 카드는 영원히 "확인되지 않음"이고 그 안의 '새로 확인'은 눌러도 영원히 안 바뀐다. 값이
+                // 없는 칸과 답이 없는 질문을 흐리게 남겨 두느니 지운다(판정 기록 7). 여기서만 플랫폼을
+                // 직접 비교하는 이유는 질문이 다르기 때문이다 — "명령을 보낼 수 있나"가 아니라
+                // "보여줄 값이 있나"다. 비교하는 것은 `"ios"` 라는 글자가 아니라 enum 이다(판정 기록 1).
+                if viewModel.플랫폼 != .iOS {
+                    소리_상태_카드.padding(.top, 8)
+                    if viewModel.방해금지_안내를_보이는가 {
+                        보조_문구("control_ringer_dnd_note").padding(.top, 6)
+                    }
                 }
                 모드_버튼들.padding(.top, 8)
 
@@ -88,6 +106,9 @@ struct ControlView: View {
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        // 보내기만 끄고 칩을 열어 두면 부모가 문장을 골라 놓고 못 보낸다(판정 기록 7).
+                        .disabled(!viewModel.버튼_활성화)
+                        .opacity(viewModel.버튼_활성화 ? 1 : 0.38)
                     }
                 }
                 .padding(.top, 10)
@@ -99,6 +120,9 @@ struct ControlView: View {
                     maxLength: ControlViewModel.messageMaxLength,
                     showsCounter: true
                 )
+                // 쓸 수 없는 편지를 쓰게 하지 않는다(판정 기록 7).
+                .disabled(!viewModel.버튼_활성화)
+                .opacity(viewModel.버튼_활성화 ? 1 : 0.38)
                 .padding(.top, 8)
                 옅은_버튼("control_message_send", 그림: "paperplane.fill") {
                     await viewModel.메시지를_보낸다()
@@ -116,6 +140,8 @@ struct ControlView: View {
                         .padding(.top, 8)
                 }
                 알람_시각_줄
+                    .disabled(!viewModel.버튼_활성화)
+                    .opacity(viewModel.버튼_활성화 ? 1 : 0.38)
                     .padding(.top, 10)
                 // 20자면 아이 폰 알림 제목 한 줄이다(xml :433-450).
                 KidCareOutlinedField(
@@ -123,6 +149,8 @@ struct ControlView: View {
                     text: $vm.알람_이름,
                     maxLength: ControlViewModel.alarmLabelMaxLength
                 )
+                .disabled(!viewModel.버튼_활성화)
+                .opacity(viewModel.버튼_활성화 ? 1 : 0.38)
                 .padding(.top, 8)
                 옅은_버튼("control_alarm_set", 그림: "alarm") {
                     await viewModel.알람을_맞춘다()

@@ -90,9 +90,33 @@ struct ChildMapView: View {
                 // 위치 버튼(`locate_button`, marginEnd 14dp)을 **같은 줄**에 나란히 두고
                 // 둘 다 bottomMargin = 패널 높이 + 12dp 다. 예전엔 세로로 쌓아 실시간
                 // 알약이 네이버 줌 컨트롤 자리까지 올라가 "−" 를 가렸다.
-                HStack(alignment: .bottom, spacing: 10) {
-                    실시간_버튼
-                    지금위치_버튼
+                VStack(alignment: .trailing, spacing: 8) {
+                    // 문구를 탭 꼭대기가 아니라 **버튼 옆**에 두는 이유(판정 기록 7): 지도 탭은
+                    // 잠긴 것이 버튼 둘뿐이고 화면 대부분은 멀쩡하다. 꼭대기에 있으면 그 문장이
+                    // 무엇을 가리키는지 알 수 없다.
+                    if viewModel.아이폰이라_못_한다고_말할까 {
+                        Text("ios_child_no_remote_control")
+                            .font(.caption)
+                            .foregroundStyle(KidCarePalette.ink)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(KidCarePalette.paperCard)
+                                    .shadow(color: .black.opacity(0.14), radius: 5, y: 2)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .strokeBorder(KidCarePalette.lineSoft, lineWidth: 1)
+                            )
+                            .frame(maxWidth: 260, alignment: .trailing)
+                    }
+                    HStack(alignment: .bottom, spacing: 10) {
+                        실시간_버튼
+                        지금위치_버튼
+                    }
                 }
                 .padding(.trailing, 14)
                 .padding(.bottom, 패널_전체_높이 + 12)
@@ -177,10 +201,11 @@ struct ChildMapView: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .disabled(viewModel.childUid == nil)
+        // 아이가 없거나 아이폰 아이면 막는다 — 조건은 뷰모델 한 곳이 정한다(판정 기록 1).
+        .disabled(!viewModel.실시간_버튼_활성화)
         // 비활성 상태가 눈에 보여야 한다 — 안드로이드 `renderLiveTrackingState` 의
         // alpha 0.55 와 같은 값.
-        .opacity(viewModel.childUid == nil ? 0.55 : 1)
+        .opacity(viewModel.실시간_버튼_활성화 ? 1 : 0.55)
         .accessibilityLabel(Text(viewModel.실시간_버튼_접근성_문구))
     }
 }

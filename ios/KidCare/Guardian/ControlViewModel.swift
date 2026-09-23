@@ -100,6 +100,8 @@ final class ControlViewModel {
 
     private let requestLog: RequestLog
     private let alarmMemoStore: AlarmMemoStore
+    /// 다섯 탭이 같이 보는 기억. 이 탭은 상태 문서를 읽으므로 **쓰는 쪽**이다(판정 기록 3).
+    private let platforms: ChildPlatformStore
     private let commandSend: @Sendable (_ familyId: String, _ childUid: String, _ type: String, _ payload: [String: String]) async throws -> String
     private let commandObserve: @Sendable (
         _ familyId: String, _ childUid: String, _ commandId: String,
@@ -152,6 +154,7 @@ final class ControlViewModel {
         childUid: String?,
         requestLog: RequestLog = RequestLog(),
         alarmMemoStore: AlarmMemoStore = AlarmMemoStore(),
+        platforms: ChildPlatformStore = ChildPlatformStore(),
         commandSend: @escaping @Sendable (_ familyId: String, _ childUid: String, _ type: String, _ payload: [String: String]) async throws -> String = CommandRepository.send,
         commandObserve: @escaping @Sendable (
             _ familyId: String, _ childUid: String, _ commandId: String,
@@ -175,6 +178,7 @@ final class ControlViewModel {
         self.childUid = childUid
         self.requestLog = requestLog
         self.alarmMemoStore = alarmMemoStore
+        self.platforms = platforms
         self.commandSend = commandSend
         self.commandObserve = commandObserve
         self.statusFetch = statusFetch
@@ -188,12 +192,30 @@ final class ControlViewModel {
 
     // MARK: - 화면이 그리는 값
 
-    /// 아이 폰이 없으면 보낼 곳이 없다(:1074-1092). 입력칸·시각 고르기는 막지 않는다 —
-    /// 미리 써 두는 것을 막을 이유가 없다. 막는 것은 보내는 버튼들뿐이다.
-    var 버튼_활성화: Bool { childUid != nil }
+    /// 고른 아이의 폰 종류. 상태 문서를 이미 읽었으면 그 값이고, 아직이면 기억해 둔 값이다.
+    /// 둘 다 없으면 `.unknown` — **아무것도 안 잠근다**(판정 기록 2).
+    var 플랫폼: ChildPlatform {
+        if let 상태 { return ChildPlatform.of(platform: 상태.platform) }
+        guard let childUid else { return .unknown }
+        return platforms.platform(childUid: childUid)
+    }
 
-    /// '새로 확인' 버튼(:1027, :1080).
-    var 새로_확인_활성화: Bool { childUid != nil && !상태_읽는_중 && !ringerQueryInFlight }
+    /// 설계서 §10.2. 아이폰 아이는 `commands/` 를 구독하지 않으므로 이 탭의 모든 버튼이
+    /// "영원히 전달 중"이 된다.
+    var 명령을_보낼_수_있나: Bool { 플랫폼.명령을_받을_수_있나 }
+
+    /// `.unknown` 에서는 **안 적는다** — 모르는 아이에게 "이 아이는 아이폰이에요"라고 말하는
+    /// 것은 버튼을 끄는 것보다 더 나쁜 거짓말이다(판정 기록 2).
+    var 아이폰이라_못_한다고_말할까: Bool { 플랫폼.못_한다고_말할까 }
+
+    /// 아이 폰이 없으면 보낼 곳이 없다(:1074-1092). 아이폰 아이면 보낼 곳이 **듣지를 않는다**
+    /// (설계서 §10.2). 4단계부터는 입력칸·시각 고르기도 이 값으로 같이 막는다 — 보내기만
+    /// 끄고 입력칸을 열어 두면 부모가 한 글자씩 써 놓고 못 보내게 된다(판정 기록 7).
+    var 버튼_활성화: Bool { childUid != nil && 명령을_보낼_수_있나 }
+
+    /// '새로 확인' 버튼(:1027, :1080). 아이폰 아이에게는 카드째 숨기지만(판정 기록 7), 값은
+    /// 여기서도 막아 둔다 — 화면을 우회하는 길이 있어도 명령이 안 나가야 한다.
+    var 새로_확인_활성화: Bool { childUid != nil && 명령을_보낼_수_있나 && !상태_읽는_중 && !ringerQueryInFlight }
 
     /// 아이 폰이 지금 울리고 있는지는 **알 방법이 없다** — 우리가 울린 지 5분이 안 됐으면
     /// 울린다고 믿는다(:875-899).
@@ -416,6 +438,14 @@ final class ControlViewModel {
             commandUi = .failed(String(localized: "map_no_child"))
             return
         }
+        // 아이폰 아이에게 보낸 명령은 아무도 안 읽어 영원히 "전달 중"에 머문다(설계서 §1·§10.2).
+        // 화면이 버튼을 껐지만 **계약은 여기다** — `commands/` 문서를 하나도 안 만든다.
+        // 조용히 되돌아가지 않고 `.failed` 로 적는 이유: 이 자리에 오는 길이 남아 있다면 그것은
+        // 화면의 버그이고, 그때 부모가 보는 문장은 참말이어야 한다.
+        guard 명령을_보낼_수_있나 else {
+            commandUi = .failed(String(localized: "ios_child_no_remote_control"))
+            return
+        }
         // 조회 중 다른 명령을 누르면 그 명령이 화면의 새 주인이다(:499-504).
         if trackingType == CommandType.queryRinger && type != CommandType.queryRinger {
             ringerQueryInFlight = false
@@ -628,6 +658,8 @@ final class ControlViewModel {
             let status = try await statusFetch(familyId, childUid)
             guard generation == statusGeneration else { return }
             상태 = status
+            // 읽기를 하나도 더 안 사고 플랫폼을 안다 — 이 함수가 이미 읽고 있다(판정 기록 3).
+            platforms.remember(childUid: childUid, status: status)
             currentRingerMode = status.map(\.ringerMode).flatMap { RingerMode.isKnown($0) ? $0 : nil }
             ringerAppliedInSession = confirmedNow
             상태_읽는_중 = false

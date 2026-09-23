@@ -183,6 +183,8 @@ final class MapViewModel {
     /// "언제 물어봤고 언제 대답을 받았나" — `DisconnectRule`(무응답 배너)의 재료.
     /// 배너는 `GuardianRootView` 의 `DisconnectBanner` 가 판정한다.
     private let requestLog: RequestLog
+    /// 다섯 탭이 같이 보는 기억. 이 탭은 상태 문서를 읽으므로 **쓰는 쪽**이다(판정 기록 3).
+    private let platforms: ChildPlatformStore
 
     /// 명령을 실제로 보내는 방법. 기본값은 프로덕션이 그대로 쓰는
     /// `CommandRepository.send` 다. `dayLoad` 와 같은 이유로 주입 가능하게 열어
@@ -313,6 +315,7 @@ final class MapViewModel {
         childUid: String?,
         zone: TimeZone = .current,
         requestLog: RequestLog = RequestLog(),
+        platforms: ChildPlatformStore = ChildPlatformStore(),
         commandSend: @escaping @Sendable (
             _ familyId: String, _ childUid: String, _ type: String, _ payload: [String: String]
         ) async throws -> String = CommandRepository.send,
@@ -342,6 +345,7 @@ final class MapViewModel {
         self.childUid = childUid
         self.zone = zone
         self.requestLog = requestLog
+        self.platforms = platforms
         self.commandSend = commandSend
         self.commandObserve = commandObserve
         self.commandSleep = commandSleep
@@ -458,6 +462,8 @@ final class MapViewModel {
             let 읽은_것 = try await dayLoad(familyId, childUid, dayKey)
             guard generation == loadGeneration else { return } // 이미 낡은 응답 — 무시
             상태 = 읽은_것.status
+            // 읽기를 하나도 더 안 사고 플랫폼을 안다 — 이 함수가 이미 읽고 있다(판정 기록 3).
+            platforms.remember(childUid: childUid, status: 읽은_것.status)
             상태가_물음보다_새로우면_대답으로_친다()
             하루기록 = 읽은_것.trail
             // Task 8: 정본은 안드로이드 drawRoute 의 `hiddenRouteStarts.retainAll(validKeys)`
@@ -583,8 +589,27 @@ final class MapViewModel {
     /// `setLocateButtonEnabled`(:709) — 진행 중이거나, 아이가 없거나, 실시간
     /// 추적이 켜져 있거나 전환 중이면 막는다.
     var 위치확인_버튼_활성화: Bool {
-        childUid != nil && !commandProgress.isInFlight && !liveTrackingActiveOrTransitioning
+        childUid != nil && 명령을_보낼_수_있나 && !commandProgress.isInFlight && !liveTrackingActiveOrTransitioning
     }
+
+    /// 지금까지 `ChildMapView.swift:180` 에 인라인으로 있던 조건을 여기로 옮긴다 —
+    /// 판단이 뷰에 흩어져 있으면 다음 사람이 한 군데를 빠뜨린다(판정 기록 1).
+    var 실시간_버튼_활성화: Bool { childUid != nil && 명령을_보낼_수_있나 }
+
+    /// 고른 아이의 폰 종류. 상태 문서를 이미 읽었으면 그 값이고, 아직이면 기억해 둔 값이다.
+    /// 둘 다 없으면 `.unknown` — **아무것도 안 잠근다**(판정 기록 2).
+    var 플랫폼: ChildPlatform {
+        if let 상태 { return ChildPlatform.of(platform: 상태.platform) }
+        guard let childUid else { return .unknown }
+        return platforms.platform(childUid: childUid)
+    }
+
+    /// 설계서 §10.2. 아이폰 아이는 `commands/` 를 구독하지 않으므로 `locate_now` 도
+    /// `start_live_tracking` 도 영원히 "전달 중"에 머문다.
+    var 명령을_보낼_수_있나: Bool { 플랫폼.명령을_받을_수_있나 }
+
+    /// `.unknown` 에서는 **안 적는다**(판정 기록 2).
+    var 아이폰이라_못_한다고_말할까: Bool { 플랫폼.못_한다고_말할까 }
 
     /// 상태 카드가 평소의 배터리·마지막 신호 문구 대신 보여줄 문구. `nil` 이면
     /// 평소 문구로 돌아간다. 정본은 안드로이드 `status_bar` 가 `renderLocating`/
@@ -628,6 +653,9 @@ final class MapViewModel {
             오류 = String(localized: "map_no_child")
             return
         }
+        // 아이폰 아이는 `commands/` 를 구독하지 않는다(설계서 §1·§10.2). 화면이 버튼을 껐지만
+        // **계약은 여기다** — `commands/` 문서를 하나도 안 만든다(판정 기록 4).
+        guard 명령을_보낼_수_있나 else { return }
         stopCommandTracking()
         // 부모가 버튼을 또 누를 수 있다. 지금 세대를 붙잡아 두고, 왕복이 끝난
         // 뒤 그 값이 아직 최신인지로 판단한다(`commandGeneration` 타입 주석 참고).
@@ -1050,6 +1078,9 @@ final class MapViewModel {
             오류 = String(localized: "map_no_child")
             return
         }
+        // 켜기만 막는다. 끄기(`stopLiveTrackingCore`)는 **안 막는다** — 켠 적이 없으면 불릴
+        // 일이 없고, 어쩌다 켜져 있었다면 끄는 것은 반드시 되어야 한다(판정 기록 4).
+        guard 명령을_보낼_수_있나 else { return }
         stopLiveCommandTracking()
         liveCommandGeneration += 1
         let generation = liveCommandGeneration
@@ -1172,6 +1203,8 @@ final class MapViewModel {
             return
         }
         상태 = status
+        // 실시간이 도는 동안 아이가 폰을 갈아탔다면 이것이 가장 최신 정보다(판정 기록 3).
+        if let childUid { platforms.remember(childUid: childUid, status: status) }
         // 실시간 스냅샷은 배너 대답으로 치지 않는다(통합 검토 I2). 안드로이드
         // `beginLiveStatusSubscription` 의 onChange(MapTimelineFragment.kt:548-566)는 상태 줄과
         // 지도만 그리고 `renderStatus`·`recordAnswer` 를 부르지 않는다 — 대답 규칙(:757)은

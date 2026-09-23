@@ -37,19 +37,23 @@ struct GuardianRootView: View {
 
     init(familyId: String, childUid: String?, selectedTab: Binding<GuardianTab>) {
         _selectedTab = selectedTab
-        let map = MapViewModel(familyId: familyId, childUid: childUid)
+        // 다섯 탭이 **같은** 기억을 본다. 상태 문서를 읽는 셋(지도·관리·장소)이 쓰고, 예약 탭은
+        // 읽기만 한다(판정 기록 3). 넷이 각자 만들면 같은 UserDefaults 라 동작은 같지만,
+        // 테스트에서 가짜 저장소를 갈아 끼울 자리가 없어진다.
+        let platforms = ChildPlatformStore()
+        let map = MapViewModel(familyId: familyId, childUid: childUid, platforms: platforms)
         let banner = DisconnectBanner(childUid: childUid)
         // 둘 다 같은 init 안에서 만들어 서로를 잇는다. SwiftUI 가 init 을 여러 번 불러도
         // @State 는 첫 쌍만 붙들므로 살아남는 지도 뷰모델은 살아남는 배너를 가리킨다.
         map.대답이_기록되면 = { [weak banner] in banner?.다시_판정한다() }
         _mapViewModel = State(initialValue: map)
         _banner = State(initialValue: banner)
-        let control = ControlViewModel(familyId: familyId, childUid: childUid)
+        let control = ControlViewModel(familyId: familyId, childUid: childUid, platforms: platforms)
         // 관리 탭의 대답도 배너를 곧바로 다시 판정하게 한다(ControlFragment.kt:747-750).
         control.대답이_기록되면 = { [weak banner] in banner?.다시_판정한다() }
         _controlViewModel = State(initialValue: control)
-        _scheduleViewModel = State(initialValue: ScheduleViewModel(familyId: familyId, childUid: childUid))
-        _placeViewModel = State(initialValue: PlaceViewModel(familyId: familyId, childUid: childUid))
+        _scheduleViewModel = State(initialValue: ScheduleViewModel(familyId: familyId, childUid: childUid, platforms: platforms))
+        _placeViewModel = State(initialValue: PlaceViewModel(familyId: familyId, childUid: childUid, platforms: platforms))
         // 실기기 확인(-readOnlyCheck)에서는 진짜 가족에 읽음을 쓰지 않는다(6단계 판정 기록 10, 통합 검토 I2).
         let markRead = ReadOnlyCheck.alertMarkRead(readOnly: ReadOnlyCheck.isOn)
         _alertViewModel = State(initialValue: AlertViewModel(familyId: familyId, childUid: childUid, markRead: markRead))

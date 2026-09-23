@@ -95,6 +95,9 @@ final class PlaceViewModel {
     @ObservationIgnored private var syncRetryTask: Task<Void, Never>?
 
     private let syncStore: RuleSyncStore
+    /// 장소 탭은 **안 잠근다**(설계서 §10.2 — 장소는 아이폰 아이가 상시 구독으로 실제로 받는다).
+    /// 자기가 이미 읽는 상태 문서를 기억시키기만 한다(판정 기록 3).
+    private let platforms: ChildPlatformStore
     private let placesObserve: @Sendable (String, String, @escaping ([PlaceDoc], Bool) -> Void, @escaping (Error) -> Void) -> ListenerRegistration
     private let placeSave: @Sendable (String, String, PlaceDoc) async throws -> String
     private let placeDelete: @Sendable (String, String, String) async throws -> Void
@@ -107,6 +110,7 @@ final class PlaceViewModel {
         familyId: String,
         childUid: String?,
         syncStore: RuleSyncStore = RuleSyncStore(kind: .place),
+        platforms: ChildPlatformStore = ChildPlatformStore(),
         placesObserve: @escaping @Sendable (
             _ familyId: String, _ childUid: String,
             _ onChange: @escaping ([PlaceDoc], Bool) -> Void, _ onError: @escaping (Error) -> Void
@@ -123,6 +127,7 @@ final class PlaceViewModel {
         self.familyId = familyId
         self.childUid = childUid
         self.syncStore = syncStore
+        self.platforms = platforms
         self.placesObserve = placesObserve
         self.placeSave = placeSave
         self.placeDelete = placeDelete
@@ -169,6 +174,9 @@ final class PlaceViewModel {
     /// 편의를 위한 한 번 읽기다. 실패해도 아무 말도 하지 않는다(:410-444).
     private func 아이_위치를_읽는다(_ childUid: String) async {
         guard let status = try? await statusFetch(familyId, childUid) else { return }
+        // 읽기를 하나도 더 안 사고 플랫폼을 안다 — 이 함수가 이미 읽고 있다(판정 기록 3).
+        // 잠그는 데 쓰지 않는다. 예약 탭이 볼 기억을 한 벌 더 채워 둘 뿐이다.
+        platforms.remember(childUid: childUid, status: status)
         // await 사이에 정리됐으면 아무것도 바꾸지 않는다(4단계 통합 검토 M1).
         guard !닫힘, !Task.isCancelled else { return }
         guard Self.고른_좌표로_쓸_수_있나(status.lat, status.lng) else { return }
