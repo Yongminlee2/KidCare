@@ -13262,6 +13262,95 @@
         }
       }
     },
+    "ios_child_no_remote_control": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아이 폰이 아이폰이라 이 기능은 쓸 수 없어요. 위치와 장소 알림은 그대로 와요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive."
+          }
+        }
+      }
+    },
     "ios_child_open_settings": {
       "extractionState": "manual",
       "localizations": {
@@ -13970,6 +14059,95 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Try again"
+          }
+        }
+      }
+    },
+    "ios_child_schedule_not_applied": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "규칙은 저장되지만 아이폰에서는 소리가 바뀌지 않아요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rules are saved, but the sound will not change on an iPhone."
           }
         }
       }
