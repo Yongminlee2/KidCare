@@ -61,8 +61,9 @@ final class DeviceState {
 
     /// **시뮬레이터는 배터리를 안 준다**(`batteryLevel` 이 -1, `batteryState` 가 `.unknown`;
     /// `simctl status_bar override` 는 화면 위 막대만 바꾼다). 그래서 읽기를 주입받는다 —
-    /// 기본값이 진짜 `UIDevice` 이고, 시뮬레이터 확인은 `ChildSimHarness` 가 값을 넣어 준다
-    /// (1단계 판정 기록 8). 실기기 실측은 4단계다.
+    /// 기본값이 진짜 `UIDevice` 이고, 시뮬레이터 확인은 `ChildSession.injectedBattery`
+    /// (`-childBattery <0~100>`, `#if DEBUG`)가 값을 넣어 준다(3단계 판정 기록 3).
+    /// 실기기 실측은 4단계다.
     init(battery: @escaping BatteryReader = DeviceState.systemBattery,
          network: NetworkReader? = nil) {
         readBattery = battery

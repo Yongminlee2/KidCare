@@ -56,7 +56,7 @@ final class TrackingCoordinator {
     /// [mode] 가 "지금이 언제인가"로 쓴다 — 좌표가 끊겨도 정지 승격 시계가 흘러야 한다.
     private var clockAt: Int64 = 0
 
-    /// 마지막으로 시작한 업로드. 화면(`ChildSimView`)이 "올리는 중"을 알고, 테스트가 기다린다.
+    /// 마지막으로 시작한 업로드. 테스트가 기다린다.
     private(set) var uploadTask: Task<Void, Never>?
 
     /// 2단계·3단계가 잇는 자리. **지금 자리에 둬야** 나중에 순서가 안 틀어진다(1단계 판정 기록 7).
@@ -74,7 +74,12 @@ final class TrackingCoordinator {
         store: TrailStore = TrailStore(),
         uploader: ChildUploading = TrailUploader(),
         source: LocationSource? = nil,
-        ticker: Ticking? = nil
+        /// **기본값이 없다.** 1단계 통합 검토 I1 이 "이 인자를 안 넘기면 좌표가 끊긴 폰이 `.moving`
+        /// 에 갇혀 하루 종일 조용해진다"였고, 그 경고를 주석으로만 두면 잊힌다 — 실제로 2단계까지
+        /// 진짜 파이프라인이 `#if DEBUG` 화면 하나뿐이었다. 기본값을 지우면 새 호출부가 `ticker:`
+        /// 를 **글자로** 적어야 하고, 빠뜨리면 컴파일이 안 된다. 테스트는 `ticker: nil` 이나
+        /// 가짜 시계를 **명시한다**(벽시계를 기다리는 테스트를 만들지 않기 위해서다).
+        ticker: Ticking?
     ) {
         self.familyId = familyId
         self.zone = zone
@@ -84,10 +89,10 @@ final class TrackingCoordinator {
         self.source = source
         self.ticker = ticker
         source?.onFix = { [weak self] fix in self?.handle(fix) }
-        // **진짜 파이프라인은 이 인자를 반드시 넘겨야 한다**(1단계는 `ChildSimView`, 3단계는
-        // `ChildRootView`). 안 넘기면 좌표가 끊긴 폰이 `.moving` 에 갇힌다 — 그 고리를 푸는
-        // 입력이 이것 하나뿐이다([TrackingTicker] 머리 주석). 기본값이 nil 인 것은 테스트가
-        // 시계를 **직접** 돌리기 위해서다(벽시계를 기다리는 테스트를 만들지 않는다).
+        // **진짜 파이프라인은 여기에 진짜 시계를 넘긴다**(`ChildSession.makeCoordinator`).
+        // 안 넘기면 좌표가 끊긴 폰이 `.moving` 에 갇힌다 — 그 고리를 푸는 입력이 이것 하나뿐이다
+        // ([TrackingTicker] 머리 주석). 인자를 받는 타입이 `Ticking?` 인 것은 테스트가 `nil` 이나
+        // 가짜 시계를 **명시적으로** 넘기기 위해서다(벽시계를 기다리는 테스트를 만들지 않는다).
         ticker?.onTick = { [weak self] now in self?.tick(now) }
         ticker?.start()
     }

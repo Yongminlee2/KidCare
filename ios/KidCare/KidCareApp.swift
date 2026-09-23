@@ -35,6 +35,12 @@ struct KidCareApp: App {
         // 로도 자동으로 읽히지만, 키가 비어 있을 때를 위에서 크게 실패시키는 지점과
         // 같은 자리에 두려고 명시적으로도 지정한다).
         NMFAuthManager.shared().ncpKeyId = key
+
+        // 저장된 역할이 child 면 **화면과 무관하게** 수집을 시작한다. 지역 전환이나 중요 위치
+        // 변경으로 앱이 백그라운드에서 되살아나면 `WindowGroup` 의 body 가 안 돌 수 있다 —
+        // 그때도 이 줄은 돈다(2단계 통합 검토 I1, 1단계 M6). 테스트 프로세스에서는
+        // `ChildSession` 이 스스로 문을 닫는다(`RouterView` 의 `isRunningTests` 와 같은 기준).
+        ChildSession.shared.startIfChild()
     }
 
     var body: some Scene {

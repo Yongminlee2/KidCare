@@ -390,7 +390,8 @@ struct TrackingCoordinatorTests {
         store.append(fix(at: t0 + 5_000, meters: 10))
 
         let 업로드 = 가짜_업로더()
-        let c = TrackingCoordinator(familyId: "F1", zone: zone, store: store, uploader: 업로드)
+        // `ticker:` 는 기본값이 없다(3단계 판정 기록 2) — 시계를 안 쓰는 테스트도 **글자로** 적는다.
+        let c = TrackingCoordinator(familyId: "F1", zone: zone, store: store, uploader: 업로드, ticker: nil)
         c.restore(nowMillis: t0 + 3 * 60 * 60_000)   // 세 시간 뒤에 되살아났다
 
         #expect(c.buffer.points.count == 2, "오늘 걸어온 길은 되찾는다")

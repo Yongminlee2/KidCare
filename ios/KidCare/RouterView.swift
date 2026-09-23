@@ -38,28 +38,29 @@ struct RouterView: View {
 
     init() {
         let store = RoleStore.shared
-        _showMain = State(initialValue: store.role == .guardian && store.familyId != nil)
+        // 아이도 본 화면으로 간다 — 이 갈래가 없으면 아이로 페어링한 폰이 앱을 다시 열 때마다
+        // 역할 선택 화면으로 돌아간다(수집은 `KidCareApp.init()` 이 이미 시작해 둔 채로).
+        _showMain = State(initialValue: (store.role == .guardian || store.role == .child)
+                          && store.familyId != nil)
     }
 
     /// 가족에서 빠진 뒤 첫 화면에 한 번 띄울 결과 글(7단계 판정 기록 8). 빼기 모델은 본 화면과 함께 사라지므로 여기서 받는다.
     @State private var 빠진_결과: String?
 
+    /// 3단계 Task 3 이 `#if DEBUG` `-childSim` 갈래를 지웠다(1단계 판정 기록 9 가 예고한 자리다).
+    /// 이제 아이 파이프라인으로 가는 길은 **저장된 역할 하나뿐**이고, 조립은 화면이 아니라
+    /// `KidCareApp.init()` → `ChildSession` 이 한다. 시뮬레이터 확인에 남긴 문은
+    /// `-childBattery <0~100>`(`ChildSession.injectedBattery`) 하나로, 값 하나를 주입할 뿐
+    /// 파이프라인을 따로 만들지 않는다.
     var body: some View {
-        #if DEBUG
-        // 아이 1단계 판정 기록 9·20. **`isRunningTests` 갈래보다 위다** — 사람이 일부러 준 인자가
-        // 테스트 분기보다 먼저 이긴다. 3단계가 `ChildRootView` 를 만들면 이 세 줄을 지운다.
-        // 출시 빌드에는 `#if DEBUG` 밖이라 존재 자체가 없다.
-        if let sim = ChildSimHarness.launch {
-            return AnyView(ChildSimView(launch: sim))
-        }
-        #endif
-        return AnyView(본_화면)
-    }
-
-    private var 본_화면: some View {
         Group {
             if isRunningTests {
                 Color.clear
+            } else if store.role == .child, store.familyId != nil {
+                // 아이는 **아이 화면만** 본다 — 보호자 탭이 하나도 안 보인다(설계서 §2-2).
+                // 수집 파이프라인은 여기서 만들지 않는다. `KidCareApp.init()` 이 이미 만들었다 —
+                // 백그라운드로 되살아난 실행에는 이 body 가 안 돌 수 있기 때문이다(판정 기록 1).
+                ChildRootView()
             } else if showMain, let familyId = store.familyId {
                 GuardianHomeView(familyId: familyId, onLeft: { outcome in
                     빠진_결과 = outcome.map(LeaveFamilyModel.끝_문구)
@@ -68,7 +69,14 @@ struct RouterView: View {
                     // (통합 검토 M1 의 .id(familyId+childUid) 를 두 겹으로 나눴다 — 6단계 판정 기록 7).
                     .id(familyId)
             } else {
-                RoleSelectView(onGuardianReady: { showMain = true })
+                RoleSelectView(
+                    onGuardianReady: { showMain = true },
+                    // 아이로 막 페어링을 끝낸 순간이다. 화면은 저장소(`store.role`)가 바뀐 것을
+                    // 이 body 가 읽어 저절로 넘어가지만, **수집은 저절로 시작하지 않는다** —
+                    // `KidCareApp.init()` 은 앱이 뜰 때 한 번 돌고 그때는 역할이 없었다.
+                    // 그래서 같은 문을 한 번 더 두드린다(조립하는 자리는 여전히 하나다).
+                    onChildReady: { ChildSession.shared.startIfChild() }
+                )
             }
         }
         // 가족에서 빠지면 familyId 가 nil 이 된다. showMain 을 되돌려 두지 않으면, 다시 합류하는 도중 InviteCodeView 가

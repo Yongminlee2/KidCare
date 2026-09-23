@@ -2,8 +2,10 @@ import SwiftUI
 
 /// 첫 실행 화면. 보호자는 두 갈래(새 가족 / 합류)로 갈린다.
 ///
-/// 아이 버튼을 **지우지 않고 안내로 두는 이유**는 설계서 §1 에 있다 — 지우면
-/// 나중에 붙일 자리를 되살려야 하고, 흐리게만 두면 왜 안 되는지를 말해주지 못한다.
+/// **아이 버튼이 이제 진짜로 간다**(3단계). 2단계까지 이 자리에는 "아이 폰은 안드로이드만
+/// 지원해요"라는 막이가 있었는데, 아이폰이 아이 역할을 할 수 있게 된 지금 그 안내는 거짓말이라
+/// 문구 키 셋(`ios_child_unsupported_*`)과 함께 지웠다(설계서 §17 열린 질문 7).
+/// 아이 합류는 보호자 합류와 **같은 화면·같은 모양**이고 `expectedRole` 만 다르다.
 struct RoleSelectView: View {
 
     /// 보호자가 (합류든 새 가족이든) 준비를 끝냈다고 스스로 알려올 때 부른다.
@@ -11,8 +13,12 @@ struct RoleSelectView: View {
     /// `RouterView` 주석 참고.
     let onGuardianReady: () -> Void
 
+    /// 아이로 합류가 끝났을 때 부른다. `JoinFamilyView` 가 `RoleStore` 에 child 를 이미
+    /// 저장한 뒤라, `RouterView` 는 이 신호로 **수집을 시작**한다(화면 전환은 저장소가 한다).
+    var onChildReady: () -> Void = {}
+
     @State private var 보호자_갈래를_묻는다 = false
-    @State private var 아이는_안된다고_알린다 = false
+    @State private var 아이로_간다 = false
     @State private var 합류로_간다 = false
     @State private var 발급으로_간다 = false
 
@@ -59,7 +65,7 @@ struct RoleSelectView: View {
                 .buttonStyle(KidCareFilledButtonStyle(minHeight: 64))
                 .padding(.bottom, 12)
 
-                Button { 아이는_안된다고_알린다 = true } label: {
+                Button { 아이로_간다 = true } label: {
                     역할_버튼_글자("role_child", 그림: "face.smiling")
                 }
                 .buttonStyle(KidCareTonalButtonStyle(minHeight: 64, fontSize: 18, fullWidth: true))
@@ -86,14 +92,10 @@ struct RoleSelectView: View {
                 Button("guardian_start_join_family") { 합류로_간다 = true }
                 Button("dialog_cancel", role: .cancel) {}
             }
-            .alert("ios_child_unsupported_title", isPresented: $아이는_안된다고_알린다) {
-                // 이 알림은 iOS 전용(설계서 §4①④)이라 제목·본문처럼 버튼도
-                // 전용 키를 쓴다 — 지도 화면의 배터리 안내 다이얼로그는 무관한
-                // 화면이라 그 확인 버튼 키를 빌려 쓰지 않는다(문구가 우연히 같을
-                // 뿐이라 그쪽이 나중에 바뀌면 여기까지 말없이 따라 바뀔 뻔했다).
-                Button("ios_child_unsupported_confirm", role: .cancel) {}
-            } message: {
-                Text("ios_child_unsupported_body")
+            .navigationDestination(isPresented: $아이로_간다) {
+                // 보호자 합류와 **같은 화면**이다 — `expectedRole` 만 다르고 그 값으로
+                // `JoinFamilyView` 가 `RoleStore.role = child` 까지 저장한다(그 파일 `:138`).
+                JoinFamilyView(expectedRole: .child, onJoined: onChildReady)
             }
             .navigationDestination(isPresented: $합류로_간다) {
                 JoinFamilyView(expectedRole: .guardian, onJoined: onGuardianReady)

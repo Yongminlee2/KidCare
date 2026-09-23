@@ -52,6 +52,15 @@ final class PlaceWatcher {
     /// 장소 목록을 갈아 끼우고 OS 지역을 다시 건다(`:63-67`). 부르는 곳은
     /// `PlaceRepository.observePlaces` 의 스냅샷 하나뿐이다 — 앱이 (다시) 뜰 때의 첫 스냅샷이
     /// 안드로이드의 `refresh` 자리이고, 그 뒤의 스냅샷이 `sync_rules` 자리다(설계서 §7.3).
+    ///
+    /// OS 등록은 **고른 결과가 실제로 달라졌을 때만** 다시 건다. `observePlaces` 가
+    /// `includeMetadataChanges: true`(`PlaceRepository.swift:42`)라 앱이 뜨자마자 캐시본·서버본으로
+    /// 두 번 도는데, 그때마다 스무 개를 지웠다 다시 걸면 iOS 의 초기 상태 판정이 매번 처음부터
+    /// 시작한다(2단계 통합 검토 M3). 비교는 OS 에 실제로 가는 넷 — id·lat·lng·반경 — 으로만 한다.
+    /// 이름이나 알림 스위치가 바뀌어도 원은 그대로다.
+    ///
+    /// **`places` 는 언제나 갱신한다.** 건너뛰는 것은 OS 등록뿐이다 — 이 구분을 놓치면 부모가
+    /// 지운 장소의 판정이 살아남는다.
     func apply(placeDocs: [PlaceDoc]) {
         places = placeDocs.map(\.asPlace)
         let report = GeofenceRegionSelection.chooseWithReport(places)
@@ -59,8 +68,33 @@ final class PlaceWatcher {
             // 조용히 실패하면 "왜 도착 알림이 안 오지"를 알아낼 방법이 없다(`:172-174`).
             logger.warning("장소 \(self.places.count)개 중 \(report.chosen.count)개만 지역으로 걸었다(상한 \(GeofenceRegionSelection.maxRegions) · 반경 0 제외)")
         }
+        let regions = report.chosen.map(RegionKey.init)
+        // **첫 apply 는 언제나 건다**(`appliedRegions` 가 아직 nil 이다). 앱이 죽어 있는 동안
+        // 부모가 장소를 전부 지웠으면 OS 에는 옛 원이 그대로 남아 있는데, 빈 목록을 "같다"고
+        // 넘기면 그 원들이 영영 안 걷힌다.
+        guard appliedRegions != regions else { return }
+        appliedRegions = regions
         monitor.replaceMonitoredRegions(report.chosen)
     }
+
+    /// OS 에 실제로 가는 값만 담는다 — 이름·알림 스위치는 원을 바꾸지 않으므로 뺀다.
+    private struct RegionKey: Equatable {
+        let id: String
+        let lat: Double
+        let lng: Double
+        let radiusMeters: Double
+
+        init(_ place: Place) {
+            id = place.id
+            lat = place.lat
+            lng = place.lng
+            radiusMeters = place.radiusMeters
+        }
+    }
+
+    /// 마지막으로 OS 에 건 원들. `nil` 은 "아직 한 번도 안 걸었다"로, 빈 배열(`[]`, 걸 것이
+    /// 하나도 없다)과 다른 말이다.
+    private var appliedRegions: [RegionKey]?
 
     /// 현재 좌표가 부모가 등록한 장소 안인지 빠르게 확인한다(`:69-100`).
     ///

@@ -135,4 +135,36 @@ struct PlaceWatcherTests {
         #expect(적힌것.docs.isEmpty, "그 콜백에는 히스테리시스도 중복 억제도 정확도 문턱도 없다")
         #expect(monitor.한_점_부탁 == 1)
     }
+
+    // MARK: 2단계 M3 — 목록이 실제로 바뀐 때만 다시 건다
+
+    @Test("같은 목록이면 OS 에 다시 안 건다 — 앱이 뜨자마자 캐시본·서버본으로 두 번 도는 자리다 (2단계 M3)")
+    func 같은_목록이면_다시_안_건다() {
+        let (watcher, monitor, _, _) = 만든다()
+        let 곳 = PlaceDoc(id: "id0", name: "학교", lat: 37.5665, lng: 126.9780, radiusMeters: 100)
+        watcher.apply(placeDocs: [곳])
+        #expect(monitor.등록_횟수 == 1, "첫 apply 는 언제나 건다")
+
+        watcher.apply(placeDocs: [곳])
+        #expect(monitor.등록_횟수 == 1, "같은 원을 지웠다 다시 걸면 iOS 의 초기 상태 판정이 매번 처음부터 시작한다")
+
+        // 이름과 알림 스위치는 OS 에 가는 값이 아니다 — 바뀌어도 원은 그대로다.
+        watcher.apply(placeDocs: [PlaceDoc(id: "id0", name: "학원", lat: 37.5665, lng: 126.9780, radiusMeters: 100)])
+        #expect(monitor.등록_횟수 == 1)
+        #expect(watcher.places.first?.name == "학원", "건너뛰는 것은 OS 등록뿐이다 — places 는 언제나 갱신한다")
+    }
+
+    @Test("반경이 바뀌면 다시 건다 — 원이 실제로 달라졌다")
+    func 반경이_바뀌면_다시_건다() {
+        let (watcher, monitor, _, _) = 만든다()
+        watcher.apply(placeDocs: [PlaceDoc(id: "id0", name: "학교", lat: 37.5665, lng: 126.9780, radiusMeters: 100)])
+        watcher.apply(placeDocs: [PlaceDoc(id: "id0", name: "학교", lat: 37.5665, lng: 126.9780, radiusMeters: 250)])
+        #expect(monitor.등록_횟수 == 2)
+        #expect(monitor.마지막_등록.first?.radiusMeters == 250)
+
+        // 장소가 통째로 사라지면 걸어 둔 원도 걷어야 한다 — 안 그러면 지운 장소의 알림이 계속 온다.
+        watcher.apply(placeDocs: [])
+        #expect(monitor.등록_횟수 == 3)
+        #expect(monitor.마지막_등록.isEmpty)
+    }
 }

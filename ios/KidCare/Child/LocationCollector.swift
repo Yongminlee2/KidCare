@@ -43,8 +43,13 @@ final class LocationCollector: NSObject, LocationSource {
     private var appliedInsideKnownPlace = false
     private var started = false
 
-    /// 지금 걸려 있는 모드. 화면(`ChildSimView`)과 테스트가 읽는다.
+    /// 지금 걸려 있는 모드. 테스트가 읽는다.
     var currentMode: CollectionMode { mode }
+
+    /// 지금 권한 상태. **매니저를 밖으로 열지 않는다** — 매니저는 앱이 사는 동안 하나여야 하고
+    /// (설계서 §5.2), 밖에서 만질 수 있게 되면 언젠가 두 번째가 생긴다. 화면(`ChildHomeModel`)과
+    /// `ConditionWatcher` 가 **같은 값**을 이 자리에서 읽는다(3단계 Pre-flight 표).
+    var permissions: ChildPermissions.Snapshot { ChildPermissions.snapshot(manager: manager) }
 
     override init() {
         super.init()
