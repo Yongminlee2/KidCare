@@ -13262,6 +13262,95 @@
         }
       }
     },
+    "ios_child_network_readonly": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "끄고 켜는 것은 폰이 다른 앱에 허용하지 않아요. 상태만 보여드려요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your child's phone does not let another app switch these on or off. We can only show you the state."
+          }
+        }
+      }
+    },
     "ios_child_no_remote_control": {
       "extractionState": "manual",
       "localizations": {

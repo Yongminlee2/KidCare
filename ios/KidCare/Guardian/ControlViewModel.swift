@@ -217,6 +217,21 @@ final class ControlViewModel {
     /// 여기서도 막아 둔다 — 화면을 우회하는 길이 있어도 명령이 안 나가야 한다.
     var 새로_확인_활성화: Bool { childUid != nil && 명령을_보낼_수_있나 && !상태_읽는_중 && !ringerQueryInFlight }
 
+    /// 소리 잠금 스위치를 보일까. **아이 폰은 `lockEnabled` 를 읽지 않는다**
+    /// (`grep -rn lockEnabled ios/KidCare/Child` → 0건). 켜도 아무 일이 안 일어나는 스위치라,
+    /// 값이 없는 칸과 답이 없는 질문을 흐리게 남겨 두느니 지운다 — 소리 상태 카드를 숨긴 것과
+    /// **같은 이유, 같은 판단**이다(판정 기록 7, 통합 검토 M1). 흐리게 두면 부모는 "지금은 안
+    /// 되지만 언젠가 되는 것"으로 읽는다.
+    var 잠금_스위치를_보일까: Bool { 플랫폼 != .iOS }
+
+    /// 인터넷 카드 아래 한 줄. **카드 자체는 안 잠근다** — 아이폰 아이도 `network` 를 실제로
+    /// 올린다(통합 검토 L3). 다만 "끄고 켜는 것은 **안드로이드가** 허용하지 않아요"는 아이폰
+    /// 아이를 고른 부모에게 틀린 문장이다. 안드로이드 아이가 읽는 문장은 **한 글자도 안 바꾼다**
+    /// (주인 판정) — 그래서 문구를 고치지 않고 아이폰 전용 키를 하나 더 둔다.
+    var 인터넷_설명_키: String.LocalizationValue {
+        플랫폼 == .iOS ? "ios_child_network_readonly" : "control_network_readonly"
+    }
+
     /// 아이 폰이 지금 울리고 있는지는 **알 방법이 없다** — 우리가 울린 지 5분이 안 됐으면
     /// 울린다고 믿는다(:875-899).
     var 울리는_중이라고_믿는가: Bool {
@@ -610,6 +625,15 @@ final class ControlViewModel {
     func 잠금을_바꾼다(_ enabled: Bool) async {
         guard let childUid else {
             commandUi = .failed(String(localized: "map_no_child"))
+            return
+        }
+        // 이 저장소는 모든 보내기를 **두 겹**으로 막는다 — 뷰와 보내는 자리(`send:441-445`).
+        // 잠금만 뷰 한 겹이었다(통합 검토 M1). 명령 문서를 만들지는 않지만
+        // (`ScheduleRepository.setRingerLock` → `schedules/settings` 쓰기) 도달하면 `:626` 이
+        // `.queued` 로 "인터넷이 연결되면 그때 애기폰으로 가서 실행돼요"를 띄운다 — 아이폰
+        // 아이에게 거짓말이다. 게다가 아이 폰은 그 값을 **읽지도 않는다**.
+        guard 명령을_보낼_수_있나 else {
+            commandUi = .failed(String(localized: "ios_child_no_remote_control"))
             return
         }
         lockEnabled = enabled

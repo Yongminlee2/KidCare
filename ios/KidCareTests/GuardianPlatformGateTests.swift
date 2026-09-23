@@ -48,7 +48,8 @@ struct GuardianPlatformGateTests {
         _ 플랫폼: [String: ChildPlatform],
          기록: 보낸_것,
         statusFetch: (@Sendable (String, String) async throws -> ChildStatusDoc?)? = nil,
-        platforms: ChildPlatformStore? = nil
+        platforms: ChildPlatformStore? = nil,
+        잠금: 보낸_것 = 보낸_것()
     ) -> ControlViewModel {
         ControlViewModel(
             familyId: "f1",
@@ -60,7 +61,7 @@ struct GuardianPlatformGateTests {
             commandObserve: { _, _, _, _, _ in 가짜_리스너() },
             statusFetch: statusFetch ?? { _, _ in nil },
             settingsObserve: { _, _, _, _ in 가짜_리스너() },
-            lockSave: { _, _, _ in },
+            lockSave: { _, _, enabled in 잠금.적는다("lock:\(enabled)") },
             serverNow: { _ in 0 },
             deviceNow: { 0 },
             commandSleep: { _ in }
@@ -328,6 +329,45 @@ struct GuardianPlatformGateTests {
         #expect(기록.types.isEmpty)
         #expect(vm.pendingSync == false)
         #expect(store.pendingSync(childUid: "c1") == false)
+    }
+
+    /// 통합 검토 M1. 잠금 스위치는 **뷰에만** 막혀 있었다 — 이 저장소가 다른 모든 보내기에
+    /// 적용한 "두 겹"(`ControlViewModel.swift:441-445`)에서 혼자 벗어나 있었다.
+    @Test("아이폰 아이면 소리 잠금이 저장까지 가지 않고, 스위치를 아예 안 보인다")
+    func 아이폰이면_소리_잠금이_저장까지_안_간다() async {
+        let 기록 = 보낸_것()
+        let 잠금 = 보낸_것()
+        let vm = 관리_뷰모델(["c1": .iOS], 기록: 기록, 잠금: 잠금)
+
+        await vm.잠금을_바꾼다(true)
+
+        #expect(잠금.types.isEmpty)          // `schedules/settings` 쓰기가 안 나갔다
+        #expect(vm.lockEnabled == false)     // 스위치가 켜진 모양으로 남지 않는다
+        #expect(vm.잠금_스위치를_보일까 == false)
+        #expect(vm.commandUi == .failed(String(localized: "ios_child_no_remote_control")))
+    }
+
+    @Test("안드로이드 아이면 소리 잠금은 지금과 똑같다")
+    func 안드로이드면_소리_잠금이_지금과_똑같다() async {
+        let 기록 = 보낸_것()
+        let 잠금 = 보낸_것()
+        let vm = 관리_뷰모델(["c1": .android], 기록: 기록, 잠금: 잠금)
+
+        await vm.잠금을_바꾼다(true)
+
+        #expect(잠금.types == ["lock:true"])
+        #expect(vm.lockEnabled == true)
+        #expect(vm.잠금_스위치를_보일까 == true)
+    }
+
+    /// 통합 검토 L3. 인터넷 카드는 **안 잠근다**(아이폰도 `network` 를 실제로 올린다).
+    /// 설명 한 줄만 참말로 바꾼다. 안드로이드 아이가 읽는 문장은 **한 글자도 안 바뀐다**.
+    @Test("인터넷 카드 설명이 아이폰 아이에게 안드로이드를 말하지 않는다")
+    func 인터넷_설명이_기종을_안_속인다() async {
+        let 기록 = 보낸_것()
+        #expect(관리_뷰모델(["c1": .iOS], 기록: 기록).인터넷_설명_키 == "ios_child_network_readonly")
+        #expect(관리_뷰모델(["c1": .android], 기록: 기록).인터넷_설명_키 == "control_network_readonly")
+        #expect(관리_뷰모델([:], 기록: 기록).인터넷_설명_키 == "control_network_readonly")
     }
 
     // MARK: - 장소 탭

@@ -60,6 +60,9 @@ struct ControlView: View {
                 }
                 모드_버튼들.padding(.top, 8)
 
+                // 아이 폰이 `lockEnabled` 를 **읽지 않으므로** 아이폰 아이에게는 카드째 지운다 —
+                // 소리 상태 카드와 같은 이유다(통합 검토 M1). 보내는 자리에도 guard 가 따로 있다.
+                if viewModel.잠금_스위치를_보일까 {
                 // 사람이 민 값만 저장으로 간다 — 서버에서 온 값은 get 으로만 들어온다(:234-238).
                 Toggle(isOn: Binding(
                     get: { viewModel.lockEnabled },
@@ -75,6 +78,7 @@ struct ControlView: View {
                 .opacity(viewModel.버튼_활성화 ? 1 : 0.38)
                 .padding(.top, 20)
                 보조_문구("control_lock_hint")
+                }
 
                 구분선
 
@@ -189,7 +193,13 @@ struct ControlView: View {
                 if let 스위치 = viewModel.와이파이_스위치_문구 {
                     Text(스위치).font(.caption).foregroundStyle(KidCarePalette.inkSoft).padding(.top, 1)
                 }
-                보조_문구("control_network_readonly").padding(.top, 6)
+                // 아이폰 아이에게는 "안드로이드가 허용하지 않아요"가 틀린 문장이다(통합 검토 L3).
+                // 카드는 그대로 둔다 — 아이폰도 `network` 를 실제로 올린다.
+                Text(String(localized: viewModel.인터넷_설명_키))
+                    .font(.caption)
+                    .foregroundStyle(KidCarePalette.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 6)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

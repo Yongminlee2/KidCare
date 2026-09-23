@@ -148,6 +148,7 @@
   "ios_child_cannot_start": "It could not start just now, so your location is not being sent yet. Where there is internet, tap 'Try again'.",
   "ios_child_force_quit_notice": "If you close the app all the way (swipe it away in the app switcher), your location stops. Your parents cannot see you until you open it again.",
   "ios_child_low_power_notice": "Low Power Mode is on, so your location may arrive less often.",
+  "ios_child_network_readonly": "Your child's phone does not let another app switch these on or off. We can only show you the state.",
   "ios_child_no_remote_control": "Your child's phone is an iPhone, so this cannot be done. Location and place alerts still arrive.",
   "ios_child_open_settings": "Open Settings",
   "ios_child_perm_always_reason": "It is set to 'While Using the App'. Your location stops as soon as you leave the screen. Change it to 'Always' in Settings.",
