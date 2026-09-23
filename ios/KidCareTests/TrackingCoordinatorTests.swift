@@ -262,6 +262,20 @@ struct TrackingCoordinatorTests {
 
     // MARK: 업로드 판정 — 설계서 §6.4
 
+    /// **통합 검토 L2.** `ChildSession.stop()` 이 코디네이터를 nil 로 두기만 하고 돌던 업로드를
+    /// 안 끊었다 — 방금 떠난 가족의 문서에 쓰기가 한 번 더 갔다.
+    @Test("멈추면 아직 안 시작한 업로드가 안 나간다 (통합 검토 L2)")
+    func 멈추면_업로드를_끊는다() async {
+        let 업로드 = 가짜_업로더()
+        let c = 만든다(업로더: 업로드)
+        c.handle(fix(at: t0))                 // 업로드 작업을 만든다
+        #expect(c.uploadTask != nil)
+        c.멈춘다()                             // 주 액터를 안 놓았으므로 작업은 아직 시작도 안 했다
+        #expect(c.uploadTask?.isCancelled == true)
+        await c.uploadTask?.value
+        #expect(업로드.횟수 == 0, "떠난 가족의 문서에 쓰기가 한 번 더 가지 않는다")
+    }
+
     @Test("첫 좌표에서 한 번 올린다 — lastUploadAt 이 0 이고 lastUploadedFix 가 nil 이라(설계서 §10.1)")
     func 첫_좌표_업로드() async {
         let 업로드 = 가짜_업로더()

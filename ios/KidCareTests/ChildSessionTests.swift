@@ -101,4 +101,19 @@ struct ChildSessionTests {
     private func 점(at: Int64, meters: Double = 0) -> Fix {
         Fix(lat: 37.5 + meters / Self.위도1도미터, lng: 127.0, accuracy: 10, at: at)
     }
+
+    /// **통합 검토 M2.** 가족에서 빠진 아이 폰이 스스로 정리하지 않았다 — `child_family_gone` 을
+    /// 띄우기만 하고 장소 리스너 하나(하루 50 읽기 예산에서 새는 읽기)와 **OS 지역 스무 개**가
+    /// 무기한 살아 있었다. `stop()` 의 유일한 호출자가 화면의 '다시 연결' 버튼이라, 아이가 앱을
+    /// 안 열면 영영 안 멈춘다.
+    ///
+    /// 파이프라인을 띄울 수 없는 프로세스라 **판정만** 본다(`startTarget`·`mayStart` 와 같은 규율).
+    @Test("서버가 '멤버가 아니다'라고 확답하면 화면만 바꾸는 것이 아니라 멈춘다 (통합 검토 M2)")
+    func 가족에서_빠지면_멈춘다() {
+        #expect(ChildSession.멤버_답을_읽는다(nil) == .그대로,
+                "모름은 아무것도 안 바꾼다 — 오프라인 한 번에 정상이던 화면이 뒤집히면 안 된다")
+        #expect(ChildSession.멤버_답을_읽는다(true) == .화면만)
+        #expect(ChildSession.멤버_답을_읽는다(false) == .멈춘다,
+                "장소 리스너와 OS 지역 스무 개를 여기서 걷지 않으면 걷을 사람이 없다")
+    }
 }

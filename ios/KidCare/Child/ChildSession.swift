@@ -197,8 +197,11 @@ final class ChildSession {
         // 자리(= 지역 등록)이고, 그 뒤의 스냅샷이 `sync_rules` 자리다.
         placesListener = PlaceRepository.observePlaces(
             familyId: familyId, childUid: childUid,
-            onChange: { docs, _ in
-                Task { @MainActor in placeWatcher.apply(placeDocs: docs) }
+            // **약하게 잡는다**(통합 검토 L1). 강하게 잡으면 `stop()` 뒤에도 이 클로저가
+            // 감시자를 살려 두고, 늦은 스냅샷이 죽은 세션에 지역을 다시 건다. 감시자 쪽에도
+            // 멈춤 guard 가 있다 — 두 겹 중 하나가 사라져도 나머지가 막는다.
+            onChange: { [weak placeWatcher] docs, _ in
+                Task { @MainActor in placeWatcher?.apply(placeDocs: docs) }
             },
             onError: { [weak self] error in
                 self?.logger.warning("장소 구독 실패: \(String(describing: error), privacy: .public)")
@@ -287,11 +290,37 @@ final class ChildSession {
             let answer = await FamilyRepository.isStillMember(familyId: familyId, uid: childUid)
             // `isStillMember` 는 취소에도 `nil`(모름)로 답한다 — 부르는 쪽이 한 번 더 봐야 한다.
             guard !Task.isCancelled, let self else { return }
+            let 할_일 = Self.멤버_답을_읽는다(answer)
             // 모름은 아무것도 안 바꾼다(`ChildHomeActivity.kt:146-147`).
-            guard let answer else { return }
+            guard 할_일 != .그대로, let answer else { return }
             self.stillMember = answer
             self.refreshHome()
+            // 화면이 먼저 말하고 그다음에 멈춘다 — 순서가 뒤집히면 `refreshHome` 이 수집기가
+            // 없어 그대로 빠져나가고(`guard let collector`), 아이는 왜 멈췄는지 못 읽는다.
+            // `stop()` 이 이 `memberCheck` 작업(지금 이 작업)도 끊지만, 남은 일이 없다.
+            if 할_일 == .멈춘다 { self.stop() }
         }
+    }
+
+    /// 멤버 확인의 답 하나로 무엇을 할지. **순수 판정이라 테스트가 부른다** — 진짜
+    /// `refreshHome` 은 수집기와 Firestore 를 요구해서 테스트 프로세스에서 못 돈다
+    /// (`startTarget`·`mayStart` 와 같은 규율).
+    enum 멤버_답: Equatable {
+        /// 모름. **아무것도 안 바꾼다** — 오프라인 한 번에 정상이던 화면이 뒤집히면 안 된다.
+        case 그대로
+        case 화면만
+        /// 서버가 "이 가족의 멤버가 아니다"라고 확답했다. 화면을 바꾸고 **파이프라인을 멈춘다**.
+        case 멈춘다
+    }
+
+    /// 통합 검토 M2. 예전에는 `child_family_gone` 을 띄우기만 하고 아무것도 안 멈췄다.
+    /// 멤버십 재확인 자체가 `onAppear`·`scenePhase == .active` 에서만 도는데
+    /// (`ChildHomeView.swift:60-64`), 가족에서 빠진 아이가 앱을 안 열면 장소 리스너 하나와
+    /// **OS 지역 스무 개**가 무기한 살아 있다 — 그 폰은 이미 아무 데도 못 보내는데 배터리와
+    /// 읽기만 쓴다.
+    static func 멤버_답을_읽는다(_ answer: Bool?) -> 멤버_답 {
+        guard let answer else { return .그대로 }
+        return answer ? .화면만 : .멈춘다
     }
 
     /// 두 걸음짜리 위치 권한 요청(설계서 §8.1). 두 걸음을 화면이 다시 적지 않는다.
@@ -318,6 +347,9 @@ final class ChildSession {
         placeWatcher?.stopMonitoring()
         collector?.stop()
         ticker?.stop()
+        // 돌던 업로드를 끊는다 — 버리기만 하면 방금 떠난 가족의 문서에 쓰기가 한 번 더 간다
+        // (통합 검토 L2).
+        coordinator?.멈춘다()
         collector = nil
         coordinator = nil
         ticker = nil

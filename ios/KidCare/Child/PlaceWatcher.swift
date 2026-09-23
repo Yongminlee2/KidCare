@@ -62,6 +62,13 @@ final class PlaceWatcher {
     /// **`places` 는 언제나 갱신한다.** 건너뛰는 것은 OS 등록뿐이다 — 이 구분을 놓치면 부모가
     /// 지운 장소의 판정이 살아남는다.
     func apply(placeDocs: [PlaceDoc]) {
+        // **멈춘 뒤에는 아무것도 다시 걸지 않는다**(통합 검토 L1). 구독 콜백은 `remove()`
+        // 직전에 이미 대기열에 올라 있을 수 있고, 그 늦은 스냅샷이 여기로 온다.
+        // `stopMonitoring()` 이 `appliedRegions` 를 `[]` 로 적어 두므로 아래 중복 방지 검사도
+        // 안 걸린다 — 죽은 세션에 지역이 다시 걸리고, 그것을 뗄 객체는 `ChildSession` 에서
+        // 더 이상 도달할 수 없다. 한 번 멈춘 감시자는 다시 쓰지 않는다(다시 페어링하면
+        // `ChildSession.build` 가 새로 만든다).
+        guard !멈췄다 else { return }
         places = placeDocs.map(\.asPlace)
         let report = GeofenceRegionSelection.chooseWithReport(places)
         if report.dropped > 0 {
@@ -88,6 +95,7 @@ final class PlaceWatcher {
     /// `appliedRegions` 를 `[]` 로 적는다 — "아직 한 번도 안 걸었다"(`nil`)가 아니라
     /// "지금 OS 에 걸린 것이 없다"가 사실이기 때문이다.
     func stopMonitoring() {
+        멈췄다 = true
         appliedRegions = []
         monitor.replaceMonitoredRegions([])
     }
@@ -106,6 +114,9 @@ final class PlaceWatcher {
             radiusMeters = place.radiusMeters
         }
     }
+
+    /// 한 번 [stopMonitoring] 을 지났나. 되돌리는 길은 **없다**(통합 검토 L1).
+    private var 멈췄다 = false
 
     /// 마지막으로 OS 에 건 원들. `nil` 은 "아직 한 번도 안 걸었다"로, 빈 배열(`[]`, 걸 것이
     /// 하나도 없다)과 다른 말이다.

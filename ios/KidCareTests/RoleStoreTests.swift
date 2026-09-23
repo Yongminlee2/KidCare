@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import KidCare
 
+@MainActor
 struct RoleStoreTests {
 
     private func 새_저장소() -> RoleStore {
@@ -60,5 +61,25 @@ struct RoleStoreTests {
         #expect(두번째.role == .child)
         #expect(두번째.familyId == "F1")
         #expect(두번째.childUid == "C1")
+    }
+
+    /// **통합 검토 M3.** 역할을 지우는 길이 셋인데(`ChildRootView.swift:29`,
+    /// `InviteCodeView.swift:103`, `LeaveFamilyModel.swift:210`) 세션을 같이 멈추는 것은
+    /// 첫째뿐이었다. 역할이 사라진 폰에서 수집기·티커·리스너·OS 지역 스무 개가 조용히
+    /// 고아가 된다. 짝을 **여기서** 지어 두면 앞으로 어느 길이 생겨도 같이 멈춘다.
+    @Test("역할을 지우면 아이 수집도 같이 멈춘다 (통합 검토 M3)")
+    func 역할을_지우면_수집도_멈춘다() {
+        final class 센다 { var 횟수 = 0 }
+        let 멈춤 = 센다()
+        let store = RoleStore(defaults: UserDefaults(suiteName: "kidcare.test.\(UUID().uuidString)")!,
+                              수집을_멈춘다: { 멈춤.횟수 += 1 })
+        store.role = .child
+        store.familyId = "fam"
+
+        store.clear()
+
+        #expect(멈춤.횟수 == 1)
+        #expect(store.role == nil)
+        #expect(store.familyId == nil)
     }
 }

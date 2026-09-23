@@ -294,6 +294,17 @@ final class TrackingCoordinator {
     /// 하나가 통과하는 순서(설계서 §6.1 의 10단계)가 위치 콜백과 엇갈릴 수 있다 — 1단계가 그
     /// 순서를 계약으로 못박았으므로 건드리지 않고, 쓰기가 끝난 쪽이 이 문으로 돌아온다.
     /// 안드로이드는 `handle` 이 코루틴이라 그 자리에서 기다린다(`TrackingService.kt:631-639`).
+    /// 돌던 업로드를 끊는다. `ChildSession.stop()` 이 코디네이터를 버리기 **전에** 부른다
+    /// (통합 검토 L2) — 그냥 nil 로 두면 이미 시작한 업로드가 **방금 떠난 가족의 문서에**
+    /// 쓰기를 한 번 더 보낸다.
+    ///
+    /// 취소가 실제로 무는 자리는 [uploadNow] 입구다. Firestore 쓰기 자체는 취소에 응하지
+    /// 않으므로(`FirstToFinish.swift` 의 같은 근거) 이미 날아간 쓰기는 못 되돌린다 — 아직
+    /// 시작도 안 한 것을 막는 것이 이 함수가 하는 일이다.
+    func 멈춘다() {
+        uploadTask?.cancel()
+    }
+
     func eventWritten(at now: Int64) {
         guard let fix = lastFix, shouldUpload(now: now, fix: fix, eventJustWritten: true) else { return }
         lastUploadAt = now
@@ -336,6 +347,9 @@ final class TrackingCoordinator {
     /// 파일에서 복구한 옛 점으로 대신 채우지 않는 것도 같은 이유다 — 그 점은 몇 시간 전일 수 있는데
     /// 상태 문서에 넣는 순간 서버 시각이 "방금"으로 찍힌다(:713-717).
     func uploadNow() async {
+        // 멈춘 세션의 업로드는 안 나간다(통합 검토 L2). 주 액터를 놓기 전에 취소되면 여기서
+        // 걸린다 — `handle` 이 작업을 만든 직후 `멈춘다()` 가 도는 길이 정확히 그 모양이다.
+        guard !Task.isCancelled else { return }
         guard let fix = lastFix else { return }
         do {
             try await uploader.upload(familyId: familyId, fix: fix, points: buffer.points, dayKey: buffer.dayKey)

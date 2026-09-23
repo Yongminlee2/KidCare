@@ -54,6 +54,25 @@ struct PlaceWatcherTests {
         #expect(watcher.places.count == 25, "판정은 스물다섯 곳 전부로 한다 — OS 상한은 등록에만 걸린다")
     }
 
+    /// 통합 검토 L1. `ChildSession` 의 장소 구독은 `remove()` 직전에 이미 대기열에 올라 있을 수
+    /// 있다. 그 늦은 스냅샷이 **멈춘** 감시자에 지역을 다시 걸면, 그것을 뗄 객체는 세션에서
+    /// 더 이상 도달할 수 없다 — OS 지역 스무 개가 주인 없이 남는다.
+    @Test("멈춘 뒤에 온 늦은 스냅샷은 지역을 다시 걸지 않는다 (통합 검토 L1)")
+    func 멈춘_뒤의_늦은_스냅샷() {
+        let (watcher, monitor, _, _) = 만든다()
+        watcher.apply(placeDocs: 장소들(3))
+        #expect(monitor.등록_횟수 == 1)
+
+        watcher.stopMonitoring()
+        #expect(monitor.마지막_등록.isEmpty)
+        let 걷은_횟수 = monitor.등록_횟수
+
+        watcher.apply(placeDocs: 장소들(5))
+
+        #expect(monitor.등록_횟수 == 걷은_횟수, "멈춘 감시자는 OS 에 아무것도 다시 걸지 않는다")
+        #expect(monitor.마지막_등록.isEmpty)
+    }
+
     @Test("멈추면 OS 지역을 전부 걷는다 — 역할을 지운 뒤에도 옛 가족의 원이 앱을 깨우면 안 된다 (통합 검토 M2)")
     func 멈추면_지역을_걷는다() {
         let (watcher, monitor, _, _) = 만든다()
