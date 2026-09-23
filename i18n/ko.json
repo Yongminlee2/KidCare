@@ -152,7 +152,7 @@
   "ios_child_perm_always_title": "위치 '항상 허용'",
   "ios_child_perm_precise_reason": "정확한 위치가 꺼져 있어요. 이러면 위치가 너무 흐릿해서 아무것도 전달되지 않아요. 설정에서 켜주세요.",
   "ios_child_perm_precise_title": "정확한 위치",
-  "ios_child_perm_refresh_reason": "이게 꺼져 있으면 앱을 보고 있을 때만 위치가 전달돼요. 설정에서 켜주세요.",
+  "ios_child_perm_refresh_reason": "꺼져 있으면 앱을 닫아 둔 동안 위치가 늦게 오거나 멈출 수 있어요. 설정에서 켜주세요.",
   "ios_child_perm_refresh_title": "백그라운드 앱 새로고침",
   "ios_leave_family_done_not_signed_out_message": "서버의 이 아이폰 보호자 연결을 지우고, 이 폰에서 가족 연결을 지웠어요. 익명 계정은 삭제를 확인하지 못했고 로그아웃도 되지 않았어요. 이 계정에는 가족 정보 없이 계정 번호와 만든 시각만 있어요.",
   "ios_leave_family_done_ok": "확인",

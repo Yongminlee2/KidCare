@@ -133,6 +133,42 @@ struct ConditionWatcherTests {
         #expect(시도.값 == 1)
     }
 
+    /// **통합 검토 I1 의 재발 방지 자리다.** 시뮬레이터로 재현했다: 권한 대화상자가 화면에
+    /// 떠 있는 채로 부모에게 "권한이 꺼졌어요 — 다시 켜주세요"가 이미 가 있었다.
+    /// CoreLocation 이 델리게이트가 붙는 순간 `.notDetermined` 인 채로 권한 변경 콜백을 한 번
+    /// 보내는 것이 원인이고, 되돌리는 이벤트는 설계상 영영 안 온다.
+    @Test("아직 묻지도 않은 권한(.notDetermined)은 꺼진 것이 아니다 — 첫 페어링에 거짓 경고가 가면 안 된다 (통합 검토 I1)")
+    func 묻기_전에는_조용() async throws {
+        let 기록부 = 기록()
+        let defaults = 새_저장소()
+        let watcher = ConditionWatcher(defaults: defaults, addEvent: { _, doc in 기록부.docs.append(doc) })
+        // 아이 폰을 막 페어링한 순간의 진짜 값이다 — 묻기 전에는 정확도도 reduced 로 답한다.
+        var 묻기_전 = 정상
+        묻기_전.authorization = .notDetermined
+        묻기_전.accuracy = .reducedAccuracy
+        try await watcher.check(familyId: "F", childUid: "C", batteryPercent: 80, permissions: 묻기_전, now: 10)
+        #expect(기록부.docs.isEmpty, "권한 대화상자가 떠 있는 동안 부모에게 아무 말도 가면 안 된다")
+        #expect(defaults.stringArray(forKey: "kidcare_conditions.permissions_off") == nil,
+                "기억도 건드리지 않는다 — 아직 아무것도 판정하지 않았다")
+
+        // 배터리 감시는 권한과 무관하다 — 이 문 밖에서 계속 돈다.
+        try await watcher.check(familyId: "F", childUid: "C", batteryPercent: 12, permissions: 묻기_전, now: 20)
+        #expect(기록부.docs.count == 1)
+        #expect(기록부.docs[0].type == EventType.lowBattery)
+
+        // 아이가 '허용'을 누른 뒤에도 조용하다(꺼진 것이 하나도 없다).
+        try await watcher.check(familyId: "F", childUid: "C", batteryPercent: 80, permissions: 정상, now: 30)
+        #expect(기록부.docs.count == 1)
+
+        // 그러다 **진짜로** 끄면 그때는 간다 — 이 갈래를 잃으면 감시가 통째로 죽는 셈이다.
+        var 껐다 = 정상
+        껐다.authorization = .denied
+        try await watcher.check(familyId: "F", childUid: "C", batteryPercent: 80, permissions: 껐다, now: 40)
+        #expect(기록부.docs.count == 2)
+        #expect(기록부.docs[1].type == EventType.permissionOff)
+        #expect(기록부.docs[1].detail.contains(String(localized: "perm_location_title")))
+    }
+
     @Test("저전력 모드는 이벤트를 만들지 않는다 (§8.3 — BATTERY_UNRESTRICTED 를 뺀 것과 같은 판단)")
     func 저전력은_조용() async throws {
         let 기록부 = 기록()

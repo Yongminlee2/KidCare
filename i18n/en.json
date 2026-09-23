@@ -152,7 +152,7 @@
   "ios_child_perm_always_title": "Location 'Always'",
   "ios_child_perm_precise_reason": "Precise Location is off. Your location is too fuzzy to send anything at all. Turn it on in Settings.",
   "ios_child_perm_precise_title": "Precise Location",
-  "ios_child_perm_refresh_reason": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings.",
+  "ios_child_perm_refresh_reason": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings.",
   "ios_child_perm_refresh_title": "Background App Refresh",
   "ios_leave_family_done_not_signed_out_message": "This iPhone's guardian link on the server was deleted, and the family link on this phone was removed. Deleting the anonymous account couldn't be confirmed, and signing out didn't work either. That account keeps only its ID and creation time, with no family info.",
   "ios_leave_family_done_ok": "OK",

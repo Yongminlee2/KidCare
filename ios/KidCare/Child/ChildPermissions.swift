@@ -64,6 +64,13 @@ enum ChildPermissions {
         Item.allCases.filter { !isGranted($0, s) }
     }
 
+    /// 아직 **묻지도 않았다**. 화면은 이 동안에도 `firstMissing` 으로 `.location` 을 말해야 하지만
+    /// (그게 곧 '허용' 버튼이다), 부모에게 보내는 경고는 이 동안 **한 마디도 나가면 안 된다** —
+    /// 한 번도 켠 적 없는 것을 "다시 켜주세요"라고 말하는 셈이기 때문이다(통합 검토 I1).
+    /// CoreLocation 을 아는 자리를 이 파일 하나로 묶으려고 여기에 둔다(`ConditionWatcher` 는
+    /// `import CoreLocation` 없이 돈다).
+    static func notYetAsked(_ s: Snapshot) -> Bool { s.authorization == .notDetermined }
+
     static func isGranted(_ item: Item, _ s: Snapshot) -> Bool {
         switch item {
         case .location:

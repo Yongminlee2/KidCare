@@ -102,6 +102,23 @@ final class ConditionWatcher {
     /// 적을 때 정렬해 두면 같은 상태가 늘 같은 바이트라 저장소가 헛되이 갱신되지 않는다.
     private func checkPermissions(familyId: String, childUid: String,
                                   permissions: ChildPermissions.Snapshot, now: Int64) async throws {
+        // **아직 묻지도 않은 권한은 꺼진 것이 아니다**(통합 검토 I1). CoreLocation 은 델리게이트가
+        // 붙는 순간 상태가 `.notDetermined` 인 채로 권한 변경 콜백을 한 번 보낸다. 그것을 그대로
+        // 판정하면 아이가 권한 대화상자에 답하기도 전에 부모에게 "애기폰에서 다시 켜주세요"가
+        // 가고, 아이가 '허용'을 눌러도 **되돌리는 이벤트는 설계상 영영 안 온다**(집합이 줄어드는
+        // 것은 안 알린다). 부모의 첫 5분에 읽지 않은 거짓 경고 하나가 영구히 남는다.
+        //
+        // 정본에서는 이 일이 일어날 수 없다 — 안드로이드의 감시는 `TrackingService` 안에서만 돌고
+        // 그 서비스는 권한이 전부 켜진 뒤에야 뜬다(`ChildHomeActivity.kt:96-101`). 코틀린 주석도
+        // 감시의 뜻을 "**켜져 있던** 권한이 꺼졌으면"이라고 못박았다(`ConditionWatcher.kt:110`).
+        // iOS 는 감시가 먼저 살아 있으므로 같은 문을 여기에 만든다.
+        //
+        // **기억도 건드리지 않는다.** 여기서 `[]` 를 적어 두면 나중에 진짜로 꺼진 순간이 여전히
+        // 첫 전환이라 결과는 같지만, "아직 아무것도 판정하지 않았다"를 그대로 두는 쪽이 정직하다.
+        // 진짜 거부(`.denied`)와 '앱 사용 중만'(`.authorizedWhenInUse`)은 이 문을 지나 그대로 알린다.
+        // 배터리 감시(`checkBattery`)는 권한과 무관하므로 이 문 밖에서 계속 돈다.
+        guard !ChildPermissions.notYetAsked(permissions) else { return }
+
         let offNow = ChildPermissions.allMissing(permissions)
         let names = Set(offNow.map(\.rawValue))
         let reported = Set(defaults.stringArray(forKey: Self.permissionsKey) ?? [])

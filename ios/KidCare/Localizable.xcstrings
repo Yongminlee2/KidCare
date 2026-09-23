@@ -13624,85 +13624,85 @@
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "id": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "it": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이게 꺼져 있으면 앱을 보고 있을 때만 위치가 전달돼요. 설정에서 켜주세요."
+            "value": "꺼져 있으면 앱을 닫아 둔 동안 위치가 늦게 오거나 멈출 수 있어요. 설정에서 켜주세요."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "th": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "With this off, your location is only sent while you are looking at the app. Turn it on in Settings."
+            "value": "With this off, your location may arrive late or stop while the app is closed. Turn it on in Settings."
           }
         }
       }
