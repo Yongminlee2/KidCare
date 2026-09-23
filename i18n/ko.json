@@ -145,6 +145,7 @@
   "holiday_substitute": "대체공휴일",
   "invite_code_done": "완료",
   "ios_alert_open_app_hint": "아이폰에서는 앱을 열었을 때 새 소식을 확인해요.",
+  "ios_child_battery_info_message": "현재 잔량은 아이 휴대폰이 보낸 상태로 확인할 수 있어요. 어떤 앱이 배터리를 얼마나 사용했는지는 아이폰 보안 정책상 원격으로 읽을 수 없으며, 아이 휴대폰의 설정 > 배터리에서 직접 확인해야 해요.",
   "ios_child_cannot_start": "지금은 시작하지 못했어요. 그래서 내 위치가 아직 전달되지 않아요. 인터넷이 되는 곳에서 '다시 해보기'를 눌러주세요.",
   "ios_child_force_quit_notice": "앱을 완전히 닫으면(앱 전환기에서 위로 밀기) 위치가 멈춰요. 다시 열 때까지 엄마 아빠가 볼 수 없어요.",
   "ios_child_low_power_notice": "저전력 모드가 켜져 있어 위치가 드문드문 올 수 있어요.",

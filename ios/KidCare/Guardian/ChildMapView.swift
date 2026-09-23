@@ -77,7 +77,8 @@ struct ChildMapView: View {
                     // 쓴 오류 중 무엇이 이기는지는 `MapViewModel.상태_줄_덮어쓰기_문구`
                     // 한 곳이 정한다(안드로이드 statusBar 처럼 마지막으로 쓴 쪽이 이긴다).
                     commandStatusText: viewModel.상태_줄_덮어쓰기_문구,
-                    isCommandBusy: viewModel.commandProgress.isInFlight || viewModel.liveTrackingState == .starting
+                    isCommandBusy: viewModel.commandProgress.isInFlight || viewModel.liveTrackingState == .starting,
+                    batteryInfoKey: viewModel.배터리_설명_키
                 )
             }
             .overlay(alignment: .bottomTrailing) {

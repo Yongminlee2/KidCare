@@ -6,9 +6,11 @@ import SwiftUI
 /// (:729)·`renderMapStatus`(:770)·`showBatteryInfo`(:254).
 ///
 /// **배터리 % 만 보여주고 "어떤 앱이 썼는지"는 안 보여준다.** 탭하면 뜨는 안내
-/// (`map_battery_info_message`)가 그 이유를 직접 말한다 — 안드로이드 보안 정책상
-/// 원격으로는 앱별 사용량을 읽을 수 없다. 그 이유를 안 보여주면 "왜 이것만
-/// 보여주나" 하는 문의로 되돌아온다(안드로이드 `showBatteryInfo` 주석).
+/// (`batteryInfoKey`)가 그 이유를 직접 말한다 — 원격으로는 앱별 사용량을 읽을 수 없다.
+/// 그 이유를 안 보여주면 "왜 이것만 보여주나" 하는 문의로 되돌아온다(안드로이드
+/// `showBatteryInfo` 주석). 안드로이드 아이는 "안드로이드 보안 정책상"이 참말이지만
+/// 아이폰 아이에게는 거짓말이라, 어느 문구를 쓸지는 `MapViewModel.배터리_설명_키`가
+/// 고른다(통합 검토 L3 와 같은 결).
 struct StatusCardView: View {
     /// 자녀 표시 이름. 비어 있으면 `child_default_name` 으로 물러나는 것은
     /// 부르는 쪽(`ChildMapView`)의 몫이다 — 이 뷰는 이미 정해진 이름만 그린다.
@@ -33,6 +35,11 @@ struct StatusCardView: View {
     /// 명령 발행·응답을 기다리는 동안 `true`. 안드로이드 `locate_progress`
     /// (`ProgressBar`)와 같은 자리 — 배터리 아이콘 옆에 작은 스피너를 돌린다.
     var isCommandBusy: Bool = false
+    /// 배터리 설명 팝업에 쓸 키. `MapViewModel.배터리_설명_키` — 아이폰 아이에게
+    /// "안드로이드 보안 정책상"이라는 거짓말을 하지 않기 위한 플랫폼별 문구다
+    /// (통합 검토 L3 와 같은 결). 기본값은 지금까지의 안드로이드 문구라 이 뷰를
+    /// 직접 쓰는 다른 자리(프리뷰 등)는 그대로 컴파일된다.
+    var batteryInfoKey: String.LocalizationValue = "map_battery_info_message"
 
     /// 본 화면의 선택기. 있으면 아이 이름이 선택 메뉴가 된다(MapTimelineFragment.kt:211-213). 미리보기처럼
     /// 선택기가 없는 곳에서는 넘겨받은 이름만 그린다.
@@ -130,7 +137,7 @@ struct StatusCardView: View {
         .alert(String(localized: "map_battery_info_title"), isPresented: $배터리_설명_표시) {
             Button(String(localized: "map_battery_info_confirm")) {}
         } message: {
-            Text(String(localized: "map_battery_info_message"))
+            Text(String(localized: batteryInfoKey))
         }
     }
 

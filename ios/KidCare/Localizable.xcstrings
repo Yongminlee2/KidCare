@@ -12995,6 +12995,95 @@
         }
       }
     },
+    "ios_child_battery_info_message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "현재 잔량은 아이 휴대폰이 보낸 상태로 확인할 수 있어요. 어떤 앱이 배터리를 얼마나 사용했는지는 아이폰 보안 정책상 원격으로 읽을 수 없으며, 아이 휴대폰의 설정 > 배터리에서 직접 확인해야 해요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "The level shown here is what your child's phone reported. iOS does not allow reading which app used how much battery from another phone, so that has to be checked in Settings > Battery on your child's phone."
+          }
+        }
+      }
+    },
     "ios_child_cannot_start": {
       "extractionState": "manual",
       "localizations": {
