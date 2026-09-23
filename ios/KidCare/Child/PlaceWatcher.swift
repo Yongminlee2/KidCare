@@ -77,6 +77,21 @@ final class PlaceWatcher {
         monitor.replaceMonitoredRegions(report.chosen)
     }
 
+    /// 감시를 접는다 — OS 에 걸어 둔 원을 **전부 걷는다**(통합 검토 M2).
+    ///
+    /// `LocationCollector.stop()` 은 `stopUpdatingLocation`·`stopMonitoringSignificantLocationChanges`
+    /// 만 부르고 등록한 지역은 그대로 둔다. 그래서 '다시 연결'로 역할을 지운 뒤에도 옛 가족의
+    /// 원 스무 개가 남아 계속 앱을 깨운다. 다시 페어링하면 새 `PlaceWatcher` 의 첫 `apply` 가
+    /// 저절로 낫지만, 다시 페어링하지 않는 폰에서는 영영 남는다(대가는 헛깨움과 배터리다 —
+    /// 가족이 없어 사건은 안 나간다). 거는 쪽이 `apply` 이므로 걷는 쪽도 여기에 둔다.
+    ///
+    /// `appliedRegions` 를 `[]` 로 적는다 — "아직 한 번도 안 걸었다"(`nil`)가 아니라
+    /// "지금 OS 에 걸린 것이 없다"가 사실이기 때문이다.
+    func stopMonitoring() {
+        appliedRegions = []
+        monitor.replaceMonitoredRegions([])
+    }
+
     /// OS 에 실제로 가는 값만 담는다 — 이름·알림 스위치는 원을 바꾸지 않으므로 뺀다.
     private struct RegionKey: Equatable {
         let id: String

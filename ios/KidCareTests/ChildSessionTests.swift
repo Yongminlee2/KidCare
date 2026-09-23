@@ -42,6 +42,27 @@ struct ChildSessionTests {
                 "저장된 역할이 child 면 화면과 무관하게 그 가족으로 시작한다")
     }
 
+    @Test("테스트 차단은 startIfChild 가 아니라 start 에 있다 (통합 검토 M3)")
+    func 문은_start_에_있다() {
+        #expect(ChildSession.mayStart(isRunningTests: true, running: false) == false,
+                "테스트 프로세스가 진짜 CLLocationManager 와 Firestore 파이프라인을 띄우면 안 된다")
+        #expect(ChildSession.mayStart(isRunningTests: false, running: true) == false,
+                "이미 뜬 세션을 두 번 띄우지 않는다")
+        #expect(ChildSession.mayStart(isRunningTests: false, running: false) == true)
+    }
+
+    /// **통합 검토 I3.** 화면의 초기값이 `.sharing` 이던 시절에는, 세션이 아예 못 뜬 폰에서
+    /// `refreshHome` 이 그대로 빠져나가 기본값 "공유 중"이 화면에 남았다. 지금 이 프로세스가
+    /// 정확히 그 상태다 — 세션이 절대 안 뜨므로 수집기가 없다.
+    @Test("세션이 안 뜬 폰의 화면은 '공유 중'이라고 말하지 않는다 (통합 검토 I3)")
+    func 안_뜬_세션의_화면() {
+        let session = ChildSession.shared
+        session.refreshHome()
+        #expect(session.running == false)
+        #expect(session.home.state != .sharing, "수집기가 하나도 없는데 '공유 중'이면 거짓말이다")
+        #expect(session.home.bodyKey != "child_sharing_on")
+    }
+
     /// **이 테스트가 1단계 I1 의 재발을 막는 자리다.** 컴파일러가 `ticker:` 를 강제하지만
     /// "넘기되 `nil` 을 넘긴다"는 여전히 가능하다 — 그러면 좌표가 끊긴 폰이 `.moving` 에
     /// 갇혀 하루 종일 조용해진다. 그래서 세션이 파이프라인을 만드는 바로 그 함수를 부르되

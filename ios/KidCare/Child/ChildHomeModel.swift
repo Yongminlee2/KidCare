@@ -18,18 +18,25 @@ import UIKit
 final class ChildHomeModel {
 
     enum State: Equatable {
+        /// **아직 아무것도 모른다.** `apply` 를 한 번도 못 받은 화면이다 — 세션이 뜨는 동안의
+        /// 짧은 순간이고, 세션이 아예 못 뜨면 여기서 더 나아가지 않는다. 예전 초기값은
+        /// `.sharing` 이었는데, 그러면 수집이 하나도 없는 폰이 "엄마 아빠가 볼 수 있어요"라고
+        /// 말한다 — 이 앱이 제일 두려워하는 거짓말이 정확히 그것이다(통합 검토 I3).
+        case starting
         case sharing
         case permissionMissing(ChildPermissions.Item)
         case familyGone
+        /// 세션을 못 띄웠다(로그인 실패 등). 화면이 그 사실을 말하고 다시 해 볼 버튼을 준다.
+        case cannotStart
     }
 
     struct Action: Equatable {
-        enum Kind { case ask, settings, repair }
+        enum Kind { case ask, settings, repair, retry }
         let titleKey: String.LocalizationValue
         let kind: Kind
     }
 
-    private(set) var state: State = .sharing
+    private(set) var state: State = .starting
     /// 저전력 모드 한 줄. **다른 문장과 함께** 보인다 — 고장이 아니라 주의사항이라서다(§8.3).
     /// 이벤트를 만들지 않는 이유도 같다: 아이가 언제든 껐다 켜는 설정이라 알리면 소음이 된다
     /// (`ConditionWatcher.kt:43-46` 이 `BATTERY_UNRESTRICTED` 를 감시에서 뺀 것과 같은 판단).
@@ -45,9 +52,11 @@ final class ChildHomeModel {
 
     var bodyKey: String.LocalizationValue {
         switch state {
+        case .starting: "ios_child_starting"
         case .sharing: "child_sharing_on"
         case .permissionMissing: "child_permission_missing"
         case .familyGone: "child_family_gone"
+        case .cannotStart: "ios_child_cannot_start"
         }
     }
 
@@ -86,5 +95,21 @@ final class ChildHomeModel {
         case .ask: Action(titleKey: "child_go_to_permission", kind: .ask)
         case .settings: Action(titleKey: "ios_child_open_settings", kind: .settings)
         }
+    }
+
+    /// 세션이 아예 못 떴다(`ChildSession.build` 의 로그인 실패 갈래). 예전에는 그 자리가
+    /// "화면은 아무 말도 바꾸지 않는다"였는데, 초기값이 `.sharing` 이라 **아무 말도 안 바꾸는
+    /// 것이 곧 거짓말**이었다(통합 검토 I3). 권한 스냅샷을 읽을 수집기조차 없는 상태라
+    /// `apply` 를 쓸 수 없어 따로 둔다.
+    func cannotStart() {
+        state = .cannotStart
+        action = Action(titleKey: "ios_child_retry", kind: .retry)
+    }
+
+    /// 다시 해 보는 중. 버튼을 거두고 "준비 중"으로 되돌린다 — 결과는 세션이 뜬 뒤
+    /// `apply` 가, 또 실패하면 `cannotStart` 가 말한다.
+    func starting() {
+        state = .starting
+        action = nil
     }
 }

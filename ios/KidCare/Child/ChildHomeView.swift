@@ -27,6 +27,10 @@ struct ChildHomeView: View {
     var onAsk: () -> Void = {}
     /// `RoleStore.clear()` + 세션 정지. 서버가 "이 가족의 멤버가 아니다"라고 확답했을 때만 뜬다.
     var onRepair: () -> Void = {}
+    /// 세션이 못 떴을 때의 '다시 해보기'. **프로세스 안에 다시 뜰 길이 이것 하나다** —
+    /// `startIfChild` 를 부르는 두 문(앱이 뜰 때·아이로 막 페어링한 순간)은 이미 지나갔고,
+    /// 역할이 저장돼 있으면 `RouterView` 는 둘째 문이 있는 화면을 아예 안 그린다(통합 검토 I3).
+    var onRetry: () -> Void = {}
 
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
@@ -154,6 +158,8 @@ struct ChildHomeView: View {
             if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
         case .repair:
             onRepair()
+        case .retry:
+            onRetry()
         }
     }
 }

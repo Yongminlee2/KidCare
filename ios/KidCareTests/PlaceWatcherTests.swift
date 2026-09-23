@@ -54,6 +54,17 @@ struct PlaceWatcherTests {
         #expect(watcher.places.count == 25, "판정은 스물다섯 곳 전부로 한다 — OS 상한은 등록에만 걸린다")
     }
 
+    @Test("멈추면 OS 지역을 전부 걷는다 — 역할을 지운 뒤에도 옛 가족의 원이 앱을 깨우면 안 된다 (통합 검토 M2)")
+    func 멈추면_지역을_걷는다() {
+        let (watcher, monitor, _, _) = 만든다()
+        watcher.apply(placeDocs: 장소들(3))
+        #expect(monitor.마지막_등록.count == 3)
+
+        watcher.stopMonitoring()
+        #expect(monitor.마지막_등록.isEmpty, "수집기의 stop() 은 업데이트만 끄고 원은 그대로 둔다")
+        #expect(monitor.등록_횟수 == 2, "걷는 것도 한 번의 등록이다")
+    }
+
     @Test("장소를 한 번도 못 읽었으면 그대로 돌아간다 — 저장된 상태를 지우지 않는다 (:105-116)")
     func 빈_목록_보호() async throws {
         let (watcher, _, store, 적힌것) = 만든다()

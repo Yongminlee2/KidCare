@@ -28,7 +28,10 @@ struct ChildRootView: View {
                 // (판정 기록 13). 역할을 지우면 `RouterView` 가 역할 선택으로 되돌린다.
                 RoleStore.shared.clear()
                 session.stop()
-            }
+            },
+            // 세션이 못 떴을 때만 뜬다(`ChildHomeModel.cannotStart`). 앱을 껐다 켜라고 시키지
+            // 않는 이유는, 그 사이에도 이 폰은 아무것도 기록하지 않기 때문이다(통합 검토 I3).
+            onRetry: { session.retryStart() }
         )
     }
 }

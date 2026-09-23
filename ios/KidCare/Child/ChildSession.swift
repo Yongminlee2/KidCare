@@ -43,6 +43,9 @@ final class ChildSession {
     /// 덮어쓰지 않는다 — 한 번 "아니다"를 받은 화면이 오프라인 한 번에 정상으로 돌아가면 안 된다.
     private var stillMember: Bool?
     private var memberCheck: Task<Void, Never>?
+    /// 파이프라인을 만드는 중인 `build()`. `stop()` 이 이것을 끊지 않으면, 로그인을 기다리던
+    /// `build()` 가 **멈춘 세션에서 그대로 이어져** 수집기·시계·리스너를 다시 채운다(통합 검토 M1).
+    private var buildTask: Task<Void, Never>?
     private let logger = Logger(subsystem: "com.kidcare.family", category: "ChildSession")
 
     /// 테스트 프로세스에서는 절대 안 뜬다. `RouterView.swift` 의 `isRunningTests` 와 **같은 기준**
@@ -69,12 +72,35 @@ final class ChildSession {
         start(familyId: familyId)
     }
 
+    /// `start` 가 열릴 조건. **순수 판정이라 테스트가 부른다** — 진짜 `start` 를 테스트가 부를
+    /// 수는 없다(그것이 바로 이 문이 막는 일이다).
+    ///
+    /// 테스트 차단이 `startIfChild` 에만 있던 것이 통합 검토 M3 이다. `start` 는 `internal` 이라
+    /// `@testable import KidCare` 로 곧장 닿고, 누가 `ChildSession.shared.start(familyId:)` 를
+    /// 쓰면 테스트 프로세스가 진짜 `CLLocationManager` 와 Firestore 파이프라인을 띄운다.
+    /// 문을 아래로 내리면 그 규율이 타입으로 지켜진다.
+    static func mayStart(isRunningTests: Bool, running: Bool) -> Bool {
+        !isRunningTests && !running
+    }
+
     func start(familyId: String, battery: Int? = ChildSession.injectedBattery) {
-        guard !running else { return }
+        guard Self.mayStart(isRunningTests: Self.isRunningTests, running: running) else { return }
         running = true
         self.familyId = familyId
         logNoRevivalAfterForceQuit()
-        Task { await build(familyId: familyId, battery: battery) }
+        buildTask = Task { await build(familyId: familyId, battery: battery) }
+    }
+
+    /// 세션이 못 떴을 때의 '다시 해보기'(통합 검토 I3). 화면의 버튼 하나가 부른다.
+    ///
+    /// **프로세스 안에 다시 뜰 길이 이것 하나다.** `startIfChild` 를 부르는 두 문은 앱이 뜰 때
+    /// (`KidCareApp.init()`, 앱당 한 번)와 아이로 막 페어링한 순간(`RouterView.onChildReady`)인데,
+    /// 역할이 이미 저장돼 있으면 `RouterView` 는 둘째 문이 있는 화면을 아예 안 그린다.
+    func retryStart() {
+        let familyId = self.familyId
+        guard !running, !familyId.isEmpty else { return }
+        home.starting()
+        start(familyId: familyId)
     }
 
     /// **강제 종료 뒤에는 되살아나지 않는다**(설계서 §5.3·§15-2). 코드 주석과 아이 화면 문구만으로는
@@ -95,12 +121,24 @@ final class ChildSession {
         let uid: String
         do {
             uid = try await AuthGateway.uid()
+        } catch is CancellationError {
+            // `stop()` 이 끼어들었다. 실패가 아니므로 화면에 아무 말도 안 한다 — 그 화면은
+            // 이미 역할 선택으로 넘어가는 중이다.
+            return
         } catch {
-            // 화면은 아무 말도 바꾸지 않는다 — 모르는 것으로 아이를 겁주지 않는다.
+            // 예전에는 "화면은 아무 말도 바꾸지 않는다"였다. 그런데 화면의 초기값이 `.sharing`
+            // 이라 **아무 말도 안 바꾸는 것이 곧 거짓말**이었다 — 수집이 하나도 없는 폰이
+            // "엄마 아빠가 볼 수 있어요"를 띄운 채 굳었고, 다시 뜰 길도 없었다(통합 검토 I3).
             running = false
             logger.error("로그인 실패로 아이 세션을 못 띄웠다: \(String(describing: error), privacy: .public)")
+            home.cannotStart()
             return
         }
+        // 기다리는 사이에 `stop()` 이 끼어들었을 수 있다. 그대로 이어 가면 **멈춘 세션이**
+        // 수집기·시계·리스너를 새로 채우고 `collector.start()` 까지 부른다 — 그 뒤 한 번 더
+        // 시작하면 파이프라인이 두 벌이 된다(`CLLocationManager` 둘, 장소 리스너 둘. 통합 검토 M1).
+        // `stop()` 이 이 Task 를 끊지만 취소는 협조가 있어야 효과가 있으므로, 깨어난 자리에서 본다.
+        guard !Task.isCancelled, running else { return }
         childUid = uid
 
         let collector = LocationCollector()
@@ -232,6 +270,8 @@ final class ChildSession {
     /// 멤버 확인은 읽기가 하나 드는 일이라 화면이 앞으로 나올 때와 세션이 뜰 때만 한다
     /// (`ChildHomeActivity.checkStillInFamily` 가 `onResume` 에서만 도는 것과 같다).
     func refreshHome(checkMembership: Bool = false) {
+        // 수집기가 없으면 읽을 권한 스냅샷도 없다 — **화면을 그대로 둔다.** 그 '그대로'가
+        // 이제는 "준비 중"이거나 "시작하지 못했어요"이지, "공유 중"이 아니다(통합 검토 I3).
         guard let collector else { return }
         home.apply(permissions: collector.permissions,
                    stillMember: stillMember,
@@ -260,6 +300,10 @@ final class ChildSession {
     /// 부르는 곳은 '다시 연결' 버튼 하나다(판정 기록 13). 리스너·시계·수집기를 전부 뗀다 —
     /// 떼는 길이 없으면 역할을 지운 뒤에도 폰이 계속 좌표를 올린다.
     func stop() {
+        // **만들던 중일 수 있다.** 안 끊으면 로그인을 기다리던 `build()` 가 그대로 이어져
+        // 멈춘 세션을 다시 채운다(통합 검토 M1).
+        buildTask?.cancel()
+        buildTask = nil
         memberCheck?.cancel()
         memberCheck = nil
         placesListener?.remove()
@@ -268,6 +312,10 @@ final class ChildSession {
             NotificationCenter.default.removeObserver(powerObserver)
             self.powerObserver = nil
         }
+        // **OS 지역을 먼저 걷는다** — 수집기가 살아 있는 동안에만 걸 수 있다(매니저가 그 안에 있다).
+        // `collector.stop()` 은 업데이트만 끄고 원은 그대로 둬서, 역할을 지운 뒤에도 옛 가족의
+        // 원 스무 개가 계속 앱을 깨운다. 다시 페어링하지 않는 폰에서는 영영 남는다(통합 검토 M2).
+        placeWatcher?.stopMonitoring()
         collector?.stop()
         ticker?.stop()
         collector = nil

@@ -18,6 +18,40 @@ struct ChildHomeModelTests {
         return m
     }
 
+    /// **통합 검토 I3 의 재발 방지 자리다.** 초기값이 `.sharing` 이던 시절에는, 로그인이 실패해
+    /// 세션이 아예 못 뜬 폰이 "엄마 아빠가 볼 수 있어요"를 띄운 채 굳었다 — 이 앱이 제일
+    /// 두려워하는 거짓말(머리 주석)이 정확히 거기서 났다.
+    @Test("아무것도 못 받은 화면은 '공유 중'이라고 말하지 않는다 — 수집이 없는 폰의 거짓말이다 (통합 검토 I3)")
+    func 시작_전에는_모른다() {
+        let m = ChildHomeModel()
+        #expect(m.state == .starting)
+        #expect(m.state != .sharing)
+        #expect(m.bodyKey == "ios_child_starting")
+        #expect(m.titleKey == "child_home_title")
+        #expect(m.action == nil, "기다리는 동안 누를 것이 없다")
+        #expect(m.forceQuitNoticeKey == "ios_child_force_quit_notice", "강제 종료 안내는 여기서도 늘 있다")
+    }
+
+    @Test("세션이 못 뜨면 화면이 그렇게 말하고 다시 해 볼 버튼을 준다 (통합 검토 I3)")
+    func 못_뜨면_말한다() {
+        let m = ChildHomeModel()
+        m.cannotStart()
+        #expect(m.state == .cannotStart)
+        #expect(m.bodyKey == "ios_child_cannot_start")
+        #expect(m.action == .init(titleKey: "ios_child_retry", kind: .retry),
+                "프로세스 안에 다시 뜰 길이 이 버튼 하나다")
+        #expect(m.reasonKey == nil)
+
+        // 다시 눌렀으면 "준비 중"으로 돌아가고 버튼은 거둔다 — 두 번 눌러도 두 벌이 되지 않는다.
+        m.starting()
+        #expect(m.state == .starting)
+        #expect(m.action == nil)
+
+        // 그러고 세션이 뜨면 보통 갈래로 돌아온다.
+        m.apply(permissions: 정상, stillMember: true, lowPower: false)
+        #expect(m.state == .sharing)
+    }
+
     @Test("다 정상이면 공유 중이라고 말하고 버튼이 없다 (child_sharing_on, ChildHomeActivity.kt:92-97)")
     func 공유중() {
         let m = 모델(정상)
