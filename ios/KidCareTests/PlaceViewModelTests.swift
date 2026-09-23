@@ -63,6 +63,9 @@ struct PlaceViewModelTests {
             familyId: "family",
             childUid: childUid,
             syncStore: store ?? RuleSyncStore(kind: .place, defaults: TestDefaults.isolated("PlaceViewModelTests")),
+            // 기본값은 `UserDefaults.standard` 라 같은 시뮬레이터에서 앱이 적어 둔 기종 기억이
+            // 테스트의 판정이 된다. 잠금이 달린 뒤로는 그 결합이 실제로 물 수 있으므로 격리한다.
+            platforms: ChildPlatformStore(defaults: TestDefaults.isolated("PlaceViewModelTests-platform")),
             placesObserve: { _, _, onChange, onError in
                 f.목록.set(onChange)
                 f.목록_오류.set(onError)

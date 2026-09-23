@@ -329,4 +329,100 @@ struct GuardianPlatformGateTests {
         #expect(vm.pendingSync == false)
         #expect(store.pendingSync(childUid: "c1") == false)
     }
+
+    // MARK: - 장소 탭
+
+    /// 장소 탭은 **아무 버튼도 안 잠근다** — 아이폰 아이도 장소를 상시 구독으로 실제로 받는다
+    /// (`Child/ChildSession.swift:198-204`). 막는 것은 `sync_rules` 명령 하나뿐이다.
+    private func 장소_뷰모델(
+        _ 플랫폼: [String: ChildPlatform],
+        기록: 보낸_것,
+        저장된: 보낸_것 = 보낸_것(),
+        syncStore: RuleSyncStore? = nil
+    ) -> PlaceViewModel {
+        PlaceViewModel(
+            familyId: "f1",
+            childUid: "c1",
+            syncStore: syncStore ?? RuleSyncStore(kind: .place,
+                                                  defaults: UserDefaults(suiteName: "GuardianPlatformGateTests-place-\(UUID())")!),
+            platforms: 저장소(플랫폼),
+            placesObserve: { _, _, _, _ in 가짜_리스너() },
+            placeSave: { _, _, doc in 저장된.적는다("save:\(doc.name)"); return doc.id },
+            placeDelete: { _, _, id in 저장된.적는다("delete:\(id)") },
+            statusFetch: { _, _ in nil },
+            commandSend: { _, _, type, _ in 기록.적는다(type); return "cmd" },
+            writeSleep: { _ in await 영원한_문().wait() },
+            newId: { "new-1" }
+        )
+    }
+
+    private func 장소를_하나_저장한다(_ vm: PlaceViewModel) async {
+        vm.편집을_연다(nil)
+        vm.지도를_만졌다(centerLat: 37.5, centerLng: 127.0)
+        vm.이름을_바꾼다("학교")
+        await vm.저장을_눌렀다()
+    }
+
+    private static let 지울_장소 = PlaceDoc(id: "p1", name: "학원", lat: 37.5, lng: 127.0,
+                                        radiusMeters: 200, notifyEnter: true, notifyExit: true)
+
+    /// **저장·삭제는 되고 알림만 안 간다.** 검토는 저장만 눌러 봤는데 `쓰고_알린다` 를 지나는 갈래는
+    /// 둘이다 — 한 갈래만 막는 사고를 잡으려면 둘 다 눌러야 한다(통합 검토 H1).
+    @Test("아이폰 아이면 장소 저장과 삭제가 sync_rules 를 하나도 안 만든다")
+    func 아이폰이면_장소_탭_명령이_하나도_안_나간다() async {
+        let 기록 = 보낸_것()
+        let 저장된 = 보낸_것()
+        let vm = 장소_뷰모델(["c1": .iOS], 기록: 기록, 저장된: 저장된)
+
+        await 장소를_하나_저장한다(vm)
+        await vm.삭제를_확인했다(Self.지울_장소)
+
+        #expect(기록.types.isEmpty)                       // sync_rules 가 한 번도 안 나갔다
+        #expect(저장된.types == ["save:학교", "delete:p1"]) // 두 갈래가 전부 진짜로 저장·삭제됐다
+        #expect(vm.pendingSync == false)                   // 깃발이 애초에 안 올라갔다
+        #expect(vm.아이폰이라_알릴_것이_없다 == true)
+    }
+
+    /// H2. 깃발이 서면 `PlaceView` 가 "애기폰은 지금도 예전 장소대로 알려요"를 띄우는데,
+    /// 아이폰 아이에게 그 문장은 **사실과 반대**다 — 장소는 이미 가 있다.
+    @Test("아이폰 아이에게는 '못 보낸 알림' 바가 안 뜨고 다시 알리기도 명령을 안 만든다")
+    func 아이폰이면_못_보낸_알림_바가_안_뜬다() async {
+        let 기록 = 보낸_것()
+        let store = RuleSyncStore(kind: .place,
+                                  defaults: UserDefaults(suiteName: "GuardianPlatformGateTests-place-stale-\(UUID())")!)
+        store.setPendingSync(childUid: "c1", true)   // 옛 버전이 올려 둔 깃발
+        let vm = 장소_뷰모델(["c1": .iOS], 기록: 기록, syncStore: store)
+
+        vm.시작한다()
+        #expect(vm.pendingSync == true)              // 옛 깃발을 읽어 왔다
+        await vm.다시_알린다()?.value
+
+        #expect(기록.types.isEmpty)
+        #expect(vm.pendingSync == false)             // 내리는 것은 언제나 한다
+        #expect(store.pendingSync(childUid: "c1") == false)
+    }
+
+    @Test("안드로이드 아이면 장소 탭도 지금과 똑같다 — 두 갈래가 전부 sync_rules 를 보낸다")
+    func 안드로이드면_장소_탭도_지금과_똑같다() async {
+        let 기록 = 보낸_것()
+        let vm = 장소_뷰모델(["c1": .android], 기록: 기록)
+
+        await 장소를_하나_저장한다(vm)
+        await vm.삭제를_확인했다(Self.지울_장소)
+
+        #expect(기록.types == Array(repeating: CommandType.syncRules, count: 2))
+        #expect(vm.아이폰이라_알릴_것이_없다 == false)
+    }
+
+    @Test("기종을 모르면 장소 탭도 지금과 똑같다")
+    func 모르면_장소_탭도_지금과_똑같다() async {
+        let 기록 = 보낸_것()
+        let vm = 장소_뷰모델([:], 기록: 기록)
+
+        await vm.삭제를_확인했다(Self.지울_장소)
+
+        #expect(기록.types == [CommandType.syncRules])
+        #expect(vm.아이폰이라_알릴_것이_없다 == false)
+        #expect(vm.플랫폼 == .unknown)
+    }
 }

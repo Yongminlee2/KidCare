@@ -35,7 +35,10 @@ struct PlaceView: View {
             if let 줄 = viewModel.상태_줄 {
                 RuleStateLine(text: 줄)
             }
-            if viewModel.pendingSync {
+            // 아이폰 아이에게는 이 바가 **거짓말**이다 — "애기폰은 지금도 예전 장소대로 알려요"라는데
+            // 장소는 상시 구독으로 이미 가 있다(통합 검토 H2). 뷰모델이 깃발을 애초에 안 올리므로
+            // 이 줄은 옛 깃발이 남은 첫 그리기 한 번을 막는 두 번째 겹이다(`ScheduleView.swift:80` 과 같다).
+            if viewModel.pendingSync && !viewModel.아이폰이라_알릴_것이_없다 {
                 SyncPendingBar(text: String(localized: "place_sync_pending"),
                                retryTitle: String(localized: "place_sync_retry")) {
                     viewModel.다시_알린다()

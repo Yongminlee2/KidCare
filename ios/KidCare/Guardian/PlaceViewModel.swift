@@ -95,8 +95,9 @@ final class PlaceViewModel {
     @ObservationIgnored private var syncRetryTask: Task<Void, Never>?
 
     private let syncStore: RuleSyncStore
-    /// 장소 탭은 **안 잠근다**(설계서 §10.2 — 장소는 아이폰 아이가 상시 구독으로 실제로 받는다).
-    /// 자기가 이미 읽는 상태 문서를 기억시키기만 한다(판정 기록 3).
+    /// 장소 탭은 **버튼을 하나도 안 잠근다**(설계서 §10.2 — 장소는 아이폰 아이가 상시 구독으로
+    /// 실제로 받는다). 잠그는 것은 `sync_rules` 명령 하나와 그 명령을 기다리는 깃발뿐이다
+    /// (통합 검토 H1·H2). 자기가 이미 읽는 상태 문서를 기억시키기도 한다(판정 기록 3).
     private let platforms: ChildPlatformStore
     private let placesObserve: @Sendable (String, String, @escaping ([PlaceDoc], Bool) -> Void, @escaping (Error) -> Void) -> ListenerRegistration
     private let placeSave: @Sendable (String, String, PlaceDoc) async throws -> String
@@ -419,6 +420,25 @@ final class PlaceViewModel {
 
     // MARK: - 아이 폰에 알리기 (:723-787)
 
+    /// 고른 아이의 폰 종류. 이 탭은 상태 문서를 이미 읽고(`아이_위치를_읽는다`) 그 자리에서
+    /// 기억까지 갱신하므로, 기억을 보는 것이 읽은 문서를 보는 것과 같은 답을 낸다 —
+    /// 그래서 읽기를 하나도 더 안 산다(판정 기록 3). 기억이 없으면 `.unknown` 이고
+    /// `.unknown` 은 아무것도 안 잠근다(판정 기록 2).
+    var 플랫폼: ChildPlatform {
+        guard let childUid else { return .unknown }
+        return platforms.platform(childUid: childUid)
+    }
+
+    /// '못 보낸 알림' 바를 숨길까. **장소 만들기·고치기·삭제는 하나도 안 막는다** —
+    /// 막는 것은 `sync_rules` 명령 하나다(설계서 §10.2).
+    ///
+    /// 이름이 예약 탭(`아이폰이라_규칙이_안_걸린다`)과 다른 이유: 예약 규칙은 아이폰 아이에게
+    /// **안 걸리지만** 장소는 **걸린다.** 장소는 상시 구독으로 이미 가 있고(`ChildSession.swift:198-204`)
+    /// 그래서 그 바의 "애기폰은 지금도 예전 장소대로 알려요"가 **거짓말**이다(통합 검토 H2).
+    /// 안 갈 알림을 기다리는 바만 지우고, 탭 맨 위에 "못 한다"는 문장은 **안 적는다** —
+    /// 장소는 실제로 되기 때문이다.
+    var 아이폰이라_알릴_것이_없다: Bool { 플랫폼.못_한다고_말할까 }
+
     /// 예약 규칙과 **같은** 명령을 쓴다 — 자녀 쪽이 그 하나로 둘 다 다시 읽는다(:727-730).
     ///
     /// 닫힘 확인은 `ScheduleViewModel.아이에게_알린다` 와 같게 겹쳐 둔다(5단계 통합 검토 I1): `쓰고_알린다` 의
@@ -429,6 +449,22 @@ final class PlaceViewModel {
         guard let childUid else {
             깃발을_바꾼다(false)
             if 글자를_쓸_수_있나(generation) { 상태_줄 = String(localized: "place_sync_no_child") }
+            return
+        }
+        // 아이폰 아이는 `commands/` 를 구독하지 않는다(설계서 §1). 여기서 보내면 그 문서는 쓰기
+        // 하나를 태우고 아무도 안 읽는 자리에 영원히 `pending` 으로 남는다 — 장소를 고칠 때마다
+        // 하나씩 샌다. `ScheduleViewModel.아이에게_알린다:548` 과 **같은 자리, 같은 두 줄**이다.
+        //
+        // 예약 탭과 다른 것은 **부모가 읽는 거짓말의 내용**이다: 예약 규칙은 아이폰 아이에게 정말
+        // 안 걸리지만, 장소는 상시 구독으로 **이미 가 있다**(`ChildSession.swift:198-204`). 그래서
+        // 깃발이 서면 뜨는 "애기폰은 지금도 예전 장소대로 알려요"가 사실과 반대이고, 부모는 그것을
+        // 일시적 실패로 읽고 '다시 알리기'를 누른다 — 누를 때마다 명령이 하나 더 생긴다(통합 검토 H2).
+        //
+        // **장소 문서 자체는 이미 저장됐고 그대로 둔다.** 아이 폰이 그것을 구독으로 받아 간다.
+        // `상태_줄` 은 **안 건드린다** — 방금 성공한 저장을 "못 알렸어요"로 덮으면 된 일이 실패처럼
+        // 읽힌다. `깃발을_바꾼다(false)` 는 옛 버전이 올려 둔 깃발까지 여기서 치운다.
+        guard 플랫폼.명령을_받을_수_있나 else {
+            깃발을_바꾼다(false)
             return
         }
         let (fid, send) = (familyId, commandSend)
@@ -465,6 +501,11 @@ final class PlaceViewModel {
 
     private func 깃발을_바꾼다(_ value: Bool) {
         guard let childUid else { return }
+        // 아이폰 아이에게는 깃발을 **애초에 안 올린다**(통합 검토 H2, `ScheduleViewModel.swift:596` 과 같다).
+        // 두 쓰기 갈래가 쓰기 **전에** 여기로 올리는데, 쓰기가 실패한 갈래는 `아이에게_알린다` 까지
+        // 가지도 못한다(catch 로 빠진다) — 입구 guard 하나만으로는 그 갈래에서 깃발이 남는다.
+        // **내리는 것은 언제나 한다** — 옛 버전이 올려 둔 깃발을 치워야 하기 때문이다.
+        if value, !플랫폼.명령을_받을_수_있나 { return }
         syncStore.setPendingSync(childUid: childUid, value)
         pendingSync = value
     }
