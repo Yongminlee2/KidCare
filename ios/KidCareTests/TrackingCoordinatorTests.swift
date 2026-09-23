@@ -262,6 +262,44 @@ struct TrackingCoordinatorTests {
 
     // MARK: 업로드 판정 — 설계서 §6.4
 
+    /// 2단계 M4. `SKIP_TOO_CLOSE` 로 거절된 좌표에서 장소 사건이 나면, 그 사건과 함께 올라가는
+    /// 상태 문서의 좌표는 **그 사건을 만든 좌표**여야 한다 — 한 점 뒤처진 직전 위치가 아니라.
+    /// "학교에 도착했어요"와 함께 직전 위치가 나가고 있었다.
+    @Test func 사건은_자기_좌표로_올라간다() async {
+        final class 상자 { var fix: Fix? }
+        let 본_것 = 상자()
+        let 업로드 = 가짜_업로더()
+        let c = 만든다(업로더: 업로드, onPlaceFix: { 본_것.fix = $0 })
+        c.handle(fix(at: t0))                                  // 첫 점 — 올라간다
+        await c.uploadTask?.value
+        #expect(업로드.마지막_점?.at == t0)
+
+        let 가까운 = fix(at: t0 + 60_000, meters: 10)           // 25m 안 → SKIP_TOO_CLOSE
+        c.handle(가까운)
+        #expect(본_것.fix?.at == 가까운.at, "장소 판정은 거절된 점으로도 한다 — 경계를 넘는 순간이 그 모양이다")
+        #expect(업로드.횟수 == 1, "거절된 점은 스스로 올라가지 않는다")
+
+        c.eventWritten(at: 가까운.at)                           // 사건을 썼다 → 강제 업로드
+        await c.uploadTask?.value
+        #expect(업로드.횟수 == 2)
+        #expect(업로드.마지막_점?.at == 가까운.at, "사건을 만든 그 좌표가 올라간다")
+    }
+
+    /// 같은 고침이 `LocationFilter` 가 보는 상태를 안 건드렸는지. **이 테스트가 빨개지면
+    /// 고침이 잘못된 것이다** — 되돌린다(4단계 계획서 판정 기록 11).
+    @Test func 필터_기준점은_안_움직인다() async {
+        let c = 만든다()
+        c.handle(fix(at: t0))
+        await c.uploadTask?.value
+        #expect(c.lastFix?.at == t0)
+
+        c.handle(fix(at: t0 + 60_000, meters: 10))             // SKIP_TOO_CLOSE
+        c.eventWritten(at: t0 + 60_000)
+        await c.uploadTask?.value
+
+        #expect(c.lastFix?.at == t0, "거절된 점은 다음 거리 비교의 기준이 되지 않는다 — 이 설계의 심장이다")
+    }
+
     /// **통합 검토 L2.** `ChildSession.stop()` 이 코디네이터를 nil 로 두기만 하고 돌던 업로드를
     /// 안 끊었다 — 방금 떠난 가족의 문서에 쓰기가 한 번 더 갔다.
     @Test("멈추면 아직 안 시작한 업로드가 안 나간다 (통합 검토 L2)")

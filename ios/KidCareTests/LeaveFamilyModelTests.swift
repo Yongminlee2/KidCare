@@ -145,8 +145,9 @@ struct LeaveFamilyModelTests {
         #expect(m.실패 == LeaveFamilyModel.확인하지_못함)
         await 문.fire()
         await 끝.wait()
-        // 늦은 결과가 흘러갈 틈을 준다.
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        // 늦은 결과가 흘러갈 틈을 준다. `끝.wait()` 로 늦은 `remove` 가 실제로 끝난 것은 이미
+        // 확인했고, 남은 것은 아무도 안 듣는 `resolve` 하나다 — 벽시계로 기다릴 일이 아니다.
+        await 주_액터를_한_바퀴_돌린다()
         #expect(log.순서 == ["remove"])
         #expect(m.계정_결과 == nil)
     }
@@ -265,7 +266,7 @@ struct LeaveFamilyModelTests {
 
         // 리스너를 떼기 직전에 대기열에 올랐던 콜백이 뒤늦게 돈다.
         onChange.value?([아이])
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        await 주_액터를_한_바퀴_돌린다()
         #expect(store.childUid == nil)
         #expect(store.familyId == nil)
     }
@@ -273,8 +274,12 @@ struct LeaveFamilyModelTests {
     @Test("빼는 중에 다시 눌러도 서버에는 한 번만 간다")
     func 두_번_눌러도_한_번() async {
         let log = 기록()
+        // 서버 쓰기가 **문이 열릴 때까지** 안 끝난다. 예전에는 50ms 를 기다렸는데, 그 50ms
+        // 안에 `뺀다()` 가 끝나 버리면 `eventually { m.빼는중 }` 이 참을 영영 못 본다
+        // (1단계 통합 검토 M5 — 이 자리가 가장 위험했다).
+        let 문 = TestSignal()
         let m = 만든다(log, remove: { _, _ in
-            try await Task.sleep(nanoseconds: 50_000_000)
+            await 문.wait()
             log.적는다("remove")
         })
         let first = Task { await m.뺀다() }
@@ -282,6 +287,7 @@ struct LeaveFamilyModelTests {
         await m.뺀다()
         m.묻는다()                       // 빼는 중에는 대화상자를 다시 열지 않는다
         #expect(m.묻는중 == false)
+        await 문.fire()
         await first.value
         #expect(log.순서 == ["remove", "auth", "left deleted", "local"])
     }

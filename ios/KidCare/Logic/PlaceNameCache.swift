@@ -105,10 +105,21 @@ struct PlaceNameCache: Equatable, Sendable {
             guard let tab = line.firstIndex(of: "\t"), tab != line.startIndex else { continue }
             let coordinates = line[line.startIndex..<tab].components(separatedBy: ",")
             guard coordinates.count == 2,
-                  let lat = Double(coordinates[0]), let lng = Double(coordinates[1]) else { continue }
+                  let lat = 코틀린_실수(coordinates[0]), let lng = 코틀린_실수(coordinates[1]) else { continue }
             cache.put(lat: lat, lng: lng, name: String(line[line.index(after: tab)...]))
         }
         return cache
+    }
+
+    /// 코틀린 `toDoubleOrNull`(`logic/PlaceNameCache.kt:84-85`)은 앞뒤 공백과 자바식 `d`/`f`
+    /// 접미사를 받는데 스위프트 `Double.init` 은 거절한다. `encode` 가 만든 줄에는 그런 글자가
+    /// 없어 실사용에서는 안 갈리지만, 두 구현이 **같은 함수**라는 약속은 입력이 어디서 오든
+    /// 지켜져야 한다(2단계 통합 검토 M2). **정본이 받는 것만 받는다** — 16진 실수나 Infinity
+    /// 까지 흉내 내는 것은 정본에 없는 입력을 상상하는 일이다.
+    private static func 코틀린_실수(_ text: some StringProtocol) -> Double? {
+        var s = text.trimmingCharacters(in: .whitespaces)
+        if let last = s.last, "dDfF".contains(last) { s.removeLast() }
+        return Double(s)
     }
 
     /// 코틀린 `lineSequence()` 와 같은 줄 나누기 — `\r\n`·`\n`·`\r` **셋 다** 줄바꿈이다.

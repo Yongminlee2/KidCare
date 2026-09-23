@@ -35,6 +35,10 @@ final class TrackingCoordinator {
     private let ticker: Ticking?
 
     private(set) var lastFix: Fix?
+    /// 마지막으로 **장소 판정에 넘긴** 점(2단계 통합 검토 M4). `lastFix` 와 다르다 —
+    /// `SKIP_TOO_CLOSE` 로 거절된 점도 장소 판정에는 간다. 사건을 쓴 쪽이 [eventWritten] 으로
+    /// 돌아왔을 때 올려야 할 좌표가 이것이다. **거리 비교에는 절대 안 쓴다.**
+    private var 사건_판정에_쓴_fix: Fix?
     private(set) var lastTrailFix: Fix?
     /// **메모리에만 둔다**(아이 1단계 판정 기록 15, `TrackingService.kt:81-89`). 프로세스가 다시
     /// 뜨면 0 이 되어 업로드가 한 번 더 나가는데 그게 손해가 아니라 이득이다 — 되살아난 직후
@@ -212,7 +216,18 @@ final class TrackingCoordinator {
         //    들어간 순간이 정확히 그 모양이다.
         //    이 훅은 **동기**라 사건을 실제로 썼는지 여기서 기다리지 않는다. 쓰기가 끝나면 그쪽이
         //    [eventWritten] 으로 되돌아와 §6.4-3 규칙을 켠다(2단계 배선).
-        if decision != .rejectInaccurate, decision != .rejectImpossible { onPlaceFix?(fix) }
+        if decision != .rejectInaccurate, decision != .rejectImpossible {
+            // `eventWritten` 이 쓸 좌표를 여기서 붙든다(2단계 통합 검토 M4). `lastFix` 는
+            // `SKIP_TOO_CLOSE` 에서 갱신되지 **않으므로**(아래 9번에서 돌아간다) 그 자리에서 난
+            // 사건의 강제 업로드가 한 점 뒤처진 좌표를 싣고 있었다 — "학교에 도착했어요"와
+            // 함께 직전 위치가 나갔다.
+            //
+            // **`lastFix = fix` 를 여기로 옮기지 않는다.** 옮기면 다음 좌표의 거리 비교 기준이
+            // 바뀌어 `LocationFilter` 의 판정 자체가 정본(`logic/LocationFilter.kt`)과 갈린다.
+            // 이 설계의 심장이다(`필터_기준점은_안_움직인다` 가 지킨다).
+            사건_판정에_쓴_fix = fix
+            onPlaceFix?(fix)
+        }
 
         // 9. UPLOAD / UPLOAD_STALE_FALLBACK 이면 lastFix = fix(:641-672).
         switch decision {
@@ -306,10 +321,12 @@ final class TrackingCoordinator {
     }
 
     func eventWritten(at now: Int64) {
-        guard let fix = lastFix, shouldUpload(now: now, fix: fix, eventJustWritten: true) else { return }
+        // 그 사건을 만든 좌표가 있으면 그것을 쓴다(2단계 통합 검토 M4). 없으면 예전대로 `lastFix`.
+        guard let fix = 사건_판정에_쓴_fix ?? lastFix,
+              shouldUpload(now: now, fix: fix, eventJustWritten: true) else { return }
         lastUploadAt = now
         lastUploadedFix = fix
-        uploadTask = Task { [weak self] in await self?.uploadNow() }
+        uploadTask = Task { [weak self] in await self?.uploadNow(fix) }
     }
 
     /// 지금 모드를 좌표원에 건다. 모드가 실제로 바뀔 때만 매니저를 다시 거는 것은 저쪽 몫이다.
@@ -346,11 +363,16 @@ final class TrackingCoordinator {
     /// 끝나는데(:720), 아이폰은 물어본 사람이 없으니 조용히 건너뛴다(설계서 §6.4 끝).
     /// 파일에서 복구한 옛 점으로 대신 채우지 않는 것도 같은 이유다 — 그 점은 몇 시간 전일 수 있는데
     /// 상태 문서에 넣는 순간 서버 시각이 "방금"으로 찍힌다(:713-717).
-    func uploadNow() async {
+    ///
+    /// [실을_점] 은 **사건 직후 업로드 전용**이다(2단계 통합 검토 M4) — `SKIP_TOO_CLOSE` 로
+    /// 거절된 점에서 난 장소 사건은 `lastFix` 를 안 밀어 두므로, 그냥 `lastFix` 를 실으면
+    /// "학교에 도착했어요"와 함께 **한 점 뒤처진 직전 위치**가 나간다. 그 점은 정확도·순간이동
+    /// 검사를 이미 통과한 진짜 점이고 `lastFix` 보다 **새롭다.** 거리 비교에는 여전히 안 쓴다.
+    func uploadNow(_ 실을_점: Fix? = nil) async {
         // 멈춘 세션의 업로드는 안 나간다(통합 검토 L2). 주 액터를 놓기 전에 취소되면 여기서
         // 걸린다 — `handle` 이 작업을 만든 직후 `멈춘다()` 가 도는 길이 정확히 그 모양이다.
         guard !Task.isCancelled else { return }
-        guard let fix = lastFix else { return }
+        guard let fix = 실을_점 ?? lastFix else { return }
         do {
             try await uploader.upload(familyId: familyId, fix: fix, points: buffer.points, dayKey: buffer.dayKey)
         } catch is CancellationError {

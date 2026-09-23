@@ -73,6 +73,17 @@ func eventually(timeoutSeconds: Double = 2, _ condition: () -> Bool) async {
     Issue.record("조건이 \(timeoutSeconds)초 안에 참이 되지 않았다")
 }
 
+/// 대기열에 이미 올라 있는 주 액터 작업들이 한 바퀴 돌 틈을 준다.
+///
+/// **벽시계를 기다리던 자리를 대신한다**(1단계 통합 검토 M5). `try? await Task.sleep(100ms)` 는
+/// 느린 기계에서 모자라고 빠른 기계에서는 그냥 낭비였다 — 시간이 판정에 끼면 그 테스트는
+/// 언젠가 간헐적으로 빨개진다. 같은 우선순위의 주 액터 작업은 먼저 올라온 것부터 도므로,
+/// 이 작업이 돌았다는 것은 **그 전에 올라온 작업들이 이미 돌았다**는 뜻이다.
+@MainActor
+func 주_액터를_한_바퀴_돌린다() async {
+    await Task { @MainActor in }.value
+}
+
 /// 딱 한 번 발화하는 신호 — "이 지점을 실제로 지났다"를 테스트에 알린다. `Task.yield()`
 /// 횟수로 순서를 가정하지 않기 위해서다(3단계 리뷰 I2).
 actor TestSignal {

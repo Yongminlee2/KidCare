@@ -98,4 +98,21 @@ struct PlaceNameCacheTests {
         #expect(cache.find(lat: 1.5, lng: 2.5) == "좋은 줄")
         #expect(cache.find(lat: 3.5, lng: 4.5) == "또 좋은 줄")
     }
+
+    /// 골든 `decode` 케이스가 이 자리를 안 싣는다(2단계 통합 검토 M2). 정본
+    /// `logic/PlaceNameCache.kt:84-85` 의 `toDoubleOrNull` 이 받는 글자를 여기에 적어 둔다 —
+    /// 이 줄을 건드리면 골든이 아니라 이 테스트가 잡는다.
+    @Test func 코틀린이_받는_숫자를_똑같이_받는다() {
+        let c = PlaceNameCache.decode("  37.5 , 127.0  \t집\n37.6d,127.1f\t학교\n")
+        #expect(c.find(lat: 37.5, lng: 127.0) == "집")
+        #expect(c.find(lat: 37.6, lng: 127.1) == "학교")
+    }
+
+    @Test func 코틀린도_안_받는_것은_안_받는다() {
+        #expect(PlaceNameCache.decode("37,5,127.0\t집").find(lat: 37.5, lng: 127.0) == nil,
+                "쉼표가 셋이면 좌표 칸이 둘이 아니다")
+        #expect(PlaceNameCache.decode("abc,127.0\t집").find(lat: 37.5, lng: 127.0) == nil)
+        #expect(PlaceNameCache.decode("37.5dd,127.0\t집").find(lat: 37.5, lng: 127.0) == nil,
+                "접미사는 하나뿐이다")
+    }
 }
