@@ -21,9 +21,15 @@ struct ChildPlatformStore {
         self.defaults = defaults
     }
 
+    /// 적어 두는 글자가 상태 문서의 `"ios"` 와 **일부러 다르다.** 판정 기록 1 이 그 글자를
+    /// 아이가 쓰는 `Documents.swift:252` 와 보호자가 읽는 `ChildPlatform.of(platform:)` 딱
+    /// 두 군데로 못박았고, 여기 적히는 것은 그 계약이 아니라 이 폰의 UserDefaults 표기다.
+    private static let 아이폰_표기 = "iphone"
+    private static let 안드로이드_표기 = "android"
+
     func platform(childUid: String) -> ChildPlatform {
         switch defaults.string(forKey: key(childUid)) {
-        case "ios": return .iOS
+        case Self.아이폰_표기: return .iOS
         case .some: return .android
         case nil: return .unknown
         }
@@ -34,8 +40,8 @@ struct ChildPlatformStore {
     /// 잠금을 놓친다.
     func remember(childUid: String, platform: ChildPlatform) {
         switch platform {
-        case .iOS: defaults.set("ios", forKey: key(childUid))
-        case .android: defaults.set("android", forKey: key(childUid))
+        case .iOS: defaults.set(Self.아이폰_표기, forKey: key(childUid))
+        case .android: defaults.set(Self.안드로이드_표기, forKey: key(childUid))
         case .unknown: return
         }
     }
