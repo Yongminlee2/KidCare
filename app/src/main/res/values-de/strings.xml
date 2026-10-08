@@ -124,6 +124,7 @@
     <string name="find_phone_notification_title" formatted="false">Ein Elternteil sucht dieses Handy</string>
     <string name="find_phone_stop" formatted="false">Gefunden (Ton stoppen)</string>
     <string name="find_phone_title" formatted="false">Ein Elternteil sucht dieses Handy</string>
+    <string name="guardian_default_name" formatted="false">Elternteil</string>
     <string name="guardian_disconnect_banner">Auf die %1$s gesendete Anfrage hat das Handy Ihres Kindes noch nicht geantwortet\nÖffnen Sie die App KidCare einmal auf seinem Handy, dann verbindet es sich wieder.</string>
     <string name="guardian_start_join_family" formatted="false">Mit einem Code einer Familie beitreten</string>
     <string name="guardian_start_new_family" formatted="false">Neue Familie anlegen</string>
@@ -155,6 +156,10 @@
     <string name="leave_family_title" formatted="false">Dieses Handy aus der Familie entfernen?</string>
     <string name="leave_family_unconfirmed_message" formatted="false">Der Server hat nichts bestätigt, daher wurde noch nichts gelöscht. Auf dem Server ist es vielleicht schon entfernt – tippe bitte erneut, sobald du online bist.</string>
     <string name="list_loading" formatted="false">Wird geladen…</string>
+    <string name="location_shared_channel" formatted="false">Hinweise zur Standortabfrage</string>
+    <string name="location_shared_live_title">Mein Standort wird live angesehen · %1$s</string>
+    <string name="location_shared_text">%1$s · heute %2$d-mal · Nur für deine Eltern sichtbar, zu deiner Sicherheit</string>
+    <string name="location_shared_title">Mein Standort wurde abgefragt · %1$s</string>
     <string name="map_battery_info_confirm" formatted="false">OK</string>
     <string name="map_battery_info_message" formatted="false">Der hier gezeigte Stand ist der, den das Handy Ihres Kindes gemeldet hat. Welche App wie viel Akku verbraucht hat, lässt Android von einem anderen Handy aus nicht auslesen; das müssen Sie dort unter Einstellungen &gt; Akku nachsehen.</string>
     <string name="map_battery_info_title" formatted="false">Akku im Handy Ihres Kindes</string>

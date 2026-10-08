@@ -124,6 +124,7 @@
     <string name="find_phone_notification_title" formatted="false">Un padre está buscando este teléfono</string>
     <string name="find_phone_stop" formatted="false">Lo encontré (parar el sonido)</string>
     <string name="find_phone_title" formatted="false">Un padre está buscando este teléfono</string>
+    <string name="guardian_default_name" formatted="false">Padre/madre</string>
     <string name="guardian_disconnect_banner">El teléfono de tu hijo aún no ha respondido a la petición enviada %1$s\nAbre una vez la aplicación KidCare en su teléfono y volverá a conectarse.</string>
     <string name="guardian_start_join_family" formatted="false">Unirse a una familia con un código</string>
     <string name="guardian_start_new_family" formatted="false">Crear una familia nueva</string>
@@ -155,6 +156,10 @@
     <string name="leave_family_title" formatted="false">¿Quitar este teléfono de la familia?</string>
     <string name="leave_family_unconfirmed_message" formatted="false">El servidor no lo confirmó, así que aún no se ha borrado nada. Puede que ya se haya quitado en el servidor; vuelve a tocar cuando tengas conexión.</string>
     <string name="list_loading" formatted="false">Cargando…</string>
+    <string name="location_shared_channel" formatted="false">Avisos de consulta de ubicación</string>
+    <string name="location_shared_live_title">Están viendo mi ubicación en directo · %1$s</string>
+    <string name="location_shared_text">%1$s · %2$d veces hoy · Solo lo ven tus padres, por tu seguridad</string>
+    <string name="location_shared_title">Se consultó mi ubicación · %1$s</string>
     <string name="map_battery_info_confirm" formatted="false">Vale</string>
     <string name="map_battery_info_message" formatted="false">El nivel que se ve aquí es el que informó el teléfono de tu hijo. Android no deja leer desde otro teléfono qué aplicación gastó cuánta batería, así que eso hay que mirarlo en Ajustes &gt; Batería en su teléfono.</string>
     <string name="map_battery_info_title" formatted="false">Batería del teléfono de tu hijo</string>

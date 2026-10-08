@@ -124,6 +124,7 @@
     <string name="find_phone_notification_title" formatted="false">Um responsável está procurando este celular</string>
     <string name="find_phone_stop" formatted="false">Achei (parar o som)</string>
     <string name="find_phone_title" formatted="false">Um responsável está procurando este celular</string>
+    <string name="guardian_default_name" formatted="false">Responsável</string>
     <string name="guardian_disconnect_banner">O celular do seu filho ainda não respondeu ao pedido enviado %1$s\nAbra o aplicativo KidCare uma vez no celular dele e a conexão volta.</string>
     <string name="guardian_start_join_family" formatted="false">Entrar numa família com um código</string>
     <string name="guardian_start_new_family" formatted="false">Criar uma família nova</string>
@@ -155,6 +156,10 @@
     <string name="leave_family_title" formatted="false">Remover este telefone da família?</string>
     <string name="leave_family_unconfirmed_message" formatted="false">O servidor não confirmou, então nada foi apagado ainda. Talvez já tenha sido removido no servidor; toque de novo quando estiver conectado.</string>
     <string name="list_loading" formatted="false">Carregando…</string>
+    <string name="location_shared_channel" formatted="false">Avisos de consulta de localização</string>
+    <string name="location_shared_live_title">Minha localização está sendo vista ao vivo · %1$s</string>
+    <string name="location_shared_text">%1$s · %2$d vezes hoje · Só seus responsáveis veem, para sua segurança</string>
+    <string name="location_shared_title">Minha localização foi consultada · %1$s</string>
     <string name="map_battery_info_confirm" formatted="false">OK</string>
     <string name="map_battery_info_message" formatted="false">O nível que aparece aqui é o que o celular do seu filho informou. O Android não deixa ler de outro celular qual aplicativo gastou quanta bateria, então isso precisa ser visto em Configurações &gt; Bateria no celular dele.</string>
     <string name="map_battery_info_title" formatted="false">Bateria do celular do seu filho</string>

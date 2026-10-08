@@ -210,6 +210,12 @@ data class CommandDoc(
     val deliveredAt: Long = 0L,
     val doneAt: Long = 0L,
     val error: String = "",
+    /**
+     * 명령을 보낸 보호자 uid. 위치정보법상 "누가 언제 아이 위치를 받아 갔는가"의
+     * 기록(제16조 제2항 확인자료)이자, 아이 폰이 그 사실을 알리는 데 쓴다. 옛 앱과
+     * 아이폰이 보낸 명령에는 없을 수 있다(빈 값 → "보호자").
+     */
+    val requestedBy: String = "",
 )
 
 object CommandType {

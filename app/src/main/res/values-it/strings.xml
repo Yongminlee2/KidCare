@@ -124,6 +124,7 @@
     <string name="find_phone_notification_title" formatted="false">Un genitore sta cercando questo telefono</string>
     <string name="find_phone_stop" formatted="false">Trovato (ferma il suono)</string>
     <string name="find_phone_title" formatted="false">Un genitore sta cercando questo telefono</string>
+    <string name="guardian_default_name" formatted="false">Genitore</string>
     <string name="guardian_disconnect_banner">Il telefono di tuo figlio non ha ancora risposto alla richiesta inviata %1$s\nApri una volta l\'app KidCare sul suo telefono e si ricollegherà.</string>
     <string name="guardian_start_join_family" formatted="false">Entra in una famiglia con un codice</string>
     <string name="guardian_start_new_family" formatted="false">Crea una nuova famiglia</string>
@@ -155,6 +156,10 @@
     <string name="leave_family_title" formatted="false">Rimuovere questo telefono dalla famiglia?</string>
     <string name="leave_family_unconfirmed_message" formatted="false">Il server non ha confermato, quindi non è stato ancora eliminato nulla. Sul server potrebbe essere già rimosso: tocca di nuovo quando sei connesso.</string>
     <string name="list_loading" formatted="false">Caricamento…</string>
+    <string name="location_shared_channel" formatted="false">Avvisi di consultazione posizione</string>
+    <string name="location_shared_live_title">La mia posizione è seguita in diretta · %1$s</string>
+    <string name="location_shared_text">%1$s · %2$d volte oggi · Lo vedono solo i tuoi genitori, per la tua sicurezza</string>
+    <string name="location_shared_title">La mia posizione è stata consultata · %1$s</string>
     <string name="map_battery_info_confirm" formatted="false">OK</string>
     <string name="map_battery_info_message" formatted="false">Il livello mostrato qui è quello riferito dal telefono di tuo figlio. Android non permette di leggere da un altro telefono quale app ha consumato quanta batteria, quindi va guardato in Impostazioni &gt; Batteria sul suo telefono.</string>
     <string name="map_battery_info_title" formatted="false">Batteria del telefono di tuo figlio</string>

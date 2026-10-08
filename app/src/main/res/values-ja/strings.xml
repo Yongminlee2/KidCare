@@ -124,6 +124,7 @@
     <string name="find_phone_notification_title" formatted="false">保護者がこの端末を探しています</string>
     <string name="find_phone_stop" formatted="false">見つけた（音を止める）</string>
     <string name="find_phone_title" formatted="false">保護者がこの端末を探しています</string>
+    <string name="guardian_default_name" formatted="false">保護者</string>
     <string name="guardian_disconnect_banner">%1$sに送ったリクエストにお子さんの端末がまだ答えていません\nお子さんの端末でKidCareを一度開いてください。そうすればまたつながります。</string>
     <string name="guardian_start_join_family" formatted="false">招待番号で家族に参加</string>
     <string name="guardian_start_new_family" formatted="false">新しい家族をつくる</string>
@@ -155,6 +156,10 @@
     <string name="leave_family_title" formatted="false">このスマホを家族から外しますか？</string>
     <string name="leave_family_unconfirmed_message" formatted="false">サーバーの確認が取れなかったため、まだ何も削除していません。サーバーではすでに外れている可能性があるので、インターネットにつながってからもう一度押してください。</string>
     <string name="list_loading" formatted="false">読み込んでいます…</string>
+    <string name="location_shared_channel" formatted="false">位置確認のお知らせ</string>
+    <string name="location_shared_live_title">リアルタイムで位置を見ています · %1$s</string>
+    <string name="location_shared_text">%1$s · 今日%2$d回 · 安全のため保護者だけに表示されます</string>
+    <string name="location_shared_title">位置が確認されました · %1$s</string>
     <string name="map_battery_info_confirm" formatted="false">OK</string>
     <string name="map_battery_info_message" formatted="false">ここに出る残量はお子さんの端末が送った状態です。どのアプリがどれだけバッテリーを使ったかはAndroidの仕組み上ほかの端末から読み取れないため、お子さんの端末の設定＞バッテリーで直接確認してください。</string>
     <string name="map_battery_info_title" formatted="false">お子さんの端末のバッテリー</string>

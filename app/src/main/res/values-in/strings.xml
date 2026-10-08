@@ -124,6 +124,7 @@
     <string name="find_phone_notification_title" formatted="false">Orang tua sedang mencari ponsel ini</string>
     <string name="find_phone_stop" formatted="false">Ketemu (hentikan suaranya)</string>
     <string name="find_phone_title" formatted="false">Orang tua sedang mencari ponsel ini</string>
+    <string name="guardian_default_name" formatted="false">Orang tua</string>
     <string name="guardian_disconnect_banner">Permintaan yang dikirim %1$s belum dijawab ponsel anak Anda\nBuka aplikasi KidCare sekali di ponselnya, sambungan akan pulih.</string>
     <string name="guardian_start_join_family" formatted="false">Gabung ke keluarga dengan kode</string>
     <string name="guardian_start_new_family" formatted="false">Buat keluarga baru</string>
@@ -155,6 +156,10 @@
     <string name="leave_family_title" formatted="false">Keluarkan ponsel ini dari keluarga?</string>
     <string name="leave_family_unconfirmed_message" formatted="false">Server tidak memberi konfirmasi, jadi belum ada yang dihapus. Mungkin sudah dikeluarkan di server, jadi ketuk lagi setelah tersambung ke internet.</string>
     <string name="list_loading" formatted="false">Memuat…</string>
+    <string name="location_shared_channel" formatted="false">Pemberitahuan cek lokasi</string>
+    <string name="location_shared_live_title">Lokasiku sedang dilihat langsung · %1$s</string>
+    <string name="location_shared_text">%1$s · %2$d kali hari ini · Hanya terlihat oleh orang tuamu, demi keamananmu</string>
+    <string name="location_shared_title">Lokasiku dicek · %1$s</string>
     <string name="map_battery_info_confirm" formatted="false">Oke</string>
     <string name="map_battery_info_message" formatted="false">Sisa daya yang tampil di sini adalah yang dilaporkan ponsel anak Anda. Aplikasi mana memakai berapa banyak baterai tidak bisa dibaca dari ponsel lain karena aturan Android, jadi itu harus dilihat di Setelan &gt; Baterai di ponselnya.</string>
     <string name="map_battery_info_title" formatted="false">Baterai ponsel anak Anda</string>

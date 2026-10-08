@@ -124,6 +124,7 @@
     <string name="find_phone_notification_title" formatted="false">Bố mẹ đang tìm điện thoại này</string>
     <string name="find_phone_stop" formatted="false">Thấy rồi (tắt tiếng)</string>
     <string name="find_phone_title" formatted="false">Bố mẹ đang tìm điện thoại này</string>
+    <string name="guardian_default_name" formatted="false">Phụ huynh</string>
     <string name="guardian_disconnect_banner">Yêu cầu gửi %1$s vẫn chưa được điện thoại của con trả lời\nHãy mở ứng dụng KidCare một lần trên máy của con, kết nối sẽ trở lại.</string>
     <string name="guardian_start_join_family" formatted="false">Vào gia đình có sẵn bằng mã</string>
     <string name="guardian_start_new_family" formatted="false">Tạo gia đình mới</string>
@@ -155,6 +156,10 @@
     <string name="leave_family_title" formatted="false">Xóa điện thoại này khỏi gia đình?</string>
     <string name="leave_family_unconfirmed_message" formatted="false">Máy chủ chưa xác nhận nên chưa có gì bị xóa. Có thể máy chủ đã xóa rồi, hãy nhấn lại sau khi có kết nối mạng.</string>
     <string name="list_loading" formatted="false">Đang tải…</string>
+    <string name="location_shared_channel" formatted="false">Thông báo xem vị trí</string>
+    <string name="location_shared_live_title">Vị trí của tôi đang được xem trực tiếp · %1$s</string>
+    <string name="location_shared_text">%1$s · %2$d lần hôm nay · Chỉ bố mẹ xem được, vì sự an toàn của con</string>
+    <string name="location_shared_title">Vị trí của tôi đã được xem · %1$s</string>
     <string name="map_battery_info_confirm" formatted="false">Đã hiểu</string>
     <string name="map_battery_info_message" formatted="false">Mức pin hiện ở đây là mức mà điện thoại của con báo về. Ứng dụng nào tốn bao nhiêu pin thì Android không cho đọc từ máy khác, phải xem trực tiếp ở Cài đặt &gt; Pin trên máy của con.</string>
     <string name="map_battery_info_title" formatted="false">Pin điện thoại của con</string>

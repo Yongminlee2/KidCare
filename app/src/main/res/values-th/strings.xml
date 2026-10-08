@@ -124,6 +124,7 @@
     <string name="find_phone_notification_title" formatted="false">ผู้ปกครองกำลังตามหามือถือเครื่องนี้</string>
     <string name="find_phone_stop" formatted="false">เจอแล้ว (หยุดเสียง)</string>
     <string name="find_phone_title" formatted="false">ผู้ปกครองกำลังตามหามือถือเครื่องนี้</string>
+    <string name="guardian_default_name" formatted="false">ผู้ปกครอง</string>
     <string name="guardian_disconnect_banner">คำสั่งที่ส่งเมื่อ %1$s มือถือของลูกยังไม่ตอบกลับ\nลองเปิดแอป KidCare บนเครื่องของลูกสักครั้ง แล้วจะเชื่อมต่อกลับมา</string>
     <string name="guardian_start_join_family" formatted="false">เข้าครอบครัวเดิมด้วยรหัสเชิญ</string>
     <string name="guardian_start_new_family" formatted="false">สร้างครอบครัวใหม่</string>
@@ -155,6 +156,10 @@
     <string name="leave_family_title" formatted="false">นำโทรศัพท์เครื่องนี้ออกจากครอบครัวไหม</string>
     <string name="leave_family_unconfirmed_message" formatted="false">ไม่ได้รับการยืนยันจากเซิร์ฟเวอร์ จึงยังไม่ได้ลบอะไรเลย เซิร์ฟเวอร์อาจนำออกไปแล้ว โปรดแตะอีกครั้งเมื่อเชื่อมต่ออินเทอร์เน็ตแล้ว</string>
     <string name="list_loading" formatted="false">กำลังโหลด…</string>
+    <string name="location_shared_channel" formatted="false">การแจ้งเตือนการดูตำแหน่ง</string>
+    <string name="location_shared_live_title">กำลังดูตำแหน่งของฉันแบบเรียลไทม์ · %1$s</string>
+    <string name="location_shared_text">%1$s · วันนี้ %2$d ครั้ง · ให้ผู้ปกครองเห็นเท่านั้น เพื่อความปลอดภัยของหนู</string>
+    <string name="location_shared_title">มีการดูตำแหน่งของฉัน · %1$s</string>
     <string name="map_battery_info_confirm" formatted="false">ตกลง</string>
     <string name="map_battery_info_message" formatted="false">ระดับแบตที่เห็นตรงนี้คือค่าที่มือถือของลูกส่งมา ส่วนที่ว่าแอปไหนใช้แบตไปเท่าไร ระบบแอนดรอยด์ไม่อนุญาตให้อ่านจากเครื่องอื่น ต้องดูที่ตั้งค่า &gt; แบตเตอรี่ บนเครื่องของลูกเอง</string>
     <string name="map_battery_info_title" formatted="false">แบตเตอรี่มือถือของลูก</string>

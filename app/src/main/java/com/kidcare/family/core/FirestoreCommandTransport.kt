@@ -35,6 +35,7 @@ class FirestoreCommandTransport : CommandTransport {
             deliveredAt = (data["deliveredAt"] as? Number)?.toLong() ?: 0L,
             doneAt = (data["doneAt"] as? Number)?.toLong() ?: 0L,
             error = data["error"] as? String ?: "",
+            requestedBy = data["requestedBy"] as? String ?: "",
         )
     }
 
@@ -96,6 +97,9 @@ class FirestoreCommandTransport : CommandTransport {
                 "deliveredAt" to 0L,
                 "doneAt" to 0L,
                 "error" to "",
+                // 규칙은 create 필드를 묶지 않으므로 그대로 실린다. 아이는 update 에서
+                // 이 필드를 못 바꾼다(affectedKeys hasOnly state·deliveredAt·doneAt·error).
+                "requestedBy" to AuthGateway.currentUid().orEmpty(),
             )
         ).await()
         return ref.id

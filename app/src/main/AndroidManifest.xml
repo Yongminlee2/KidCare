@@ -57,6 +57,12 @@
 
         <!-- 네이버 Mobile Dynamic Map 인증키. 실제 값은 커밋되지 않는
              local.properties의 naverMapNcpKeyId에서 빌드할 때만 들어간다. -->
+        <!-- 구글 플레이 "감시 앱" 정책: 아이를 지키려는 보호자용 앱이라고 신고한다. 모든
+             버전·모든 트랙에 있어야 하고, 스토어 설명과 값이 맞아야 심사를 통과한다. -->
+        <meta-data
+            android:name="isMonitoringTool"
+            android:value="child_monitoring" />
+
         <meta-data
             android:name="com.naver.maps.map.NCP_KEY_ID"
             android:value="${naverMapNcpKeyId}" />

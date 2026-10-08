@@ -45,12 +45,20 @@ import java.time.ZoneId
  * 보안 규칙이 정한 대로 나눈다(규칙은 그대로다).
  * - 하루 기록(`trails`)은 아이만 쓸 수 있으므로 **아이 폰**이 지운다.
  * - 명령(`commands`)과 사건(`events`)은 보호자만 지울 수 있으므로 **보호자 폰**이 지운다.
+ *   명령은 위치 제공 기록이라 6개월([KEEP_RECORD_DAYS]) 둔다.
  *
  * 하루에 한 번만 돈다. 지우는 것도 쓰기라 돌 때마다 무료 한도를 먹는다.
  */
 object HistoryCleaner {
 
     const val KEEP_DAYS = 30L
+
+    /**
+     * 명령은 6개월 둔다. 명령 하나가 곧 "어느 보호자가 언제 아이 위치를 받아 갔는가"의
+     * 기록이고, 위치정보법 제16조 제2항의 수집·이용·제공사실 확인자료는 업계가 6개월
+     * 이상 보관한다. 좌표는 들어 있지 않아 작다.
+     */
+    const val KEEP_RECORD_DAYS = 183L
     const val KEEP_FIELD = "keepHistory"
 
     private const val TAG = "HistoryCleaner"
@@ -84,13 +92,13 @@ object HistoryCleaner {
     suspend fun cleanGuardianSide(context: Context, familyId: String, childUids: List<String>) {
         if (!claimToday(context)) return
         if (!shouldDelete(familyId)) return
-        val cutoff = System.currentTimeMillis() - KEEP_DAYS * DAY_MILLIS
+        val now = System.currentTimeMillis()
         val family = db.collection("families").document(familyId)
-        deleteAll(family.collection("events").whereLessThan("at", cutoff), "사건")
+        deleteAll(family.collection("events").whereLessThan("at", now - KEEP_DAYS * DAY_MILLIS), "사건")
         childUids.forEach { uid ->
             deleteAll(
                 family.collection("children").document(uid).collection("commands")
-                    .whereLessThan("createdAt", cutoff),
+                    .whereLessThan("createdAt", now - KEEP_RECORD_DAYS * DAY_MILLIS),
                 "명령",
             )
         }

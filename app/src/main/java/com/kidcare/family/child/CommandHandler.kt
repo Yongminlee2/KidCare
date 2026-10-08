@@ -68,6 +68,16 @@ class CommandHandler(
     // 협력자들과 통일해 필드로 둔다.
     private val scheduleApplier = ScheduleApplier(context)
 
+    /**
+     * 보호자가 위치를 받아 갈 때마다 아이에게 알린다(위치정보법 제19조 제3항).
+     *
+     * **지금은 꺼 둔다(2026-10-09).** 가족끼리만 쓰기로 해서 외부 배포가 없다. 상용 배포를
+     * 다시 검토할 때 아래 두 `shareNotice.show(...)` 주석을 풀면 된다 —
+     * docs/legal/location-law-check.md "가족끼리만 쓰기로 함" 참고.
+     */
+    @Suppress("unused")
+    private val shareNotice = LocationShareNotice(context)
+
     suspend fun handle(familyId: String, childUid: String, command: CommandDoc) {
         if (!handled.add(command.id)) {
             Log.d(TAG, "이미 처리한 명령이라 건너뛴다: ${command.id}")
@@ -180,7 +190,11 @@ class CommandHandler(
                 // 이 물음이 상태·경로 문서가 쓰이는 주된 순간이다. 아직 위치를 못 잡았으면
                 // 아래 catch 가 그 사유(locate_no_fix)를 명령 문서에 적어 부모에게 알린다 —
                 // 조용히 done 으로 끝내면 부모는 지도의 옛 위치를 방금 확인한 것으로 읽는다.
-                CommandType.LOCATE_NOW -> onLocateNow(familyId, childUid)
+                CommandType.LOCATE_NOW -> {
+                    onLocateNow(familyId, childUid)
+                    // 가족 전용이라 꺼 둠(위 shareNotice 주석).
+                    // shareNotice.show(familyId, command.requestedBy, LocationShareNotice.Kind.LOCATE)
+                }
                 CommandType.START_LIVE_TRACKING -> {
                     val durationSeconds = command.payload[CommandType.PAYLOAD_DURATION_SECONDS]
                         ?.toLongOrNull()
@@ -192,6 +206,8 @@ class CommandHandler(
                         ?.takeIf { it.isNotEmpty() }
                         ?: command.id
                     onStartLiveTracking(familyId, childUid, durationSeconds, sessionId)
+                    // 가족 전용이라 꺼 둠(위 shareNotice 주석).
+                    // shareNotice.show(familyId, command.requestedBy, LocationShareNotice.Kind.LIVE)
                 }
                 CommandType.STOP_LIVE_TRACKING -> {
                     val sessionId = command.payload[CommandType.PAYLOAD_SESSION_ID]

@@ -124,6 +124,7 @@
     <string name="find_phone_notification_title" formatted="false">家長正在找這支手機</string>
     <string name="find_phone_stop" formatted="false">找到了（停止鈴聲）</string>
     <string name="find_phone_title" formatted="false">家長正在找這支手機</string>
+    <string name="guardian_default_name" formatted="false">家長</string>
     <string name="guardian_disconnect_banner">%1$s傳送的要求，孩子手機還沒有回應\n請在孩子手機上開啟一次KidCare，就會重新連上。</string>
     <string name="guardian_start_join_family" formatted="false">用邀請號碼加入既有家庭</string>
     <string name="guardian_start_new_family" formatted="false">建立新家庭</string>
@@ -155,6 +156,10 @@
     <string name="leave_family_title" formatted="false">要將此手機移出家庭嗎？</string>
     <string name="leave_family_unconfirmed_message" formatted="false">未收到伺服器確認，因此尚未刪除任何內容。伺服器上可能已經移出，請在連上網路後再點一次。</string>
     <string name="list_loading" formatted="false">正在載入…</string>
+    <string name="location_shared_channel" formatted="false">位置查看通知</string>
+    <string name="location_shared_live_title">正在即時查看我的位置 · %1$s</string>
+    <string name="location_shared_text">%1$s · 今天%2$d次 · 為了安全，只給家長看</string>
+    <string name="location_shared_title">有人查看了我的位置 · %1$s</string>
     <string name="map_battery_info_confirm" formatted="false">好</string>
     <string name="map_battery_info_message" formatted="false">這裡顯示的電量是孩子手機回報的狀態。哪個應用程式用了多少電，依Android的安全規定無法從遠端讀取，需要在孩子手機的設定＞電池裡直接查看。</string>
     <string name="map_battery_info_title" formatted="false">孩子手機的電量</string>
