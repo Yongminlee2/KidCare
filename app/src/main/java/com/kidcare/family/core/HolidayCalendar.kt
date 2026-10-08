@@ -67,7 +67,7 @@ object HolidayCalendar {
             // 해마다 한 번 찍힌다. 이 계산은 틀려도 예외가 안 나고 그냥 엉뚱한 날짜가
             // 되는 종류라, 실기기에서 눈으로 맞춰볼 수 있는 자리가 하나는 있어야 한다
             // (부모 화면의 '다음 쉬는 날' 한 줄이 같은 값을 보여주는 것도 같은 이유다).
-            Log.i(TAG, "${'$'}year 년 음력 기준일: 설날 ${'$'}{it.seollal}, 추석 ${'$'}{it.chuseok}, 부처님오신날 ${'$'}{it.buddha}")
+            Log.i(TAG, "${year}년 음력 기준일: 설날 ${it.seollal}, 추석 ${it.chuseok}, 부처님오신날 ${it.buddha}")
         }
     } catch (e: Exception) {
         // 기기의 ICU 가 이 달력을 못 다루는 경우다. 공휴일을 모르는 채로 도는 것이

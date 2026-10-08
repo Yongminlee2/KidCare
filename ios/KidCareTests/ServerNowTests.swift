@@ -3,7 +3,7 @@ import Testing
 
 /// `FamilyRepository.serverNow`(정확히는 그 안의 `measureWithTimeout`)가 취소돼도
 /// 값을 돌려주지 않고 `CancellationError` 를 던지는지 확인한다. 정본은
-/// `.superpowers/sdd/2026-09-13-kidcare-ios-phase2/task-1-brief.md` — 오프셋이 아직
+/// 개발 중 작업 메모(저장소에 안 올림) — 오프셋이 아직
 /// 캐시되지 않은 **첫 호출**(= `NewFamilySession` 이 초대를 발급하는 그 순간)에서
 /// 취소가 떨어지면, 비구조적 `Task` 경주가 부모의 취소를 모르고 값을 돌려줘
 /// `createInvite` 가 아무도 못 볼 초대 문서를 10분 TTL 내내 남기던 버그였다.

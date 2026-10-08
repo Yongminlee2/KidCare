@@ -1,6 +1,5 @@
 # iOS 7단계 구현 계획 — 출시 준비(개인정보 매니페스트, 심사 대비, 로컬 아카이브까지)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 아이폰 보호자 앱을 "가족에게 TestFlight 로 나눠줄 수 있고, 나중에 App Store 심사에 그대로 낼 수 있는" 상태로 만든다. 끝은 **로컬에서 검증한 `.xcarchive`·`.ipa`, 실기기 Release 읽기 확인, 그리고 사람이 할 일 목록**이다. App Store Connect 에 올리거나 앱 레코드를 만드는 일은 이 계획서에 없다.
 
@@ -8,14 +7,14 @@
 
 **Tech Stack:** Swift 6 / SwiftUI / Firebase Auth·Firestore 12.19.1 / NMapsMap 3.23.3 / Swift Testing / XcodeGen / Python 3(표준 라이브러리) / bash + `plutil`·`PlistBuddy`·`codesign`·`security`·`strings`·`xcrun devicectl`. 새 의존성 없음.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-kidcare-ios-design.md`. 이 단계가 기대는 곳은 다음과 같다.
+**Spec:** `docs/specs/2026-09-12-kidcare-ios-design.md`. 이 단계가 기대는 곳은 다음과 같다.
 - §9 7단계 "아이콘 · 개인정보 매니페스트 · TestFlight 배포 준비 — 가족이 실제로 설치 가능"
 - §1 배포 방식 "나중에 App Store 정식 출시를 염두에 두고 만든다 … 심사를 막는 선택(권한 과다 요청, 개인정보 매니페스트 누락, 아이 동의 흐름 부재)을 하지 않는다"
 - §1 "이 앱이 요청하는 권한은 0개다 … 가이드라인 2.5.4, 배경 위치를 통째로 피한다", 푸시(FCM) 제외
 - §10-4 Apple Developer Program 은 7단계에서, §11 "TestFlight 빌드는 90일 만료"
 - §13 "App Store 정식 출시 시점과 그때 필요한 자료(개인정보처리방침 웹페이지, 심사용 테스트 계정, 시연 영상, 아이 동의 흐름)"
 
-**저장 위치.** 이 계획서는 저장소에 넣을 때 `docs/superpowers/plans/2026-09-13-kidcare-ios-phase7.md` 로 커밋한다(6단계 선례 `0c7c7d8`).
+**저장 위치.** 이 계획서는 저장소에 넣을 때 `docs/plans/2026-09-13-kidcare-ios-phase7.md` 로 커밋한다(6단계 선례 `0c7c7d8`).
 
 **선행 조건.** 6단계 Task 1~5 와 단계 마무리가 `ios-guardian-app` 에 모두 커밋돼 있어야 한다. 2026-09-13 이 계획서를 쓸 때 `/Users/com/work/KidCare` 에는 6단계 Task 1 이 **커밋 전**이었다(`tools/ios-strings.py`·`tools/i18n-untranslated.json`·`LocalizationBundleTests.swift` 가 추적 안 됨, `project.yml`·`Info.plist` 등 수정됨). 별도 작업 트리(`scratchpad/kidcare-p6`, 가지 `ios-p6-t2`)는 커밋이 없었다. 그래서 이 계획서는 **6단계 계획서에 적힌 이름**을 쓴다. 시작 전에 이름이 실제로 그대로인지 확인한다.
 
@@ -49,7 +48,7 @@ python3 tools/ios-strings.py --check; echo $?                                   
 - No push notifications and no FCM (the Firebase Spark free plan). Every Firestore listener has a removal path on disappear.
 - i18n: new keys are added to **both** `i18n/ko.json` and `i18n/en.json` and are regenerated into `Localizable.xcstrings` the way earlier phases did (find the mechanism, e.g. `tools/check-i18n-keys.swift` and the existing parity tests, and state the exact command). `%@` is never used in `i18n/*.json`. A literal `%` must be `%%` in format strings. **Never borrow a string key from an unrelated screen** (this was rejected twice).
 - Tests never write to production Firestore. Emulator tests use `configureForEmulator(projectId: "kidcare-emulator")` (Auth 127.0.0.1:9099, Firestore 8080), and `KidCareApp.init()` must call `configureForApp()` at commit time.
-- Commits are in Korean, author `Yongminlee2 <dydals5678@gmail.com>`, with no Co-Authored-By trailer and no AI traces.
+- Commits are in Korean, author `Yongminlee2 <dydals5678@gmail.com>`.
 - Test command: `cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17'`.
 - **보이는 뒤로 가기.** push 되는 화면은 모두 시스템 뒤로 버튼이 보인다. `.navigationBarBackButtonHidden` 은 쓰지 않는다.
 - **진짜 가족 보호.** 진짜 가족 문서에 쓰는 동작은 에뮬레이터에서만 확인한다. 실기기 Task 는 읽기만 한다.
@@ -1438,7 +1437,7 @@ family,kids,child,location,parent,guardian,safety,timeline,silent,schedule,geofe
 # App Store 개인정보 영양 라벨 답 — 우리아이 지킴이 (iOS)
 
 붙여 넣는 곳: App Store Connect → 앱 → 앱 개인정보 보호(App Privacy) → 시작하기.
-근거: `docs/superpowers/plans/2026-09-13-kidcare-ios-phase7.md` 판정 기록 2. 앱 매니페스트(`ios/KidCare/PrivacyInfo.xcprivacy`)의 여섯 항목과 같고,
+근거: `docs/plans/2026-09-13-kidcare-ios-phase7.md` 판정 기록 2. 앱 매니페스트(`ios/KidCare/PrivacyInfo.xcprivacy`)의 여섯 항목과 같고,
 Firebase SDK 가 스스로 신고하는 진단 데이터 하나를 더했다. `ReleaseConfigTests.신고한_수집_항목` 을 바꾸면 이 파일도 같이 바꾼다.
 
 ## 기본 질문
@@ -1713,7 +1712,7 @@ cd ios && xcodegen generate && git -C .. status --short               # xcodegen
 xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17'   # M+17 PASS(에뮬레이터 켠 채)
 ```
 
-- [ ] **Step 2: 통합 리뷰** — superpowers:requesting-code-review 로 7단계 첫 커밋의 부모부터 HEAD 까지를 한 번 리뷰받는다. 리뷰어에게 이 계획서의 "판정 기록" 열여섯 줄과 "Pre-flight conflict table" 을 함께 준다. 특히 네 가지를 봐 달라고 적는다.
+- [ ] **Step 2: 통합 리뷰** — 코드 리뷰로 7단계 첫 커밋의 부모부터 HEAD 까지를 한 번 리뷰받는다. 리뷰어에게 이 계획서의 "판정 기록" 열여섯 줄과 "Pre-flight conflict table" 을 함께 준다. 특히 네 가지를 봐 달라고 적는다.
   1. `LeaveFamilyModel.뺀다` 가 어떤 실패 경로에서도 서버 확인 전에 `clearLocal` 을 부르지 않는가.
   2. `LeaveFamilyRepository.removeMember` 의 PERMISSION_DENIED 삼킴이 "아직 멤버"를 성공으로 잘못 보는 길이 있는가.
   3. `RouterView` 의 `onChange` 가 1단계 CRITICAL(합류 도중 본 화면으로 튕김)을 되살리지 않는가.
@@ -2029,7 +2028,7 @@ xcrun devicectl device process launch --device 6C5120C8-779D-5250-AB4C-B152B9A64
 ## 아이폰 TestFlight로 올리는 법 (사람이 할 일)
 
 코드로 대신 못 하는 것들입니다. **A~F 는 가족에게 TestFlight 로 나눠줄 때, G~H 는 App Store 에 낼 때** 필요합니다.
-명령이 적힌 항목은 **주인이 직접 확인한 뒤에만** 실행합니다. 개발 도구(에이전트 포함)는 올리기·레코드 만들기를 하지 않습니다.
+명령이 적힌 항목은 **주인이 직접 확인한 뒤에만** 실행합니다. 개발 도구는 올리기·레코드 만들기를 하지 않습니다.
 
 로컬 산출물은 `ios/` 에서 이렇게 다시 만들고 검사합니다(아무것도 올리지 않습니다).
 

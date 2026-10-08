@@ -1,6 +1,5 @@
 # iOS 아이 역할 4단계 구현 계획 — 보호자 차단, 전수 검토, 실기기 확인
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 아이가 아이폰이면 **보호자 앱이 못 하는 것을 못 한다고 말한다.** 지금 보호자 화면은 아이폰 아이에게도 소리 모드 버튼·핸드폰 찾기·메시지·알람·'지금 위치 확인'·'실시간 보기'를 그대로 내밀고, 누르면 `commands/` 문서가 하나 만들어져 **아무도 구독하지 않는 자리에서 영원히 "전달 중"에 머문다**(아이폰 아이는 명령을 안 듣는다, 설계서 §1). 이 단계가 그 거짓말을 끝낸다. 그리고 1~3단계가 열어 둔 이월을 하나씩 닫거나 **왜 안 닫는지를 적어** 닫고, 세 단계 전체를 상수·골든·리스너·비용·정직함 다섯 축으로 훑고, 개발일지를 쓰고, **실기기에서만 풀리는 항목의 점검표를 적어 둔 채 주인의 허락을 기다린다.**
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Swift 6 strict concurrency / iOS 17 / SwiftUI / Firebase Firestore / Swift Testing / XcodeGen. 새 의존성 없음. 새 Firestore 리스너 없음. 새 화면 없음. **`app/` 을 한 줄도 안 만진다** — 이 단계는 골든 파일을 더하지 않으므로 `GoldenFileWriterTest.kt` 예외조차 쓰지 않는다(판정 기록 12 가 그래도 되는 이유를 적었다).
 
-**Spec:** `docs/superpowers/specs/2026-09-22-kidcare-ios-child-design.md`. 이 단계가 기대는 곳:
+**Spec:** `docs/specs/2026-09-22-kidcare-ios-child-design.md`. 이 단계가 기대는 곳:
 - §14 4단계 — 범위 그대로("`platform` 쓰기와 읽기, `Guardian/ChildPlatform` + 세 화면 잠금(§10.2) / 전수 검토: 상수 대조표(§4)를 코드와 한 줄씩 대조, 골든 대조가 정말로 무는지 일부러 값을 망가뜨려 확인 / **주인의 허락을 받은 뒤** 실기기 검증 열 항목(§12.4)")
 - §10 전부 — 10.1 아이폰인 것을 아는 법과 **값이 없으면 안드로이드로 본다**, 10.2 무엇을 잠그나와 문구 둘
 - §11.2 하루 쓰기 수 — 만든 코드로 다시 세어 안드로이드 대비 배수가 안 나빠졌는지 본다
@@ -32,7 +31,7 @@
 
 ## 선행 조건
 
-3단계(`docs/superpowers/plans/2026-09-23-kidcare-ios-child-phase3.md`)가 **수정 파동까지 전부 커밋된 뒤** 시작한다. 기준 커밋은 `0b141d6`(3단계 고침 3) 이상이다.
+3단계(`docs/plans/2026-09-23-kidcare-ios-child-phase3.md`)가 **수정 파동까지 전부 커밋된 뒤** 시작한다. 기준 커밋은 `0b141d6`(3단계 고침 3) 이상이다.
 
 ```bash
 cd /Users/com/work/KidCare
@@ -91,7 +90,7 @@ cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare \
 - 테스트는 **운영 Firestore 에 절대 쓰지 않는다.** 에뮬레이터 테스트는 `configureForEmulator(projectId: "kidcare-emulator")`(Auth 127.0.0.1:9099, Firestore 8080)를 쓰고, **커밋 시점의 `KidCareApp.init()` 은 반드시 `configureForApp()` 을 부른다.** 에뮬레이터는 **이미 떠 있는 것을 그대로 쓰고 그 데이터도 지우지 않는다**(3단계가 남긴 가족 `MZO1poA0yAyAmgOEx56X` 포함).
 - **실기기를 아이로 페어링하지 않는다.** 설계서 §13 이 그 이유를 적었다 — 진짜 가족 문서에 쓰고 **진짜 아이의 위치를 모으기 시작한다.** 이 단계가 하는 일은 점검표를 **적어 두는 것**까지이고, 실행은 **주인이 하라고 말한 뒤**다(Task 4 Step 8).
 - **시뮬레이터를 끄거나 지우지 않는다.** 테스트 전에 앱을 **지우지 않는다**(위에 덮어 설치한다).
-- 커밋은 한국어, 작성자 `Yongminlee2 <dydals5678@gmail.com>`. **AI 흔적을 남기지 않는다**(Co-Authored-By 금지).
+- 커밋은 한국어, 작성자 `Yongminlee2 <dydals5678@gmail.com>`.
 - 테스트 명령: `cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17'`.
 - 주석은 한국어로 **"왜"** 를 적는다. 실행 전 PATH 는 `export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH"` 다. 파일을 새로 만들거나 지웠으면 테스트 전에 `cd ios && xcodegen generate` 를 돌린다.
 - Swift 의 `CancellationError` 를 일반 `catch` 로 삼키지 않는다(설계서 §16 마지막 줄).
@@ -251,7 +250,7 @@ tools/
 └─ i18n-untranslated.json                재생성(--write-gaps)
 docs/
 ├─ known-issues.md                       수정. 2단계 M1·M5 를 기록으로 남긴다
-└─ superpowers/plans/
+└─ plans/
    └─ 2026-09-23-kidcare-ios-child-phase4.md   이 문서
 README.md                                수정. 개발일지 한 절 + 개발 현황 표 한 행
 ios/KidCare/Guardian/
@@ -1533,7 +1532,7 @@ git -c user.name="Yongminlee2" -c user.email="dydals5678@gmail.com" \
 - [ ] README 에 개발일지 한 절이 들어갔고, 그 안에 ①아이폰이 못 하는 것과 이유 ②강제 종료 차이 ③도착 직후 이탈(안드로이드와 같은 동작) ④안드로이드에서 고칠 것 넷이 전부 있다.
 - [ ] `git diff --stat 0b141d6..HEAD -- app firestore.rules gradlew` 가 **비어 있다.**
 - [ ] 앱 코드에 `@unchecked Sendable`·`nonisolated(unsafe)` 가 없고, `Logic/` 이 Foundation 만 import 한다.
-- [ ] 커밋이 전부 한국어이고 작성자가 `Yongminlee2 <dydals5678@gmail.com>` 이며 `Co-Authored-By` 가 하나도 없다.
+- [ ] 커밋이 전부 한국어이고 작성자가 `Yongminlee2 <dydals5678@gmail.com>`다.
 
 ---
 

@@ -1,6 +1,5 @@
 # iOS 아이 역할 1단계 구현 계획 — 위치와 경로
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 아이폰이 **아이 폰**으로서 위치를 모아 안드로이드와 **글자까지 같은 모양**의 `children/{childUid}/trails/{dayKey}` 문서와 `children/{childUid}` 상태 문서를 쓰게 한다. 시뮬레이터에 GPX 경로를 먹이면 에뮬레이터에 그 두 문서가 올라가고, 지금 있는 아이폰 보호자 앱이 그 경로를 지도에 그린다. 순수 로직 다섯을 `Logic/` 으로 옮기고 전부 코틀린이 뽑은 골든 파일로 대조한다.
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Swift 6 엄격 동시성 / iOS 17 / SwiftUI / CoreLocation / Firebase Firestore 12.19.1 / Swift Testing / XcodeGen. 새 의존성 없음. 코틀린 쪽은 기존 `GoldenFileWriterTest.kt` 한 파일에 `@Test` 다섯을 더하는 것이 전부다.
 
-**Spec:** `docs/superpowers/specs/2026-09-22-kidcare-ios-child-design.md`. 이 단계가 기대는 곳은 다음과 같다.
+**Spec:** `docs/specs/2026-09-22-kidcare-ios-child-design.md`. 이 단계가 기대는 곳은 다음과 같다.
 
 - §3.1 `Logic/` 새 파일 표 중 다섯(장소·이름 관련 셋은 2단계), §3.2 `Fix.speedAccuracy`·`Segment.nameLat/nameLng`
 - §3.3 `Core/ChildStatusReporter`(신규), `TrailRepository.save`, `ChildStatusDoc.platform`
@@ -47,7 +46,7 @@ cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destinatio
 - No push notifications and no FCM (the Firebase Spark free plan). Every Firestore listener has a removal path on disappear.
 - i18n: 새 키는 `i18n/ko.json` 과 `i18n/en.json` **둘 다**에 넣고 `python3 tools/ios-strings.py` 로 `Localizable.xcstrings` 를 다시 만든다. **번역을 지어내지 않는다** — 나머지 12개 언어는 영어로 채워지고 `tools/i18n-untranslated.json` 에 기록된다(6단계 공통 절차 A). `%@` 는 `i18n/*.json` 에 절대 쓰지 않는다. 리터럴 `%` 는 `%%` 다. **무관한 화면의 문구 키를 빌려 쓰지 않는다**(두 번 거절당했다).
 - Tests never write to production Firestore. Emulator tests use `configureForEmulator(projectId: "kidcare-emulator")` (Auth 127.0.0.1:9099, Firestore 8080), and `KidCareApp.init()` must call `configureForApp()` at commit time.
-- Commits are in Korean, author `Yongminlee2 <dydals5678@gmail.com>`, with no Co-Authored-By trailer and no AI traces.
+- Commits are in Korean, author `Yongminlee2 <dydals5678@gmail.com>`.
 - Test command: `cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17'`.
 - **정본은 안드로이드다.** 이 계획서가 코틀린과 다르면 코틀린이 맞다. 상수는 인용한 줄에서 그대로 옮긴다.
 - 주석은 한국어로 '왜'를 적는다. 실행 전 PATH 는 `export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH"` 이다. 파일을 새로 만들었으면 테스트 전에 `cd ios && xcodegen generate` 를 돌린다.
@@ -2859,7 +2858,7 @@ cd ios && xcodegen generate && xcodebuild test -project KidCare.xcodeproj -schem
 | §4.10 `GEOCODE_BUDGET`·`PlaceNamer`·`MAX_GEOFENCES`·`LOW_PERCENT` | **2·3단계다.** 1단계에 없는 것이 맞다 |
 | §4.10 `FILE_NAME` = `trail_today.csv` | `TrailStoreTests` |
 
-- [ ] **Step 3: 통합 리뷰** — superpowers:requesting-code-review 로 **1단계 첫 커밋의 부모부터 HEAD 까지**를 한 번 리뷰받는다. 리뷰어에게 이 계획서의 "판정 기록" 스무 줄과 아래 Pre-flight conflict table 을 함께 준다. 특히 여섯 가지를 봐 달라고 적는다.
+- [ ] **Step 3: 통합 리뷰** — 코드 리뷰로 **1단계 첫 커밋의 부모부터 HEAD 까지**를 한 번 리뷰받는다. 리뷰어에게 이 계획서의 "판정 기록" 스무 줄과 아래 Pre-flight conflict table 을 함께 준다. 특히 여섯 가지를 봐 달라고 적는다.
 
 1. **골든이 정말 스윕인가.** 다섯 파일의 `cases` 가 경계 양옆을 실제로 담고 있는가. 코틀린 생성기의 `check()` 가 "이름만 경계"인 케이스를 잡는가.
 2. **`Float` → `Double` 이 문턱을 옮기지 않았는가.** 판정 기록 2 의 두 상수와, 상수를 쓰는 **모든** 비교식.

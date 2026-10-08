@@ -1,6 +1,5 @@
 # iOS 3단계 구현 계획 — 지도 탭 전체
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 아이폰 지도 화면을 안드로이드와 같게 만든다 — 하루 경로선, 타임라인, 날짜 이동, '지금 위치 확인', 실시간 보기.
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Swift 6 / SwiftUI / 네이버 지도 iOS SDK 3.23.3 / Firebase Firestore. 새 의존성 없음.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-kidcare-ios-design.md` (§4 화면 대응표, §9 3단계)
+**Spec:** `docs/specs/2026-09-12-kidcare-ios-design.md` (§4 화면 대응표, §9 3단계)
 
 ## Global Constraints
 
@@ -20,7 +19,7 @@
 - **`Fix` 를 Firestore 에서 만들 때 `speed` 를 반드시 싣는다.** 2단계에서 이 필드가 영원히 0 이던 버그를 고쳤고, 그 수정이 의미를 가지려면 매핑이 값을 넘겨야 한다.
 - **안드로이드 `app/` 아래를 수정하지 않는다.** `firestore.rules`·`gradlew` 도 마찬가지.
 - Swift 6 strict concurrency. `@unchecked Sendable`·`nonisolated(unsafe)` 금지.
-- 주석은 **한국어로 '왜'**. 커밋은 **한국어**, author `Yongminlee2 <dydals5678@gmail.com>`, **도구·AI 흔적 금지**.
+- 주석은 **한국어로 '왜'**. 커밋은 **한국어**, author `Yongminlee2 <dydals5678@gmail.com>`.
 - 실행 전 PATH: `export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH"`
 - iOS 테스트: `cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17'` (현재 128개, known issues 12)
 - 안드로이드 테스트(참고용, 읽기 전용): `sh gradlew :app:testDebugUnitTest -x processDebugGoogleServices` — `sh gradlew`, `./gradlew` 아님.

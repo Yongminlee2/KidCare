@@ -1,6 +1,5 @@
 # KidCare 3단계 구현 계획 (구간 요약·타임라인·경로선)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 하루치 위치 점을 "몇 시부터 몇 시까지 어디에 있었고 언제 어디로 이동했는지"라는 글로 바꿔 보호자 폰에 타임라인으로 보여주고, 같은 하루를 지도 위에 선으로 그린다.
 
@@ -8,9 +7,9 @@
 
 **Tech Stack:** Kotlin (AGP 9 내장), Views + ViewBinding + Material3, RecyclerView, Firebase Firestore, 카카오맵 SDK v2 (RouteLine), 카카오 로컬 REST API (`HttpURLConnection`), `java.time`, JUnit4
 
-**설계서:** `docs/superpowers/specs/2026-08-06-kidcare-design.md`
+**설계서:** `docs/specs/2026-08-06-kidcare-design.md`
 **미해결 목록:** `docs/known-issues.md`
-**직전 단계 계획:** `docs/superpowers/plans/2026-08-06-kidcare-phase1-2.md`
+**직전 단계 계획:** `docs/plans/2026-08-06-kidcare-phase1-2.md`
 
 ## Global Constraints
 

@@ -1,6 +1,5 @@
 # iOS 5단계 구현 계획 — 예약 탭과 장소 탭
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 아이폰 보호자 앱의 예약·장소 자리표시를 안드로이드 `ScheduleFragment`·`PlaceFragment` 와 같은 화면으로 채운다. 예약 탭에는 기본 모드 카드, 공휴일 스위치, 하루 띠가 달린 규칙 목록과 규칙 편집이 들어간다. 장소 탭에는 이름 첫 글자 스티커 목록과, 지도 한가운데 십자와 반경 원으로 고르는 장소 편집이 들어간다. 두 탭 모두 쓰기가 끝나면 `sync_rules` 명령을 보내고, 못 보냈으면 "아직 애기폰에 전달되지 않았어요" 줄을 남긴다.
 
@@ -8,9 +7,9 @@
 
 **Tech Stack:** Swift 6 / SwiftUI(`NavigationStack`, `Slider`, `DatePicker(.wheel)`, `.alert`) / Firebase Firestore 12.19.1 / NMapsMap 3.23.3(`NMFCircleOverlay`, `NMFMapViewCameraDelegate`) / Swift Testing. 새 의존성 없음.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-kidcare-ios-design.md`. §4 탭별 대응표의 `ScheduleFragment`("하루 띠 UI · 공휴일 스위치 · 저장 후 `SYNC_RULES` 전송")와 `PlaceFragment`("지도 한가운데를 좌표로 삼는 방식 그대로") 두 행, §4 "색과 치수는 안드로이드 리소스에서 그대로", §5 손 매핑, §9 5단계 "예약 탭 · 장소 탭 — 하루 띠 UI와 지도 위 반경 고르기".
+**Spec:** `docs/specs/2026-09-12-kidcare-ios-design.md`. §4 탭별 대응표의 `ScheduleFragment`("하루 띠 UI · 공휴일 스위치 · 저장 후 `SYNC_RULES` 전송")와 `PlaceFragment`("지도 한가운데를 좌표로 삼는 방식 그대로") 두 행, §4 "색과 치수는 안드로이드 리소스에서 그대로", §5 손 매핑, §9 5단계 "예약 탭 · 장소 탭 — 하루 띠 UI와 지도 위 반경 고르기".
 
-**선행 조건:** 4단계 Task 3·4 는 커밋됐다(`8e9ebc6`, `0b0a5f1`, 보완 `5209a6e`). 이 계획서는 그 커밋이 실제로 만든 이름을 쓴다. 4단계 계획서와 달라진 점은 `.superpowers/sdd/2026-09-13-kidcare-ios-phase4/task-3-4-report.md` 에 있고, 이 계획서에 반영한 것은 맨 아래 Pre-flight conflict table 에 적었다. 시작 전에 이름이 그대로인지 확인한다(4단계 통합 리뷰가 이름을 바꿨을 수 있다):
+**선행 조건:** 4단계 Task 3·4 는 커밋됐다(`8e9ebc6`, `0b0a5f1`, 보완 `5209a6e`). 이 계획서는 그 커밋이 실제로 만든 이름을 쓴다. 4단계 계획서와 달라진 점은 개발 중 작업 메모(저장소에 안 올림) 에 있고, 이 계획서에 반영한 것은 맨 아래 Pre-flight conflict table 에 적었다. 시작 전에 이름이 그대로인지 확인한다(4단계 통합 리뷰가 이름을 바꿨을 수 있다):
 
 ```bash
 cd /Users/com/work/KidCare
@@ -34,7 +33,7 @@ grep -n "static let vibrate\|struct RingerSettingsDoc" ios/KidCare/Core/Document
 - No push notifications and no FCM (the Firebase Spark free plan). Every Firestore listener has a removal path on disappear.
 - i18n: new keys are added to **both** `i18n/ko.json` and `i18n/en.json` and are regenerated into `Localizable.xcstrings` the way earlier phases did (find the mechanism, e.g. `tools/check-i18n-keys.swift` and the existing parity tests, and state the exact command). `%@` is never used in `i18n/*.json`. A literal `%` must be `%%` in format strings. **Never borrow a string key from an unrelated screen** (this was rejected twice).
 - Tests never write to production Firestore. Emulator tests use `configureForEmulator(projectId: "kidcare-emulator")` (Auth 127.0.0.1:9099, Firestore 8080), and `KidCareApp.init()` must call `configureForApp()` at commit time.
-- Commits are in Korean, author `Yongminlee2 <dydals5678@gmail.com>`, with no Co-Authored-By trailer and no AI traces.
+- Commits are in Korean, author `Yongminlee2 <dydals5678@gmail.com>`.
 - Test command: `cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17'`.
 
 5단계 브리프가 더한 것:
@@ -4309,7 +4308,7 @@ grep -rn "TabPlaceholderView(tab: .schedule)\|TabPlaceholderView(tab: .place)" i
 
 테스트 개수를 적어 둔다(Task 4 개발일지). 기대값은 4단계 끝(수정 라운드 포함)보다 **51개** 많다. Task 1 이 17(`KotlinMath` 4, `RuleDocuments` 4, `ListLoad` 2, `RuleSyncStore` 2, `RuleRepository` 5), Task 2 가 19(`ScheduleText` 4, `ScheduleViewModel` 15), Task 3 이 15(`PlaceText` 3, `PlaceViewModel` 12)다.
 
-- [ ] **Step 2: 통합 리뷰** — superpowers:requesting-code-review 로 5단계 첫 커밋의 부모부터 HEAD 까지를 한 번 리뷰받는다. 리뷰어에게 이 계획서의 "판정 기록" 열네 줄과 "Pre-flight conflict table" 을 함께 준다. 특히 네 가지를 봐 달라고 적는다.
+- [ ] **Step 2: 통합 리뷰** — 코드 리뷰로 5단계 첫 커밋의 부모부터 HEAD 까지를 한 번 리뷰받는다. 리뷰어에게 이 계획서의 "판정 기록" 열네 줄과 "Pre-flight conflict table" 을 함께 준다. 특히 네 가지를 봐 달라고 적는다.
   1. 판정 기록 3(뒤로 가기 중 저장)의 세대 규칙에 틈이 없는가.
   2. `PlacePickerMapView` 의 `@preconcurrency` 준수와 제스처 동시 인식이 Swift 6 에서 경고 없이 도는가.
   3. 두 뷰모델의 `정리한다()` 뒤에 쓰기·구독이 새로 생기는 길이 없는가(4단계 통합 검토 M1 과 같은 종류).

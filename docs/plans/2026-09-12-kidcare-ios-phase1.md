@@ -1,6 +1,5 @@
 # iOS 1단계 구현 계획 — 뼈대·인증·페어링·아이 마커
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 아이폰에서 익명 로그인으로 기존 가족에 **보호자로 합류**하고, 지도 위에 그 가족 아이의 마지막 위치 마커 하나를 띄운다.
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Swift 6 / SwiftUI / iOS 17.0+ / Xcode 26.6, Firebase iOS SDK(Auth·Firestore, SPM), 네이버 지도 iOS SDK 3.23.3(SPM), Swift Testing, Firebase Local Emulator Suite.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-kidcare-ios-design.md`
+**Spec:** `docs/specs/2026-09-12-kidcare-ios-design.md`
 
 ## Global Constraints
 
@@ -19,7 +18,7 @@
 - **시각은 전부 UTC 밀리초 `Int64`.** 안드로이드 `Documents.kt` 와 같은 단위다.
 - 주석은 **한국어로 '왜'** 를 적는다. 무엇을 하는지는 코드가 말한다. 집필 기준은 `app/src/main/java/com/kidcare/family/core/AuthGateway.kt`.
 - 화면 문구는 **하드코딩하지 않는다.** 1단계에서는 `String(localized:)` 키만 쓰고, 키 정의는 6단계(다국어)에서 `i18n` 원본에서 생성한다. 1단계 동안은 `Localizable.xcstrings` 에 한국어만 직접 넣어 둔다.
-- **커밋 메시지는 한국어, author `Yongminlee2 <dydals5678@gmail.com>`, 도구·AI 흔적 금지.** 기존 113개 커밋과 같은 결을 지킨다.
+- **커밋 메시지는 한국어, author `Yongminlee2 <dydals5678@gmail.com>`.** 기존 113개 커밋과 같은 결을 지킨다.
 - **비밀은 커밋하지 않는다.** `GoogleService-Info.plist` 와 `ios/Config/Secrets.xcconfig` 는 `.gitignore` 에 넣는다. 안드로이드가 `local.properties` 를 쓰는 것과 같은 대우다.
 - **brew · node · java · xcodegen 은 PATH 에 없다.** 이 계획서의 명령은 앞에 이 줄을 붙여 쓴다: `export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH"`
 - **`.xcodeproj` 를 커밋하지 않는다.** `project.yml` 이 정본이고 `xcodegen generate` 로 만든다.
@@ -383,7 +382,7 @@ Expected: `TEST SUCCEEDED`. 시뮬레이터 이름이 다르면 `xcrun simctl li
 
 - [ ] **Step 10: 커밋**
 
-커밋 메시지는 한국어로, 도구·AI 흔적 없이. 담을 내용: project.yml 을 정본으로 두고
+커밋 메시지는 한국어로. 담을 내용: project.yml 을 정본으로 두고
 .xcodeproj 를 커밋하지 않는 이유(pbxproj 가 병합 충돌의 상설 무대가 된다), 지도 키를
 Secrets.xcconfig 에서만 읽는 이유(안드로이드 local.properties 와 같은 대우), 네이버 지도를
 안드로이드와 같은 3.23.3 에 못 박는 이유(버전이 갈리면 두 폰이 같은 자리를 다르게 그린다).

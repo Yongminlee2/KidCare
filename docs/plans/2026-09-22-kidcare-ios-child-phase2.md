@@ -1,6 +1,5 @@
 # iOS 아이 역할 2단계 구현 계획 — 장소 알림과 머무른 곳 이름
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 아이폰 아이가 부모가 정한 장소의 경계를 넘을 때 **안드로이드와 글자까지 같은 `events/` 문서**(`place_enter`·`place_exit`, `placeName` 포함)를 쓰게 한다. 판정은 안드로이드 `logic/GeofenceEvaluator.kt` 를 옮긴 순수 로직이 하고, OS 지역 감시는 "판정해 보라는 신호"로만 쓴다. 그리고 하루 문서의 머무름 구간에 이름을 붙인다(`child/PlaceNamer.kt` + `logic/PlaceNameCache.kt`). 보호자 알림 탭은 한 줄도 안 바뀐 채로 그 사건을 읽는다.
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Swift 6 strict concurrency / iOS 17 / SwiftUI / CoreLocation(`CLLocationManager.startMonitoring(for: CLCircularRegion)`) / Firebase Firestore / Swift Testing / XcodeGen. 새 의존성 없음. 코틀린 쪽은 `app/src/test/java/com/kidcare/family/logic/GoldenFileWriterTest.kt` **한 파일만** 만진다.
 
-**Spec:** `docs/superpowers/specs/2026-09-22-kidcare-ios-child-design.md`. 이 단계가 기대는 곳:
+**Spec:** `docs/specs/2026-09-22-kidcare-ios-child-design.md`. 이 단계가 기대는 곳:
 - §14 2단계 — 범위 그대로("`Logic/`: GeofenceEvaluator·PlaceNameCache·GeofenceRegionSelection, 골든 둘 + 대조 테스트 / `Child/`: PlaceWatcher·PlaceStateStore·PlaceNamer / `Core/`: EventRepository.add, PlaceRepository.observePlaces 를 아이 uid 로 / 에뮬레이터 테스트: 이벤트 쓰기 계약 셋과 거부 경로")
 - §4.6 `GeofenceEvaluator` 상수 셋, §4.7 `PlaceNameCache` 상수 둘, §4.10 `GEOCODE_BUDGET_MILLIS`·`TIMEOUT_MILLIS`·`MIN_INTERVAL_MILLIS`·`ENDPOINT`·`USER_AGENT`·`MAX_GEOFENCES`
 - §7 지오펜스 전부(7.1 신호·7.2 20개 상한·7.3 어느 API·7.4 앱이 죽어 있는 동안)
@@ -19,13 +18,13 @@
 
 ## 선행 조건
 
-1단계(`docs/superpowers/plans/2026-09-22-kidcare-ios-child-phase1.md`)가 **전부 커밋된 뒤** 시작한다. 이 계획서는 1단계 계획서에 적힌 이름(`LocationCollector`, `TrackingCoordinator`, `TrailBuffer`, `TrailStore`, `TrailUploader`, `ChildStatusReporter`)을 쓴다. 시작 전에 이름이 실제로 그대로인지 확인한다.
+1단계(`docs/plans/2026-09-22-kidcare-ios-child-phase1.md`)가 **전부 커밋된 뒤** 시작한다. 이 계획서는 1단계 계획서에 적힌 이름(`LocationCollector`, `TrackingCoordinator`, `TrailBuffer`, `TrailStore`, `TrailUploader`, `ChildStatusReporter`)을 쓴다. 시작 전에 이름이 실제로 그대로인지 확인한다.
 
 ```bash
 cd /Users/com/work/KidCare
 git status --short                                                        # 비어 있어야 한다
 git log --oneline | grep -E "아이 1단계 Task"                              # 네 줄 이상
-ls docs/superpowers/plans/2026-09-22-kidcare-ios-child-phase1.md           # 있어야 한다
+ls docs/plans/2026-09-22-kidcare-ios-child-phase1.md           # 있어야 한다
 
 # 1단계가 만든 이름 — 하나라도 다르면 Pre-flight conflict table 의 해당 행을 먼저 처리한다
 grep -n "enum LocationFilter\|fallbackMaxAccuracyMeters\|static func distanceMeters" ios/KidCare/Logic/LocationFilter.swift   # 세 줄
@@ -61,7 +60,7 @@ cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare \
 - 새 문구는 `i18n/ko.json`·`i18n/en.json` **둘에만** 넣고 `python3 tools/ios-strings.py` 로 생성한다. **번역을 지어내지 않는다.** (이 단계는 새 키가 없다 — 판정 기록 10.)
 - 테스트는 **운영 Firestore 에 절대 쓰지 않는다.** 에뮬레이터 테스트는 `configureForEmulator(projectId: "kidcare-emulator")`(Auth 127.0.0.1:9099, Firestore 8080)를 쓰고, 커밋 시점의 `KidCareApp.init()` 은 반드시 `configureForApp()` 을 부른다. **실기기를 아이로 페어링하지 않는다**(설계서 §13, 4단계 몫).
 - **시뮬레이터를 끄거나 지우지 않는다.** 테스트 전에 앱을 **지우지 않는다**(위에 덮어 설치한다). 에뮬레이터는 이미 떠 있는 것을 그대로 쓰고 그 데이터도 지우지 않는다.
-- 커밋은 한국어, 작성자 `Yongminlee2 <dydals5678@gmail.com>`. **AI 흔적을 남기지 않는다**(Co-Authored-By 금지).
+- 커밋은 한국어, 작성자 `Yongminlee2 <dydals5678@gmail.com>`.
 - 테스트 명령: `cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17'`.
 - 주석은 한국어로 **"왜"** 를 적는다. 실행 전 PATH 는 `export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH"` 다. 파일을 새로 만들었으면 테스트 전에 `cd ios && xcodegen generate` 를 돌린다.
 - Swift 의 `CancellationError` 를 일반 `catch` 로 삼키지 않는다(설계서 §16 마지막 줄).
@@ -2651,5 +2650,5 @@ git -c user.name="Yongminlee2" -c user.email="dydals5678@gmail.com" \
 | **2단계 Task 2 ↔ 3단계** | `permission_off` 이벤트, 아이 화면 | 3단계가 `ConditionWatcher` 로 쓴다. `EventRepository.add` 와 `EventDoc.firestoreData` 를 이 단계가 먼저 만들어 두므로 3단계는 그대로 쓴다 |
 | **2단계 Task 2 ↔ 4단계** | `Guardian/ChildPlatform` 과 세 화면 잠금 | 겹치지 않는다. `platform` 필드는 1단계가 상태 문서에 심는다 |
 | **2단계 ↔ 보호자 앱(안 고침)** | `Guardian/AlertText`·`AlertViewModel` 이 `place_enter`/`place_exit` 를 이미 그린다 | **보호자 쪽은 한 줄도 안 바뀐다.** 이 단계가 쓰는 `type` 값 둘은 `EventType.placeEnter`/`placeExit` 상수를 참조하므로 리터럴이 갈릴 일이 없다 |
-| **작업 트리 상태 ↔ 2단계 시작** | 다른 에이전트가 1단계 계획서를 `docs/superpowers/plans/` 에 커밋하는 중이다(2026-09-22) | 선행 조건 `git status --short` 가 비어 있어야 한다. 이 계획서 파일 자체도 그 에이전트의 커밋과 같은 폴더에 들어가므로, **옮겨 넣기 전에 1단계 계획서 커밋이 끝났는지 확인한다** |
+| **작업 트리 상태 ↔ 2단계 시작** | 다른 작업이 1단계 계획서를 `docs/plans/` 에 커밋하는 중이다(2026-09-22) | 선행 조건 `git status --short` 가 비어 있어야 한다. 이 계획서 파일 자체도 그 작업의 커밋과 같은 폴더에 들어가므로, **옮겨 넣기 전에 1단계 계획서 커밋이 끝났는지 확인한다** |
 | **코틀린 주석의 낡은 값 ↔ Task 2** | `EventRepository.kt:25`·`PlaceWatcher.kt:131-132` 가 `at` 창을 "24시간"으로 적었다 | 규칙이 7일이다(`firestore.rules:306-310`). **코틀린 주석을 고치지 않는다**(`app/src/main` 금지). 판정 기록 12 에 적고, 4단계 개발일지의 "안드로이드에서 찾은 것"에 한 줄 남긴다 |

@@ -16,7 +16,7 @@ import java.net.URL
  * 좌표를 사람이 읽는 주소로 바꾼다. OpenStreetMap Nominatim 의 reverse 엔드포인트를
  * 쓴다(2026-08-07, 카카오 로컬 REST API에서 교체 — 소유자가 REST 키를 발급받지 않아
  * 머무른 곳 이름이 항상 "머무른 곳"으로만 나왔다. Nominatim 은 키 등록 자체가 없다.
- * 근거·응답 예시는 `.superpowers/geocoder-swap-report.md` 참고).
+ * 근거·응답 예시는 개발 중 작업 메모(저장소에 안 올림) 참고).
  *
  * HttpURLConnection 을 쓰는 이유: 요청이 이 한 종류뿐이라 HTTP 라이브러리를 하나 더
  * 들이는 값이 안 맞는다.
@@ -119,7 +119,7 @@ class PlaceNamer(context: Context) {
      * 상호·건물명 같은 구체적 장소명이 있으면 그게 사람에게 가장 익숙하니 그대로
      * 쓴다. 없으면 동 단위 행정 구역명을 쓰고, 도로명이 있으면 덧붙인다.
      *
-     * 실제 서울 좌표 4곳을 찍어보면(`.superpowers/geocoder-swap-report.md`) suburb
+     * 실제 서울 좌표 4곳을 찍어보면(개발 중 작업 메모, 저장소에 안 올림) suburb
      * (행정동)가 quarter(법정동)보다 훨씬 자주 채워져 있었다. 그래서 suburb 를 먼저
      * 본다. 시·도까지 전부 붙이면 화면에서 잘리므로 그 아래만 남긴다.
      */

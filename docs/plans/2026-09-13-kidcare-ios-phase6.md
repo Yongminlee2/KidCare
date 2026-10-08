@@ -1,6 +1,5 @@
 # iOS 6단계 구현 계획 — 알림 탭, 아이 선택기와 초대, 14개 언어
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 아이폰 보호자 앱의 마지막 자리표시(알림 탭)를 안드로이드 `AlertFragment` 와 같은 화면으로 채운다. 안드로이드 `GuardianMainActivity` 의 아이 선택기(팝업의 '＋ 아이 추가'·'＋ 보호자 초대' 포함)와 지구본 버튼을 옮긴다. `i18n/*.json` 14벌에서 `Localizable.xcstrings` 를 통째로 생성하는 `tools/ios-strings.py` 를 만들고, 12개의 `withKnownIssue` 를 실제 검사로 바꾼다.
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Swift 6 / SwiftUI(`TabView`, `Menu`, `fullScreenCover`, `@SceneStorage`, `@Environment(Type.self)`) / Firebase Firestore 12.19.1 / Swift Testing / Python 3(생성기, 표준 라이브러리만). 새 의존성 없음.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-kidcare-ios-design.md`. 이 단계가 기대는 곳은 다음과 같다.
+**Spec:** `docs/specs/2026-09-12-kidcare-ios-design.md`. 이 단계가 기대는 곳은 다음과 같다.
 - §4 ① "알림 탭의 `AlertService` 스위치가 없다 — 그 자리에 제약을 한 줄로"
 - §4 대응표 `AlertFragment`("살구빛 하이라이트와 `read` 한 필드만 쓰는 계약 그대로")와 `GuardianMainActivity`("탭 컨테이너 · 아이 선택기 · 무응답 배너")
 - §4 "알림 탭의 살구빛은 화면을 여는 순간의 안 읽은 ID를 따로 붙들어 칠한다"
@@ -27,7 +26,7 @@ grep -n "static let apricotSoft\|static let berryInk\|static let lineSoft" ios/K
 ls ios/KidCare/Assets.xcassets/Mascot3D.imageset/mascot_3d.png       # 있어야 한다
 grep -n "scheduleViewModel\|placeViewModel\|TabPlaceholderView(tab: .alert)\|onChange(of: scenePhase)" ios/KidCare/Guardian/GuardianRootView.swift   # 넷 이상
 grep -n "@SceneStorage(\"guardian.selectedTab\")" ios/KidCare/Guardian/GuardianRootView.swift   # 한 줄
-grep -rn "add-ios-catalog-keys" docs/superpowers/plans/2026-09-13-kidcare-ios-phase5.md | head -1   # 5단계가 이 도구를 썼다
+grep -rn "add-ios-catalog-keys" docs/plans/2026-09-13-kidcare-ios-phase5.md | head -1   # 5단계가 이 도구를 썼다
 swift tools/check-i18n-keys.swift > /tmp/p6-i18n-before.txt; echo $?   # 1 (12개 언어 × 21키). 기준으로 남긴다
 ```
 
@@ -42,7 +41,7 @@ swift tools/check-i18n-keys.swift > /tmp/p6-i18n-before.txt; echo $?   # 1 (12�
 - No push notifications and no FCM (the Firebase Spark free plan). Every Firestore listener has a removal path on disappear.
 - i18n: new keys are added to **both** `i18n/ko.json` and `i18n/en.json` and are regenerated into `Localizable.xcstrings` the way earlier phases did (find the mechanism, e.g. `tools/check-i18n-keys.swift` and the existing parity tests, and state the exact command). `%@` is never used in `i18n/*.json`. A literal `%` must be `%%` in format strings. **Never borrow a string key from an unrelated screen** (this was rejected twice).
 - Tests never write to production Firestore. Emulator tests use `configureForEmulator(projectId: "kidcare-emulator")` (Auth 127.0.0.1:9099, Firestore 8080), and `KidCareApp.init()` must call `configureForApp()` at commit time.
-- Commits are in Korean, author `Yongminlee2 <dydals5678@gmail.com>`, with no Co-Authored-By trailer and no AI traces.
+- Commits are in Korean, author `Yongminlee2 <dydals5678@gmail.com>`.
 - Test command: `cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17'`.
 - **보이는 뒤로 가기.** push 되는 화면은 모두 시스템 뒤로 버튼이 보인다. `.navigationBarBackButtonHidden` 은 쓰지 않는다.
 - **진짜 가족 보호.** 진짜 가족 문서에 쓰는 동작은 에뮬레이터에서만 확인한다. 실기기 Task 는 읽기만 한다.
@@ -686,7 +685,7 @@ Run: `cd ios && xcodegen generate && xcodebuild test -project KidCare.xcodeproj 
 Expected: 전체 PASS. `I18nKeyParityTests` 3개, `LocalizationBundleTests` 3개가 새로 들어간다. `withKnownIssue` 로 기록되던 알려진 문제 12개가 사라진다. `LocalizationBundleTests.열네_언어가_실린다` 가 `xx.lproj 가 번들에 없다` 로 실패하면 **멈추고 보고한다.** `CFBundleLocalizations` 만으로 빌드가 언어를 싣지 않는다는 뜻이다. 프로젝트 언어 목록을 손으로 고치지 않는다.
 
 ```bash
-grep -rn "withKnownIssue\|알려진_어긋남\|add-ios-catalog-keys" ios tools docs/superpowers/specs   # 비어 있어야 한다
+grep -rn "withKnownIssue\|알려진_어긋남\|add-ios-catalog-keys" ios tools docs/specs   # 비어 있어야 한다
 ```
 
 - [ ] **Step 9: 커밋** (공통 절차 B)
@@ -3099,7 +3098,7 @@ git diff ios/KidCare/KidCareApp.swift                                           
 - Task 3: 12(`InviteSession` 9, `FamilyMembers` 1, `InviteFlow` 2)
 - Task 4: 10(`ChildSelectorModel` 10)
 
-- [ ] **Step 2: 통합 리뷰** — superpowers:requesting-code-review 로 6단계 첫 커밋의 부모부터 HEAD 까지를 한 번 리뷰받는다. 리뷰어에게 이 계획서의 "판정 기록" 열두 줄과 "Pre-flight conflict table" 을 함께 준다. 특히 다섯 가지를 봐 달라고 적는다.
+- [ ] **Step 2: 통합 리뷰** — 코드 리뷰로 6단계 첫 커밋의 부모부터 HEAD 까지를 한 번 리뷰받는다. 리뷰어에게 이 계획서의 "판정 기록" 열두 줄과 "Pre-flight conflict table" 을 함께 준다. 특히 다섯 가지를 봐 달라고 적는다.
   1. 아이를 바꿔 `GuardianRootView` 가 `.id` 로 다시 만들어질 때, 옛 뷰의 `onDisappear` 가 다섯 뷰모델의 `정리한다()` 를 **모두** 부르는가. 새 뷰의 `onAppear` 전에 옛 리스너가 새 아이 화면에 값을 흘리는 길이 없는가.
   2. `AlertViewModel` 의 보임 판정이 탭 전환·앱 전환·`.inactive`(제어 센터)에서 안드로이드 `setVisible` 과 같은 결과를 내는가.
   3. `InviteSession` 이 커버의 재마운트나 `시작한다()` 중복 호출에도 번호를 한 번만 발급하는가. 닫힌 뒤 늦게 끝난 발급이 상태를 건드리지 않는가.

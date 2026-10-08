@@ -1,6 +1,5 @@
 # iOS 4단계 구현 계획 — 탭 다섯, 관리 탭, 무응답 배너
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 아이폰 보호자 앱에 안드로이드와 같은 하단 탭 다섯을 세우고, 관리 탭(인터넷 상태·소리 모드·잠금·폰찾기·한마디·알람)을 안드로이드 `ControlFragment` 와 같게 옮기고, 무응답 배너를 모든 탭 위에 띄우고, 초대 코드 입력칸의 키보드 버그를 고친다.
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Swift 6 / SwiftUI(`TabView`, `@SceneStorage`) / Firebase Firestore 12.19.1 / Swift Testing. 새 의존성 없음.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-kidcare-ios-design.md` (§4 화면·탭별 대응표·"탭을 바꿔도 지도를 다시 만들지 않는다", §8 명령의 정직한 표시·무응답 배너, §9 4단계)
+**Spec:** `docs/specs/2026-09-12-kidcare-ios-design.md` (§4 화면·탭별 대응표·"탭을 바꿔도 지도를 다시 만들지 않는다", §8 명령의 정직한 표시·무응답 배너, §9 4단계)
 
 ## Global Constraints
 
@@ -19,7 +18,7 @@
 - No push notifications and no FCM (the Firebase Spark free plan). Every Firestore listener has a removal path on disappear.
 - i18n: new keys are added to **both** `i18n/ko.json` and `i18n/en.json` and are regenerated into `Localizable.xcstrings` the way earlier phases did (find the mechanism, e.g. `tools/check-i18n-keys.swift` and the existing parity tests, and state the exact command). `%@` is never used in `i18n/*.json`. A literal `%` must be `%%` in format strings. **Never borrow a string key from an unrelated screen** (this was rejected twice).
 - Tests never write to production Firestore. Emulator tests use `configureForEmulator(projectId: "kidcare-emulator")` (Auth 127.0.0.1:9099, Firestore 8080), and `KidCareApp.init()` must call `configureForApp()` at commit time.
-- Commits are in Korean, author `Yongminlee2 <dydals5678@gmail.com>`, with no Co-Authored-By trailer and no AI traces.
+- Commits are in Korean, author `Yongminlee2 <dydals5678@gmail.com>`.
 - Test command: `cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17'`.
 
 이 저장소에서 이어지는 규칙:
@@ -3569,7 +3568,7 @@ git diff 31c6eb2..HEAD -- ios/KidCare/KidCareApp.swift                  # 비어
 
 테스트 개수를 적어 둔다(Task 6 개발일지에 쓴다).
 
-- [ ] **Step 2: 통합 리뷰** — superpowers:requesting-code-review 로 `31c6eb2..HEAD` 전체를 한 번 리뷰받는다. 리뷰어에게 이 계획서의 "판정 기록" 일곱 줄과 "Pre-flight conflict table" 을 함께 준다. 반려 항목은 고친 뒤 한국어 커밋(`iOS 4단계 Fix round N: …`)으로 남긴다.
+- [ ] **Step 2: 통합 리뷰** — 코드 리뷰로 `31c6eb2..HEAD` 전체를 한 번 리뷰받는다. 리뷰어에게 이 계획서의 "판정 기록" 일곱 줄과 "Pre-flight conflict table" 을 함께 준다. 반려 항목은 고친 뒤 한국어 커밋(`iOS 4단계 Fix round N: …`)으로 남긴다.
 
 - [ ] **Step 3: 시뮬레이터 확인 준비 — 에뮬레이터에만 쓴다**
 

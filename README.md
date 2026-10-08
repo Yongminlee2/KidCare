@@ -38,7 +38,7 @@
 - **WiFi 원격 제어.** 안드로이드 10부터 서드파티 앱은 WiFi를 켤 수 없습니다. 유일한 길인 기기 소유자 등록은 위와 같은 이유로 막혔고, 옛 API를 되살리려고 `targetSdk`를 내리면 위치 수집이 망가집니다.
 - **통화·문자·앱 사용시간 감시.** 이 앱의 범위가 아닙니다.
 
-**아이폰**: 보호자용 iOS 앱이 같은 가족에 합류합니다(`ios/`, 2026-09-13 1단계 완료). 아이 폰은 안드로이드만 지원합니다 — 소리 전환과 핸드폰 찾기가 iOS에서는 불가능해서 반쪽이 되기 때문입니다. 설계 근거는 [`docs/superpowers/specs/2026-09-12-kidcare-ios-design.md`](docs/superpowers/specs/2026-09-12-kidcare-ios-design.md)에 있습니다.
+**아이폰**: 보호자용 iOS 앱이 같은 가족에 합류합니다(`ios/`, 2026-09-13 1단계 완료). 아이 폰은 안드로이드만 지원합니다 — 소리 전환과 핸드폰 찾기가 iOS에서는 불가능해서 반쪽이 되기 때문입니다. 설계 근거는 [`docs/specs/2026-09-12-kidcare-ios-design.md`](docs/specs/2026-09-12-kidcare-ios-design.md)에 있습니다.
 
 **배포 방식**: 가족끼리 APK 직접 설치. 플레이스토어에 올리지 않습니다.
 
@@ -1162,8 +1162,8 @@ iOS 테스트 **788개**, 안드로이드 **193개** 통과. 아이 역할 코�
 
 | | |
 |---|---|
-| [`docs/superpowers/specs/`](docs/superpowers/specs/) | 설계서 — 무엇을 왜 그렇게 정했는지, 결정 기록 포함 |
-| [`docs/superpowers/plans/`](docs/superpowers/plans/) | 단계별 구현 계획 |
+| [`docs/specs/`](docs/specs/) | 설계서 — 무엇을 왜 그렇게 정했는지, 결정 기록 포함 |
+| [`docs/plans/`](docs/plans/) | 단계별 구현 계획 |
 | [`docs/known-issues.md`](docs/known-issues.md) | 미해결 항목과 **"고치지 않기로 판단한 것"** + 그 이유 |
 | [`docs/setup.md`](docs/setup.md) | 설정 절차와 개발 환경 함정 |
 | [`firestore.rules`](firestore.rules) | 보안 규칙 (각 규칙이 무슨 공격을 막는지 주석) |
@@ -1333,7 +1333,7 @@ adb -s <기기> shell screencap -p /sdcard/s.png && adb -s <기기> pull /sdcard
 
 현재 빌드: `versionCode 8` / `versionName 0.8` · 네이버 지도 SDK를 포함한 단일 APK 약 96MiB.
 
-> **단계 번호 주의.** 이 표(그리고 커밋 메시지·개발일지·`versionCode`)는 **구현 계획서 번호**를 씁니다. 설계서 §7의 표는 7단계로 나뉘어 있는데, 4단계 계획서가 그 표의 4·5를 한 번에 다루면서 그 뒤가 하나씩 밀렸습니다. 대조표는 [설계서 §7](docs/superpowers/specs/2026-08-06-kidcare-design.md)에 있고, **말할 때 기준은 계획서 번호**입니다.
+> **단계 번호 주의.** 이 표(그리고 커밋 메시지·개발일지·`versionCode`)는 **구현 계획서 번호**를 씁니다. 설계서 §7의 표는 7단계로 나뉘어 있는데, 4단계 계획서가 그 표의 4·5를 한 번에 다루면서 그 뒤가 하나씩 밀렸습니다. 대조표는 [설계서 §7](docs/specs/2026-08-06-kidcare-design.md)에 있고, **말할 때 기준은 계획서 번호**입니다.
 
 **"완료"는 코드가 다 들어갔다는 뜻입니다.** 보호자·자녀 두 대의 신규 연결과 위치 요청은 운영 Firebase에서 확인했지만, 아이 폰을 하루 종일 들고 다니는 **실사용 검증은 1~6단계 통틀어 아직 남아 있습니다**. 무엇이 미검증인지는 [`docs/known-issues.md`](docs/known-issues.md)에 항목마다 적혀 있습니다.
 

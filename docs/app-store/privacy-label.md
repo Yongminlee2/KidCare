@@ -1,7 +1,7 @@
 # App Store 개인정보 영양 라벨 답 — 우리아이 지킴이 (iOS)
 
 붙여 넣는 곳: App Store Connect → 앱 → 앱 개인정보 보호(App Privacy) → 시작하기.
-근거: `docs/superpowers/plans/2026-09-13-kidcare-ios-phase7.md` 판정 기록 2. 앱 매니페스트(`ios/KidCare/PrivacyInfo.xcprivacy`, Task 1 이 만든다)의 여섯 항목과 같고,
+근거: `docs/plans/2026-09-13-kidcare-ios-phase7.md` 판정 기록 2. 앱 매니페스트(`ios/KidCare/PrivacyInfo.xcprivacy`, Task 1 이 만든다)의 여섯 항목과 같고,
 Firebase SDK 가 스스로 신고하는 진단 데이터 하나를 더했다. `ReleaseConfigTests.신고한_수집_항목` 을 바꾸면 이 파일도 같이 바꾼다.
 
 **이 문서를 쓴 시점(Task 3)에는 Task 1 이 아직 이 저장소에 없다.** 여섯 항목은 계획서 판정 기록 2 의 표를 그대로 옮겼고, Task 1 이 합쳐진 뒤 `PrivacyInfo.xcprivacy` 와 `ReleaseConfigTests.신고한_수집_항목` 으로 다시 대조해야 한다(아래 "대조 필요" 참고).

@@ -1,6 +1,5 @@
 # KidCare 1~2단계 구현 계획 (뼈대·페어링·위치 수집·지도)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 부모 폰과 자녀 폰을 초대 코드로 연결하고, 자녀 폰이 위치를 주기적으로 올리면 부모 폰 카카오맵에 현재 위치가 보이는 데까지 만든다.
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Kotlin (AGP 9 내장), Views + ViewBinding, Material3, Firebase(Auth 익명 / Firestore), play-services-location, 카카오맵 SDK v2, JUnit4
 
-**설계서:** `docs/superpowers/specs/2026-08-06-kidcare-design.md`
+**설계서:** `docs/specs/2026-08-06-kidcare-design.md`
 
 ## Global Constraints
 

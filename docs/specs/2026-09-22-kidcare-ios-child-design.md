@@ -1242,7 +1242,6 @@ Swift 가 같은 입력에 같은 답을 내는지 대조한다. **갈리면 Swi
   나머지 12개 언어는 영어로 채워지고 `tools/i18n-untranslated.json` 에 남는다.
 - 주석은 한국어로, **"왜"** 를 적는다. 코드가 말하는 "무엇"을 되풀이하지 않는다.
 - 커밋 메시지는 한국어, 작성자 `Yongminlee2 <dydals5678@gmail.com>`.
-  **AI 흔적을 남기지 않는다**(Co-Authored-By 금지).
 - `app/src/main`, `firestore.rules`, `gradlew` 를 고치지 않는다.
   유일한 예외는 `app/src/test/.../GoldenFileWriterTest.kt` 다(§12.2, 열린 질문 1).
 - `CancellationException` 에 대응하는 Swift 의 `CancellationError` 를

@@ -1,6 +1,5 @@
 # 5단계 구현 계획 — 장소 알림·메시지·원격 알람
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 부모가 정한 장소에 아이가 도착·이탈하면 부모 폰에 알림이 뜨고, 부모가 아이 폰에 메시지와 알람시계를 보낼 수 있게 한다.
 
@@ -15,7 +14,7 @@
 - **새 의존성 금지.** `play-services-location` 은 이미 있다(GeofencingClient 포함).
 - 주석은 한국어로 **왜** 를 적는다. 집필 기준은 `core/AuthGateway.kt`.
 - 사용자에게 보이는 문구는 전부 `strings.xml`. 부모가 한 번 읽고 알아야 한다.
-- 커밋 메시지 한국어, author `Yongminlee2 <dydals5678@gmail.com>`, **도구·AI 흔적 금지**.
+- 커밋 메시지 한국어, author `Yongminlee2 <dydals5678@gmail.com>`.
 - `CancellationException` 은 어떤 일반 catch·`runCatching` 보다 **먼저** 다시 던진다. 이 저장소에서 같은 사고를 아홉 번 고쳤다.
 - 프래그먼트는 `onDestroyView` 에서 리스너를 전부 해제하고 바인딩을 null 로 둔다. 늦게 오는 콜백은 바인딩 null 검사로 막는다.
 - 실패 문구는 전부 `core/ErrorText.errorMessage(...)` 를 거친다. SDK 원문이 부모에게 보이면 안 된다.

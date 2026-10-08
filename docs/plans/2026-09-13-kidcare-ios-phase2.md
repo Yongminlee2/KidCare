@@ -1,6 +1,5 @@
 # iOS 2단계 구현 계획 — 계산 로직 포팅과 안드로이드 대조
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 보호자 화면이 쓰는 순수 계산 로직 8개를 Swift로 옮기고, **안드로이드와 같은 답을 내는 것을 기계가 증명**한다.
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Swift 6 / Swift Testing / Foundation. 새 의존성 없음.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-kidcare-ios-design.md` (§6이 이 단계다)
+**Spec:** `docs/specs/2026-09-12-kidcare-ios-design.md` (§6이 이 단계다)
 
 ## Global Constraints
 
@@ -19,7 +18,7 @@
 - Swift 6 strict concurrency. `@unchecked Sendable`·`nonisolated(unsafe)` 금지.
 - 시각은 전부 UTC 밀리초 `Int64`. 시간대는 `TimeZone` 을 인자로 받는다(코틀린의 `ZoneId` 자리).
 - **화면 문구를 하드코딩하지 않는다.** Task 4·5의 결정을 반드시 읽을 것.
-- 주석은 **한국어로 '왜'**. 커밋 메시지는 **한국어**, author `Yongminlee2 <dydals5678@gmail.com>`, **도구·AI 흔적 금지**.
+- 주석은 **한국어로 '왜'**. 커밋 메시지는 **한국어**, author `Yongminlee2 <dydals5678@gmail.com>`.
 - 실행 전 PATH: `export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH"`
 - 테스트: `cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17'`
 - **`KidCareUITests` 스킴은 건드리지 않는다.** 실기기·운영 Firebase 전용이라 이 단계와 무관하다.

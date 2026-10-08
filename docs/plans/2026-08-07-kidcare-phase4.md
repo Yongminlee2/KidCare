@@ -1,6 +1,5 @@
 # KidCare 4단계 구현 계획 (원격 제어·폰찾기·시간대 예약)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 부모가 버튼을 누르면 아이 폰의 소리/진동이 몇 초 안에 바뀌고, 무음이어도 벨을 울려 폰을 찾을 수 있으며, "평일 09:00~15:00 진동" 같은 규칙이 자동으로 적용된다.
 
@@ -8,9 +7,9 @@
 
 **Tech Stack:** Kotlin (AGP 9 내장), Views + ViewBinding + Material3, `BottomNavigationView`, Firebase Firestore, `AudioManager` / `NotificationManager`(DND) / `AlarmManager` / `Vibrator`, `java.time`, JUnit4
 
-**설계서:** `docs/superpowers/specs/2026-08-06-kidcare-design.md` (§3 문서 구조·보안 규칙, §4.3 시간대 규칙, §4.4 되돌리기, §4.5 핸드폰 찾기)
+**설계서:** `docs/specs/2026-08-06-kidcare-design.md` (§3 문서 구조·보안 규칙, §4.3 시간대 규칙, §4.4 되돌리기, §4.5 핸드폰 찾기)
 **미해결 목록:** `docs/known-issues.md` (5번 commands 규칙 구멍, 6번 전달 계층 감싸기)
-**직전 단계:** `docs/superpowers/plans/2026-08-07-kidcare-phase3.md`
+**직전 단계:** `docs/plans/2026-08-07-kidcare-phase3.md`
 
 ## Global Constraints
 

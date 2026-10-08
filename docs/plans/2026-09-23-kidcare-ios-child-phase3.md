@@ -1,6 +1,5 @@
 # iOS 아이 역할 3단계 구현 계획 — 아이 화면과 권한, 그리고 아이 역할 켜기
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 아이폰이 **실제로 아이 폰이 된다.** 역할 선택 화면의 막이를 걷어 아이로 페어링하고, 앱이 뜨는 순간 저장된 역할이 child 이면 **화면과 무관하게** 수집기·시계·장소 감시·업로더를 조립한다(2단계 통합 검토 I1, 1단계 M6). 아이는 지금 무엇이 공유되고 있는지, 무엇이 꺼져 있어 안 되고 있는지, 그리고 **앱을 완전히 닫으면 아무것도 안 된다는 것**을 한 화면에서 본다. 권한이 꺼진 순간은 안드로이드 `child/ConditionWatcher.kt` 와 **같은 `permission_off` 이벤트**로 부모에게 간다 — 부모 화면은 한 줄도 안 바뀐 채로 그것을 읽는다.
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Swift 6 strict concurrency / iOS 17 / SwiftUI / CoreLocation / UIKit(`UIApplication.backgroundRefreshStatus`, `ProcessInfo.isLowPowerModeEnabled`) / Firebase Firestore / Swift Testing / XcodeGen. 새 의존성 없음. **`app/` 을 한 줄도 안 만진다** — 이 단계는 골든 파일을 더하지 않으므로 `GoldenFileWriterTest.kt` 예외조차 쓰지 않는다.
 
-**Spec:** `docs/superpowers/specs/2026-09-22-kidcare-ios-child-design.md`. 이 단계가 기대는 곳:
+**Spec:** `docs/specs/2026-09-22-kidcare-ios-child-design.md`. 이 단계가 기대는 곳:
 - §14 3단계 — 범위 그대로("`Child/`: ChildPermissions·ConditionWatcher·DeviceState·ChildHomeModel·ChildHomeView·ChildRootView / 역할 선택 화면의 막이 제거, `JoinFamilyView(expectedRole: .child)`, `RouterView` 의 child 갈래, `RoleStore` 저장 / 새 i18n 키 + `INFOPLIST_KEYS` 확장 + `ios_child_unsupported_*` 셋 제거")
 - §8 전부 — 8.1 두 걸음, 8.2 정확한 위치, 8.3 저전력 모드, 8.4 백그라운드 앱 새로고침, 8.5 문구, 8.6 아이폰에 없는 권한 둘
 - §4.10 `LOW_PERCENT`(15)·`REARM_PERCENT`(20), §4.9 `CONDITION_CHECK_INTERVAL_MILLIS`(60초)
@@ -26,13 +25,13 @@
 
 ## 선행 조건
 
-2단계(`docs/superpowers/plans/2026-09-22-kidcare-ios-child-phase2.md`)가 **전부 커밋된 뒤** 시작한다. 기준 커밋은 `d26e28f`(2단계 마무리) 이상이다.
+2단계(`docs/plans/2026-09-22-kidcare-ios-child-phase2.md`)가 **전부 커밋된 뒤** 시작한다. 기준 커밋은 `d26e28f`(2단계 마무리) 이상이다.
 
 ```bash
 cd /Users/com/work/KidCare
 git status --short                                                       # 비어 있어야 한다
 git log --oneline -1                                                     # d26e28f 이거나 그 뒤
-ls docs/superpowers/plans/2026-09-22-kidcare-ios-child-phase2.md          # 있어야 한다
+ls docs/plans/2026-09-22-kidcare-ios-child-phase2.md          # 있어야 한다
 
 # 1·2단계가 만든 이름 — 하나라도 다르면 Pre-flight conflict table 의 해당 행을 먼저 처리한다
 grep -n "final class TrackingCoordinator\|var onCondition\|ticker: Ticking" ios/KidCare/Child/TrackingCoordinator.swift   # 세 줄
@@ -76,7 +75,7 @@ cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare \
 - **시뮬레이터를 끄거나 지우지 않는다.** 테스트 전에 앱을 **지우지 않는다**(위에 덮어 설치한다).
 - **명령(`commands/`)을 만들지 않는다.** 아이폰 아이는 구독하지 않는다(설계서 §1).
 - **지역 감시는 `CLLocationManager.startMonitoring(for:)` 그대로다**(주인 판정, §17 열린 질문 2). `CLMonitor` 로 옮기지 않는다.
-- 커밋은 한국어, 작성자 `Yongminlee2 <dydals5678@gmail.com>`. **AI 흔적을 남기지 않는다**(Co-Authored-By 금지).
+- 커밋은 한국어, 작성자 `Yongminlee2 <dydals5678@gmail.com>`.
 - 테스트 명령: `cd ios && xcodebuild test -project KidCare.xcodeproj -scheme KidCare -destination 'platform=iOS Simulator,name=iPhone 17'`.
 - 주석은 한국어로 **"왜"** 를 적는다. 실행 전 PATH 는 `export PATH="/opt/homebrew/opt/openjdk@21/bin:/opt/homebrew/bin:$PATH"` 다. 파일을 새로 만들거나 지웠으면 테스트 전에 `cd ios && xcodegen generate` 를 돌린다.
 - Swift 의 `CancellationError` 를 일반 `catch` 로 삼키지 않는다(설계서 §16 마지막 줄).
@@ -1523,7 +1522,7 @@ git -c user.name="Yongminlee2" -c user.email="dydals5678@gmail.com" \
 - [ ] 출시 빌드 바이너리에 `childBattery`·`childSim` 문자열이 0개다.
 - [ ] 앱 코드에 `@unchecked Sendable`·`nonisolated(unsafe)` 가 없고, 새 리스너(저전력 알림)에 떼는 길이 있다.
 - [ ] `git diff --stat d26e28f..HEAD -- app firestore.rules gradlew` 가 **비어 있다**(이 단계는 `app/` 을 아예 안 만진다).
-- [ ] 커밋이 전부 한국어이고 작성자가 `Yongminlee2 <dydals5678@gmail.com>` 이며 `Co-Authored-By` 가 하나도 없다.
+- [ ] 커밋이 전부 한국어이고 작성자가 `Yongminlee2 <dydals5678@gmail.com>`다.
 
 ---
 

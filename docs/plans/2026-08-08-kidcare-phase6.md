@@ -1,6 +1,5 @@
 # 6단계 구현 계획 — 오프라인·예외 화면·출시 준비
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 통신이 끊겨도 데이터가 안 빠지고, 실패한 자리마다 무엇을 해야 하는지 화면이 말하고, 서명된 릴리스 APK 가 나온다.
 
@@ -15,7 +14,7 @@
 - **새 의존성 금지.**
 - 주석은 한국어로 **왜** 를 적는다. 집필 기준은 `core/AuthGateway.kt`.
 - 문구는 전부 `strings.xml`, 한국어.
-- 커밋 한국어, author `Yongminlee2 <dydals5678@gmail.com>`, **도구·AI 흔적 금지**.
+- 커밋 한국어, author `Yongminlee2 <dydals5678@gmail.com>`.
 - `CancellationException` 은 어떤 일반 catch 보다 **먼저** 다시 던진다.
 - **서명 키와 비밀번호는 절대 커밋하지 않는다.** `local.properties`(이미 gitignore)와 `*.jks` 를 쓴다.
 - 색은 `@color` 이름만, 캐릭터는 `mascot_*` 고정색.
@@ -218,7 +217,7 @@ cd /c/workAndroid/KidCare && git add -A && git commit -m "릴리스 빌드: 서�
 ### Task 5: 문서 정리와 최종 점검
 
 **Files:**
-- Modify: `README.md`, `docs/known-issues.md`, `docs/setup.md`, `docs/superpowers/specs/2026-08-06-kidcare-design.md`
+- Modify: `README.md`, `docs/known-issues.md`, `docs/setup.md`, `docs/specs/2026-08-06-kidcare-design.md`
 
 - [ ] **Step 1: 문서가 지금 코드와 맞는지 본다**
 
