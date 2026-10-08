@@ -1012,6 +1012,27 @@ iOS 테스트 **788개**, 안드로이드 **193개** 통과. 아이 역할 코�
 
 번역 생성기가 멈춘 이유도 적어 둡니다. 아이폰 작업이 한국어·영어에만 있는 키 32개를 더해 두어 `gen.py` 가 "열쇠가 어긋났다"며 거부합니다. 32개 모두 안드로이드가 안 쓰는 키라, **14개 언어에 다 있는 키만** 임시 폴더에 모아 안드로이드 문구를 뽑았습니다. 같은 이유로 `audit.py` 를 원본 폴더에 돌리면 확정 384가 나옵니다(32 × 12개 언어) — 아이폰이 번역을 채우면 사라집니다.
 
+### 공통 창고(common)와 주고받은 것 (2026-10-09)
+
+여러 앱이 같이 쓰는 재료 창고 [`Yongminlee2/common`](https://github.com/Yongminlee2/common)(`C:\workAndroid\common`)에서 가져다 쓴 것과, 이 앱에서 배워 돌려준 것을 정리했습니다.
+
+**가져다 쓴 것**
+- 다국어 도구 `i18n/gen.py`(원본 JSON → `res/values-*/strings.xml`)와 `i18n/audit.py`(번역 감사, 확정 0 이 출시 조건). 14개 언어 전체가 이 둘로 만들어졌습니다.
+- 언어 목록과 선택 대화상자 `android/AppLanguage.kt`·`LanguagePicker.kt` → `core/AppLanguage.kt`·`core/LanguagePicker.kt`(이름 하나만 바꿔 씀).
+- 번체 중국어를 `values-zh-rHK` 에도 복사해 두는 규칙(`traps/03-i18n.md`).
+
+**돌려준 것**
+- `traps/11-firebase.md` — 무료 한도 계산, 오프라인 쓰기 대기, 캐시의 "없음" 착시, 오프라인 `delete()` 가 나중에 몰래 성공하는 것, 실패값 캐시, App Check 소스 분리. 전부 이 앱에서 실제로 난 것입니다.
+- `checklists/location-app-korea.md` — 이번 위치정보법 조사 정리(신고 대상 판단, 2023년 자녀 안심 앱 과태료 사례, 사업자 없이 갈 수 있는 길과 한계).
+- `android/holidays/` — 이 앱의 공휴일 계산(`KoreanHolidays`·`HolidayCalendar`)과 그 테스트를 패키지만 바꿔 넣었습니다.
+- `i18n/gen.py --complete-only` — 위에 적은 "열쇠 어긋남" 문제를 도구에 넣었습니다. **이제 안드로이드 문구는 이렇게 뽑습니다:**
+  `python C:/workAndroid/common/i18n/gen.py i18n/ --to android --out app/src/main/res --complete-only`
+  (뽑은 뒤 `values-zh-rTW` 를 `values-zh-rHK` 로 복사). 임시 폴더 방식과 결과가 같은 것을 비교해 확인했습니다.
+- `i18n/add-keys.py` — 언어 파일 14개에 새 문장을 한 번에 넣는 도구. 이 앱의 파일이 전부 CRLF 라, 통째로 다시 쓰면 문장 몇 개 넣고도 diff 가 파일 전체로 번졌던 것을 막습니다.
+- `traps/03-i18n.md` 9·10번(번역 파일 밖 한국어, 두 플랫폼이 원본을 같이 쓸 때 `%@` 금지), `traps/04-windows-build.md` 6번(빌드를 겹쳐 돌렸더니 진입 클래스가 빠진 APK 가 "통과"했던 일).
+
+공통 창고는 다른 작업과 같은 폴더를 쓰고 있어서, 이 내용은 그쪽의 광고 정리 커밋(`446993f`)에 함께 묶여 올라갔습니다. 내용은 그대로입니다.
+
 ---
 
 ## 아이가 앱을 강제 종료하면 — 막을 수 없고, 대신 부모에게 알립니다
