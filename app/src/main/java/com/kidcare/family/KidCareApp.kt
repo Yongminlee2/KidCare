@@ -56,6 +56,12 @@ class KidCareApp : Application() {
             FirebaseFirestore.getInstance().useEmulator("127.0.0.1", FIRESTORE_EMULATOR_PORT)
         }
 
+        // 정품 앱만 서버에 닿게 하는 App Check. 없으면 누구나 이 앱의 접속 키로 익명 계정과
+        // 가족 문서를 끝없이 만들어 무료 한도를 일부러 태울 수 있다 — 그날 모든 가족의 앱이
+        // 멈춘다. 여기서는 토큰을 붙이기만 한다. 실제로 막는 스위치(강제 적용)는 Firebase
+        // 콘솔에 있고, 켜는 순서는 docs/setup.md "App Check" 에 있다.
+        AppCheckSetup.install()
+
         // FirebaseFirestore.getInstance().firestoreSettings = ... 를 여기에 세우지
         // 않는다. 기본값이 이미 우리가 원하는 값이고(위 클래스 주석의 근거 참고),
         // 기본값과 같은 값을 다시 적어두면 다음 사람이 "이 줄이 켜는 기능"이라고

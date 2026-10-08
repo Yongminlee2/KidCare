@@ -28,6 +28,7 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.kidcare.family.R
 import com.kidcare.family.core.AuthGateway
 import com.kidcare.family.core.CommandRepository
+import com.kidcare.family.core.HistoryCleaner
 import com.kidcare.family.core.RoleStore
 import com.kidcare.family.core.model.CommandType
 import com.kidcare.family.logic.AdaptiveMovementDetector
@@ -683,6 +684,8 @@ class TrackingService : LifecycleService() {
             try {
                 val childUid = AuthGateway.currentUid() ?: AuthGateway.signIn()
                 uploadNow(familyId, childUid)
+                // 30일 지난 하루 기록 정리도 같은 하루 한 번에 묻어 간다.
+                HistoryCleaner.cleanChildTrails(this@TrackingService, familyId, childUid)
             } catch (e: CancellationException) {
                 // 서비스가 죽으면서 lifecycleScope 가 취소된 것뿐인 정상 종료다.
                 // GuardianPairingActivity 에서 두 번 고친 것과 같은 실수(취소를 실패로
@@ -780,7 +783,7 @@ class TrackingService : LifecycleService() {
         trailUploader.upload(familyId, childUid)
     }
 
-    /** 나쁜 정확도와 순간이동을 제거하고 가장 최신인 위치를 최대 2초마다 상태 문서에 쓴다. */
+    /** 나쁜 정확도와 순간이동을 제거하고 가장 최신인 위치를 최대 5초마다 상태 문서에 쓴다. */
     private fun handleLiveFix(familyId: String, fix: Fix) {
         if (!liveTracking) return
         val refined = LiveLocationRefiner.refine(liveLocation, fix) ?: return
@@ -900,7 +903,13 @@ class TrackingService : LifecycleService() {
          * 실제로 쓰는 기능 쪽에 예산을 남긴다.
          */
         private const val SAFETY_UPLOAD_INTERVAL_MILLIS = 24 * 60 * 60 * 1000L
-        private const val LIVE_REPORT_INTERVAL_MILLIS = 2_000L
+        /**
+         * 실시간 보기 중 상태 문서에 쓰는 간격. 2초였을 때는 10분 한 번에 쓰기 300 + 부모 읽기
+         * 300 이라, 100가족이 하루 50번만 켜도 무료 한도(하루 쓰기 2만)를 넘었다. 5초면
+         * 120 + 120 이다. 위치는 여전히 2초마다 받아 가장 최신 점을 올린다 — 화면이 덜
+         * 자주 움직일 뿐 늦은 점을 보여주지는 않는다.
+         */
+        private const val LIVE_REPORT_INTERVAL_MILLIS = 5_000L
         private const val MAX_LIVE_DURATION_SECONDS = 10 * 60L
         private const val STAY_ANCHOR_INTERVAL_MILLIS = 5 * 60_000L
 

@@ -40,6 +40,7 @@ object LeaveFamily {
         "kidcare",
         "kidcare_alert",
         "kidcare_alarm_memo",
+        "kidcare_cleanup",
         "kidcare_place_sync",
         "kidcare_requests",
         "kidcare_schedule_sync",

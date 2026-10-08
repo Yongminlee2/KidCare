@@ -20,6 +20,7 @@ import com.kidcare.family.core.errorMessage
 import com.kidcare.family.core.model.ChildStatusDoc
 import com.kidcare.family.core.FamilyMember
 import com.kidcare.family.core.FamilyRepository
+import com.kidcare.family.core.HistoryCleaner
 import com.kidcare.family.core.RoleStore
 import com.kidcare.family.databinding.ActivityGuardianMainBinding
 import com.kidcare.family.logic.DisconnectRule
@@ -132,6 +133,9 @@ class GuardianMainActivity : AppCompatActivity() {
     /** 가족에서 빼기가 도는 중인가. 두 번 눌러 두 번 도는 것을 막는다. */
     private var leaveJob: Job? = null
 
+    /** 오래된 기록 정리. 화면 하나에서 한 번만 띄운다. */
+    private var cleanupJob: Job? = null
+
     /**
      * 상태바·내비게이션바가 차지하는 높이. 인셋 리스너가 채워 넣는다.
      *
@@ -216,6 +220,15 @@ class GuardianMainActivity : AppCompatActivity() {
         children = nextChildren
         store.selectedChildUid = selected?.uid
         renderChildSelector()
+        if (nextChildren.isNotEmpty() && cleanupJob == null) {
+            // 30일 지난 명령·사건 정리. 하루 한 번만 실제로 돈다(HistoryCleaner).
+            // memberJob 은 멤버가 바뀔 때마다 취소되므로 따로 띄운다.
+            cleanupJob = lifecycleScope.launch {
+                runCatching {
+                    HistoryCleaner.cleanGuardianSide(applicationContext, familyId, nextChildren.map { it.uid })
+                }
+            }
+        }
 
         memberJob?.cancel()
         memberJob = lifecycleScope.launch {
