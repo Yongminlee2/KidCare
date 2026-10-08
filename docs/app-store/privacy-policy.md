@@ -36,7 +36,7 @@
 
 **3. 보유 기간**
 
-위치 기록(하루 경로), 장소 도착·이탈 같은 알림 기록, 보호자가 보낸 명령 기록은 **30일이 지나면 자동으로 지웁니다.** 그 전이라도 가족 구성원이 앱에서 지우거나(아래 4), 운영자에게 삭제를 요청하면 지웁니다. 장소·예약 같은 설정은 보호자가 지울 때까지 남습니다.
+위치 기록(하루 경로)과 장소 도착·이탈 같은 알림 기록은 **30일이 지나면 자동으로 지웁니다.** 보호자가 아이 위치를 받아 간 기록(받은 보호자·일시)은 위치정보법에 따라 6개월 보관한 뒤 지웁니다. 그 전이라도 가족 구성원이 앱에서 지우거나(아래 4), 운영자에게 삭제를 요청하면 지웁니다. 장소·예약 같은 설정은 보호자가 지울 때까지 남습니다.
 
 **4. 삭제 방법**
 
@@ -88,7 +88,7 @@ The iPhone guardian app does **not** collect the iPhone's location and asks for 
 
 **3. Retention**
 
-Location history (daily routes), alert records such as place arrivals and departures, and records of commands sent by parents are **deleted automatically after 30 days**. Before that, they are deleted when removed in the app (section 4) or on request. Settings such as places and schedules remain until a parent deletes them.
+Location history (daily routes) and alert records such as place arrivals and departures are **deleted automatically after 30 days**. Records of which parent received the child's location and when are kept for 6 months, as required by Korean location-information law, and then deleted. Before that, they are deleted when removed in the app (section 4) or on request. Settings such as places and schedules remain until a parent deletes them.
 
 **4. Deleting your data**
 
