@@ -36,10 +36,11 @@
 
 **3. 보유 기간**
 
-위치 기록 등 가족 데이터는 현재 **자동으로 지우지 않습니다.** 가족 구성원이 앱에서 지우거나(아래 4), 운영자에게 삭제를 요청하면 지웁니다.
+위치 기록(하루 경로), 장소 도착·이탈 같은 알림 기록, 보호자가 보낸 명령 기록은 **30일이 지나면 자동으로 지웁니다.** 그 전이라도 가족 구성원이 앱에서 지우거나(아래 4), 운영자에게 삭제를 요청하면 지웁니다. 장소·예약 같은 설정은 보호자가 지울 때까지 남습니다.
 
 **4. 삭제 방법**
 
+- 안드로이드 보호자 앱: 위쪽 아이 선택 메뉴 → "이 폰을 가족에서 빼기". 이 폰의 가족 멤버 기록, 익명 계정, 기기에 저장된 가족 정보를 지웁니다.
 - 아이폰 보호자 앱: 메뉴 → "이 아이폰을 가족에서 빼기". 이 아이폰의 가족 멤버 기록, 익명 계정, 기기에 저장된 가족 정보를 지웁니다.
 - 앱에서 지울 수 없는 정보(아이 폰이 올린 위치·상태 기록, 가족 공용 예약·장소, 가족 자체): 【주인이 채움: 이메일】로 가족을 알려 주시면 【주인이 채움: 기간】 안에 지웁니다.
 - 앱을 삭제하면 기기에 남은 정보는 함께 지워집니다.
@@ -87,10 +88,11 @@ The iPhone guardian app does **not** collect the iPhone's location and asks for 
 
 **3. Retention**
 
-Family data such as location history is currently **not deleted automatically**. It is deleted when removed in the app (section 4) or on request.
+Location history (daily routes), alert records such as place arrivals and departures, and records of commands sent by parents are **deleted automatically after 30 days**. Before that, they are deleted when removed in the app (section 4) or on request. Settings such as places and schedules remain until a parent deletes them.
 
 **4. Deleting your data**
 
+- Android parent app: child picker menu at the top > "Remove this phone from the family". This deletes this phone's family membership record, its anonymous account and the family data stored on the device.
 - iPhone guardian app: Menu > "Remove this iPhone from the family". This deletes this iPhone's family membership record, its anonymous account and the family data stored on the device.
 - Data the app cannot delete (records uploaded by the child's phone, shared schedules and places, the family itself): email 【OWNER: email】 and we will delete it within 【OWNER: period】.
 - Deleting the app removes the data stored on the device.
